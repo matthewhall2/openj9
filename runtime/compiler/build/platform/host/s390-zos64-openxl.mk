@@ -1,5 +1,4 @@
-################################################################################
-# Copyright IBM Corp. and others 2021
+# Copyright (c) 2000, 2024 IBM Corp. and others
 #
 # This program and the accompanying materials are made available under
 # the terms of the Eclipse Public License 2.0 which accompanies this
@@ -18,17 +17,9 @@
 # [2] https://openjdk.org/legal/assembly-exception.html
 #
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
-################################################################################
 
-set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
-
-set(CMAKE_IMPORT_LIBRARY_PREFIX "lib")
-
-# todo: perhaps this belongs in corresponding toolchain file?
-if($(TOOLCHAIN_TYPE),xlc)
-    list(APPEND OMR_PLATFORM_COMPILE_OPTIONS
-        "\"-Wc,inline(auto,noreport,600,5000)\""
-        "\"-Wc,list(),offset,gonumber\""
-    )
-endif()
+HOST_ARCH=z
+HOST_SUBARCH=
+HOST_BITS=64
+OS=zos
+TOOLCHAIN=zos-openxl

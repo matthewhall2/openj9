@@ -53,6 +53,17 @@ ifeq ($(PLATFORM),ppc64-linux64-clang)
     endif
 endif
 
+ifeq ($(PLATFORM),s390-zos64-openxl)
+    # todo: are these hardcoded default paths needed?
+    ifeq (default,$(origin CC))
+        export CC=/jit/team/tsjit/openxl/usr/lpp/IBM/cnw/v2r1/openxl/bin/ibm-clang64
+    endif
+    ifeq (default,$(origin CXX))
+        export CXX=/jit/team/tsjit/openxl/usr/lpp/IBM/cnw/v2r1/openxl/bin/ibm-clang64++
+    endif
+    export A2E_INCLUDE_PATH?=/usr/.lpp/cbclib/include
+endif
+
 ifeq ($(PLATFORM),s390-zos64-vacpp)
     ifeq (default,$(origin CC))
         export CC=/usr/lpp/cbclib/xlc/bin/xlc

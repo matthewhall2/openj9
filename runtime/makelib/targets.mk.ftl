@@ -321,7 +321,7 @@ LIBCDEFS := $(word 1,$(wildcard $(foreach d,$(TPF_ROOT),$d/base/lib/libCDEFSFORA
 <#if uma.spec.flags.opt_useOmrDdr.enabled>
 	$(CC) $(CFLAGS) -Wc,debug -c -o $@ $< > /dev/null
 </#if>
-	$(CC) $(CFLAGS) -c -o $@ $< > $*.asmlist
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # compilation rule for metal-C files.
 %$(UMA_DOT_O) : %.mc
@@ -336,7 +336,7 @@ LIBCDEFS := $(word 1,$(wildcard $(foreach d,$(TPF_ROOT),$d/base/lib/libCDEFSFORA
 <#if uma.spec.flags.opt_useOmrDdr.enabled>
 	$(CXX) $(CXXFLAGS) -Wc,debug -c -o $@ $< > /dev/null
 </#if>
-	$(CXX) $(CXXFLAGS) -c -o $@ $< > $*.asmlist
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 <#else>
 
 # compilation rule for C files.
@@ -364,16 +364,16 @@ DDR_SED_COMMAND := \
 # which are incompatible with the use of '-E' below, trigger numerous warnings.
 # The solution is to use '-Wc,noconvlit' and '-Wc,nolist,nooffset' to negate those options.
 
-DDR_NOLIST := <#if uma.spec.type.zos>-Wc,noconvlit -Wc,nolist,nooffset</#if>
+#DDR_NOLIST := <#if uma.spec.type.zos>-Wc,noconvlit -Wc,nolist,nooffset</#if>
 
 # On z/OS, also suppress these C preprocessor errors:
 # - CCN3211 Parameter list must be empty, or consist of one or more identifiers separated by commas.
 # - CCN3766 The universal character name "0x**" is not in the allowable range for an identifier.
 
-DDR_C_SUPPRESS := <#if uma.spec.type.zos>-qsuppress=CCN3211:CCN3766</#if>
+#DDR_C_SUPPRESS := <#if uma.spec.type.zos>-qsuppress=CCN3211:CCN3766</#if>
 
 %.i : %.c
-	$(CC) $(CFLAGS) $(DDR_NOLIST) $(DDR_C_SUPPRESS) -E $< | $(DDR_SED_COMMAND) > $@
+	$(CC) $(CFLAGS) $(DDR_NOLIST) -E $< | $(DDR_SED_COMMAND) > $@
 
 %.i : %.cpp
 	$(CXX) $(CXXFLAGS) $(DDR_NOLIST) -E $< | $(DDR_SED_COMMAND) > $@
