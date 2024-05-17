@@ -61,6 +61,7 @@ j9csrsi_init(int32_t *ret)
 						 CSRSI_REQUEST_V2CPC_LPAR | CSRSI_REQUEST_V3CPC_VM);
 		sess->infoarea_len = sizeof(sess->infoarea);
 
+        extern void j9csrsi_wrp(struct j9csrsi_t *session);
 		j9csrsi_wrp(sess);
 
 		if (NULL != ret) {
