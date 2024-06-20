@@ -25,8 +25,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
 
 set(CMAKE_IMPORT_LIBRARY_PREFIX "lib")
 
-# todo: perhaps this belongs in corresponding toolchain file?
-if($(TOOLCHAIN_TYPE),xlc)
+if(${OMR_TOOLCONFIG} STREQUAL "xlc")
     list(APPEND OMR_PLATFORM_COMPILE_OPTIONS
         "\"-Wc,inline(auto,noreport,600,5000)\""
         "\"-Wc,list(),offset,gonumber\""

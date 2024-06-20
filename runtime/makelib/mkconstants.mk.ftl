@@ -31,15 +31,6 @@ ifndef UMA_TARGET_PATH
   UMA_TARGET_PATH=$(UMA_PATH_TO_ROOT)
 endif
 
-# Define a toolchain type to use.
-ifndef TOOLCHAIN_TYPE
-  ifeq(,$(findstring ibm-clang,$(CC)))
-    TOOLCHAIN_TYPE := xlc
-  else
-    TOOLCHAIN_TYPE := openxl
-  endif
-endif
-
 # Define all the tool used for compilation and linking.
 <#if uma.spec.type.windows>
 <#if uma.spec.flags.build_VS12AndHigher.enabled>

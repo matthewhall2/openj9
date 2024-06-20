@@ -54,7 +54,8 @@ export BUILD_CONFIG?=prod
   export PLATFORM=ppc-aix-vacpp
 </#if>
 <#if uma.spec.id?starts_with("zos_390-64")>
-  export PLATFORM=s390-zos64-openxl
+  export PLATFORM=s390-zos64-vacpp
+  export ASMLIST=1
 <#elseif uma.spec.id?starts_with("zos_390")>
   export PLATFORM=s390-zos-vacpp
   export ASMLIST=1

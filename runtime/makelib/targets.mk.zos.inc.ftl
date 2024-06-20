@@ -54,26 +54,14 @@ $(UMA_EXETARGET) : $(UMA_OBJECTS) $(UMA_TARGET_LIBRARIES)
 
 ifndef UMA_DO_NOT_OPTIMIZE_CCODE
   ifeq ($(VERSION_MAJOR),8)
-    ifeq ($(TOOLCHAIN_TYPE),openxl)
-      UMA_OPTIMIZATION_FLAGS = -O3 -march=arch8 -mtune=arch10
-    else
-      UMA_OPTIMIZATION_FLAGS = -O3 -Wc,"ARCH(8)" -Wc,"TUNE(10)"
-      UMA_OPTIMIZATION_LINKER_FLAGS = -Wl,compat=ZOSV1R13
-    endif
+    UMA_OPTIMIZATION_FLAGS = -O3 -Wc,"ARCH(8)" -Wc,"TUNE(10)"
+    UMA_OPTIMIZATION_LINKER_FLAGS = -Wl,compat=ZOSV1R13
   else
-    ifeq ($(TOOLCHAIN_TYPE),openxl)
-      UMA_OPTIMIZATION_FLAGS = -O3 -march=arch10 -mtune=arch12
-    else
-      UMA_OPTIMIZATION_FLAGS = -O3 -Wc,"ARCH(10)" -Wc,"TUNE(12)"
-      UMA_OPTIMIZATION_LINKER_FLAGS = -Wl,compat=ZOSV2R3
-    endif
+    UMA_OPTIMIZATION_FLAGS = -O3 -Wc,"ARCH(10)" -Wc,"TUNE(12)"
+    UMA_OPTIMIZATION_LINKER_FLAGS = -Wl,compat=ZOSV2R3
   endif
 else
-  ifeq ($(TOOLCHAIN_TYPE,openxl)
-    UMA_OPTIMIZATION_FLAGS = -O0
-  else
-    UMA_OPTIMIZATION_FLAGS = -0
-  endif
+  UMA_OPTIMIZATION_FLAGS = -0
 endif
 
 ifdef j9vm_uma_supportsIpv6
@@ -82,16 +70,9 @@ endif
 
 # _ISOC99_SOURCE Exposes c99 standard library changes which dont require c99 compiler support. (Also needed for c++, see below)
 # __STDC_LIMIT_MACROS Is needed to expose limit macros from <stdint.h> on c++ (also requires _ISOC99_SOURCE)
-UMA_ZOS_FLAGS += -DJ9ZOS390 -DLONGLONG -DJ9VM_TIERED_CODE_CACHE -D_ALL_SOURCE -D_XOPEN_SOURCE_EXTENDED \
-  -DIBM_ATOE -D_POSIX_SOURCE -D_ISOC99_SOURCE -D__STDC_LIMIT_MACROS \
-  -DCOMPILER_HEADER_PATH_PREFIX=$(INCLUDE_DIR)
-ifeq($(TOOLCHAIN_TYPE),openxl)
-  UMA_ZOS_FLAGS += -I$(OMR_DIR)/util/a2e/headers $(UMA_OPTIMIZATION_FLAGS) $(UMA_OPTIMIZATION_LINKER_FLAGS) \
+UMA_ZOS_FLAGS += -DJ9ZOS390 -DLONGLONG -DJ9VM_TIERED_CODE_CACHE -D_ALL_SOURCE -D_XOPEN_SOURCE_EXTENDED -DIBM_ATOE -D_POSIX_SOURCE -D_ISOC99_SOURCE -D__STDC_LIMIT_MACROS
+UMA_ZOS_FLAGS += -I$(OMR_DIR)/util/a2e/headers $(UMA_OPTIMIZATION_FLAGS) $(UMA_OPTIMIZATION_LINKER_FLAGS) \
 	-Wc,"convlit(ISO8859-1),xplink,rostring,FLOAT(IEEE,FOLD,AFP),enum(4)" -Wa,goff -Wc,NOANSIALIAS -Wc,"inline(auto,noreport,600,5000)"
-else
-  UMA_ZOS_FLAGS += -I$(OMR_DIR)/util/a2e/headers $(UMA_OPTIMIZATION_FLAGS) $(UMA_OPTIMIZATION_LINKER_FLAGS) \
-    -fexec-charset=ISO8859-1 -fno-strict-aliasing -fno-short-enums
-endif
 UMA_ZOS_FLAGS += -Wc,"SERVICE(j${uma.buildinfo.build_date})"
 ifeq ($(VERSION_MAJOR),8)
   UMA_ZOS_FLAGS += -Wc,"TARGET(zOSV1R13)"
@@ -100,39 +81,21 @@ else
 endif
 UMA_ZOS_FLAGS += -Wc,list,offset
 ifdef j9vm_env_data64
-  ifeq ($(TOOLCHAIN_TYPE),openxl)
-    UMA_ZOS_FLAGS += -DJ9ZOS39064 -Wc,lp64 -m64
-    UMA_WC_64 = -m64
-  else
-    UMA_ZOS_FLAGS += -DJ9ZOS39064 -Wc,lp64 -Wa,"SYSPARM(BIT64)"
-    UMA_WC_64 = -Wc,lp64
-  endif
+  UMA_ZOS_FLAGS += -DJ9ZOS39064 -Wc,lp64 -Wa,"SYSPARM(BIT64)"
+  UMA_WC_64 = -Wc,lp64
 else
-  ifeq ($(TOOLCHAIN_TYPE,openxl)
-    UMA_ZOS_FLAGS += -D_LARGE_FILES
-  else
-    UMA_ZOS_FLAGS += -D_LARGE_FILES -Wc,gonumber
-  endif
+  UMA_ZOS_FLAGS += -D_LARGE_FILES -Wc,gonumber
 endif
 
 ifeq ($(UMA_TARGET_TYPE),DLL)
-  ifeq($(TOOLCHAIN_TYPE,openxl)
-    UMA_ZOS_FLAGS += -fvisibility=default
-    UMA_LINK_FLAGS += -shared -Wl,-x$(UMA_DLLTARGET_XSRC)
-  else
-    UMA_ZOS_FLAGS += -Wc,DLL,EXPORTALL
-    UMA_LINK_FLAGS += -Wl,xplink,dll
-  endif
+  UMA_ZOS_FLAGS += -Wc,DLL,EXPORTALL
+  UMA_LINK_FLAGS += -Wl,xplink,dll
 endif
 ifeq ($(UMA_TARGET_TYPE),EXE)
-  ifeq($(TOOLCHAIN_TYPE,xlc)
-    UMA_LINK_FLAGS += -Wl,xplink
-  endif
+UMA_LINK_FLAGS += -Wl,xplink
 endif
 ifdef j9vm_env_data64
-  ifeq ($(TOOLCHAIN_TYPE),xlc)
-    UMA_LINK_FLAGS += -Wl,lp64
-  endif
+  UMA_LINK_FLAGS += -Wl,lp64
   UMA_M4_FLAGS += -DTR_64Bit -DTR_HOST_64BIT
 endif
 
@@ -160,18 +123,11 @@ endif
 
 ASFLAGS += -Wa,goff -Wa,"SYSPARM(BIT64)"
 
-ifeq ($(TOOLCHAIN_TYPE,openxl)
-  CFLAGS += -std=gnu99 $(UMA_ZOS_FLAGS)
-  CPPFLAGS += -std=gnu99
-  CXXFLAGS += -std=gnu++98 $(UMA_WC_64) -xc++ $(UMA_ZOS_FLAGS)
-  UMA_ZOS_CXX_LD_FLAGS += -std=gnu++98 $(UMA_WC_64)
-else
-  CFLAGS += -Wc,"langlvl(extc99)" $(UMA_ZOS_FLAGS)
-  CPPFLAGS += -Wc,"langlvl(extc99)"
-  CXXFLAGS += -Wc,"langlvl(extended)" $(UMA_WC_64) -+ $(UMA_ZOS_FLAGS)
-  UMA_ZOS_CXX_LD_FLAGS += -Wc,"langlvl(extended)" $(UMA_WC_64) -+
-endif
+CFLAGS += -Wc,"langlvl(extc99)" $(UMA_ZOS_FLAGS)
+CPPFLAGS += -Wc,"langlvl(extc99)"
+CXXFLAGS += -Wc,"langlvl(extended)" $(UMA_WC_64) -+ $(UMA_ZOS_FLAGS)
 
+UMA_ZOS_CXX_LD_FLAGS += -Wc,"langlvl(extended)" $(UMA_WC_64) -+
 
 UMA_DLLTARGET_XSRC = $($(UMA_TARGET_NAME)_xsrc)
 UMA_DLLTARGET_XDEST = $($(UMA_TARGET_NAME)_xdest)
@@ -183,7 +139,6 @@ ifdef j9vm_env_data64
   MCFLAGS = -q64
 endif
 
-ifeq ($(TOOLCHAIN_TYPE,xlc)
 # JAZZ103 49015 - compile with MRABIG debug option to reduce stack size required for -Xmt
 MRABIG = -Wc,"TBYDBG(-qdebug=MRABIG)"
 SPECIALCXXFLAGS = $(filter-out -Wc$(COMMA)debug -O3,$(CXXFLAGS))
@@ -206,4 +161,3 @@ MHInterpreterFull$(UMA_DOT_O) : MHInterpreterFull.cpp
 
 MHInterpreterCompressed$(UMA_DOT_O) : MHInterpreterCompressed.cpp
 	$(CXX) $(SPECIALCXXFLAGS) $(MRABIG) $(NEW_OPTIMIZATION_FLAG) -c $< > $*.asmlist
-endif

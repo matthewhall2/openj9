@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright IBM Corp. and others 2020
+# Copyright IBM Corp. and others 2024
 #
 # This program and the accompanying materials are made available under
 # the terms of the Eclipse Public License 2.0 which accompanies this
@@ -30,30 +30,13 @@ if(NOT OMR_OS_ZOS)
 	list(APPEND OMR_PLATFORM_CXX_COMPILE_OPTIONS -qsuppress=1540-1087:1540-1088:1540-1090)
 endif()
 
-#set(OMR_ZOS_COMPILE_ARCHITECTURE "arch10" CACHE STRING "z/OS compile machine architecture" FORCE)
-#set(OMR_ZOS_COMPILE_TARGET "ZOSV2R4" CACHE STRING "z/OS compile target operating system" FORCE)
-#set(OMR_ZOS_COMPILE_TUNE "12" CACHE STRING "z/OS compile machine architecture tuning" FORCE)
-#set(OMR_ZOS_LINK_COMPAT "ZOSV2R4" CACHE STRING "z/OS link compatible operating system" FORCE)
-
 # OMR_PLATFORM_CXX_COMPILE_OPTIONS gets applied to the jit (which needs exceptions),
 # so we put these in the CMAKE_CXX_FLAGS instead
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fignore-exceptions")
 
+# OMR_PLATFORM_COMPILE_OPTIONS gets applied to the jit (which doesn't compile with -g),
+# so we put -g in the CMAKE_C_FLAGS and CMAKE_CXX_FLAGS instead
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -g")
+#list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -fno-rtti)
 
-if(CMAKE_C_COMPILER_IS_XLCLANG)
-	# xlclang/xlclang++ options
-	# OMR_PLATFORM_COMPILE_OPTIONS gets applied to the jit (which doesn't compile with -g),
-	# so we put -g in the CMAKE_C_FLAGS and CMAKE_CXX_FLAGS instead
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -g")
-	list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -fno-rtti)
-else()
-	# xlc/xlc++ options
-	if(OMR_OS_ZOS)
-		# Specifying -g on z/OS inhibits compiler optimizations.
-		# Instead we use these flags to get info required for DDR without hindering the optimizer.
-		# list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -qdebug=nohook -qxplink=noback)
-	else()
-		list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -g)
-	endif()
-endif()
