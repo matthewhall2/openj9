@@ -21,6 +21,7 @@
  *******************************************************************************/
 
 /* Includes */
+#include <stdlib.h>
 #if defined(AIXPPC)
 #include <sys/time.h>
 #endif /* defined(AIXPPC) */
