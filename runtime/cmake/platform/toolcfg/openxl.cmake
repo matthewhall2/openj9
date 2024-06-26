@@ -31,12 +31,5 @@ if(NOT OMR_OS_ZOS)
 endif()
 
 # OMR_PLATFORM_CXX_COMPILE_OPTIONS gets applied to the jit (which needs exceptions),
-# so we put these in the CMAKE_CXX_FLAGS instead
+# so we put these in the CMAKE_CXX_FLAGS instead.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fignore-exceptions")
-
-# OMR_PLATFORM_COMPILE_OPTIONS gets applied to the jit (which doesn't compile with -g),
-# so we put -g in the CMAKE_C_FLAGS and CMAKE_CXX_FLAGS instead
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -g")
-#list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -fno-rtti)
-
