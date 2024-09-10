@@ -4056,20 +4056,6 @@ J9::Z::CodeGenerator::inlineDirectCall(
          }
       }
 
-   if (!comp->getOption(TR_DisableSIMDDoubleMaxMin) && cg->getSupportsVectorRegisters())
-      {
-      switch (methodSymbol->getRecognizedMethod())
-         {
-         case TR::java_lang_Math_max_D:
-            resultReg = TR::TreeEvaluator::inlineDoubleMax(node, cg);
-            return true;
-         case TR::java_lang_Math_min_D:
-            resultReg = TR::TreeEvaluator::inlineDoubleMin(node, cg);
-            return true;
-         default:
-            break;
-         }
-      }
 
    switch (methodSymbol->getRecognizedMethod())
       {
@@ -4079,7 +4065,6 @@ J9::Z::CodeGenerator::inlineDirectCall(
       case TR::java_lang_StrictMath_fma_F:
          resultReg = TR::TreeEvaluator::inlineMathFma(node, cg);
          return true;
-
       default:
          break;
       }
