@@ -2867,19 +2867,104 @@ J9::Z::TreeEvaluator::toLowerIntrinsic(TR::Node *node, TR::CodeGenerator *cg, bo
    return caseConversionHelper(node, cg, false, isCompressedString);
    }
 
-TR::Register*
-J9::Z::TreeEvaluator::inlineDoubleMax(TR::Node *node, TR::CodeGenerator *cg)
+TR::Register* mpMinMaxHelper(TR::Node* node, TR::CodeGenerator* cg, TR::InstOpCode::Mnemonic compareRROp, TR::InstOpCode::S390BranchCondition branchCond, TR::InstOpCode::Mnemonic moveRROp)
    {
-   cg->generateDebugCounter("z13/simd/doubleMax", 1, TR::DebugCounter::Free);
-   return doubleMaxMinHelper(node, cg, true);
+   TR::Node* lhsNode = node->getChild(0);
+   TR::Node* rhsNode = node->getChild(1);
+
+   TR::Register* lhsReg = cg->gprClobberEvaluate(lhsNode);
+   TR::Register* rhsReg = cg->evaluate(rhsNode);
+
+   TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
+   TR::LabelSymbol* cFlowRegionEnd = generateLabelSymbol(cg);
+
+   TR::LabelSymbol* swap = generateLabelSymbol(cg);
+   TR::LabelSymbol* equalRegion = generateLabelSymbol(cg);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
+   cFlowRegionStart->setStartInternalControlFlow();
+
+   generateRREInstruction(cg, compareRROp, node, lhsReg, rhsReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, cFlowRegionEnd);
+   //Check for NaN operands for float and double
+   //Support float and double +0/-0 comparisons adhering to IEEE 754 standard
+   //Checking if operands are equal, then branching to equalRegion, otherwise fall through for NaN case handling
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, equalRegion);
+
+   // If first operand is NaN, then we are done, otherwise fallthrough to move second operand as result
+   generateRXEInstruction(cg, node->getOpCode().isDouble() ? TR::InstOpCode::TCDB : TR::InstOpCode::TCEB, node, lhsReg, generateS390MemoryReference(0x00F, cg),0);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, cFlowRegionEnd);
+   //branch to swap label, since either second operand is NaN, or entire satisfies the alternate condition code
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRU, node, swap);
+
+      //code for handling +0/-0 comparisons when operands are equal
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, equalRegion);
+      if (node->getOpCode().isMax())
+         {
+         //For Max calls, checking if first operand is +0, then we are done, otherwise fall through for swap
+         generateRXEInstruction(cg, node->getOpCode().isDouble() ? TR::InstOpCode::TCDB : TR::InstOpCode::TCEB, node, lhsReg, generateS390MemoryReference(0x800, cg), 0);  // lhsReg is +0 ?
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, cFlowRegionEnd);   // it is +0
+         }
+      else if (node->getOpCode().isMin())
+         {
+            //For Min calls, checking if first operand is not +0, then we are done, otherwise fall through for swap
+         generateRXEInstruction(cg, node->getOpCode().isDouble() ? TR::InstOpCode::TCDB : TR::InstOpCode::TCEB, node, lhsReg, generateS390MemoryReference(0x400, cg), 0);  // lhsReg is -0 ?
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, cFlowRegionEnd);
+         }
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, swap);
+   //Move resulting operand to lhsReg as fallthrough for alternate Condition Code
+   generateRREInstruction(cg, moveRROp, node, lhsReg, rhsReg);
+
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 2, cg);
+   deps->addPostConditionIfNotAlreadyInserted(lhsReg, TR::RealRegister::AssignAny);
+   deps->addPostConditionIfNotAlreadyInserted(rhsReg, TR::RealRegister::AssignAny);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionEnd, deps);
+   cFlowRegionEnd->setEndInternalControlFlow();
+
+   node->setRegister(lhsReg);
+   cg->decReferenceCount(lhsNode);
+   cg->decReferenceCount(rhsNode);
+
+   return lhsReg;
+   }
+
+
+TR::Register*
+J9::Z::TreeEvaluator::fminEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CEBR, TR::InstOpCode::COND_MASK4, TR::InstOpCode::LER);
    }
 
 TR::Register*
-J9::Z::TreeEvaluator::inlineDoubleMin(TR::Node *node, TR::CodeGenerator *cg)
+J9::Z::TreeEvaluator::dminEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   cg->generateDebugCounter("z13/simd/doubleMin", 1, TR::DebugCounter::Free);
-   return doubleMaxMinHelper(node, cg, false);
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CDBR, TR::InstOpCode::COND_MASK4, TR::InstOpCode::LDR);
+
+TR::Register*
+J9::Z::TreeEvaluator::fminEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CEBR, TR::InstOpCode::COND_MASK4, TR::InstOpCode::LER);
    }
+
+TR::Register*
+J9::Z::TreeEvaluator::dminEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CDBR, TR::InstOpCode::COND_MASK4, TR::InstOpCode::LDR);
+   }
+
+TR::Register*
+J9::Z::TreeEvaluator::fmaxEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CEBR, TR::InstOpCode::COND_MASK2, TR::InstOpCode::LER);
+   }
+
+TR::Register*
+J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return fpMinMaxHelper(node, cg, TR::InstOpCode::CDBR, TR::InstOpCode::COND_MASK2, TR::InstOpCode::LDR);
+   }    
 
 TR::Register *
 J9::Z::TreeEvaluator::inlineMathFma(TR::Node *node, TR::CodeGenerator *cg)
