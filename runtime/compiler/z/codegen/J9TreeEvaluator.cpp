@@ -905,10 +905,48 @@ allocateWriteBarrierInternalPointerRegister(TR::CodeGenerator * cg, TR::Node * s
    return sourceRegister;
    }
 
+
+TR::Register *
+J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
+   {
+   if (cg->SupportsVectorRegisters())
+      {
+      cg->generateDebugCounter("z13/simd/doubleMax", 1, TR::DebugCounter::Free);
+      return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
+      }
+   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);
+   }
+
+TR::Register *
+J9::Z::TreeEvaluator::dminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
+   {
+   if (cg->SupportsVectorRegisters())
+      {
+      cg->generateDebugCounter("z13/simd/doubleMin", 1, TR::DebugCounter::Free);
+      return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
+      }
+   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);
+   }
+
 TR::Register *
 J9::Z::TreeEvaluator::fmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-      return OMR::Z::CodeGenerator::fmaxEvaluator(node, cg);
+   if (cg->SupportsVectorRegisters())
+      {
+      cg->generateDebugCounter("z13/simd/floatMax", 1, TR::DebugCounter::Free);
+      return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
+      }
+   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);   }
+
+TR::Register *
+J9::Z::TreeEvaluator::fminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
+   {
+   if (cg->SupportsVectorRegisters())
+      {
+      cg->generateDebugCounter("z13/simd/floatMin", 1, TR::DebugCounter::Free);
+      return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
+      }
+   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);
    }
 
 TR::Register*
