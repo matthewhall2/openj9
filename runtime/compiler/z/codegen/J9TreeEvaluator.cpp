@@ -909,7 +909,7 @@ allocateWriteBarrierInternalPointerRegister(TR::CodeGenerator * cg, TR::Node * s
 TR::Register *
 J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (cg->SupportsVectorRegisters())
+   if (cg->getSupportsVectorRegisters())
       {
       cg->generateDebugCounter("z13/simd/doubleMax", 1, TR::DebugCounter::Free);
       return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
@@ -920,7 +920,7 @@ J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
 TR::Register *
 J9::Z::TreeEvaluator::dminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (cg->SupportsVectorRegisters())
+   if (cg->getSupportsVectorRegisters())
       {
       cg->generateDebugCounter("z13/simd/doubleMin", 1, TR::DebugCounter::Free);
       return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
@@ -931,17 +931,18 @@ J9::Z::TreeEvaluator::dminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
 TR::Register *
 J9::Z::TreeEvaluator::fmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (cg->SupportsVectorRegisters())
+   if (cg->getSupportsVectorRegisters())
       {
       cg->generateDebugCounter("z13/simd/floatMax", 1, TR::DebugCounter::Free);
       return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
       }
-   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);   }
+   return OMR::Z::TreeEvaluator::xmaxxminhelper(node, cg);
+   }
 
 TR::Register *
 J9::Z::TreeEvaluator::fminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   if (cg->SupportsVectorRegisters())
+   if (cg->getSupportsVectorRegisters())
       {
       cg->generateDebugCounter("z13/simd/floatMin", 1, TR::DebugCounter::Free);
       return OMR::Z::TreeEvaluator::fpMinMaxVectorHelper(node, cg);
