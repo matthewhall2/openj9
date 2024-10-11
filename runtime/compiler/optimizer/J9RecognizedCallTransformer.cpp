@@ -1371,7 +1371,7 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop* treetop)
          case TR::java_lang_Math_min_F:
          case TR::java_lang_Math_max_D:
          case TR::java_lang_Math_min_D:
-            return !comp()->getOption(TR_DisableMaxMinOptimization):
+            return !comp()->getOption(TR_DisableMaxMinOptimization);
          case TR::java_lang_Math_multiplyHigh:
             return cg()->getSupportsLMulHigh();
          case TR::java_lang_StringUTF16_toBytes:
