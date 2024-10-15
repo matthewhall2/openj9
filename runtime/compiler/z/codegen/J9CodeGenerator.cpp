@@ -4079,24 +4079,6 @@ J9::Z::CodeGenerator::inlineDirectCall(
          }
       }
 
-   if (cg->getSupportsInlineMath_MaxMin_FD()) {
-      switch (methodSymbol->getRecognizedMethod()) {
-         case TR::java_lang_Math_max_D:
-            resultReg = J9::Z::TreeEvaluator::dmaxEvaluator(node, cg);
-            return true;
-         case TR::java_lang_Math_min_D:
-            resultReg = J9::Z::TreeEvaluator::dminEvaluator(node, cg);
-            return true;
-         case TR::java_lang_Math_max_F:
-            resultReg = J9::Z::TreeEvaluator::fmaxEvaluator(node, cg);
-            return true;
-         case TR::java_lang_Math_min_F:
-            resultReg = J9::Z::TreeEvaluator::fminEvaluator(node, cg);
-            return true;
-         default:
-            break;
-      }
-   }
 
    switch (methodSymbol->getRecognizedMethod())
       {
