@@ -86,6 +86,8 @@ class RecognizedCallTransformer : public OMR::RecognizedCallTransformer
     */
    void process_java_lang_Class_IsAssignableFrom(TR::TreeTop* treetop, TR::Node* node);
 
+   void test_process(TR::TreeTop* treetop, TR::Node* node);
+
    /** \brief
     *     Transforms java/lang/Class.cast(Ljava/lang/Object;)Ljava/lang/Object;
     *     into a checkcast node.

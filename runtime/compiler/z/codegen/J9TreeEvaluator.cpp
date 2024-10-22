@@ -8710,8 +8710,8 @@ void genInstanceOfDynamicCacheAndHelperCall(TR::Node *node, TR::CodeGenerator *c
 
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
    cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-      outlinedSlowPath->swapInstructionListsWithCompilation();
-
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+   
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "instanceOf/(%s)/Helper", comp->signature()),1,TR::DebugCounter::Undetermined);
    J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
@@ -8801,7 +8801,7 @@ void genInstanceOfDynamicCacheAndHelperCall(TR::Node *node, TR::CodeGenerator *c
          cg->stopUsingRegister(offsetRegister);
       }
 
-   // WARNING: It is not recommended to have two exit point in OOL section
+   // WARNING: It is not recommended to have two exit points in OOL section
    // In this case we need it in case of ifInstanceOf to save additional complex logic in mainline section
    // In case if there is GLRegDeps attached to ifInstanceOf node, it will be evaluated and attached as post dependency conditions
    // at the end of node
@@ -11482,7 +11482,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    static char *disable = feGetEnv("TR_disableInlineIsAssignableFrom");
    TR::Compilation *comp = cg->comp();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp->fe());
-
    if (disable)
       return false;
 
@@ -11491,7 +11490,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          thisClass->getFirstChild()->getOpCodeValue() == TR::loadaddr)
       {
       TR::SymbolReference *thisClassSymRef = thisClass->getFirstChild()->getSymbolReference();
-
       if (thisClassSymRef->isClassInterface(comp) || thisClassSymRef->isClassAbstract(comp))
          {
          return false;
@@ -11505,7 +11503,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          && javaLangClassFrom->getFirstChild()->getOpCodeValue() == TR::loadaddr))
       {
       TR::Node   *castClassRef =javaLangClassFrom->getFirstChild();
-
       TR::SymbolReference *castClassSymRef = NULL;
       if(castClassRef->getOpCode().hasSymbolReference())
          castClassSymRef= castClassRef->getSymbolReference();
@@ -11513,12 +11510,13 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       TR::StaticSymbol    *castClassSym = NULL;
       if (castClassSymRef && !castClassSymRef->isUnresolved())
          castClassSym= castClassSymRef ? castClassSymRef->getSymbol()->getStaticSymbol() : NULL;
-
       TR_OpaqueClassBlock * clazz = NULL;
-      if (castClassSym)
-         clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
-
-      if(clazz)
+      if (castClassSym) {
+clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
+         printf("class name: %s\n", castClassSym->getName());
+      }
+         
+      if (clazz)
          classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
       }
 
@@ -11530,7 +11528,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 //   startLabel->setStartInternalControlFlow();
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
  //  doneLabel->setEndInternalControlFlow();
 
    TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
@@ -11539,11 +11537,10 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::RegisterDependencyConditions * deps = NULL;
 
 
-   TR::Register *tempReg = cg->allocateRegister();
+   TR::Register *resultReg = cg->allocateRegister();
+  // TR::Register *resultReg = cg->allocateRegister();
    TR::Register *objClassReg, *castClassReg, *scratch1Reg,*scratch2Reg;
    int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
-
-
    if (classDepth != -1)
       {
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
@@ -11555,12 +11552,11 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps->addPostCondition(scratch2Reg, TR::RealRegister::AssignAny);
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
       deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
-
       }
    else
       {
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions, cg);
-      objClassReg = tempReg;
+      objClassReg = resultReg;
       }
 
    deps->addPostCondition(thisClassReg, TR::RealRegister::AssignAny);
@@ -11568,64 +11564,110 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
      {
      deps->addPostCondition(checkClassReg, TR::RealRegister::AssignAny);
      }
-   deps->addPostCondition(tempReg, TR::RealRegister::AssignAny);
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLabel);
 
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, thisClassReg, thisClassReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, outlinedCallLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, helperCallLabel);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, checkClassReg, checkClassReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, outlinedCallLabel);
-
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, helperCallLabel);
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, objClassReg,
                 generateS390MemoryReference(checkClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
    generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, objClassReg,
          generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
+   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
 
    TR_Debug * debugObj = cg->getDebug();
+   //deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   bool isHelperCall = false;
    if (classDepth != -1)
       {
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
-      genTestIsSuper(cg, node, objClassReg, castClassReg, scratch1Reg, scratch2Reg, tempReg, NULL, classDepth, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
-
+      genTestIsSuper(cg, node, objClassReg, castClassReg, scratch1Reg, scratch2Reg, resultReg, NULL, classDepth, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
-   else
+   else // helper call
       {
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, outlinedCallLabel);
+     // isHelperCall = true;
+      printf("Calling helper\n");
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, helperCallLabel);
       }
+   
+  
+ 
+      TR::Node * fromClass = node->getSecondChild();
+      TR::Node * helperCallNode = TR::Node::createWithSymRef(node, TR::icall, 2, comp->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
+    
+     helperCallNode->setChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, thisClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+     helperCallNode->setChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+      helperCallNode->swapChildren(); // helper checks if first arg is castable to second arg, so we need to swap
 
+      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+      cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+      outlinedSlowPath->swapInstructionListsWithCompilation();
+      //outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
 
-   TR_S390OutOfLineCodeSection *outlinedHelperCall = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(node, TR::icall, tempReg, outlinedCallLabel, doneLabel, cg);
-   cg->getS390OutOfLineCodeSectionList().push_front(outlinedHelperCall);
-   outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+      J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
+      resultReg = helperLink->buildDirectDispatch(helperCallNode, resultReg);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
+      outlinedSlowPath->swapInstructionListsWithCompilation();
 
-
-   cg->decReferenceCount(node->getFirstChild());
-   cg->decReferenceCount(node->getSecondChild());
-
-   node->setRegister(tempReg);
-
+      cg->decReferenceCount(thisClass);
+      cg->decReferenceCount(fromClass);
+      
+   node->setRegister(resultReg);
    if (classDepth != -1)
       {
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
-      generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
+      generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
       cg->stopUsingRegister(objClassReg);
       cg->stopUsingRegister(castClassReg);
       cg->stopUsingRegister(scratch1Reg);
       cg->stopUsingRegister(scratch2Reg);
       }
+  
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
    return true;
    }
+
+// TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+//    {
+//    TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
+//    if (symbol->isHelper())
+//       {
+//       switch (symRef->getReferenceNumber())
+//          {
+//          case TR_checkAssignable:
+//             return TR::TreeEvaluator::checkAssignableEvaluator(node, cg);
+//          default:
+//             break;
+//          }
+//       }
+//    return J9::TreeEvaluator::directCallEvaluator(node, cg);
+//    }
+
+// TR::Register *J9::Z::TreeEvaluator::checkAssignableEvaluator(TR::Node *node, TR::CodeGenerator *cg) {
+//       TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
+//       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+//       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+//       outlinedSlowPath->swapInstructionListsWithCompilation();
+//       //outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
+
+//       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+//       J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
+//       resultReg = helperLink->buildDirectDispatch(helperCallNode, resultReg);
+//       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
+//       outlinedSlowPath->swapInstructionListsWithCompilation();
+// }
 
 
 bool

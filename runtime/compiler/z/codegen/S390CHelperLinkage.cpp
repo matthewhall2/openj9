@@ -250,6 +250,27 @@ class RealRegisterManager
    TR::CodeGenerator*   _cg;
    };
 
+static bool getIsFastPathOnly(TR::Node * callNode, TR::CodeGenerator * cg) {
+   auto opCode = callNode->getOpCodeValue();
+   
+   // TODO: Currently only jitInstanceOf and jitCheckAssignable are fast path helpers. Need to modify following condition if we add support for other fast path only helpers
+   if (opCode == TR::instanceof) {
+     // printf("Fast path only: instanceof\n");
+      return true;
+   }
+ //  printf("checking for isAssignabeFrom Call\n");
+   TR::MethodSymbol * methodSymbol = callNode->getSymbol()->getMethodSymbol();
+   TR::SymbolReference * ref = callNode->getSymbolReference();
+   if (ref == cg->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable)) {
+      printf("found isAssignableFromCall in getIsFastPath\n");
+     // callNode->setSymbolReference(cg->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
+      return true;  
+   }else{
+     // printf("Call found was not isAssignableFrom\n");
+   }
+   return false;
+}
+
 /**   \brief Build a JIT helper call.
  *    \details
  *    It generates sequence that prepares parameters for the JIT helper function and generate a helper call.
@@ -263,8 +284,7 @@ TR::Register * J9::Z::CHelperLinkage::buildDirectDispatch(TR::Node * callNode, T
    {
    RealRegisterManager RealRegisters(cg());
    bool isHelperCallWithinICF = deps != NULL;
-   // TODO: Currently only jitInstanceOf is fast path helper. Need to modify following condition if we add support for other fast path only helpers
-   bool isFastPathOnly = callNode->getOpCodeValue() == TR::instanceof;
+   bool isFastPathOnly = getIsFastPathOnly(callNode, cg());
    traceMsg(comp(),"%s: Internal Control Flow in OOL : %s\n",callNode->getOpCode().getName(),isHelperCallWithinICF  ? "true" : "false" );
    for (int i = TR::RealRegister::FirstGPR; i < TR::RealRegister::NumRegisters; i++)
       {
@@ -305,7 +325,7 @@ TR::Register * J9::Z::CHelperLinkage::buildDirectDispatch(TR::Node * callNode, T
    TR::RegisterDependencyConditions * postDeps = RealRegisters.buildRegisterDependencyConditions(regRANum);
    // If buildDirectDispatch is called within ICF we need to pass the dependencies which will be used there, else we need single dependencylist to be attached to the BRASL
    // We return postdependency conditions back to evaluator to merge with ICF condition and attach to merge label
-   if (isHelperCallWithinICF )
+   if (isHelperCallWithinICF)
       *deps = new (cg()->trHeapMemory()) TR::RegisterDependencyConditions(postDeps, childNodeRegDeps, cg());
 
    int padding = 0;

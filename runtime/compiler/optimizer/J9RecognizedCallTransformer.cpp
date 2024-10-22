@@ -62,8 +62,17 @@ void J9::RecognizedCallTransformer::processConvertingUnaryIntrinsicFunction(TR::
    node->setAndIncChild(0, actualResult);
    }
 
+void J9::RecognizedCallTransformer::test_process(TR::TreeTop* treetop, TR::Node* node){
+   auto toClass = node->getChild(0);
+   auto fromClass = node->getChild(1);
+   auto nullchk = comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol());
+   treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, toClass), nullchk)));
+   treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, fromClass), nullchk)));
+}
+
 void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR::TreeTop* treetop, TR::Node* node)
    {
+      TR::Node::recreate(treetop->getNode(), TR::treetop);
    auto toClass = node->getChild(0);
    auto fromClass = node->getChild(1);
    auto nullchk = comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol());
@@ -1438,7 +1447,11 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop* treetop)
             processUnsafeAtomicCall(treetop, TR::SymbolReferenceTable::atomicSwapSymbol);
             break;
          case TR::java_lang_Class_isAssignableFrom:
+           // if (comp()->target().cpu.isZ()){
+            //   test_process(treetop, node);
+            //}else {
             process_java_lang_Class_IsAssignableFrom(treetop, node);
+           // }
             break;
          case TR::java_lang_Class_cast:
             process_java_lang_Class_cast(treetop, node);
