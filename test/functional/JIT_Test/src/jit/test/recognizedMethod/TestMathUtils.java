@@ -131,7 +131,7 @@
              {dsNaN, -0.0d, dsNaNBits}
          };
  
-         Object[][] nanPairs = new Object[60][3];
+         Object[][] nanPairs = new Object[5000][3];
          int i = 0;
          while (i < constNanPairs.length) {
              nanPairs[i] = constNanPairs[i];
