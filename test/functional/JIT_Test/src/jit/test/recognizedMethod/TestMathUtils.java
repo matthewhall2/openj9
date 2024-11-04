@@ -186,13 +186,13 @@
          farg1 = farg2 = 0.0f;
  
          long iarg1;
-         long min = 1L << 13;
+         long max = dNaNQuietBit;
          do {
              iarg1 = r.nextLong();
-         } while (iarg1 < min);
+         } while (iarg1 >= max || iarg1 <= 0);
          // shift right so that mantisa is non-zero
          // shift of 13 instead of 12 ensures that the quiet bit is not set
-         iarg1 = iarg1 >> 13;
+         //iarg1 = (iarg1 >> 13) + 1;
  
          int arg1Type = r.nextInt(3); // 0 -> quiet, 1 -> signalling
          if (arg1Type == 0) {
@@ -210,8 +210,7 @@
          long iarg2;
          do {
              iarg2 = r.nextLong();
-             iarg2 = iarg2 >> 13;
-         } while (iarg2 < min);
+         } while (iarg2 >= max || iarg2 <= 0);
  
          int arg2Type = r.nextInt(3);
          if (arg2Type == 0) {
@@ -243,7 +242,12 @@
          float farg1, farg2;
          farg1 = farg2 = 0.0f;
  
-         int iarg1 = r.nextInt(fNaNMantisaMax - 1) + 1;
+
+         int iarg1;
+         do {
+            iarg1 = r.nextInt(fNaNQuietBit);
+         } while (iarg1 <= 0);
+
          int arg1Type = r.nextInt(3); // 0 -> quiet, 1 -> signalling
          if (arg1Type == 0) {
              iarg1 = iarg1 | fNaNPrefix | fNaNQuietBit;
@@ -258,7 +262,11 @@
  
          // arg 2
          int arg2Type = r.nextInt(3);
-         int iarg2 = r.nextInt(fNaNMantisaMax - 1) + 1;
+         int iarg2;
+         do {
+            iarg2 = r.nextInt(fNaNQuietBit);
+         } while (iarg2 <= 0);
+         
          if (arg2Type == 0) {
              iarg2 = (r.nextInt(fNaNMantisaMax - 1) + 1) | fNaNPrefix | fNaNQuietBit;
              farg2 = Float.intBitsToFloat(iarg2);

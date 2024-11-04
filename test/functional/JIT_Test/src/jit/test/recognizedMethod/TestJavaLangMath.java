@@ -78,7 +78,6 @@
  
      @Test(groups = {"level.sanity"}, invocationCount=2, dataProvider="zeroProviderFD", dataProviderClass=TestMathUtils.class)
      public void test_java_lang_Math_max_zeros_FD(Number a, Number b, boolean isFirstArg) {
-        if (!PlatformInfo.isS390()) return;
          if (a instanceof Float) {
              float f1 = a.floatValue();
              float f2 = b.floatValue();
