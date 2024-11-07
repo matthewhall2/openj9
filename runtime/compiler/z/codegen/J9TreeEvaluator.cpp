@@ -11639,21 +11639,21 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
    return true;
    }
 
-// TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
-//    {
-//    TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
-//    if (symbol->isHelper())
-//       {
-//       switch (symRef->getReferenceNumber())
-//          {
-//          case TR_checkAssignable:
-//             return TR::TreeEvaluator::checkAssignableEvaluator(node, cg);
-//          default:
-//             break;
-//          }
-//       }
-//    return J9::TreeEvaluator::directCallEvaluator(node, cg);
-//    }
+TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   // TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
+   // if (symbol->isHelper())
+   //    {
+   //    switch (symRef->getReferenceNumber())
+   //       {
+   //       case TR_checkAssignable:
+   //          return TR::TreeEvaluator::checkAssignableEvaluator(node, cg);
+   //       default:
+   //          break;
+   //       }
+   //    }
+   return J9::TreeEvaluator::directCallEvaluator(node, cg);
+   }
 
 // TR::Register *J9::Z::TreeEvaluator::checkAssignableEvaluator(TR::Node *node, TR::CodeGenerator *cg) {
 //       TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
