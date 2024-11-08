@@ -63,6 +63,7 @@ void J9::RecognizedCallTransformer::processConvertingUnaryIntrinsicFunction(TR::
    }
 
 void J9::RecognizedCallTransformer::test_process(TR::TreeTop* treetop, TR::Node* node){
+   printf("generating nullcheck nodes\n");
    auto toClass = node->getChild(0);
    auto fromClass = node->getChild(1);
    auto nullchk = comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol());
@@ -72,21 +73,21 @@ void J9::RecognizedCallTransformer::test_process(TR::TreeTop* treetop, TR::Node*
 
 void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR::TreeTop* treetop, TR::Node* node)
    {
-      TR::Node::recreate(treetop->getNode(), TR::treetop);
    auto toClass = node->getChild(0);
    auto fromClass = node->getChild(1);
    auto nullchk = comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol());
    treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, toClass), nullchk)));
    treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, fromClass), nullchk)));
 
-   TR::Node::recreate(treetop->getNode(), TR::treetop);
-   node->setSymbolReference(comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
-   node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+    TR::Node::recreate(treetop->getNode(), TR::treetop);
+ TR::Node::recreateWithSymRef(node, TR::icall, comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
+   //node->setSymbolReference(comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
+node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
    node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
    node->swapChildren();
 
-   toClass->recursivelyDecReferenceCount();
-   fromClass->recursivelyDecReferenceCount();
+  toClass->recursivelyDecReferenceCount();
+  fromClass->recursivelyDecReferenceCount();
    }
 
 static void substituteNode(
@@ -1447,11 +1448,11 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop* treetop)
             processUnsafeAtomicCall(treetop, TR::SymbolReferenceTable::atomicSwapSymbol);
             break;
          case TR::java_lang_Class_isAssignableFrom:
-           // if (comp()->target().cpu.isZ()){
-            //   test_process(treetop, node);
-            //}else {
+         //  if (comp()->target().cpu.isZ()){
+           ////   test_process(treetop, node);
+           // }else {
             process_java_lang_Class_IsAssignableFrom(treetop, node);
-           // }
+           //}
             break;
          case TR::java_lang_Class_cast:
             process_java_lang_Class_cast(treetop, node);

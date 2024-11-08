@@ -4769,10 +4769,10 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
    TR::LabelSymbol *cFlowRegionDone = generateLabelSymbol(cg);
    TR::LabelSymbol *oolFailLabel = generateLabelSymbol(cg);
 
-#if defined(J9VM_GC_SPARSE_HEAP_ALLOCATION)
+#if defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION)
    bool isOffHeapAllocationEnabled = TR::Compiler->om.isOffHeapAllocationEnabled();
    TR::LabelSymbol *populateFirstDimDataAddrSlot = isOffHeapAllocationEnabled ? generateLabelSymbol(cg) : NULL;
-#endif /* defined(J9VM_GC_SPARSE_HEAP_ALLOCATION) */
+#endif /* defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION) */
 
    // oolJumpLabel is a common point that all branches will jump to. From this label, we branch to OOL code.
    // We do this instead of jumping directly to OOL code from mainline because the RA can only handle the case where there's
@@ -4850,7 +4850,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
       iComment("Init 1st dim size field.");
       }
 
-#if defined(J9VM_GC_SPARSE_HEAP_ALLOCATION)
+#if defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION)
    if (isOffHeapAllocationEnabled)
       {
       TR_ASSERT_FATAL_WITH_NODE(node,
@@ -4871,7 +4871,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
       cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, populateFirstDimDataAddrSlot);
       }
    else
-#endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
+#endif /* J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION */
       {
       cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, cFlowRegionDone);
       }
@@ -4960,7 +4960,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
 
    TR::Register *temp3Reg = cg->allocateRegister();
 
-#if defined(J9VM_GC_SPARSE_HEAP_ALLOCATION)
+#if defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION)
    if (isOffHeapAllocationEnabled)
       {
       // Populate dataAddr slot for 2nd dimension zero size array.
@@ -4975,7 +4975,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
          temp3Reg,
          generateS390MemoryReference(temp2Reg, fej9->getOffsetOfDiscontiguousDataAddrField(), cg));
       }
-#endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
+#endif /* J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION */
 
    // Store 2nd dim element into 1st dim array slot, compress temp2 if needed
    if (comp->target().is64Bit() && comp->useCompressedPointers())
@@ -5000,7 +5000,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
    generateRILInstruction(cg, TR::InstOpCode::SLFI, node, firstDimLenReg, 1);
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::CL, node, firstDimLenReg, 0, TR::InstOpCode::COND_BNE, loopLabel, false);
 
-#if defined(J9VM_GC_SPARSE_HEAP_ALLOCATION)
+#if defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION)
    if (isOffHeapAllocationEnabled)
       {
       // No offset is needed since 1st dimension array is contiguous.
@@ -5008,7 +5008,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, populateFirstDimDataAddrSlot);
       }
    else
-#endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
+#endif /* J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION */
       {
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, cFlowRegionDone);
       }
@@ -5028,7 +5028,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, oolJumpLabel);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, oolFailLabel);
 
-#if defined(J9VM_GC_SPARSE_HEAP_ALLOCATION)
+#if defined(J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION)
    if (isOffHeapAllocationEnabled)
       {
       /* Populate dataAddr slot of 1st dimension array. Arrays of non-zero size
@@ -5048,7 +5048,7 @@ static TR::Register * generateMultianewArrayWithInlineAllocators(TR::Node *node,
          temp3Reg,
          generateS390MemoryReference(targetReg, temp1Reg, fej9->getOffsetOfContiguousDataAddrField(), cg));
       }
-#endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
+#endif /* J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION */
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionDone, dependencies);
 
@@ -11016,7 +11016,7 @@ J9::Z::TreeEvaluator::VMnewEvaluator(TR::Node * node, TR::CodeGenerator * cg)
                   (comp->compileRelocatableCode() && opCode == TR::anewarray) ? classReg : NULL,
                   resReg, enumReg, dataSizeReg, litPoolBaseReg, conditions, cg);
 
-#ifdef J9VM_GC_SPARSE_HEAP_ALLOCATION
+#ifdef J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION
          if (TR::Compiler->om.isOffHeapAllocationEnabled())
             {
             /* Here we'll update dataAddr slot for both fixed and variable length arrays. Fixed length arrays are
@@ -11095,7 +11095,7 @@ J9::Z::TreeEvaluator::VMnewEvaluator(TR::Node * node, TR::CodeGenerator * cg)
                cg->stopUsingRegister(offsetReg);
                }
             }
-#endif /* J9VM_GC_SPARSE_HEAP_ALLOCATION */
+#endif /* J9VM_GC_ENABLE_SPARSE_HEAP_ALLOCATION */
 
          // Write Arraylet Pointer
          if (generateArraylets)
@@ -11641,33 +11641,73 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
 
 TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   // TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
-   // if (symbol->isHelper())
-   //    {
-   //    switch (symRef->getReferenceNumber())
-   //       {
-   //       case TR_checkAssignable:
-   //          return TR::TreeEvaluator::checkAssignableEvaluator(node, cg);
-   //       default:
-   //          break;
-   //       }
-   //    }
-   return J9::TreeEvaluator::directCallEvaluator(node, cg);
+   TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
+   TR::SymbolReference *symRef = node->getSymbolReference();
+   if (symbol->isHelper())
+      {
+      switch (symRef->getReferenceNumber())
+         {
+         case TR_checkAssignable:
+         printf("Calling evaluator\n");
+            return TR::TreeEvaluator::checkAssignableEvaluator(node, cg);
+         default:
+            break;
+         }
+      }
+   return OMR::Z::TreeEvaluator::directCallEvaluator(node, cg);
    }
 
-// TR::Register *J9::Z::TreeEvaluator::checkAssignableEvaluator(TR::Node *node, TR::CodeGenerator *cg) {
-//       TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
-//       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
-//       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-//       outlinedSlowPath->swapInstructionListsWithCompilation();
-//       //outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
+TR::Register *J9::Z::TreeEvaluator::checkAssignableEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+      TR::Register *resultReg = cg->allocateRegister();
+   TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
+   TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
+   TR::Register *checkClassReg = cg->evaluate(node->getSecondChild());
+   TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
+ TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+  outlinedSlowPath->swapInstructionListsWithCompilation();
+   //outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
 
-//       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-//       J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
-//       resultReg = helperLink->buildDirectDispatch(helperCallNode, resultReg);
-//       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
-//       outlinedSlowPath->swapInstructionListsWithCompilation();
-// }
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+   J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
+
+  // TR::Register *resultReg = cg->allocateRegister();
+  int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions, cg);
+   deps->addPostCondition(thisClassReg, TR::RealRegister::AssignAny);
+   if (thisClassReg != checkClassReg)
+     {
+     deps->addPostCondition(checkClassReg, TR::RealRegister::AssignAny);
+     }
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+  //  deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+cg->incReferenceCount(node->getFirstChild());
+cg->incReferenceCount(node->getSecondChild());
+cg->incReferenceCount(node->getFirstChild());
+cg->incReferenceCount(node->getSecondChild());
+
+resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+  // resultReg = helperLink->buildDirectDispatch(node, resultReg);
+//TR::Node::recreate(node, TR::icall);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
+  // cg->decReferenceCount(node->getFirstChild()->getFirstChild());
+    //  cg->decReferenceCount(node->getSecondChild()->getFirstChild());
+  // cg->recursivelyDecReferenceCount(node->getFirstChild());
+  // cg->recursivelyDecReferenceCount(node->getSecondChild());
+  //  TR::Node *toClass = node->getFirstChild();
+  //  TR::Node *fromClass = node->getSecondChild();
+
+   // cg->decReferenceCount(toClass);
+   // cg->decReferenceCount(fromClass);
+
+   node->setRegister(resultReg);
+   return resultReg;
+   }
 
 
 bool
