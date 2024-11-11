@@ -11603,16 +11603,20 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
    static char* num = feGetEnv("TR_countAssignable");
    static int n = num != NULL ? atoi(num) : -1;
    static int count = 1;
+   static bool use_aload = feGetEnv("TR_use_aload") != NULL;
   if (feGetEnv("TR_enableNewAssignableFrom") != NULL && count > n)
      {
       printf("new code\n");
       TR::Node * fromClass = node->getSecondChild();
       TR::Node * helperCallNode = TR::Node::createWithSymRef(node, TR::icall, 2, comp->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
-     helperCallNode->setAndIncChild(0, thisClass);
-     helperCallNode->setAndIncChild(1, fromClass);
-      // helperCallNode->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, thisClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
-      // helperCallNode->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
-      node->swapChildren(); // helper checks if first arg is castable to second arg, so we need to swap
+     if (!use_aload) {
+    helperCallNode->setAndIncChild(0, thisClass);
+    helperCallNode->setAndIncChild(1, fromClass);
+}else {
+     helperCallNode->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, thisClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+     helperCallNode->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+}
+      helperCallNode->swapChildren(); // helper checks if first arg is castable to second arg, so we need to swap
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
@@ -11654,6 +11658,11 @@ printf("count: %d\n", count++);
    return true;
    }
 
+TR::Register *
+J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return J9::TreeEvaluator::directCallEvaluator(node, cg);
+   }
 
 bool
 J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::CodeGenerator * cg)
