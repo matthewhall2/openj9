@@ -11598,7 +11598,7 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
       printf("Calling helper\n");
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, helperCallLabel);
       }
-
+   
    static bool initialResult = feGetEnv("TR_instanceOfInitialValue") != NULL;
    static char* num = feGetEnv("TR_countAssignable");
    static int n = num != NULL ? atoi(num) : -1;
@@ -11608,10 +11608,10 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
       printf("new code\n");
       TR::Node * fromClass = node->getSecondChild();
       TR::Node * helperCallNode = TR::Node::createWithSymRef(node, TR::icall, 2, comp->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
-     // helperCallNode->setAndIncChild(0, thisClass->getFirstChild());
-     // helperCallNode->setAndIncChild(1, fromClass->getFirstChild());
-      helperCallNode->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, thisClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
-      helperCallNode->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+     helperCallNode->setAndIncChild(0, thisClass);
+     helperCallNode->setAndIncChild(1, fromClass);
+      // helperCallNode->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, thisClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+      // helperCallNode->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
       node->swapChildren(); // helper checks if first arg is castable to second arg, so we need to swap
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11620,7 +11620,6 @@ clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
       //outlinedHelperCall->generateS390OutOfLineCodeSectionDispatch();
 
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-      generateRIInstruction(cg,TR::InstOpCode::getLoadHalfWordImmOpCode(),node,resultReg,static_cast<int32_t>(!initialResult));
       J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
       resultReg = helperLink->buildDirectDispatch(helperCallNode, resultReg);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
