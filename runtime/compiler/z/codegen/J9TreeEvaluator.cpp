@@ -11479,13 +11479,12 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
 /////////////////////////////////////////////////////////////////////////////////
 static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
-   static char *disable = feGetEnv("TR_disableInlineIsAssignableFrom");
+   static char *disable = feGetEnv("TR_DisableInliningOfIsAssignableFrom");
    TR::Compilation *comp = cg->comp();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp->fe());
 
    if (disable)
       return false;
-
    TR::Node *thisClass = node->getFirstChild();
    if (thisClass->getOpCodeValue() == TR::aloadi &&
          thisClass->getFirstChild()->getOpCodeValue() == TR::loadaddr)
@@ -11644,7 +11643,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
      deps->addPostCondition(checkClassReg, TR::RealRegister::AssignAny);
      }
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-   
+
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // load initial value for result
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel); // branch to OOL section - will make more sense when inlined tests are added
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
