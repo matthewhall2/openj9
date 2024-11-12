@@ -11671,7 +11671,6 @@ TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::Code
       switch (symRef->getReferenceNumber())
          {
          case TR_checkAssignable:
-         printf("Calling evaluator\n");
             return checkAssignableEvaluator(node, cg);
          default:
             break;

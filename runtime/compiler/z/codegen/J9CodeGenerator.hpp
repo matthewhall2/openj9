@@ -89,6 +89,7 @@ public:
    int32_t getPDMulEncodedPrecision(TR::Node *pdmul);
    int32_t getPDMulEncodedPrecision(TR::Node *pdmul, int32_t exponent);
    bool callUsesHelperImplementation(TR::Symbol *sym);
+   bool supportsInliningOfIsAssignableFrom();
 
    uint32_t getLongToPackedFixedSize()               { return TR_LONG_TO_PACKED_SIZE; }
    uint32_t getIntegerToPackedFixedSize()            { return TR_INTEGER_TO_PACKED_SIZE; }
