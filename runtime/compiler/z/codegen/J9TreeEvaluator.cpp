@@ -11627,6 +11627,61 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    return true;
    }
 
+static TR::Register* checkAssignableEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
+   TR::Register *checkClassReg = cg->evaluate(node->getSecondChild());
+
+   TR::Register *resultReg = cg->allocateRegister();
+   TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
+
+   int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions, cg);
+   deps->addPostCondition(thisClassReg, TR::RealRegister::AssignAny);
+   if (thisClassReg != checkClassReg)
+     {
+     deps->addPostCondition(checkClassReg, TR::RealRegister::AssignAny);
+     }
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // load initial value for result
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel); // branch to OOL section - will make more sense when inlined tests are added
+   TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+   resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // skip over fail label
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
+   node->setRegister(resultReg);
+
+   return resultReg;
+   }
+
+TR::Register *J9::Z::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   TR::MethodSymbol *symbol = node->getSymbol()->castToMethodSymbol();
+   TR::SymbolReference *symRef = node->getSymbolReference();
+   if (symbol->isHelper())
+      {
+      switch (symRef->getReferenceNumber())
+         {
+         case TR_checkAssignable:
+         printf("Calling evaluator\n");
+            return checkAssignableEvaluator(node, cg);
+         default:
+            break;
+         }
+      }
+   return OMR::Z::TreeEvaluator::directCallEvaluator(node, cg);
+   }
+
+
+
 
 bool
 J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::CodeGenerator * cg)
