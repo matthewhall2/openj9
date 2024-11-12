@@ -3808,7 +3808,7 @@ J9::Z::CodeGenerator::inlineDirectCall(
       ReduceSynchronizedFieldLoad::inlineSynchronizedFieldLoad(node, cg);
       return true;
       }
-   else if (node->getSymbolReference()->getReferenceNumber() == TR::checkAssignable)
+   else if (node->getSymbolReference()->getReferenceNumber() == TR_checkAssignable)
       {
       resultReg = TR::TreeEvaluator::inlineCheckAssignableFromEvaluator(node, cg);
       return true;
