@@ -1334,7 +1334,8 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop* treetop)
             return !comp()->getOption(TR_DisableUnsafe) && !comp()->compileRelocatableCode() && !TR::Compiler->om.canGenerateArraylets() && comp()->target().is64Bit() &&
                cg()->supportsNonHelper(TR::SymbolReferenceTable::atomicSwapSymbol);
          case TR::java_lang_Class_isAssignableFrom:
-            return cg()->supportsInliningOfIsAssignableFrom();
+            return true;
+            //return cg()->supportsInliningOfIsAssignableFrom();
          case TR::java_lang_Class_cast:
             {
             static const bool disable =
