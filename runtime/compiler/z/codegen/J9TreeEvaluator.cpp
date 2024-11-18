@@ -4326,6 +4326,14 @@ genInstanceOfOrCheckCastNullTest(TR::Node* node, TR::CodeGenerator* cg, TR::Regi
       }
    }
 
+static void genClassEqualityTest(TR::Node * node, TR::CodeGenerator * cg, TR::LabelSymbol *doneLabel, TR::Register *castClassReg, TR::Register *objClassReg)
+   {
+   TR::Compilation  *comp = cg->comp();
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Equal", comp->signature()),1,TR::DebugCounter::Undetermined);
+   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassReg, objClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/EqualFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+   }
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //  checkcastEvaluator - checkcast
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -11628,12 +11636,15 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
+   
    TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *checkClassReg = cg->evaluate(node->getSecondChild());
 
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
+
+   genClassEqualityTest(node, cg, doneLabel, thisClassReg, checkClassReg);
 
    int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions, cg);
