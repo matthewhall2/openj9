@@ -93,7 +93,7 @@ extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
 /**
- * Generates instructions to load J9Class modifiers into a scratch register and set a condition code if it's an interface
+ * Generates instructions to load J9Class modifiers into a scratch register and branch to <handleInterfaceLabel> if <toClass> is an interface
  */
 static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Register *scratchRegister, TR::Register *toClassReg, TR::InstOpCode loadOp, TR::LabelSymbol * handleInterfaceLabel);
 
