@@ -95,7 +95,7 @@ extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerat
 /**
  * Generates instructions to load J9Class modifiers into a scratch register and branch to <handleInterfaceLabel> if <toClass> is an interface
  */
-static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Register *scratchRegister, TR::Register *toClassReg, TR::InstOpCode loadOp, TR::LabelSymbol * handleInterfaceLabel);
+static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Register *scratchRegister, TR::Register *toClassReg, TR::InstOpCode loadOp);
 
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
@@ -3268,18 +3268,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
       TR_ASSERT((node->getOpCodeValue() == TR::instanceof &&
             node->getSecondChild()->getOpCodeValue() != TR::loadaddr), "genTestIsSuper: castClassDepth == -1 is only supported for transformed isInstance calls.");
 
-      // check if cast class is an interface
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
-            generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
-
-      cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratch1Reg,
-            generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
-
-
-      TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
-            "genTestIsSuper::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
-
-      cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratch1Reg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
+      cursor = genTestIsInterface(node, cg, scratch1Reg, castClassReg, TR::InstOpCode::L);
 
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
@@ -4276,7 +4265,7 @@ void genInstanceOfOrCheckcastArrayOfJavaLangObjectTest(TR::Node *node, TR::CodeG
    }
 
 static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Register *scratchRegister, TR::Register *toClassReg,
-   TR::InstOpCode loadOp, TR::LabelSymbol * handleInterfaceLabel)
+   TR::InstOpCode loadOp)
    {
    TR::Instruction *cursor = NULL;
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchRegister,
@@ -4286,7 +4275,6 @@ static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *c
    TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
          "genTestIsSuper::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchRegister, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleInterfaceLabel, cursor);
    return cursor;
    }
 
@@ -4329,7 +4317,8 @@ bool genInstanceOfOrCheckcastSuperClassTest(TR::Node *node, TR::CodeGenerator *c
       //TR::Register *scratchRegister1 = scratch1Reg;
       TR_ASSERT(node->getSecondChild()->getOpCodeValue() != TR::loadaddr,
             "genTestIsSuper: castClassDepth == -1 is not supported for a loadaddr castClass.");
-      cursor = genTestIsInterface(node, cg, scratchRegister1, castClassReg, loadOp, callHelperLabel);
+      cursor = genTestIsInterface(node, cg, scratchRegister1, castClassReg, loadOp);
+      cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
       castClassDepthReg = srm->findOrCreateScratchRegister();
       cursor = generateRXInstruction(cg, loadOp, node, castClassDepthReg,
             generateS390MemoryReference(castClassReg, offsetof(J9Class, classDepthAndFlags) + byteOffset, cg), cursor);
