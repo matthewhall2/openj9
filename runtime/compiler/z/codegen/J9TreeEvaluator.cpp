@@ -4280,9 +4280,9 @@ static TR::Instruction * genTestIsInterface(TR::Node *node, TR::CodeGenerator *c
    {
    TR::Instruction *cursor = NULL;
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchRegister,
-            generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
+            generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cursor);
    cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratchRegister,
-         generateS390MemoryReference(scratchRegister1, offsetof(J9ROMClass, modifiers), cg), cursor);
+         generateS390MemoryReference(scratchRegister, offsetof(J9ROMClass, modifiers), cg), cursor);
    TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
          "genTestIsSuper::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchRegister, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
