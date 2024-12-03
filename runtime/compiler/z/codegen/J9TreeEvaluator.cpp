@@ -11785,21 +11785,20 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
    resultReg = TR::TreeEvaluator::performCall(node, false, cg);
 
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, finalLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, finalLabel);
 
-
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, equalLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, finalLabel, deps);
 
-   node->setRegister(resultReg);
    cg->stopUsingRegister(scratchReg1);
+   node->setRegister(resultReg);
 
    return resultReg;
    }
