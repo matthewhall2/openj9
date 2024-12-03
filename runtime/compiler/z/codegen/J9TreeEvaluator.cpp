@@ -11793,7 +11793,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
 
@@ -11811,7 +11810,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    // add next: load class depth, if fromClass depth < toClass depth, go to helper
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
+   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
    TR::Register *scratchReg1, *scratchReg2;
    scratchReg1 = cg->allocateRegister();
    scratchReg2 = cg->allocateRegister();
