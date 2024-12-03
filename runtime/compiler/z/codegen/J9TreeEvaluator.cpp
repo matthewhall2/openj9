@@ -11755,6 +11755,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *equalLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *finalLabel = generateLabelSymbol(cg);
 
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 4, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
@@ -11774,7 +11775,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    scratchReg1 = cg->allocateRegister();
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
    genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, doneLabel);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11788,11 +11789,17 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, finalLabel);
+
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, equalLabel, deps);
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, finalLabel, deps);
+
    node->setRegister(resultReg);
+   cg->stopUsingRegister(scratchReg1);
 
    return resultReg;
    }
