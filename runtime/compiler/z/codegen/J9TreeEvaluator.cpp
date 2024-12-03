@@ -11784,7 +11784,7 @@ static int getCompileTimeClassDepth(TR::CodeGenerator *cg, TR::Node *node)
          {
          int len = 0;
          classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
-        const char * name = TR::Compiler->cls.classNameChars(clazz, len);
+        const char * name = TR::Compiler->cls.classNameChars(comp, clazz, len);
         // char * name = fej9->getClassNameChars(clazz, len);
          sprintf("nname is %s", name, len);
          }
