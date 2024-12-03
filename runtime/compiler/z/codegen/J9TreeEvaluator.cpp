@@ -11769,6 +11769,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // add next: load class depth, if fromClass depth < toClass depth, go to helper
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
    genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+   TR::Register *scratchReg1, *scratchReg2;
+   genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, helperCallLabel, cursor);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11782,6 +11785,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
    node->setRegister(resultReg);
 
    return resultReg;
