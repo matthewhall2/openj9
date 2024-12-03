@@ -11754,9 +11754,10 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    return true;
    }
 
-static int getClassDepth(TR::CodeGenerator *cg, TR::Node *node)
+static int getCompileTimeClassDepth(TR::CodeGenerator *cg, TR::Node *node)
    {
    TR::Compilation *comp = cg->comp();
+   TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp->fe());
    int32_t classDepth = -1;
    TR::Node     *javaLangClassFrom = node->getFirstChild();
    if (javaLangClassFrom->getOpCodeValue() != TR::aloadi) return classDepth;
@@ -11780,7 +11781,12 @@ static int getClassDepth(TR::CodeGenerator *cg, TR::Node *node)
          clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
 
       if(clazz)
+         {
+         int len = 0;
          classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
+         char * name = fej9->getClassNameChars(clazz, len);
+         sprintf("nname is %s", name, len);
+         }
       }
    return classDepth;
    }
@@ -11802,6 +11808,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // inlined tests don't set the register value
 
+   int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
+   int fromClassDepth = getCompileTimeClassDepth(cg, node->getFirstChild());
+   // if (toClassDepth != -1 && fromClassDepth != -1)
+   //    {
+   //    if (fromClassDepth < toClassDepth) generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+   //    }
    /*
     * TODO: add inlined tests (classEqualityTest, SuperclassTest, etc)
     * Inlined tests will be used when possible, or will jump to the OOL section
@@ -11814,11 +11826,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *scratchReg1, *scratchReg2;
    scratchReg1 = cg->allocateRegister();
    scratchReg2 = cg->allocateRegister();
-  int toClassDepth = getClassDepth(cg, node->getSecondChild());
-  printf("Class depth is %d\n", toClassDepth);
+   printf("Class depth is %d\n", toClassDepth);
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
  //  deps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
-  genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+   genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL, true);
   //genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, helperCallLabel);
 
