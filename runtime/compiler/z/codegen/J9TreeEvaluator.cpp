@@ -11756,7 +11756,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *equalLabel = generateLabelSymbol(cg);
 
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 4, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
@@ -11771,6 +11771,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
    genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, equalLabel);
    TR::Register *scratchReg1, *scratchReg2;
+   scratchReg1 = cg->allocateRegister();
+   deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
    genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
 
