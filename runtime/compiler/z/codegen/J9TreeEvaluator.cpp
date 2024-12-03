@@ -11818,7 +11818,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
   printf("Class depth is %d\n", toClassDepth);
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
  //  deps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
-  genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, -1, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+  genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
   //genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, helperCallLabel);
 
