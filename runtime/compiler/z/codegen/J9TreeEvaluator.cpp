@@ -11814,8 +11814,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *scratchReg1, *scratchReg2;
    scratchReg1 = cg->allocateRegister();
    scratchReg2 = cg->allocateRegister();
-  // int toClassDepth = getClassDepth(cg, node->getSecondChild());
-  // printf("Class depth is %d\n", toClassDepth);
+  int toClassDepth = getClassDepth(cg, node->getSecondChild());
+  printf("Class depth is %d\n", toClassDepth);
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
  //  deps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
   // genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, -1, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
