@@ -11807,8 +11807,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-   generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // inlined tests don't set the register value
+   generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
+
 
    int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
    int fromClassDepth = getCompileTimeClassDepth(cg, node->getFirstChild());
