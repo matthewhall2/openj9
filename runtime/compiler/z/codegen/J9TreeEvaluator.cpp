@@ -11807,6 +11807,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // inlined tests don't set the register value
 
    int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
@@ -11834,7 +11835,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
  //  deps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
    genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL, true);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-
   //genTestIsInterface(node, cg, scratchReg1, toClassReg, TR::InstOpCode::L);
   // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, helperCallLabel);
 
