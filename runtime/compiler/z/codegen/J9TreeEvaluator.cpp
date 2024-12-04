@@ -11811,11 +11811,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
    int fromClassDepth = getCompileTimeClassDepth(cg, node->getFirstChild());
-   printf("toClass depth is %d, fromclass depgth is %d\n", toClassDepth, fromClassDepth);
+   //printf("toClass depth is %d, fromclass depgth is %d\n", toClassDepth, fromClassDepth);
    // if (toClassDepth != -1 && fromClassDepth != -1)
    //    {
    //    if (fromClassDepth < toClassDepth) generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
    //    }
+
    /*
     * TODO: add inlined tests (classEqualityTest, SuperclassTest, etc)
     * Inlined tests will be used when possible, or will jump to the OOL section
@@ -11852,6 +11853,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
    cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    node->setRegister(resultReg);
 
    return resultReg;
