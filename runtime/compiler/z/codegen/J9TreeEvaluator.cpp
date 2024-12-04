@@ -11784,9 +11784,9 @@ static int getCompileTimeClassDepth(TR::CodeGenerator *cg, TR::Node *node)
          {
          int len = 0;
          classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
-        const char * name = TR::Compiler->cls.classNameChars(comp, clazz, len);
+     //   const char * name = TR::Compiler->cls.classNameChars(comp, clazz, len);
         // char * name = fej9->getClassNameChars(clazz, len);
-         sprintf("nname is %s", name, len);
+      //   sprintf("name is %s", name, len);
          }
       }
    return classDepth;
@@ -11811,6 +11811,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
    int fromClassDepth = getCompileTimeClassDepth(cg, node->getFirstChild());
+   printf("toClass depth is %d, fromclass depgth is %d\n", toClassDepth, fromClassDepth);
    // if (toClassDepth != -1 && fromClassDepth != -1)
    //    {
    //    if (fromClassDepth < toClassDepth) generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
@@ -11827,7 +11828,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *scratchReg1, *scratchReg2;
    scratchReg1 = cg->allocateRegister();
    scratchReg2 = cg->allocateRegister();
-   printf("Class depth is %d\n", toClassDepth);
+   
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
  //  deps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
    genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL, true);
