@@ -11849,17 +11849,14 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
-   node->setRegister(resultReg);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
    cg->stopUsingRegister(scratchReg1);
    cg->stopUsingRegister(scratchReg2);
+   node->setRegister(resultReg);
    
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
-
-   
-
    return resultReg;
    }
 
