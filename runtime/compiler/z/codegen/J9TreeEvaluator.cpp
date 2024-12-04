@@ -11808,8 +11808,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // inlined tests don't set the register value
-   //generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
-   TR::trap();
+
+   bool genTrap = feGetEnv("Use_trap") != NULL
+   if (genTrap)
+      {
+      generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
+      }
+
 
    int toClassDepth = getCompileTimeClassDepth(cg, node->getSecondChild());
    int fromClassDepth = getCompileTimeClassDepth(cg, node->getFirstChild());
