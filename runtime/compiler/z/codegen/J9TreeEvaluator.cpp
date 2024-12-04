@@ -11835,7 +11835,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
    genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
    TR::Register *scratchReg1, *scratchReg2;
-   scratchReg1 = cg->allocateRegister();:
+   scratchReg1 = cg->allocateRegister();
    scratchReg2 = cg->allocateRegister();
    
    deps->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
