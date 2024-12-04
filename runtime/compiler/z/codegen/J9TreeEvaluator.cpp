@@ -11809,7 +11809,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1); // inlined tests don't set the register value
 
-   bool genTrap = feGetEnv("Use_trap") != NULL
+   bool genTrap = feGetEnv("Use_trap") != NULL;
    if (genTrap)
       {
       generateRIEInstruction(cg, TR::InstOpCode::CIT, node, resultReg, 1, TR::InstOpCode::COND_BE);
