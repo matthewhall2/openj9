@@ -11793,17 +11793,24 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
+   static const char * c = feGetEnv("a_counter");
+   static const uint32_t threshold = c == NULL ? (uint32_t)(2000000000) : atoi(c);
+   static uint32_t counter = 0;
+
+   bool doTest = counter > threshold;
    TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
 
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *testLabel = generateLabelSymbol(cg);
 
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
    /*
     * TODO: add inlined tests (SuperclassTest, etc) 
@@ -11812,7 +11819,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    */
 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doTest ? testLabel : doneLabel);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11825,9 +11832,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, testLabel, deps);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+
+
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    node->setRegister(resultReg);
-
+   counter++;
    return resultReg;
    }
 
