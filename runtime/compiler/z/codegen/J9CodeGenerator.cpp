@@ -4236,7 +4236,7 @@ J9::Z::CodeGenerator::supportsTrapsInTMRegion()
    }
 
 bool
-J9::X86::CodeGenerator::supportsInliningOfIsAssignableFrom()
+J9::Z::CodeGenerator::supportsInliningOfIsAssignableFrom()
    {
    static const bool disableInliningOfIsAssignableFrom = feGetEnv("TR_disableInlineIsAssignableFrom") != NULL;
    return !disableInliningOfIsAssignableFrom;
