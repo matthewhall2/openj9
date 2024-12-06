@@ -4486,9 +4486,9 @@ genInstanceOfOrCheckCastNullTest(TR::Node* node, TR::CodeGenerator* cg, TR::Regi
       }
    }
 
-static void genInlineClassEqualityTest(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp, TR::Register * toClassReg, TR::Register * fromClassReg, TR::LabelSymbol * successLabel) {
+static void genInlineClassEqualityTest(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp, TR::Register * toClassReg, TR::Register * fromClassReg, TR::LabelSymbol * successLabel, bool needsCC = false) {
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Equal", comp->signature()),1,TR::DebugCounter::Undetermined);
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_MASK8, successLabel, needsCC, false);
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/EqualFail", comp->signature()),1,TR::DebugCounter::Undetermined);
 }
 
@@ -11816,7 +11816,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    */
 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel, true);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
