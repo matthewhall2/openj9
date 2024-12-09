@@ -11639,7 +11639,7 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
 
 static bool getIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Compilation * comp)
    {
-   while (node->getOpCodeValue() == TR::aloadi && node->hasChild())
+   while (node->getOpCodeValue() == TR::aloadi && node->getNumChildren() > 0)
       {
       node = node->getFirstChild();
       }
@@ -11655,7 +11655,7 @@ static bool getIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Compilatio
 static int getCompileTimeClassDepth(TR::Node *node)
    {
    int classDepth = -1;
-   while (node->getOpCodeValue() == TR::aloadi && node->hasChild())
+   while (node->getOpCodeValue() == TR::aloadi && node->getNumChildren() > 0)
       {
       node = node->getFirstChild();
       }
