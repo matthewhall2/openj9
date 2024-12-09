@@ -11647,7 +11647,7 @@ static bool getIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Compilatio
    if (node->getOpCodeValue() == TR::loadaddr)
       {
       TR::SymbolReference *classSymRef = node->getSymbolReference();
-      return classSymRef->isClassInterface(comp) || classSymRef->isClassAbstract(comp)
+      return classSymRef->isClassInterface(comp) || classSymRef->isClassAbstract(comp);
       }
    return false;
    }
