@@ -11851,13 +11851,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     * and perform the tests using the CHelper when not possible
    */
 
-  if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
-   {
+ // if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
+ //  {
   // printf("not interface or dyn\n");
    genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
   // generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
    //generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
-   }
+  // }
 
 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
@@ -11882,7 +11882,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
- 
+
+
+
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    node->setRegister(resultReg);
    return resultReg;
