@@ -11816,7 +11816,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    */
 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+   generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
+
+   //genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
