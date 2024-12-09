@@ -11854,7 +11854,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     * and perform the tests using the CHelper when not possible
    */
 
-  if (!getIsInterface(node->getFirstChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getFirstChild()) != -1)
+  if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
    {
    generateRREInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg, fromClassReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
