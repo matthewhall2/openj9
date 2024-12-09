@@ -11856,7 +11856,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
   if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
    {
-   generateRREInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg, fromClassReg);
+   generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
    }
 
