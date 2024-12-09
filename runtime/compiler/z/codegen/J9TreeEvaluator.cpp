@@ -11840,13 +11840,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *testLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
 
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
-   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
-   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
+      generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
 
    /*
     * TODO: add inlined tests (SuperclassTest, etc) 
@@ -11857,7 +11854,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
   if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
    {
   // printf("not interface or dyn\n");
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
   // generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
    //generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
    }
@@ -11879,6 +11876,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
+   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
+   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel, deps);
+   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
  
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    node->setRegister(resultReg);
