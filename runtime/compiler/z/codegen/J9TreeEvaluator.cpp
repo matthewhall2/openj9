@@ -11816,7 +11816,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    */
 
    // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
+   generateRRInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg, fromClassReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
 
    //genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
