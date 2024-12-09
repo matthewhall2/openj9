@@ -11637,7 +11637,48 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
    return 0;
    }
 
+static bool getIsInterface(TR::Node *node, TR::CodeGenerator *cg, TR::Compilation * comp)
+   {
+   while (node->getOpCodeValue() == TR::aloadi && node->hasChild())
+      {
+      node = node->getFirstChild();
+      }
 
+   if (node->getOpCodeValue() == TR::loadaddr)
+      {
+      TR::SymbolReference *classSymRef = node->getSymbolReference();
+      return classSymRef->isClassInterface(comp) || classSymRef->isClassAbstract(comp)
+      }
+   return false;
+   }
+
+static int getCompileTimeClassDepth(TR::Node *node)
+   {
+   int classDepth = -1;
+   while (node->getOpCodeValue() == TR::aloadi && node->hasChild())
+      {
+      node = node->getFirstChild();
+      }
+   
+   if (node->getOpCodeValue() != TR::loadaddr) return classDepth;
+
+   TR::Node   *castClassRef = node;
+   TR::SymbolReference *castClassSymRef = NULL;
+   if(castClassRef->getOpCode().hasSymbolReference())
+      castClassSymRef= castClassRef->getSymbolReference();
+
+   TR::StaticSymbol    *castClassSym = NULL;
+   if (castClassSymRef && !castClassSymRef->isUnresolved())
+      castClassSym= castClassSymRef ? castClassSymRef->getSymbol()->getStaticSymbol() : NULL;
+
+   TR_OpaqueClassBlock * clazz = NULL;
+   if (castClassSym)
+      clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
+
+   if(clazz)
+      classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
+   return classDepth;
+   }
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
@@ -11793,8 +11834,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-  
-
    TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
 
@@ -11815,9 +11854,15 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     * and perform the tests using the CHelper when not possible
    */
 
-   // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   generateRRInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg, fromClassReg);
+  if (!getIsInterface(node->getFirstChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getFirstChild()) != -1)
+   {
+   generateRREInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg, fromClassReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
+   }
+
+
+   // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
+   
 
    //genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
 
