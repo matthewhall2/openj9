@@ -11842,28 +11842,16 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
 
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
-      generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
+  
 
-   /*
+ 
+   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
+
+    /*
     * TODO: add inlined tests (SuperclassTest, etc) 
     * Inlined tests will be used when possible, or will jump to the OOL section
     * and perform the tests using the CHelper when not possible
-   */
-
- // if (!getIsInterface(node->getSecondChild(), cg, cg->comp()) && !getCompileTimeClassDepth(node->getSecondChild()) != -1)
- //  {
-  // printf("not interface or dyn\n");
-   genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
-  // generateRREInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg);
-   //generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, doneLabel);
-  // }
-
-
-   // no need to check for null inline, NULLCHECK nodes are inserted during the inlined called recognition
-   
-
-   //genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, doneLabel);
+    */
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11876,14 +11864,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
-
-
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    node->setRegister(resultReg);
