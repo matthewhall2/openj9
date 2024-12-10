@@ -11846,6 +11846,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
  
    genInlineClassEqualityTest(node, cg, cg->comp(), toClassReg, fromClassReg, successLabel);
+   genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL, true);
 
     /*
     * TODO: add inlined tests (SuperclassTest, etc) 
