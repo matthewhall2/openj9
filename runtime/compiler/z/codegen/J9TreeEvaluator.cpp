@@ -11807,8 +11807,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
 
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   TR::RealRegister *scratcReg1 = srm->findOrCreateScratchRegister();
-   TR::RealRegister *scratcReg2 = srm->findOrCreateScratchRegister();
+   TR::Register *scratcReg1 = srm->findOrCreateScratchRegister();
+   TR::Register *scratcReg2 = srm->findOrCreateScratchRegister();
    genTestIsSuper(cg, node, fromClassReg, toClassReg, scratcReg1, scratchReg2, resultReg, NULL, -1, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
 
 
