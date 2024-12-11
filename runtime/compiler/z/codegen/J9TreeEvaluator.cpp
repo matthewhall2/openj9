@@ -11798,11 +11798,18 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+   TR::RealRegister *scratcReg1 = srm->findOrCreateScratchRegister();
+   TR::RealRegister *scratcReg2 = srm->findOrCreateScratchRegister();
+   genTestIsSuper(cg, node, fromClassReg, toClassReg, scratcReg1, scratchReg2, resultReg, NULL, depth, failLabel, sucessLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+
 
    /*
     * TODO: add inlined tests (SuperclassTest, cast class cache, etc)
@@ -11824,7 +11831,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
 
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
