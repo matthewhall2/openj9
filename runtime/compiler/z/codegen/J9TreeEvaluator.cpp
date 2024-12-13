@@ -3280,7 +3280,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
 static TR::Instruction *
 genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
    TR::Register * objClassReg, TR::Register * castClassReg,
-   TR::Register * scratch1Reg, TR::Register * scratch2Reg, TR::Register * resultReg,
+   TR_S390ScratchRegisterManager *srm, TR::Register * resultReg,
    TR::Register * litPoolBaseReg, int32_t castClassDepth,
    TR::LabelSymbol * failLabel, TR::LabelSymbol * trueLabel, TR::LabelSymbol * callHelperLabel,
    TR::RegisterDependencyConditions * conditions, TR::Instruction * cursor,
@@ -3311,17 +3311,19 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
             node->getSecondChild()->getOpCodeValue() != TR::loadaddr), "genTestIsSuper: castClassDepth == -1 is only supported for transformed isInstance calls.");
 
       // check if cast class is an interface
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
+      TR::Register *modifiersReg = srm->findOrCreateScratchRegister();
+      cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifiersReg,
             generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
 
-      cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratch1Reg,
+      cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifiersReg,
             generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
 
 
       TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
             "genTestIsSuper::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
 
-      cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratch1Reg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
+      cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, modifiersReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
+      srm->reclaimScratchRegister(modifiersReg);
 
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
@@ -3378,9 +3380,10 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
       bytesOffset = 2;
       }
 
+   TR::Register *castClassDepthReg = srm->findOrCreateScratchRegister();
    if (dynamicCastClass)
       {
-      cursor = generateRXInstruction(cg, loadOp, node, scratch2Reg,
+      cursor = generateRXInstruction(cg, loadOp, node, castClassDepthReg,
             generateS390MemoryReference(castClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg), cursor);
 
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
@@ -3393,8 +3396,8 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          {
          cursor = generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0, cursor);
          }
-
-      cursor = generateRXInstruction(cg, loadOp, node, scratch1Reg,
+      TR::Register *objClassDepthReg = srm->findOrCreateScratchRegister();
+      cursor = generateRXInstruction(cg, loadOp, node, objClassDepthReg,
             generateS390MemoryReference(objClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg) , cursor);
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                   "genTestIsSuper::J9Class->classDepthAndFlags is wrong size\n");
@@ -3407,21 +3410,21 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          {
          if (comp->target().is64Bit())
             {
-            cursor = genLoadLongConstant(cg, node, castClassDepth, scratch2Reg, cursor, conditions, litPoolBaseReg);
+            cursor = genLoadLongConstant(cg, node, castClassDepth, castClassDepthReg, cursor, conditions, litPoolBaseReg);
             }
          else
             {
-            cursor = generateLoad32BitConstant(cg, node, castClassDepth, scratch2Reg, false, cursor, conditions, litPoolBaseReg);
+            cursor = generateLoad32BitConstant(cg, node, castClassDepth, castClassDepthReg, false, cursor, conditions, litPoolBaseReg);
             }
          generateCompareAndBranchIsPossible = true;
          }
       else
          {
-         cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, scratch1Reg, castClassDepth, cursor);
+         cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, objClassDepthReg, castClassDepth, cursor);
          }
 
       if (generateCompareAndBranchIsPossible)
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, failLabel, false, false);
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, objClassDepthReg, castClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
       else
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
 
@@ -3429,6 +3432,8 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          debugObj->addInstructionComment(cursor, "Fail if depth(obj) > depth(castClass)");
 
       }
+   srm->reclaimScratchRegister(castClassDepthReg);
+   srm->reclaimScratchRegister(objClassDepthReg);
 
    if (resultReg)
       {
@@ -11637,6 +11642,53 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
    return 0;
    }
 
+
+static bool isInterfaceOrAbstract(TR::Node *clazz, TR::Compilation *comp)
+   {
+   while (clazz->getOpCode == TR::aloadi)
+      {
+      clazz = clazz->getFirstChild();
+      }
+
+   // we don't assume its an interface if its not loadaddr
+   // (could have Class.forName(<someinterface>) as the node)
+   if (clazz->getOpCodeValue() != TR::loadaddr) return false;
+
+   TR::SymbolReference *thisClassSymRef = clazz->getSymbolReference();
+   return thisClassSymRef->isClassInterface(comp) || thisClassSymRef->isClassAbstract(comp);
+   }
+
+static int32_t getCompileTimeClassDepth(TR::Node *clazz, TR::Compilation *comp)
+   {
+   int32_t classDepth = -1;
+   while (clazz->getOpCode == TR::aloadi && clazz->getNumChildren() > 0 && clazz->getFirstChild()->getOpCodeValue() == TR::aloadi)
+      {
+      clazz = clazz->getFirstChild();
+      }
+   
+   if (clazz->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() || clazz->getFirstChild()->getOpCodeValue() != TR::loadaddr) return classDepth;
+
+   TR::Node   *castClassRef = clazz->getFirstChild();
+
+   TR::SymbolReference *castClassSymRef = NULL;
+   if(castClassRef->getOpCode().hasSymbolReference())
+      castClassSymRef= castClassRef->getSymbolReference();
+
+   TR::StaticSymbol    *castClassSym = NULL;
+   if (castClassSymRef && !castClassSymRef->isUnresolved())
+      castClassSym= castClassSymRef ? castClassSymRef->getSymbol()->getStaticSymbol() : NULL;
+
+   TR_OpaqueClassBlock * clazz = NULL;
+   if (castClassSym)
+      clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
+
+   if(clazz)
+      classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
+
+   return classDepth;
+
+   }
+
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
@@ -11799,7 +11851,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
@@ -11807,9 +11859,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
 
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   TR::Register *scratchReg1 = srm->findOrCreateScratchRegister();
-   TR::Register *scratchReg2 = srm->findOrCreateScratchRegister();
-   genTestIsSuper(cg, node, fromClassReg, toClassReg, scratchReg1, scratchReg2, resultReg, NULL, -1, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+   auto castClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
+   genTestIsSuper(cg, node, fromClassReg, toClassReg, srm, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+   srm->stopUsingRegisters();
 
 
    /*
@@ -11837,10 +11889,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
 
 
-
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   srm->addScratchRegistersToDependencyList(deps);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
