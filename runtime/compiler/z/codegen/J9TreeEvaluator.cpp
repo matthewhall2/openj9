@@ -3316,7 +3316,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
             generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
 
       cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifiersReg,
-            generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
+            generateS390MemoryReference(modifiersReg, offsetof(J9ROMClass, modifiers), cg), cursor);
 
 
       TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
@@ -3381,6 +3381,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
       }
 
    TR::Register *castClassDepthReg = srm->findOrCreateScratchRegister();
+   TR::Register *objClassDepthReg = srm->findOrCreateScratchRegister();
    if (dynamicCastClass)
       {
       cursor = generateRXInstruction(cg, loadOp, node, castClassDepthReg,
@@ -3396,7 +3397,6 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          {
          cursor = generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0, cursor);
          }
-      TR::Register *objClassDepthReg = srm->findOrCreateScratchRegister();
       cursor = generateRXInstruction(cg, loadOp, node, objClassDepthReg,
             generateS390MemoryReference(objClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg) , cursor);
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
@@ -3432,8 +3432,8 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          debugObj->addInstructionComment(cursor, "Fail if depth(obj) > depth(castClass)");
 
       }
-   srm->reclaimScratchRegister(castClassDepthReg);
    srm->reclaimScratchRegister(objClassDepthReg);
+
 
    if (resultReg)
       {
@@ -3443,25 +3443,26 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
    // objClassReg contains the class offset, so we may need to
    // convert this offset to a real J9Class pointer
 #endif
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
+   TR::Register *superClassArrayReg = srm->findOrCreateScratchRegister();
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superClassArrayReg,
                generateS390MemoryReference(objClassReg, offsetof(J9Class, superclasses), cg), cursor);
 
    if (outOfBound || dynamicCastClass)
       {
       if (comp->target().is64Bit())
          {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, scratch2Reg, scratch2Reg, 3, cursor);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, castClassDepthReg, castClassDepthReg, 3, cursor);
          }
       else
          {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, scratch2Reg, 2, cursor);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, castClassDepthReg, 2, cursor);
          }
 #ifdef OMR_GC_COMPRESSED_POINTERS
       // castClassReg contains the class offset, but the memory reference below will
       // generate a J9Class pointer. We may need to convert this pointer to an offset
 #endif
       cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg,
-                  generateS390MemoryReference(scratch1Reg, scratch2Reg, 0, cg), cursor);
+                  generateS390MemoryReference(superClassArrayReg, castClassDepthReg, 0, cg), cursor);
       }
    else
       {
@@ -3470,12 +3471,12 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
       // generate a J9Class pointer. We may need to convert this pointer to an offset
 #endif
       cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg,
-                  generateS390MemoryReference(scratch1Reg, superClassOffset, cg), cursor);
+                  generateS390MemoryReference(superClassArrayReg, superClassOffset, cg), cursor);
       }
 
    if (debugObj)
       debugObj->addInstructionComment(cursor, "Check if objClass is subclass of castClass");
-
+   srm->reclaimScratchRegister(castClassDepthReg);
    return cursor;
    }
 
