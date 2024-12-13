@@ -11687,7 +11687,6 @@ static int32_t getCompileTimeClassDepth(TR::Node *clazz, TR::Compilation *comp)
       classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazzz);
 
    return classDepth;
-
    }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -11854,14 +11853,16 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
 
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   auto castClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-   genTestIsSuper(cg, node, fromClassReg, toClassReg, srm, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-   srm->stopUsingRegisters();
-
-
+   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
+      {
+      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+      auto castClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
+      genTestIsSuper(cg, node, fromClassReg, toClassReg, srm, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+      srm->stopUsingRegisters();
+      }
+   
    /*
     * TODO: add inlined tests (SuperclassTest, cast class cache, etc)
     * Inlined tests will be used when possible, or will jump to the OOL section
