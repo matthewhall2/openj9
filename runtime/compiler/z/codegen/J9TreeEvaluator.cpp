@@ -11754,8 +11754,9 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 
    TR::Register *tempReg = cg->allocateRegister();
-   TR::Register *objClassReg, *castClassReg, *scratch1Reg,*scratch2Reg;
+   TR::Register *objClassReg, *castClassReg;
    int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
 
    if (classDepth != -1)
@@ -11763,13 +11764,9 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
       objClassReg = cg->allocateRegister();
       castClassReg = cg->allocateRegister();
-      scratch1Reg = cg->allocateRegister();
-      scratch2Reg = cg->allocateRegister();
-      deps->addPostCondition(scratch1Reg, TR::RealRegister::AssignAny);
-      deps->addPostCondition(scratch2Reg, TR::RealRegister::AssignAny);
+     
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
       deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
-
       }
    else
       {
@@ -11806,7 +11803,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
-      genTestIsSuper(cg, node, objClassReg, castClassReg, scratch1Reg, scratch2Reg, tempReg, NULL, classDepth, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
+      genTestIsSuper(cg, node, objClassReg, castClassReg, srm, tempReg, NULL, classDepth, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
 
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
@@ -11833,8 +11830,8 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
       cg->stopUsingRegister(objClassReg);
       cg->stopUsingRegister(castClassReg);
-      cg->stopUsingRegister(scratch1Reg);
-      cg->stopUsingRegister(scratch2Reg);
+      srm->addScratchRegistersToDependencyList(deps);
+      srm->stopUsingRegisters();
       }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
