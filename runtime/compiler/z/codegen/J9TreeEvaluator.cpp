@@ -11679,12 +11679,12 @@ static int32_t getCompileTimeClassDepth(TR::Node *clazz, TR::Compilation *comp)
    if (castClassSymRef && !castClassSymRef->isUnresolved())
       castClassSym= castClassSymRef ? castClassSymRef->getSymbol()->getStaticSymbol() : NULL;
 
-   TR_OpaqueClassBlock * clazz = NULL;
+   TR_OpaqueClassBlock * clazzz = NULL;
    if (castClassSym)
-      clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
+      clazzz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
 
-   if(clazz)
-      classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
+   if(clazzz)
+      classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazzz);
 
    return classDepth;
 
