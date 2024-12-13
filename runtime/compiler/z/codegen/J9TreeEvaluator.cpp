@@ -11646,7 +11646,7 @@ J9::Z::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::CodeGenerator *c
 
 static bool isInterfaceOrAbstract(TR::Node *clazz, TR::Compilation *comp)
    {
-   while (clazz->getOpCode == TR::aloadi)
+   while (clazz->getOpCodeValue() == TR::aloadi)
       {
       clazz = clazz->getFirstChild();
       }
@@ -11662,7 +11662,7 @@ static bool isInterfaceOrAbstract(TR::Node *clazz, TR::Compilation *comp)
 static int32_t getCompileTimeClassDepth(TR::Node *clazz, TR::Compilation *comp)
    {
    int32_t classDepth = -1;
-   while (clazz->getOpCode == TR::aloadi && clazz->getNumChildren() > 0 && clazz->getFirstChild()->getOpCodeValue() == TR::aloadi)
+   while (clazz->getOpCodeValue() == TR::aloadi && clazz->getNumChildren() > 0 && clazz->getFirstChild()->getOpCodeValue() == TR::aloadi)
       {
       clazz = clazz->getFirstChild();
       }
