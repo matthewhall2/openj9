@@ -11849,6 +11849,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+   TR::Register *sr1 =  srm->findOrCreateScratchRegister();
+   TR::Register *sr2 = srm->findOrCreateScratchRegister();
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
@@ -11860,7 +11862,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       {
       generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
       auto castClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-      genTestIsSuper(cg, node, fromClassReg, toClassReg, srm, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       srm->stopUsingRegisters();
       }
    
