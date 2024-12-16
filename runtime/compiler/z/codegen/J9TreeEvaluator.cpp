@@ -11851,10 +11851,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
 
-   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
       {
       generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
