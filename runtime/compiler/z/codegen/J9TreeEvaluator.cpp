@@ -3426,7 +3426,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
 
       if (debugObj)
-         debugObj->addInstructionComment(cursor, "Fail if depth(obj) > depth(castClass)");
+         debugObj->addInstructionComment(cursor, "Fail if depth(obj) <= depth(castClass)");
 
       }
 
@@ -4486,11 +4486,6 @@ genInstanceOfOrCheckCastNullTest(TR::Node* node, TR::CodeGenerator* cg, TR::Regi
       }
    }
 
-static void genInlineClassEqualityTest(TR::Node * node, TR::CodeGenerator * cg, TR::Compilation * comp, TR::Register * toClassReg, TR::Register * fromClassReg, TR::LabelSymbol * successLabel) {
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Equal", comp->signature()),1,TR::DebugCounter::Undetermined);
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/EqualFail", comp->signature()),1,TR::DebugCounter::Undetermined);
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //  checkcastEvaluator - checkcast
@@ -4605,7 +4600,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                }
             else
                {
-               genInlineClassEqualityTest(node, cg, comp, castClassReg, objClassReg, doneLabel);
+               cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Equal", comp->signature()),1,TR::DebugCounter::Undetermined);
+               generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassReg, objClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+               cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/EqualFail", comp->signature()),1,TR::DebugCounter::Undetermined);
                }
             break;
          case SuperClassTest:
@@ -11840,6 +11837,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
 
+
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
@@ -11855,14 +11853,21 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(deps);
+
+   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
 
    if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
       {
-      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-      auto castClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, castClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+      auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
+      auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
+      if (toClassDepth > fromClassDepth)
+         {
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+         }
+      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       srm->stopUsingRegisters();
       }
    
@@ -11882,10 +11887,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
-
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel, deps);
-   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
