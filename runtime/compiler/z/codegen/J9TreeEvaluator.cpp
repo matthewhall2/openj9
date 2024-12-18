@@ -11841,7 +11841,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *resultReg = cg->allocateRegister();
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
 
@@ -11858,12 +11857,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
 
-   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
+   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) && !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
       {
       generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
       auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
-      if (toClassDepth > fromClassDepth)
+      if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
          {
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
          }
@@ -11891,9 +11890,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
 
-  // srm->addScratchRegistersToDependencyList(deps);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
+   doneLabel->setEndInternalControlFlow();
    doneLabel->setEndInternalControlFlow();
    node->setRegister(resultReg);
    return resultReg;
