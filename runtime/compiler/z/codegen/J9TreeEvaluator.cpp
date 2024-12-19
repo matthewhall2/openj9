@@ -11859,7 +11859,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
-   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) || !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
+   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) && !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
       {
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
       auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
