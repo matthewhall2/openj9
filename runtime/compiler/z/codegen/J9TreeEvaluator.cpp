@@ -11868,7 +11868,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
          }
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      srm->stopUsingRegisters();
       }
    
    /*
@@ -11889,12 +11888,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
-   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 0);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
-   doneLabel->setEndInternalControlFlow();
+
+   srm->stopUsingRegisters();
    node->setRegister(resultReg);
    return resultReg;
    }
