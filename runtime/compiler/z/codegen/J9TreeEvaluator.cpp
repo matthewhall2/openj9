@@ -11859,9 +11859,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
    if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
       {
+      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
