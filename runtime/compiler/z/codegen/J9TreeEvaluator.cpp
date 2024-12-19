@@ -11853,13 +11853,14 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(deps);
 
-   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
+   // assume result is true. avoids the need for a branch if we were to both a "success" region
+   // and a "fail" region.
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
-
-   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) && !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
+   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) || !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
       {
-      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
       auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
       if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
