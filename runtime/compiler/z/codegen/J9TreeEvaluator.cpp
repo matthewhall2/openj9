@@ -11835,15 +11835,17 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
-   TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
+
+   TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
 
 
    TR::Register *resultReg = NULL;
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
@@ -11857,20 +11859,25 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    // assume result is true. avoids the need for a branch if we were to both a "success" region
    // and a "fail" region.
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+   
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-   // if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
-   //    {
-      auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-      auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
-      // if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
-      //    {
-      //    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
-      //    }
-      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-     // }
+   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+   if (!isInterfaceOrAbstract(toClas, cg->comp()))
+      {
+      auto toClassDepth = getCompileTimeClassDepth(toClass, cg->comp());
+      if (!isInterfaceOrAbstract(fromClass))
+         {
+         auto fromClassDepth = getCompileTimeClassDepth(fromClass, cg->comp())
+         if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
+            {
+            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+            }
+         }
+      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      }
    
    /*
     * TODO: add inlined tests (SuperclassTest, cast class cache, etc)
@@ -11891,10 +11898,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); 
 
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
