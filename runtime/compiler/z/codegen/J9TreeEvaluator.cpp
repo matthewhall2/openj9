@@ -11658,7 +11658,8 @@ static int32_t getCompileTimeClassDepth(TR::Node *clazz, TR::Compilation *comp)
       clazz = clazz->getFirstChild();
       }
    
-   if (clazz->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() || clazz->getFirstChild()->getOpCodeValue() != TR::loadaddr) return classDepth;
+   if (clazz->getOpCodeValue() != TR::aloadi || clazz->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() || 
+   clazz->getFirstChild()->getOpCodeValue() != TR::loadaddr) return classDepth;
 
    TR::Node   *castClassRef = clazz->getFirstChild();
 
