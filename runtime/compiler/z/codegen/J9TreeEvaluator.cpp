@@ -11843,6 +11843,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
@@ -11856,14 +11857,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    // assume result is true. avoids the need for a branch if we were to both a "success" region
    // and a "fail" region.
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
       {
-      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
+      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
+      genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
    
@@ -11884,9 +11884,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); 
 
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
