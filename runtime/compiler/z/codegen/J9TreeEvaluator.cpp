@@ -11839,7 +11839,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
 
 
-   TR::Register *resultReg = cg->allocateRegister();
+   TR::Register *resultReg = NULL;
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
@@ -11869,7 +11869,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       //    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
       //    }
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
      // }
    
    /*
