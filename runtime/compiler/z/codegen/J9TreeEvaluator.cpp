@@ -11869,7 +11869,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       auto toClassDepth = getCompileTimeClassDepth(toClass, cg->comp());
       if (!isInterfaceOrAbstract(fromClass, cg->comp()))
          {
-         auto fromClassDepth = getCompileTimeClassDepth(fromClass, cg->comp())
+         auto fromClassDepth = getCompileTimeClassDepth(fromClass, cg->comp());
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
