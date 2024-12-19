@@ -11844,28 +11844,24 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
 
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    TR::Register *sr1 =  srm->findOrCreateScratchRegister();
    TR::Register *sr2 = srm->findOrCreateScratchRegister();
-   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
-   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-   srm->addScratchRegistersToDependencyList(deps);
+   
 
    // assume result is true. avoids the need for a branch if we were to both a "success" region
    // and a "fail" region.
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
-      {
+   // if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
+   //    {
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-      }
+     // }
    
    /*
     * TODO: add inlined tests (SuperclassTest, cast class cache, etc)
@@ -11890,6 +11886,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+
+   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
+   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
+   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+   srm->addScratchRegistersToDependencyList(deps);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
