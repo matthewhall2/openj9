@@ -11859,14 +11859,18 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
-   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()) && !isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
+   if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
       {
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
-      auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
-      if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
+      if (!isInterfaceOrAbstract(node->getFirstChild(), cg->comp()))
          {
-         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+         auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
+         if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
+            {
+            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+            }
          }
+      
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       }
    
