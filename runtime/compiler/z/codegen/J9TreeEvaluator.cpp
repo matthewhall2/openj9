@@ -11859,6 +11859,11 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // if (!isInterfaceOrAbstract(node->getSecondChild(), cg->comp()))
    //    {
       auto toClassDepth = getCompileTimeClassDepth(node->getSecondChild(), cg->comp());
+      auto fromClassDepth = getCompileTimeClassDepth(node->getFirstChild(), cg->comp());
+      if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
+         {
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+         }
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, resultReg, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
      // }
