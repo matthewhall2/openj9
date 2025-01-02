@@ -11787,7 +11787,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *fromClassReg = cg->evaluate(fromClass);
    TR::Register *toClassReg = cg->evaluate(toClass);
 
-   TR::Register *shortcutReg = NULL;
+   TR::Register *shortcutReg = cg->allocateRegister();
+   bool usesShortcutReg = false;
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
  //  TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
@@ -11812,7 +11813,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          auto fromClassDepth = getCompileTimeClassDepth(fromClass, cg->comp());
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
-            shortcutReg = cg->allocateRegister();
+            usesShortcutReg = true;
             generateRIInstruction(cg, TR::InstOpCode::LHI, node, shortcutReg, 0);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
             }
@@ -11822,9 +11823,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       TR::Register *sr2 = srm->findOrCreateScratchRegister();
       srm->addScratchRegistersToDependencyList(deps);
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, NULL, NULL, toClassDepth, doneLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, shortcutReg, 0, TR::InstOpCode::COND_MASK8);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
       }
+
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11832,7 +11833,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-   resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+   TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
@@ -11849,7 +11850,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    doneLabel->setEndInternalControlFlow();
 
    srm->stopUsingRegisters();
-   node->setRegister(resultReg);
+   if (usesShortcutReg){
+      cg->stopUsingRegister(resultReg);
+   }else{
+      cg->stopUsingRegister(shortcutReg);
+   }
+   node->setRegister(usesShortcutReg ? shortcutReg : resultReg);
    return resultReg;
    }
 
