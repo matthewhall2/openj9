@@ -3294,7 +3294,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, objClassReg, generateS390MemoryReference(classObjectClazzSnippetReg,0,cg), cursor);
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
          cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg, generateS390MemoryReference(instanceOfClazzSnippetReg,0,cg), cursor);
-         cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 1, TR::InstOpCode::COND_BE);
+         cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 1, TR::InstOpCode::COND_MASK8);
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, trueLabel, cursor);
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, callHelperLabel, cursor);
          cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel, cursor);
@@ -3361,14 +3361,14 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          {
          cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, scratch1Reg, castClassDepth, cursor);
          }
-
+      TR::InstOpCode code = TR::InstOpCode::COND_MASK8 | TR::InstOpCode::COND_MASK4;
       if (generateCompareAndBranchIsPossible) {
- cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
+ cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, code);
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, failLabel, false, false);
       }
         
       else {
-cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
+cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, code);
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
       }
          
@@ -11787,7 +11787,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *fromClassReg = cg->evaluate(fromClass);
    TR::Register *toClassReg = cg->evaluate(toClass);
 
-   TR::Register *resultReg = cg->allocateRegister();
+   TR::Register *shortcutReg = NULL;
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
  //  TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
@@ -11812,17 +11812,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          auto fromClassDepth = getCompileTimeClassDepth(fromClass, cg->comp());
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
-            generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
-            deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-            TR::LabelSymbol* cFlowRegionEnd = generateLabelSymbol(cg);
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionEnd, deps);
-
-            cFlowRegionEnd->setEndInternalControlFlow();
-
-            //generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND)
-            node->setRegister(resultReg);
-            return resultReg;
-            //generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+            shortcutReg = cg->allocateRegister();
+            generateRIInstruction(cg, TR::InstOpCode::LHI, node, shortcutReg, 0);
+            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
             }
          }
 
@@ -11830,7 +11822,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       TR::Register *sr2 = srm->findOrCreateScratchRegister();
       srm->addScratchRegistersToDependencyList(deps);
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, NULL, NULL, toClassDepth, doneLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+      generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, shortcutReg, 0, TR::InstOpCode::COND_MASK8);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
