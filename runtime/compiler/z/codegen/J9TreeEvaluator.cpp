@@ -3361,7 +3361,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          {
          cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, scratch1Reg, castClassDepth, cursor);
          }
-      TR::InstOpCode::S390BranchCondition code = TR::InstOpCode::COND_MASK8 | TR::InstOpCode::COND_MASK4;
+      TR::InstOpCode::S390BranchCondition code = (TR::InstOpCode::S390BranchCondition)(TR::InstOpCode::COND_MASK8 | TR::InstOpCode::COND_MASK4);
       if (generateCompareAndBranchIsPossible) {
  cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, code);
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, failLabel, false, false);
