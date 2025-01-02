@@ -3364,12 +3364,12 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
 
       if (generateCompareAndBranchIsPossible) {
  cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, trueLabel, false, false);
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, failLabel, false, false);
       }
         
       else {
 cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
-         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, trueLabel, cursor);
+         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
       }
          
 
@@ -11844,9 +11844,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
-   generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
- 
    // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    // generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
    // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
