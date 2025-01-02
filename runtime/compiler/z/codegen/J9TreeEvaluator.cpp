@@ -1066,30 +1066,10 @@ allocateWriteBarrierInternalPointerRegister(TR::CodeGenerator * cg, TR::Node * s
    }
 
 
+
 TR::Register *
 J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
-TR::Register *
-J9::Z::TreeEvaluator::dmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
-   return OMR::Z::TreeEvaluator::dmaxHelper(node, cg);
-   }
-
-TR::Register *
-J9::Z::TreeEvaluator::dminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
-   {
-   return OMR::Z::TreeEvaluator::dminHelper(node, cg);
-   }
-
-TR::Register *
-J9::Z::TreeEvaluator::fmaxEvaluator(TR::Node * node, TR::CodeGenerator * cg)
-   {
-   return OMR::Z::TreeEvaluator::fmaxHelper(node, cg);
-   }
-
-TR::Register *
-J9::Z::TreeEvaluator::fminEvaluator(TR::Node * node, TR::CodeGenerator * cg)
-   {
-   return OMR::Z::TreeEvaluator::fminHelper(node, cg);
    return OMR::Z::TreeEvaluator::dmaxHelper(node, cg);
    }
 
