@@ -3362,12 +3362,16 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, scratch1Reg, castClassDepth, cursor);
          }
 
-      if (generateCompareAndBranchIsPossible)
-         cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
+      if (generateCompareAndBranchIsPossible) {
+ cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, trueLabel, false, false);
-      else
-         cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
+      }
+        
+      else {
+cursor = generateRIEInstruction(cg, TR::InstOpCode::LOCHI, node, resultReg, 0, TR::InstOpCode::COND_BNH);
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, trueLabel, cursor);
+      }
+         
 
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Fail if depth(obj) <= depth(castClass)");
