@@ -11813,8 +11813,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
             generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+            deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
             TR::LabelSymbol* cFlowRegionEnd = generateLabelSymbol(cg);
-               generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionEnd, deps);
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionEnd, deps);
 
             cFlowRegionEnd->setEndInternalControlFlow();
 
@@ -11846,11 +11847,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::getLoadHalfWordImmOpCode(), node, resultReg, 1);
  
-   TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3, cg);
-   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
-   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-
    // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    // generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
    // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
