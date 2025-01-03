@@ -1582,7 +1582,6 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
    //
    bool objectClassLoaded = false;
    bool castClassEvaluated = false;
-
    for (uint32_t j = 0; j < i; ++j)
       {
       InstanceOfOrCheckCastSequences s = sequences[j];
