@@ -92,6 +92,10 @@ extern void killRegisterIfNotLocked(TR::CodeGenerator * cg, TR::RealRegister::Re
 extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision, TR::MemoryReference * divchkDivisorMR);
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
+static TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
+static TR::Instruction *genLoadClassDepth();
+static TR::Instruction *genCheckSuperclassArray();
+
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
    {
@@ -3212,6 +3216,24 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
          }
       }
    return iCursor;
+   }
+
+TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
+   {
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
+            generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
+
+   cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratch1Reg,
+         generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
+
+
+   TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
+         callerName + "::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
+
+   cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratch1Reg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
+
+   if (debugObj)
+      debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
    }
 
 // max number of cache slots used by checkcat/instanceof
