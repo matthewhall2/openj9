@@ -11847,6 +11847,19 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = generateLabelSymbol(cg);
 
+   TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+   TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
+   outlinedSlowPath->swapInstructionListsWithCompilation();
+
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+
+
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    TR::Register *sr1 =  srm->findOrCreateScratchRegister();
@@ -11860,7 +11873,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
   
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, doneLabel, false, false);
    if (!isInterfaceOrAbstract(toClass, cg->comp()))
       {
       auto toClassDepth = getCompileTimeClassDepth(toClass, cg->comp());
@@ -11873,7 +11886,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             }
          }
       genTestIsSuper(cg, node, fromClassReg, toClassReg, sr1, sr2, NULL, NULL, toClassDepth, failLabel, doneLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
    
    /*
@@ -11883,23 +11896,11 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     */
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
-   TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
-   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-   outlinedSlowPath->swapInstructionListsWithCompilation();
-
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-   TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
-
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
-   outlinedSlowPath->swapInstructionListsWithCompilation();
+   
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel);
-
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
-
 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
