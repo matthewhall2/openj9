@@ -3227,7 +3227,7 @@ TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::
          generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg), cursor);
 
    TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
-      std::format("%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName));
+   "%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
 
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
 
