@@ -92,8 +92,8 @@ extern void killRegisterIfNotLocked(TR::CodeGenerator * cg, TR::RealRegister::Re
 extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision, TR::MemoryReference * divchkDivisorMR);
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
-static TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
-static TR::Instruction *genLoadClassDepth();
+static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
+static TR::Instruction *genLoadClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
 static TR::Instruction *genCheckSuperclassArray();
 
 void
@@ -3218,7 +3218,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
    return iCursor;
    }
 
-TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
+TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
    {
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
             generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg), cursor);
@@ -3231,10 +3231,46 @@ TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::
 
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
 
+   TR_Debug * debugObj = cg->getDebug();
    if (debugObj)
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
 
    return cursor;
+   }
+
+TR::Instruction *genLoadClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName)
+   {
+   TR::InstOpCode::Mnemonic loadOp;
+   int32_t byteOffset;
+   if (cg->comp()->target().is64Bit())
+      {
+      loadOp = TR::InstOpCode::LLGH;
+      byteOffset = 6;
+      }
+   else
+      {
+      loadOp = TR::InstOpCode::LLH;
+      byteOffset = 2;
+      }
+
+   if (loadToClassDepth)
+      {
+      cursor = generateRXInstruction(cg, loadOp, node, toClassDepthReg,
+            generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags) + byteOffset, cg), cursor);
+
+      TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
+            "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
+      }
+
+   if (loadFromClassDepth)
+      {
+       cursor = generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg) , cursor);
+
+      TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
+                  "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
+      }
+   
    }
 
 // max number of cache slots used by checkcat/instanceof
@@ -4239,7 +4275,6 @@ bool genInstanceOfOrCheckcastSuperClassTest(TR::Node *node, TR::CodeGenerator *c
    TR::Instruction *cursor = NULL;
    if (cg->comp()->target().is64Bit())
       {
-      TR::InstOpCode::getLoadOpCode();
       loadOp = TR::InstOpCode::LLGH;
       byteOffset = 6;
       }
