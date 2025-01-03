@@ -3220,20 +3220,21 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
 
 TR::Instruction *genRuntimeIsInterfaceOrAbstractTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
    {
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
-            generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+            generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg), cursor);
 
-   cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratch1Reg,
-         generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
-
+   cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+         generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg), cursor);
 
    TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
-         callerName + "::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
+      std::format("%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName));
 
-   cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratch1Reg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
+   cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
 
    if (debugObj)
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
+
+   return cursor;
    }
 
 // max number of cache slots used by checkcat/instanceof
@@ -4300,6 +4301,7 @@ bool genInstanceOfOrCheckcastSuperClassTest(TR::Node *node, TR::CodeGenerator *c
    TR::Instruction *cursor = NULL;
    if (cg->comp()->target().is64Bit())
       {
+      TR::InstOpCode::getLoadOpCode();
       loadOp = TR::InstOpCode::LLGH;
       byteOffset = 6;
       }
