@@ -94,7 +94,7 @@ extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerat
 
 static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
 static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, TR::LabelSymbol *failLabel, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
-static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *failLabel, TR::Register *toClassDepthReg, TR::Register *fromClassDepthReg, int32_t toClassDepth);
+static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *superclassArrayReg, TR::Instruction *cursor);
 
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
@@ -3283,205 +3283,37 @@ static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::N
    return cursor;
    }
 
-// max number of cache slots used by checkcat/instanceof
-#define NUM_PICS 3
-
-static TR::Instruction *
-genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
-   TR::Register * objClassReg, TR::Register * castClassReg,
-   TR::Register * scratch1Reg, TR::Register * scratch2Reg, TR::Register * resultReg,
-   TR::Register * litPoolBaseReg, int32_t castClassDepth,
-   TR::LabelSymbol * failLabel, TR::LabelSymbol * trueLabel, TR::LabelSymbol * callHelperLabel,
-   TR::RegisterDependencyConditions * conditions, TR::Instruction * cursor,
-   bool addDataSnippetAsSecondaryCache,
-   TR::Register * classObjectClazzSnippetReg,
-   TR::Register * instanceOfClazzSnippetReg
-   )
+static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *superclassArrayReg, TR::Instruction *cursor)
    {
-   TR::Compilation *comp = cg->comp();
-   TR_Debug * debugObj = cg->getDebug();
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
+               generateS390MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cursor);
 
-   int32_t superClassOffset = castClassDepth * TR::Compiler->om.sizeofReferenceAddress();
-   bool outOfBound = (superClassOffset > MAX_IMMEDIATE_VAL || superClassOffset < MIN_IMMEDIATE_VAL) ? true : false;
-   // For the scenario where a call to Class.isInstance() is converted to instanceof,
-   // we need to load the class depth at runtime because we don't have it at compile time
-   bool dynamicCastClass = (castClassDepth == -1);
-   bool eliminateSuperClassArraySizeCheck = (!dynamicCastClass && (castClassDepth < comp->getOptions()->_minimumSuperclassArraySize));
-
-
-#ifdef OMR_GC_COMPRESSED_POINTERS
-   // objClassReg contains the class offset, so we may need to
-   // convert this offset to a real J9Class pointer
-#endif
-   if (dynamicCastClass)
+   if (toClassDepth == -1)
       {
-      TR::LabelSymbol * notInterfaceLabel = generateLabelSymbol(cg);
-      TR_ASSERT((node->getOpCodeValue() == TR::instanceof &&
-            node->getSecondChild()->getOpCodeValue() != TR::loadaddr), "genTestIsSuper: castClassDepth == -1 is only supported for transformed isInstance calls.");
-
-      // check if cast class is an interface
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
-            generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cursor);
-
-      cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratch1Reg,
-            generateS390MemoryReference(scratch1Reg, offsetof(J9ROMClass, modifiers), cg), cursor);
-
-
-      TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
-            "genTestIsSuper::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
-
-      cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratch1Reg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)), cursor);
-
-      if (debugObj)
-         debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
-
-      // insert snippet check
-      if ( addDataSnippetAsSecondaryCache )
+      if (cg->comp()->target().is64Bit())
          {
-        cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notInterfaceLabel, cursor);
-         // classObjectClazzSnippet and instanceOfClazzSnippet stores values of currentObject and cast Object when
-         // the helper call returns success.
-         // test if class is interface of not.
-         // if interface, we do the following.
-         //
-         // insert instanceof site snippet test
-         // cmp objectClassReg, classObjectClazzSnippet
-         // jne helper call
-         // cmp castclassreg, instanceOfClazzSnippet
-         // je true_label
-         // jump to outlined label
-         // test jitInstanceOf results
-         // JE fail_label        // instanceof result is not true
-         //
-         // the following will be done at the end of instanceof evaluation when we do helperCall
-         // cmp snippet1 with value -1
-         // jne true_label         // snippet already updated
-         // update classObjectClazzSnippet, instanceOfClazzSnippet with object class and instance of class
-         // jmp true_label
-         //NO need for cache test for z, if it is dynamic we will already have failed cache test if we got here.
-         cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, objClassReg, generateS390MemoryReference(classObjectClazzSnippetReg,0,cg), cursor);
-         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
-         cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg, generateS390MemoryReference(instanceOfClazzSnippetReg,0,cg), cursor);
-         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, trueLabel, cursor);
-         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, callHelperLabel, cursor);
-         cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel, cursor);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3, cursor);
          }
       else
          {
-        cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2, cursor);
          }
-      }
 
-
-   TR::InstOpCode::Mnemonic loadOp;
-   int32_t bytesOffset;
-
-   if (comp->target().is64Bit())
-      {
-      loadOp = TR::InstOpCode::LLGH;
-      bytesOffset = 6;
+      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+                  generateS390MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg), cursor);
       }
    else
       {
-      loadOp = TR::InstOpCode::LLH;
-      bytesOffset = 2;
+      int32_t superClassOffset = toClassDepth * TR::Compiler->om.sizeofReferenceAddress();
+      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+                  generateS390MemoryReference(superclassArrayReg, superClassOffset, cg), cursor);
       }
-
-   if (dynamicCastClass)
-      {
-      cursor = generateRXInstruction(cg, loadOp, node, scratch2Reg,
-            generateS390MemoryReference(castClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg), cursor);
-
-      TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
-            "genTestIsSuper::J9Class->classDepthAndFlags is wrong size\n");
-      }
-
-   if (!eliminateSuperClassArraySizeCheck)
-      {
-      if (resultReg)
-         {
-         cursor = generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0, cursor);
-         }
-
-      cursor = generateRXInstruction(cg, loadOp, node, scratch1Reg,
-            generateS390MemoryReference(objClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg) , cursor);
-      TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
-                  "genTestIsSuper::J9Class->classDepthAndFlags is wrong size\n");
-
-      bool generateCompareAndBranchIsPossible = false;
-
-      if (dynamicCastClass)
-         generateCompareAndBranchIsPossible = true;
-      else if (outOfBound)
-         {
-         if (comp->target().is64Bit())
-            {
-            cursor = genLoadLongConstant(cg, node, castClassDepth, scratch2Reg, cursor, conditions, litPoolBaseReg);
-            }
-         else
-            {
-            cursor = generateLoad32BitConstant(cg, node, castClassDepth, scratch2Reg, false, cursor, conditions, litPoolBaseReg);
-            }
-         generateCompareAndBranchIsPossible = true;
-         }
-      else
-         {
-         cursor = generateRIInstruction(cg, TR::InstOpCode::getCmpHalfWordImmOpCode(), node, scratch1Reg, castClassDepth, cursor);
-         }
-
-      if (generateCompareAndBranchIsPossible)
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, scratch1Reg, scratch2Reg, TR::InstOpCode::COND_BNH, failLabel, false, false);
-      else
-         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
-
-      if (debugObj)
-         debugObj->addInstructionComment(cursor, "Fail if depth(obj) <= depth(castClass)");
-
-      }
-
-   if (resultReg)
-      {
-      cursor = generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1, cursor);
-      }
-#ifdef OMR_GC_COMPRESSED_POINTERS
-   // objClassReg contains the class offset, so we may need to
-   // convert this offset to a real J9Class pointer
-#endif
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratch1Reg,
-               generateS390MemoryReference(objClassReg, offsetof(J9Class, superclasses), cg), cursor);
-
-   if (outOfBound || dynamicCastClass)
-      {
-      if (comp->target().is64Bit())
-         {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, scratch2Reg, scratch2Reg, 3, cursor);
-         }
-      else
-         {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, scratch2Reg, 2, cursor);
-         }
-#ifdef OMR_GC_COMPRESSED_POINTERS
-      // castClassReg contains the class offset, but the memory reference below will
-      // generate a J9Class pointer. We may need to convert this pointer to an offset
-#endif
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg,
-                  generateS390MemoryReference(scratch1Reg, scratch2Reg, 0, cg), cursor);
-      }
-   else
-      {
-#ifdef OMR_GC_COMPRESSED_POINTERS
-      // castClassReg contains the class offset, but the memory reference below will
-      // generate a J9Class pointer. We may need to convert this pointer to an offset
-#endif
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, castClassReg,
-                  generateS390MemoryReference(scratch1Reg, superClassOffset, cg), cursor);
-      }
-
-   if (debugObj)
-      debugObj->addInstructionComment(cursor, "Check if objClass is subclass of castClass");
-
    return cursor;
    }
+
+
+// max number of cache slots used by checkcat/instanceof
+#define NUM_PICS 3
 
 // Checks for the scenario where a call to Class.isInstance() is converted to instanceof,
 // and we need to load the j9class of the cast class at runtime because we don't have it at compile time
@@ -11756,10 +11588,12 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    if (classDepth != -1)
       {
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-      generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
+      TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
-      genTestIsSuper(cg, node, objClassReg, castClassReg, scratch1Reg, scratch2Reg, tempReg, NULL, classDepth, failLabel, doneLabel, NULL, deps, NULL, false, NULL, NULL);
+      cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, scratch1Reg, castClassReg, cursor, "genTestIsSuper");
+      cursor = genLoadAndCompareClassDepth(cg, node, castClassReg, scratch1Reg, classDepth, objClassReg, scratch2Reg, cursor, failLabel, classDepth == -1, true, "genTestIsSuper");
+      genCheckSuperclassArray(cg, node, castClassReg, scratch1Reg, classDepth, objClassReg, scratch2Reg, cursor);      
 
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       }
