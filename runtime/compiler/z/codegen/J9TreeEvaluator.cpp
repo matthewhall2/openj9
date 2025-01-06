@@ -92,9 +92,6 @@ extern void killRegisterIfNotLocked(TR::CodeGenerator * cg, TR::RealRegister::Re
 extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator * cg, bool isDivision, TR::MemoryReference * divchkDivisorMR);
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
-static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor,  TR::LabelSymbol *callHelperLabel, const char *callerName);
-static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, TR::LabelSymbol *failLabel, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
-static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *superclassArrayReg, TR::Instruction *cursor);
 
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
