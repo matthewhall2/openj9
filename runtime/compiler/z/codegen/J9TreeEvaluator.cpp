@@ -93,8 +93,8 @@ extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
 static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
-static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
-static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR:LabelSymbol *failLabel, TR::Register *toClassDepthReg, TR::Register *fromClassDepthReg, int32_t toClassDepth);
+static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, TR::LabelSymbol *failLabel, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
+static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *failLabel, TR::Register *toClassDepthReg, TR::Register *fromClassDepthReg, int32_t toClassDepth);
 
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
@@ -3238,25 +3238,25 @@ static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator 
    return cursor;
    }
 
-static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName)
+static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, TR::LabelSymbol *failLabel, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName)
    {
    TR::InstOpCode::Mnemonic loadOp;
-   int32_t byteOffset;
+   int32_t bytesOffset;
    if (cg->comp()->target().is64Bit())
       {
       loadOp = TR::InstOpCode::LLGH;
-      byteOffset = 6;
+      bytesOffset = 6;
       }
    else
       {
       loadOp = TR::InstOpCode::LLH;
-      byteOffset = 2;
+      bytesOffset = 2;
       }
 
    if (loadToClassDepth)
       {
       cursor = generateRXInstruction(cg, loadOp, node, toClassDepthReg,
-            generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags) + byteOffset, cg), cursor);
+            generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg), cursor);
 
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
             "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
@@ -3269,6 +3269,15 @@ static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::N
 
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                   "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
+      }
+   
+   if (loadToClassDepth)
+      {
+      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false, cursor);
+      }
+   else
+      {
+      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, false, false, cursor);
       }
    
    return cursor;
