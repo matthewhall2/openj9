@@ -93,8 +93,8 @@ extern TR::Register * iDivRemGenericEvaluator(TR::Node * node, TR::CodeGenerator
 extern TR::Instruction * generateS390CompareOps(TR::Node * node, TR::CodeGenerator * cg, TR::InstOpCode::S390BranchCondition fBranchOpCond, TR::InstOpCode::S390BranchCondition rBranchOpCond, TR::LabelSymbol * targetLabel);
 
 static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName);
-static TR::Instruction *genLoadClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
-static TR::Instruction *genCheckSuperclassArray();
+static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName);
+static TR::Instruction *genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR:LabelSymbol *failLabel, TR::Register *toClassDepthReg, TR::Register *fromClassDepthReg, int32_t toClassDepth);
 
 void
 J9::Z::TreeEvaluator::inlineEncodeASCII(TR::Node *node, TR::CodeGenerator *cg)
@@ -3218,7 +3218,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
    return iCursor;
    }
 
-TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
+static TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *scratchReg, TR::Register *classReg, TR::Instruction *cursor, const char *callerName)
    {
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
             generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg), cursor);
@@ -3238,7 +3238,7 @@ TR::Instruction *genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR
    return cursor;
    }
 
-TR::Instruction *genLoadClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName)
+static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::Register *fromClassDepthReg, TR::Instruction *cursor, bool loadToClassDepth, bool loadFromClassDepth, const char *callerName)
    {
    TR::InstOpCode::Mnemonic loadOp;
    int32_t byteOffset;
@@ -3271,6 +3271,7 @@ TR::Instruction *genLoadClassDepth(TR::CodeGenerator *cg, TR::Node *node, TR::Re
                   "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
       }
    
+   return cursor;
    }
 
 // max number of cache slots used by checkcat/instanceof
@@ -3425,7 +3426,7 @@ genTestIsSuper(TR::CodeGenerator * cg, TR::Node * node,
          cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNH, node, failLabel, cursor);
 
       if (debugObj)
-         debugObj->addInstructionComment(cursor, "Fail if depth(obj) > depth(castClass)");
+         debugObj->addInstructionComment(cursor, "Fail if depth(obj) <= depth(castClass)");
 
       }
 
