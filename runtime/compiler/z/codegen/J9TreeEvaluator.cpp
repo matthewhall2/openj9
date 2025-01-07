@@ -3268,15 +3268,21 @@ static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::N
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                   "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
       }
-   
-   if (loadToClassDepth)
+   // add check for eliminate superclassarraysize check
+   bool eliminateSuperClassArraySizeCheck = (!loadToClassDepth && (toClassDepth < cg->comp()->getOptions()->_minimumSuperclassArraySize));
+
+   if (!eliminateSuperClassArraySizeCheck)
       {
-      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
-      }
-   else
-      {
-      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false, cursor);
-      }
+      if (loadToClassDepth)
+         {
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
+         }
+      else
+         {
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false, cursor);
+         }
+   }
+  
    
    return cursor;
    }
