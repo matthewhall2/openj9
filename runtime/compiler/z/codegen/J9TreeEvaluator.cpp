@@ -4555,11 +4555,13 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       ++iter;
       }
 
-   TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 2+7+srm->numAvailableRegisters(), cg);
+   TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 7+srm->numAvailableRegisters(), cg);
    TR::RegisterDependencyConditions *outlinedConditions = NULL;
 
-   conditions->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
-   conditions->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+ //  conditions->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
+ //  conditions->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
 
    // In case of Higher probability of quality test to pass, we put rest of the test outlined
    if (!outlinedSlowPath)
