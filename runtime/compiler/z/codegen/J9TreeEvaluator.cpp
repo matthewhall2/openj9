@@ -4470,7 +4470,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR::Register *flagsReg = scratchReg1;
             cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, flagsReg, castClassReg, cursor, callLabel, "checkcastEvaluator");
 
-            TR::Register *castClassDepthReg = scratchReg1
+            TR::Register *castClassDepthReg = scratchReg1;
             TR::Register *objClassDepthReg = scratchReg2;
             cursor = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor, callLabel, castClassDepth == -1, true, "checkcastEvaluator");
 
