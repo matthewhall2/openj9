@@ -4397,7 +4397,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                */
 
             TR::Register *flagsReg = srm->findOrCreateScratchRegister();
-            cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassDepthReg, flagsReg, cursor, callLabel, "checkcastEvaluator");
+            cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, flagsReg, castClassReg, cursor, callLabel, "checkcastEvaluator");
             srm->reclaimScratchRegister(flagsReg);
 
             TR::Register *castClassDepthReg = srm->findOrCreateScratchRegister();
