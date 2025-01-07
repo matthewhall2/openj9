@@ -4388,21 +4388,28 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR_ASSERT(numSequencesRemaining == 2, "SuperClassTest should always be followed by a GoToFalse and must always be the second last test generated");
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
-        //   dynamicCastClass = genInstanceOfOrCheckcastSuperClassTest(node, cg, objClassReg, castClassReg, castClassDepth, callLabel, callLabel, srm);
+       //    dynamicCastClass = genInstanceOfOrCheckcastSuperClassTest(node, cg, objClassReg, castClassReg, castClassDepth, callLabel, callLabel, srm);
             /* outlinedSlowPath will be non-NULL if we have a higher probability of ClassEqualityTest succeeding.
                * In such cases we will do rest of the tests in OOL section, and as such we need to skip the helper call
                * if the result of SuperClassTest is true and branch to resultLabel which will branch back to the doneLabel from OOL code.
                * In normal cases SuperClassTest will be inlined with doneLabel as fallThroughLabel so we need to branch to callLabel to generate CastClassException
                * through helper call if result of SuperClassTest turned out to be false.
                */
+
+            TR::Register *flagsReg = srm->findOrCreateScratchRegister();
+            cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassDepthReg, flagsReg, cursor, callLabel, "checkcastEvaluator");
+            srm->reclaimScratchRegister(flagsReg);
+
             TR::Register *castClassDepthReg = srm->findOrCreateScratchRegister();
             TR::Register *objClassDepthReg = srm->findOrCreateScratchRegister();
-            cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassDepthReg, castClassReg, cursor, callLabel, "checkcastEvaluator");
             cursor = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor, callLabel, castClassDepth == -1, true, "checkcastEvaluator");
-            genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor);
-            cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
-            srm->reclaimScratchRegister(castClassDepthReg);
             srm->reclaimScratchRegister(objClassDepthReg);
+
+            TR::Register *superclassArrayReg = srm->findOrCreateScratchRegister();
+            genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, superclassArrayReg, cursor);
+            cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
+            srm->reclaimScratchRegister(superclassArrayReg);
+            srm->reclaimScratchRegister(castClassDepthReg);
             break;
             }
          /**   Following switch case generates sequence of instructions for profiled class test for this checkCast node
