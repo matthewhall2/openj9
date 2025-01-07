@@ -4477,6 +4477,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR::Register *superclassArrayReg = scratchReg2;
             genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, superclassArrayReg, cursor);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
+            cg->stopUsingRegister(scratchReg1);
+            cg->stopUsingRegister(scratchReg2);
             break;
             }
          /**   Following switch case generates sequence of instructions for profiled class test for this checkCast node
@@ -4560,8 +4562,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
  //  conditions->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
  //  conditions->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
-   cg->stopUsingRegister(scratchReg1);
-   cg->stopUsingRegister(scratchReg2);
+   
 
    // In case of Higher probability of quality test to pass, we put rest of the test outlined
    if (!outlinedSlowPath)
