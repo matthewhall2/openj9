@@ -3268,15 +3268,21 @@ static TR::Instruction *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::N
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                   "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
       }
-   
-   if (loadToClassDepth)
+   // add check for eliminate superclassarraysize check
+   bool eliminateSuperClassArraySizeCheck = (!loadToClassDepth && (toClassDepth < cg->comp()->getOptions()->_minimumSuperclassArraySize));
+
+   if (!eliminateSuperClassArraySizeCheck)
       {
-      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
-      }
-   else
-      {
-      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false, cursor);
-      }
+      if (loadToClassDepth)
+         {
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
+         }
+      else
+         {
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false, cursor);
+         }
+   }
+  
    
    return cursor;
    }
@@ -4374,6 +4380,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *resultLabel = doneLabel;
 
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+
    TR_Debug * debugObj = cg->getDebug();
    objectReg = cg->evaluate(objectNode);
 
@@ -4450,20 +4459,23 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR_ASSERT(numSequencesRemaining == 2, "SuperClassTest should always be followed by a GoToFalse and must always be the second last test generated");
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
-          dynamicCastClass = genInstanceOfOrCheckcastSuperClassTest(node, cg, objClassReg, castClassReg, castClassDepth, callLabel, callLabel, srm);
+           //dynamicCastClass = genInstanceOfOrCheckcastSuperClassTest(node, cg, objClassReg, castClassReg, castClassDepth, callLabel, callLabel, srm);
             /* outlinedSlowPath will be non-NULL if we have a higher probability of ClassEqualityTest succeeding.
                * In such cases we will do rest of the tests in OOL section, and as such we need to skip the helper call
                * if the result of SuperClassTest is true and branch to resultLabel which will branch back to the doneLabel from OOL code.
                * In normal cases SuperClassTest will be inlined with doneLabel as fallThroughLabel so we need to branch to callLabel to generate CastClassException
                * through helper call if result of SuperClassTest turned out to be false.
                */
-        //    TR::Register *castClassDepthReg = srm->findOrCreateScratchRegister();
-         //   TR::Register *objClassDepthReg = srm->findOrCreateScratchRegister();
-         //   cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassDepthReg, castClassReg, cursor, callLabel, "checkcastEvaluator");
-          //  cursor = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor, callLabel, castClassDepth == -1, true, "checkcastEvaluator");
-          //  genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor);
-          //  srm->reclaimScratchRegister(castClassDepthReg);
-          //  srm->reclaimScratchRegister(objClassDepthReg);
+            
+            TR::Register *flagsReg = scratchReg1;
+            cursor = genRuntimeIsInterfaceOrArrayClassTest(cg, node, flagsReg, castClassReg, cursor, callLabel, "checkcastEvaluator");
+
+            TR::Register *castClassDepthReg = scratchReg1
+            TR::Register *objClassDepthReg = scratchReg2;
+            cursor = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, objClassDepthReg, cursor, callLabel, castClassDepth == -1, true, "checkcastEvaluator");
+
+            TR::Register *superclassArrayReg = scratchReg2;
+            genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, superclassArrayReg, cursor);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
             break;
             }
@@ -4543,8 +4555,11 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       ++iter;
       }
 
-   TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 7+srm->numAvailableRegisters(), cg);
+   TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 2+7+srm->numAvailableRegisters(), cg);
    TR::RegisterDependencyConditions *outlinedConditions = NULL;
+
+   conditions->addPostCondition(scratchReg1, TR::RealRegister::AssignAny);
+   conditions->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
    // In case of Higher probability of quality test to pass, we put rest of the test outlined
    if (!outlinedSlowPath)
@@ -4599,7 +4614,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       resultReg = startOOLLabel ? helperLink->buildDirectDispatch(node, &deps) : helperLink->buildDirectDispatch(node);
       if (resultReg)
          outlinedConditions->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/HelperCall", comp->signature()),1,TR::DebugCounter::Undetermined);
       if(outlinedSlowPath)
          {
