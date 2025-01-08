@@ -4638,8 +4638,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
    srm->stopUsingRegisters();
-   cg->stopUsingRegisters(scratchReg1);
-   cg->stopUsingRegisters(scratchReg2);
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
