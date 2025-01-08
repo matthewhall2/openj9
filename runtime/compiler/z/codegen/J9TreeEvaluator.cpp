@@ -3228,7 +3228,7 @@ static void genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Nod
    "%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
 
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)));
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel);
+   TR::Instruction *cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel);
 
    TR_Debug * debugObj = cg->getDebug();
    if (debugObj)
@@ -3276,14 +3276,19 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
 
    if (!eliminateSuperClassArraySizeCheck)
       {
+      TR::Instruction *cursor = NULL;
       if (toClassDepth == -1)
          {
-         generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
          }
       else
          {
-         generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
          }
+
+      TR_Debug * debugObj = cg->getDebug();
+      if (debugObj)
+         debugObj->addInstructionComment(cursor, "Check is fromClassDepth <= toClassDepth and jump to fail");
       }
    srm->reclaimScratchRegister(fromClassDepthReg);
    return toClassDepthReg;
