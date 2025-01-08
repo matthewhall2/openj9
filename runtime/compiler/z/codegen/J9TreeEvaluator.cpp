@@ -3232,7 +3232,10 @@ static void genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Nod
 
    TR_Debug * debugObj = cg->getDebug();
    if (debugObj)
+      {
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
+      }
+
    srm->reclaimScratchRegister(scratchReg);
    }
 
@@ -3263,7 +3266,6 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
             "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
       }
 
-   
    fromClassDepthReg = srm->findOrCreateScratchRegister();
    generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
          generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
@@ -4478,7 +4480,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                * through helper call if result of SuperClassTest turned out to be false.
                */
 
-            TR::Register *flagsReg = srm->findOrCreateScratchRegister();
             genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassReg, callLabel, srm, "checkcastEvaluator");
 
             TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcastEvaluator");
