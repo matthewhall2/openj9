@@ -3218,17 +3218,17 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
 static void genRuntimeIsInterfaceOrArrayClassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR::LabelSymbol *callHelperLabel, TR_S390ScratchRegisterManager *srm, const char *callerName)
    {
    TR::Register *scratchReg = srm->findOrCreateScratchRegister();
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
             generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
 
-   cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
          generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
 
    TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
    "%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
 
-   cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)));
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel);
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel);
 
    TR_Debug * debugObj = cg->getDebug();
    if (debugObj)
