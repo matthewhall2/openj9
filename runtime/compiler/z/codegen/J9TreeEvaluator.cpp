@@ -3297,9 +3297,9 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
    }
 
 /**
- * Generates code to index in to the superclassarray compare value with fromClassReg
+ * Generates code to index in to the superclassarray compare value with toClassReg
  * 
- * toClassDepthReg should have been allocated by the scratch register manager that is also passed in
+ * toClassDepthReg should have been allocated by the scratch register manager
  */
 static void genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR_S390ScratchRegisterManager *srm)
    {
@@ -4472,18 +4472,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR_ASSERT(numSequencesRemaining == 2, "SuperClassTest should always be followed by a GoToFalse and must always be the second last test generated");
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
-           //dynamicCastClass = genInstanceOfOrCheckcastSuperClassTest(node, cg, objClassReg, castClassReg, castClassDepth, callLabel, callLabel, srm);
-            /* outlinedSlowPath will be non-NULL if we have a higher probability of ClassEqualityTest succeeding.
-               * In such cases we will do rest of the tests in OOL section, and as such we need to skip the helper call
-               * if the result of SuperClassTest is true and branch to resultLabel which will branch back to the doneLabel from OOL code.
-               * In normal cases SuperClassTest will be inlined with doneLabel as fallThroughLabel so we need to branch to callLabel to generate CastClassException
-               * through helper call if result of SuperClassTest turned out to be false.
-               */
 
             genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassReg, callLabel, srm, "checkcastEvaluator");
-
             TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcastEvaluator");
-
             genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, castClassDepth, objClassReg, srm);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
             break;
