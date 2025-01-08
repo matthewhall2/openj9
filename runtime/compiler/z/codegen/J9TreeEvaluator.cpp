@@ -3256,7 +3256,7 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
    if (toClassDepth == -1)
       {
       toClassDepthReg = srm->findOrCreateScratchRegister();
-      cursor = generateRXInstruction(cg, loadOp, node, toClassDepthReg,
+      generateRXInstruction(cg, loadOp, node, toClassDepthReg,
             generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
 
       TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
@@ -3264,25 +3264,25 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
       }
 
    
-   fromClassDepthReg = srm->findOrCreateScratchRegister()
-   cursor = generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
+   fromClassDepthReg = srm->findOrCreateScratchRegister();
+   generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
          generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
 
    TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                "%s::J9Class->classDepthAndFlags is wrong size\n", callerName);
       
    // add check for eliminate superclassarraysize check
-   bool eliminateSuperClassArraySizeCheck = (!loadToClassDepth && (toClassDepth < cg->comp()->getOptions()->_minimumSuperclassArraySize));
+   bool eliminateSuperClassArraySizeCheck = (toClassDepth != -1 && (toClassDepth < cg->comp()->getOptions()->_minimumSuperclassArraySize));
 
    if (!eliminateSuperClassArraySizeCheck)
       {
       if (toClassDepth == -1)
          {
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
+         generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, fromClassDepthReg, toClassDepthReg, TR::InstOpCode::COND_BNH, failLabel, false, false);
          }
       else
          {
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
+         generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
          }
       }
    srm->reclaimScratchRegister(fromClassDepthReg);
@@ -3297,27 +3297,27 @@ static TR::Register *genLoadAndCompareClassDepth(TR::CodeGenerator *cg, TR::Node
 static void genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR_S390ScratchRegisterManager *srm)
    {
    TR::Register *superclassArrayReg = srm->findOrCreateScratchRegister();
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
                generateS390MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg));
 
    if (toClassDepth == -1)
       {
       if (cg->comp()->target().is64Bit())
          {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3);
+         generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3);
          }
       else
          {
-         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2);
+         generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2);
          }
 
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
                   generateS390MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg));
       }
    else
       {
       int32_t superClassOffset = toClassDepth * TR::Compiler->om.sizeofReferenceAddress();
-      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
                   generateS390MemoryReference(superclassArrayReg, superClassOffset, cg));
       }
    srm->reclaimScratchRegister(superclassArrayReg);
