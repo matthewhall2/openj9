@@ -65,7 +65,7 @@ void J9::RecognizedCallTransformer::processConvertingUnaryIntrinsicFunction(TR::
 void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR::TreeTop* treetop, TR::Node* node)
    {
    printf("calling isAssignableFrom transformer\n");
-   static bool useNew = (bool)feGetEnv("use_new") != NULL;
+   static bool useNew = (feGetEnv("use_new") != NULL);
    if (!useNew) return;
    auto toClass = node->getChild(0);
    auto fromClass = node->getChild(1);
