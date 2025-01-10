@@ -11679,7 +11679,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
 
-   srm->addScratchRegistersToDependencyList();
+   srm->addScratchRegistersToDependencyList(deps);
    srm->stopUsingRegisters();
    node->setRegister(resultReg);
    return resultReg;
