@@ -1446,6 +1446,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
 
          if (TR::Compiler->cls.isClassArray(cg->comp(), castClass))
             {
+            cg->generateDebugCounter("superclass/static/array", 1, TR::DebugCounter::Free);
             if (TR::Compiler->cls.isReferenceArray(cg->comp(), castClass))
                {
                TR_OpaqueClassBlock *componentClass = fej9->getComponentClassFromArrayClass(castClass);
@@ -1504,6 +1505,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
          //
          else if (TR::Compiler->cls.isInterfaceClass(cg->comp(), castClass))
             {
+               cg->generateDebugCounter("superclass/static/interface", 1, TR::DebugCounter::Free);
+
             if (singleImplementerClass)
                {
                sequences[i++] = CompileTimeGuessClassTest;
@@ -1525,6 +1528,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
          //
          else if (fej9->isAbstractClass(castClass))
             {
+                           cg->generateDebugCounter("superclass/static/abstract", 1, TR::DebugCounter::Free);
+
             // Don't bother with the cast class cache, it's not updated by the VM when the cast can be determined via a superclass test.
             //
             if (singleImplementerClass)
