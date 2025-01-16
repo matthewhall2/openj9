@@ -3285,11 +3285,11 @@ static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regis
 
 
    genSuperclassDynCounters(cg, node, srm,  normal);
-   
+
    TR::Register *flagsReg = srm->findOrCreateScratchRegister();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, normal);
    genPrepareCounter(cg, node, classReg, flagsReg);
-   cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, modifierReg, static_cast<int32_t>(flags));
+   TR::Instruction *cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, flagsReg, static_cast<int32_t>(flags));
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
 
 
