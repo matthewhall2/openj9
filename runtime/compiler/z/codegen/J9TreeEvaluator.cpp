@@ -3224,35 +3224,15 @@ static TR::Instruction  *genPrepareCounter(TR::CodeGenerator *cg, TR::Node *node
          generateS390MemoryReference(flagsReg, offsetof(J9ROMClass, modifiers), cg));
       return cursor;
    }
-/**
- * generates code to branch to <callHelperLabel> if any of the J9ROMClass modifier flags match the given flags <flags>
- */
-static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t toClassDepth, TR::LabelSymbol *callHelperLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
+
+static TR::Instruction *genSuperclassDynCounters(TR::CodeGenerator *cg, TR::Node *node, TR_S390ScratchRegisterManager *srm, TR::LabelSymbol *exitLabel)
    {
-   if (toClassDepth != -1)
-      {
-      return;
-      }
-   //static unsigned long count = 1;
-  // printf("superclasstest count: %lu\n", count++);
-  TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
-  TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
-  TR::LabelSymbol *abstractLabel = generateLabelSymbol(cg);
-  TR::LabelSymbol *normal = generateLabelSymbol(cg);
+   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *abstractLabel = generateLabelSymbol(cg);
 
    TR::Register *modifierReg = srm->findOrCreateScratchRegister();
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifierReg,
-            generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
-
-   generateRXInstruction(cg, TR::InstOpCode::L, node, modifierReg,
-         generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
-
-   TR_ASSERT((flags < UINT_MAX && flags > 0),
-   "%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
- 
-   cg->generateDebugCounter("superclass/dynamic/total", 1, TR::DebugCounter::Free);
-
-
+   genPrepareCounter(cg, node, classReg, modifierReg);
    TR::Instruction *cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, modifierReg, static_cast<int32_t>(J9AccClassArray));
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, arrayLabel, cursor);
 
@@ -3264,22 +3244,51 @@ static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regis
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, modifierReg, static_cast<int32_t>(J9AccAbstract));
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, abstractLabel, cursor);
 
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, normal, cursor);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, exitLabel, cursor);
    
    
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, arrayLabel);
    cg->generateDebugCounter("superclass/dynamic/array", 1, TR::DebugCounter::Free);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, normal, cursor);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, exitLabel, cursor);
 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
    cursor = cg->generateDebugCounter("superclass/dynamic/interface", 1, TR::DebugCounter::Free);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, normal, cursor); 
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, exitLabel, cursor); 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, abstractLabel);
-   cg->generateDebugCounter("superclass/dynamic/abstract", 1, TR::DebugCounter::Free);
+   cursor = cg->generateDebugCounter("superclass/dynamic/abstract", 1, TR::DebugCounter::Free);
+   srm->reclaimScratchRegister(modifierReg);
+   return cursor;
 
+   }
+/**
+ * generates code to branch to <callHelperLabel> if any of the J9ROMClass modifier flags match the given flags <flags>
+ */
+static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t toClassDepth, TR::LabelSymbol *callHelperLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
+   {
+   if (toClassDepth != -1)
+      {
+      return;
+      }
+   //static unsigned long count = 1;
+  // printf("superclasstest count: %lu\n", count++);
+  
+  TR::LabelSymbol *normal = generateLabelSymbol(cg);
+
+   
+
+   TR_ASSERT((flags < UINT_MAX && flags > 0),
+   "%s::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
+ 
+   cg->generateDebugCounter("superclass/dynamic/total", 1, TR::DebugCounter::Free);
+
+
+   genSuperclassDynCounters(cg, node, srm,  normal);
+   
+   TR::Register *flagsReg = srm->findOrCreateScratchRegister();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, normal);
+   genPrepareCounter(cg, node, classReg, flagsReg);
    cursor = generateRILInstruction(cg, TR::InstOpCode::NILF, node, modifierReg, static_cast<int32_t>(flags));
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callHelperLabel, cursor);
 
@@ -3291,7 +3300,7 @@ static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regis
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
       }
 
-   srm->reclaimScratchRegister(modifierReg);
+   srm->reclaimScratchRegister(flagsReg);
    }
 
 /**
