@@ -3225,7 +3225,7 @@ static TR::Instruction  *genPrepareCounter(TR::CodeGenerator *cg, TR::Node *node
       return cursor;
    }
 
-static TR::Instruction *genSuperclassDynCounters(TR::CodeGenerator *cg, TR::Node *node, TR_S390ScratchRegisterManager *srm, TR::LabelSymbol *exitLabel)
+static TR::Instruction *genSuperclassDynCounters(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR_S390ScratchRegisterManager *srm, TR::LabelSymbol *exitLabel)
    {
    TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
@@ -3284,7 +3284,7 @@ static void genTestRuntimeFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regis
    cg->generateDebugCounter("superclass/dynamic/total", 1, TR::DebugCounter::Free);
 
 
-   genSuperclassDynCounters(cg, node, srm,  normal);
+   genSuperclassDynCounters(cg, node, srm, classReg, normal);
 
    TR::Register *flagsReg = srm->findOrCreateScratchRegister();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, normal);
