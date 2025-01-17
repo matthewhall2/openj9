@@ -11631,8 +11631,13 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
    else
       {
+      auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
       cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, outlinedCallLabel);
+      genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
+      TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
+      genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
       }
 
 
