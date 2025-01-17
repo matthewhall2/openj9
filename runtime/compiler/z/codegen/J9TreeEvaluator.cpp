@@ -11471,6 +11471,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    static char *disable = feGetEnv("TR_disableInlineIsAssignableFrom");
    TR::Compilation *comp = cg->comp();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp->fe());
+   cg->generateDebugCounter("superclass/isAssignableFrom", 1, TR::DebugCounter::Free);
 
    if (disable)
       return false;
