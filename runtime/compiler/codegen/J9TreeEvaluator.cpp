@@ -1160,7 +1160,6 @@ uint32_t getInstanceOfOrCheckCastTopProfiledClass(TR::CodeGenerator *cg, TR::Nod
       if (traceProfilingInfo)
          traceInstanceOfOrCheckCastProfilingInfo(cg, node, castClass);
       }
-   cg->generateDebugCounter("checkcastOrInstanceof/total", 1, TR::DebugCounter::Free);
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
    TR_ByteCodeInfo bcInfo = node->getByteCodeInfo();
@@ -1294,6 +1293,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
    // By default maxOnsiteCacheSlotForInstanceOf is set to 0 which means cache is disable.
    // To enable test pass JIT option maxOnsiteCacheSlotForInstanceOf=<number_of_slots>
    bool createDynamicCacheTests = cg->comp()->getOptions()->getMaxOnsiteCacheSlotForInstanceOf() > 0 && isInstanceOf;
+   cg->generateDebugCounter("checkcastOrInstanceof/total", 1, TR::DebugCounter::Free);
 
 
    uint32_t i = 0;
