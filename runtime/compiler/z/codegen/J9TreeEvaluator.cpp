@@ -11641,7 +11641,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
 
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
+     // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
       }
 
 
