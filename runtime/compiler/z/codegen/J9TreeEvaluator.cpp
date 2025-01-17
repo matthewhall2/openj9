@@ -11587,7 +11587,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
    else
       {
-      deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions, cg);
+      deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+1, cg);
       objClassReg = tempReg;
       castClassReg = cg->allocateRegister();
 
