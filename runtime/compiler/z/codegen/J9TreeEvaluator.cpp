@@ -11589,7 +11589,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    else
       {
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+1, cg);
-      objClassReg = tempReg;
+      objClassReg = cg->allocateRegister();
       castClassReg = cg->allocateRegister();
 
       }
@@ -11665,7 +11665,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       cg->stopUsingRegister(objClassReg);
       cg->stopUsingRegister(castClassReg);
       
-         cg->stopUsingRegister(castClassReg);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
