@@ -1293,7 +1293,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
    // By default maxOnsiteCacheSlotForInstanceOf is set to 0 which means cache is disable.
    // To enable test pass JIT option maxOnsiteCacheSlotForInstanceOf=<number_of_slots>
    bool createDynamicCacheTests = cg->comp()->getOptions()->getMaxOnsiteCacheSlotForInstanceOf() > 0 && isInstanceOf;
-   cg->generateDebugCounter("checkcastOrInstanceof/total", 1, TR::DebugCounter::Free);
+   cg->generateDebugCounter("matthew/totals/checkcastOrInstanceof", 1, TR::DebugCounter::Free);
 
 
    uint32_t i = 0;
