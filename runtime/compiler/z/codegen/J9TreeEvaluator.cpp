@@ -4367,6 +4367,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    bool outLinedTest = numSequencesRemaining >= 2 && sequences[numSequencesRemaining-2] == SuperClassTest && topClassProbability >= 0.5 && topClassWasCastClass;
    traceMsg(comp, "Outline Super Class Test: %d\n", outLinedTest);
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
+   cg->generateDebugCounter("checkcast/total", 1, TR::DebugCounter::Free);
 
    while (numSequencesRemaining > 1)
       {
@@ -8845,6 +8846,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       resultReg = cg->allocateRegister();
       cursor = generateRIInstruction(cg,TR::InstOpCode::getLoadHalfWordImmOpCode(),node,resultReg,static_cast<int32_t>(initialResult));
       }
+   cg->generateDebugCounter("instanceof/total", 1, TR::DebugCounter::Free);
+
 
    TR_S390OutOfLineCodeSection *outlinedSlowPath = NULL;
 
@@ -11474,7 +11477,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    if (disable)
       return false;
-   cg->generateDebugCounter("superclass/isAssignableFrom", 1, TR::DebugCounter::Free);
+  // cg->generateDebugCounter("superclass/isAssignableFrom", 1, TR::DebugCounter::Free);
 
    TR::Node *thisClass = node->getFirstChild();
    if (thisClass->getOpCodeValue() == TR::aloadi &&
@@ -11622,7 +11625,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
       // TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
       //                                           generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-      auto flags = J9AccInterface | J9AccClassArray
+      auto flags = J9AccInterface | J9AccClassArray;
       genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
       TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
       genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
@@ -11731,6 +11734,7 @@ J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::
          {
          case TR::java_lang_Class_isAssignableFrom:
             {
+            cg->generateDebugCounter("isAssignableFrom/total", 1, TR::DebugCounter::Free);
             callWasInlined = inlineIsAssignableFrom(node, cg);
             break;
             }
