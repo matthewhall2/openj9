@@ -11577,22 +11577,14 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
 
 
-   if (classDepth != -1)
-      {
+   
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
       objClassReg = cg->allocateRegister();
       castClassReg = cg->allocateRegister();
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
-      deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
+      deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);   
 
-      }
-   else
-      {
-      deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+1, cg);
-      objClassReg = cg->allocateRegister();
-      castClassReg = cg->allocateRegister();
-
-      }
+      
 
    deps->addPostCondition(thisClassReg, TR::RealRegister::AssignAny);
    if (thisClassReg != checkClassReg)
@@ -11619,30 +11611,32 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
 
    TR_Debug * debugObj = cg->getDebug();
-   if (classDepth != -1)
-      {
+   if (classDepth != -1){
       cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthKnownAtCompileTime", 1, TR::DebugCounter::Free);
+   }
+   else{
+      cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
+   }
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       // TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
       //                                           generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-      auto flags = J9AccInterface | J9AccClassArray;
+      auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
       genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
       TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
       genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
 
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-      }
-   else
-      {
-      auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
-      cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
-      genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
-      TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
-      genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
+
+    
+      // cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
+      // genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
+      // TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
+      // genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
+      // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
 
      // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
-      }
+      
 
 
    TR_S390OutOfLineCodeSection *outlinedHelperCall = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(node, TR::icall, tempReg, outlinedCallLabel, doneLabel, cg);
