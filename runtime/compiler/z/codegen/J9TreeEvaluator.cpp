@@ -11477,7 +11477,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    if (disable)
       return false;
-  // cg->generateDebugCounter("superclass/isAssignableFrom", 1, TR::DebugCounter::Free);
+   cg->generateDebugCounter("isAssignableFrom/total", 1, TR::DebugCounter::Free);
 
    TR::Node *thisClass = node->getFirstChild();
    if (thisClass->getOpCodeValue() == TR::aloadi &&
@@ -11734,7 +11734,6 @@ J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::
          {
          case TR::java_lang_Class_isAssignableFrom:
             {
-            cg->generateDebugCounter("isAssignableFrom/total", 1, TR::DebugCounter::Free);
             callWasInlined = inlineIsAssignableFrom(node, cg);
             break;
             }
