@@ -11581,6 +11581,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       {
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
       objClassReg = cg->allocateRegister();
+      castClassReg = cg->allocateRegister();
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
       deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
 
@@ -11632,12 +11633,13 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
    else
       {
-      // auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
-      // cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
-      // genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
-      // TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
-      // genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
-      // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
+      cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
+      genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
+      TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
+      genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
       }
 
