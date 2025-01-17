@@ -1160,6 +1160,7 @@ uint32_t getInstanceOfOrCheckCastTopProfiledClass(TR::CodeGenerator *cg, TR::Nod
       if (traceProfilingInfo)
          traceInstanceOfOrCheckCastProfilingInfo(cg, node, castClass);
       }
+   cg->generateDebugCounter("checkcastOrInstanceof/total", 1, TR::DebugCounter::Free);
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(cg->fe());
    TR_ByteCodeInfo bcInfo = node->getByteCodeInfo();

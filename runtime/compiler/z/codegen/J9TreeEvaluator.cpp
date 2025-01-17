@@ -4318,7 +4318,6 @@ TR::Register *
 J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {
    TR::Compilation *comp = cg->comp();
-   cg->generateDebugCounter("checkcast/total", 1, TR::DebugCounter::Free);
    // TODO: This is not the place to make such checks. If we really want to optimize for space or disable inlining
    // of instanceof/checkcast we should still go through the else path to the common infrastructure and it should just
    // generate a call to the helper (along with any null tests if needed for checkcastAndNULLCHK). This should be
@@ -8845,7 +8844,6 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       resultReg = cg->allocateRegister();
       cursor = generateRIInstruction(cg,TR::InstOpCode::getLoadHalfWordImmOpCode(),node,resultReg,static_cast<int32_t>(initialResult));
       }
-   cg->generateDebugCounter("instanceof/total", 1, TR::DebugCounter::Free);
 
 
    TR_S390OutOfLineCodeSection *outlinedSlowPath = NULL;
