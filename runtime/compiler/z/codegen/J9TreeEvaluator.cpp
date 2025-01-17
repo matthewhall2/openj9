@@ -11520,6 +11520,40 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          classDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
       }
 
+   int32_t objDepth = -1; 
+   TR::Node     *javaLangClassTo = node->getSecondChild();
+   if((javaLangClassTo->getOpCodeValue() == TR::aloadi
+         && javaLangClassTo->getSymbolReference() == comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()
+         && javaLangClassTo->getFirstChild()->getOpCodeValue() == TR::loadaddr))
+      {
+      TR::Node   *castClassRef =javaLangClassTo->getFirstChild();
+
+      TR::SymbolReference *castClassSymRef = NULL;
+      if(castClassRef->getOpCode().hasSymbolReference())
+         castClassSymRef= castClassRef->getSymbolReference();
+
+      TR::StaticSymbol    *castClassSym = NULL;
+      if (castClassSymRef && !castClassSymRef->isUnresolved())
+         castClassSym= castClassSymRef ? castClassSymRef->getSymbol()->getStaticSymbol() : NULL;
+
+      TR_OpaqueClassBlock * clazz = NULL;
+      if (castClassSym)
+         clazz = (TR_OpaqueClassBlock *) castClassSym->getStaticAddress();
+
+      if(clazz)
+         objDepth = (int32_t)TR::Compiler->cls.classDepthOf(clazz);
+      }
+
+   if (objDepth != -1)
+   {
+      cg->generateDebugCounter("superclass/isAssignableFrom/fromClass/depthKnownAtCompileTime", 1, TR::DebugCounter::Free);
+   }
+   else{
+      cg->generateDebugCounter("superclass/isAssignableFrom/fromClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
+
+   }
+   
+
    TR::Register        *returnRegister = NULL;
    TR::SymbolReference *symRef     = node->getSymbolReference();
    TR::MethodSymbol    *callSymbol = symRef->getSymbol()->castToMethodSymbol();
@@ -11584,6 +11618,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR_Debug * debugObj = cg->getDebug();
    if (classDepth != -1)
       {
+      cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthKnownAtCompileTime", 1, TR::DebugCounter::Free);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
@@ -11596,6 +11631,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
    else
       {
+      cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, outlinedCallLabel);
       }
 
