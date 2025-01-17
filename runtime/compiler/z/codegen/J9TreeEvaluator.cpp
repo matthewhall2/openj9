@@ -11610,6 +11610,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
    TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
 
    TR_Debug * debugObj = cg->getDebug();
    if (classDepth != -1){
@@ -11618,16 +11619,15 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    else{
       cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
    }
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+
       // TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
       //                                           generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-      auto flags = J9AccInterface | J9AccClassArray | J9AccAbstract;
+      auto flags = J9AccInterface | J9AccClassArray
       genTestRuntimeFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "genTestIsSuper");
       TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
       genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);
 
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, outlinedCallLabel);
 
     
       // cg->generateDebugCounter("superclass/isAssignableFrom/toClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
@@ -11650,6 +11650,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    srm->addScratchRegistersToDependencyList(deps);
    srm->stopUsingRegisters();
+
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
 
