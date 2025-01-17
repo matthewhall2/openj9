@@ -11474,7 +11474,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    if (disable)
       return false;
-   cg->generateDebugCounter("matthew/totals/isAssignableFrom", 1, TR::DebugCounter::Free);
+   cg->generateDebugCounter("matthew/total/isAssignableFrom", 1, TR::DebugCounter::Free);
 
    TR::Node *thisClass = node->getFirstChild();
    if (thisClass->getOpCodeValue() == TR::aloadi &&
