@@ -11649,17 +11649,12 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    srm->addScratchRegistersToDependencyList(deps);
    srm->stopUsingRegisters();
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
 
+   cg->stopUsingRegister(objClassReg);
+   cg->stopUsingRegister(castClassReg);
    node->setRegister(tempReg);
-
-   
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
-      generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
-
-      cg->stopUsingRegister(objClassReg);
-      cg->stopUsingRegister(castClassReg);
-      
-
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
    return true;
