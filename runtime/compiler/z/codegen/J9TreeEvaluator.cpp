@@ -11551,7 +11551,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    }
    else{
       cg->generateDebugCounter("superclass/isAssignableFrom/fromClass/depthNotKnownAtCompileTime", 1, TR::DebugCounter::Free);
-
    }
    
 
@@ -11576,16 +11575,12 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::Register *tempReg = cg->allocateRegister();
    TR::Register *objClassReg, *castClassReg, *scratch1Reg,*scratch2Reg;
    int8_t numOfPostDepConditions = (thisClassReg == checkClassReg)? 2 : 3;
-
-
    
-      deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
-      objClassReg = cg->allocateRegister();
-      castClassReg = cg->allocateRegister();
-      deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
-      deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);   
-
-      
+   deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
+   objClassReg = cg->allocateRegister();
+   castClassReg = cg->allocateRegister();
+   deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
+   deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);   
 
    deps->addPostCondition(thisClassReg, TR::RealRegister::AssignAny);
    if (thisClassReg != checkClassReg)
