@@ -4361,7 +4361,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    TR_Debug * debugObj = cg->getDebug();
    objectReg = cg->evaluate(objectNode);
-
+   cg->generateDebugCounter("matthew/total/checkcast", 1, TR::DebugCounter::Free);
    // When we topProfiledClass in the profiled information is cast class with frequency greater than 0.5, we expect class equality to succeed so we put rest of the test outlined.
    bool outLinedTest = numSequencesRemaining >= 2 && sequences[numSequencesRemaining-2] == SuperClassTest && topClassProbability >= 0.5 && topClassWasCastClass;
    traceMsg(comp, "Outline Super Class Test: %d\n", outLinedTest);
@@ -8845,7 +8845,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       cursor = generateRIInstruction(cg,TR::InstOpCode::getLoadHalfWordImmOpCode(),node,resultReg,static_cast<int32_t>(initialResult));
       }
 
-
+   cg->generateDebugCounter("matthew/total/instanceof", 1, TR::DebugCounter::Free);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = NULL;
 
    TR::LabelSymbol *doneOOLLabel = NULL;
