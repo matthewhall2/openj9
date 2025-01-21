@@ -4411,8 +4411,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
    TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
-   startICFLabel->setStartInternalControlFlow();
    while (numSequencesRemaining > 1)
       {
       switch(*iter)
@@ -4428,6 +4426,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
             objClassReg = cg->allocateRegister();
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            startICFLabel->setStartInternalControlFlow();
             break;
          case GoToTrue:
             TR_ASSERT(false, "Doesn't Make sense, GoToTrue should not be part of multiple sequences");
@@ -4637,7 +4637,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-   doneLabel->setEndInternalControlFlow();
+   if (objClassReg)
+      {
+      doneLabel->setEndInternalControlFlow();
+      }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    cg->stopUsingRegister(castClassReg);
    if (objClassReg)
