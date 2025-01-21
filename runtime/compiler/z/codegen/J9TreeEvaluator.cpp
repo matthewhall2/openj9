@@ -4513,7 +4513,14 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    conditions->addPostCondition(objectReg, TR::RealRegister::AssignAny);
    if (objClassReg)
+      {
       conditions->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
+      }
+   else
+      {
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+      startICFLabel->setStartInternalControlFlow();
+      }
 
 
    srm->addScratchRegistersToDependencyList(conditions);
@@ -4575,10 +4582,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-   if (objClassReg)
-      {
+  
       doneLabel->setEndInternalControlFlow();
-      }
+      
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    cg->stopUsingRegister(castClassReg);
    if (objClassReg)
