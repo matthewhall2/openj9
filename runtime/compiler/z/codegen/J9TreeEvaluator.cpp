@@ -4426,8 +4426,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
             objClassReg = cg->allocateRegister();
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
             startICFLabel->setStartInternalControlFlow();
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
             break;
          case GoToTrue:
             TR_ASSERT(false, "Doesn't Make sense, GoToTrue should not be part of multiple sequences");
@@ -8888,10 +8888,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
 
    // In the evaluator, We need at maximum two scratch registers, so creating a pool of scratch registers with 2 size.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   // TR::Register *scratchReg1 = cg->allocateRegister();
-   // TR::Register *scratchReg2 = cg->allocateRegister();
-   // srm->donateScratchRegister(scratchReg1);
-   // srm->donateScratchRegister(scratchReg2);
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+   srm->donateScratchRegister(scratchReg1);
+   srm->donateScratchRegister(scratchReg2);
 
    bool topClassWasCastClass=false;
    float topClassProbability=0.0;
@@ -8921,10 +8921,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    TR::LabelSymbol *helperReturnLabel = NULL;
    TR::LabelSymbol *dynamicCacheTestLabel = NULL;
    TR::LabelSymbol *branchLabel = NULL;
-   TR::LabelSymbol *jmpLabel = NULL;
-  // TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
- //  startICFLabel->setStartInternalControlFlow();
-  // doneLabel->setEndInternalControlFlow();
+   TR::LabelSymbol *jmpLabel = NULL; 
 
    TR::InstOpCode::S390BranchCondition branchCond;
    TR_Debug *debugObj = cg->getDebug();
@@ -8976,6 +8973,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    bool generateDynamicCache = false;
    bool cacheCastClass = false;
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
    while (numSequencesRemaining >   1 || (numSequencesRemaining==1 && *iter!=HelperCall))
       {
       switch (*iter)
@@ -8991,6 +8989,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
             objClassReg = cg->allocateRegister();
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
+            startICFLabel->setStartInternalControlFlow();
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
             break;
          case GoToTrue:
             traceMsg(comp, "%s: Emitting GoToTrue\n", node->getOpCode().getName());
@@ -9181,13 +9181,22 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       }
 
    if (objClassReg)
+      {
       conditions->addPostConditionIfNotAlreadyInserted(objClassReg, TR::RealRegister::AssignAny);
+      }
+   else
+      {
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+      startICFLabel->setStartInternalControlFlow();
+      }
+      
    if (needResult)
       conditions->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    conditions->addPostConditionIfNotAlreadyInserted(objectReg, TR::RealRegister::AssignAny);
    if (castClassReg)
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
+   doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
@@ -9195,9 +9204,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       cg->stopUsingRegister(castClassReg);
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
-   // cg->stopUsingRegister(scratchReg1);
-   // cg->stopUsingRegister(scratchReg2);
-   srm->stopUsingRegisters();
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    TR::Register *ret = needResult ? resultReg : NULL;
