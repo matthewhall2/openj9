@@ -4323,10 +4323,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   // TR::Register *scratchReg1 = cg->allocateRegister();
-   // TR::Register *scratchReg2 = cg->allocateRegister();
-   // srm->donateScratchRegister(scratchReg1);
-   // srm->donateScratchRegister(scratchReg2);
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+   srm->donateScratchRegister(scratchReg1);
+   srm->donateScratchRegister(scratchReg2);
 
    TR::Instruction *gcPoint = NULL;
    TR::Instruction *cursor = NULL;
@@ -4337,9 +4337,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *resultLabel = doneLabel;
-  // TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
-   //startICFLabel->setStartInternalControlFlow();
- //  doneLabel->setEndInternalControlFlow();
+  TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   startICFLabel->setStartInternalControlFlow();
+  doneLabel->setEndInternalControlFlow();
 
   // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
    TR_Debug * debugObj = cg->getDebug();
@@ -4580,9 +4580,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       cg->stopUsingRegister(objClassReg);
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
-   srm->stopUsingRegisters();
-  // cg->stopUsingRegister(scratchReg1);
-  // cg->stopUsingRegister(scratchReg2);
+  // srm->stopUsingRegisters();
+  cg->stopUsingRegister(scratchReg1);
+  cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
