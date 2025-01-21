@@ -4323,6 +4323,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+   srm->donateScratchRegister(scratchReg1);
+   srm->donateScratchRegister(scratchReg2);
 
    TR::Instruction *gcPoint = NULL;
    TR::Instruction *cursor = NULL;
@@ -4333,7 +4337,11 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *resultLabel = doneLabel;
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   startICFLabel->setStartInternalControlFlow();
+   doneLabel->setEndInternalControlFlow();
 
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
    TR_Debug * debugObj = cg->getDebug();
    objectReg = cg->evaluate(objectNode);
 
@@ -4570,7 +4578,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    cg->stopUsingRegister(castClassReg);
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
-   srm->stopUsingRegisters();
+
+   // cannot use srm->stopUsingRegisters here since these are donated registers
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
@@ -8803,6 +8814,11 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
 
    // In the evaluator, We need at maximum two scratch registers, so creating a pool of scratch registers with 2 size.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+   srm->donateScratchRegister(scratchReg1);
+   srm->donateScratchRegister(scratchReg2);
+
    bool topClassWasCastClass=false;
    float topClassProbability=0.0;
    InstanceOfOrCheckCastSequences sequences[InstanceOfOrCheckCastMaxSequences];
@@ -8832,6 +8848,9 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    TR::LabelSymbol *dynamicCacheTestLabel = NULL;
    TR::LabelSymbol *branchLabel = NULL;
    TR::LabelSymbol *jmpLabel = NULL;
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   startICFLabel->setStartInternalControlFlow();
+   doneLabel->setEndInternalControlFlow();
 
    TR::InstOpCode::S390BranchCondition branchCond;
    TR_Debug *debugObj = cg->getDebug();
@@ -9100,7 +9119,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       cg->stopUsingRegister(objClassReg);
    if (castClassReg)
       cg->stopUsingRegister(castClassReg);
-   srm->stopUsingRegisters();
+
+   // cannot use srm->stopUsingRegisters here since these are donated registers
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    TR::Register *ret = needResult ? resultReg : NULL;
@@ -11482,11 +11504,11 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::MethodSymbol    *callSymbol = symRef->getSymbol()->castToMethodSymbol();
 
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-//   startLabel->setStartInternalControlFlow();
+   startLabel->setStartInternalControlFlow();
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
- //  doneLabel->setEndInternalControlFlow();
+   doneLabel->setEndInternalControlFlow();
 
    TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *checkClassReg = cg->evaluate(node->getSecondChild());
@@ -11505,9 +11527,10 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
       objClassReg = cg->allocateRegister();
       castClassReg = cg->allocateRegister();
+      scratch1Reg = cg->allocateRegister();
+      scratch2Reg = cg->allocateRegister();
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
       deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
-
       }
    else
       {
@@ -11543,12 +11566,15 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-
+      srm->donateScratchRegister(scratch1Reg);
+      srm->donateScratchRegister(scratch2Reg);
       genRuntimeIsInterfaceOrArrayClassTest(cg, node, castClassReg, outlinedCallLabel, srm, "genTestIsSuper");
       TR::Register *castClassDepthReg = genLoadAndCompareClassDepth(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "genTestIsSuper");
       genCheckSuperclassArray(cg, node, castClassReg, castClassDepthReg, classDepth, objClassReg, srm);      
-
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
+      srm->addScratchRegistersToDependencyList(deps);
+      cg->stopUsingRegister(scratch1Reg);
+      cg->stopUsingRegister(scratch2Reg);
       }
    else
       {
@@ -11564,8 +11590,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    cg->decReferenceCount(node->getFirstChild());
    cg->decReferenceCount(node->getSecondChild());
 
-   srm->addScratchRegistersToDependencyList(deps);
-   srm->stopUsingRegisters();
 
    node->setRegister(tempReg);
 
@@ -11573,9 +11597,10 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       {
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel, deps);
       generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
-
       cg->stopUsingRegister(objClassReg);
       cg->stopUsingRegister(castClassReg);
+      cg->stopUsingRegister(scratch1Reg);
+      cg->stopUsingRegister(scratch2Reg);
       }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
