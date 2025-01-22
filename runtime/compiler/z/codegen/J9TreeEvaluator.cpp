@@ -11596,11 +11596,11 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::MethodSymbol    *callSymbol = symRef->getSymbol()->castToMethodSymbol();
 
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
-   //startLabel->setStartInternalControlFlow();
+   startLabel->setStartInternalControlFlow();
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
-   //doneLabel->setEndInternalControlFlow();
+   doneLabel->setEndInternalControlFlow();
 
    TR::Register *thisClassReg = cg->evaluate(node->getFirstChild());
    TR::Register *checkClassReg = cg->evaluate(node->getSecondChild());
