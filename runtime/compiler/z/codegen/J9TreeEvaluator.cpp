@@ -4385,10 +4385,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   TR::Register *scratchReg1 = cg->allocateRegister();
-   TR::Register *scratchReg2 = cg->allocateRegister();
-   srm->donateScratchRegister(scratchReg1);
-   srm->donateScratchRegister(scratchReg2);
+   // TR::Register *scratchReg1 = cg->allocateRegister();
+   // TR::Register *scratchReg2 = cg->allocateRegister();
+   // srm->donateScratchRegister(scratchReg1);
+   // srm->donateScratchRegister(scratchReg2);
 
    TR::Instruction *gcPoint = NULL;
    TR::Instruction *cursor = NULL;
@@ -4583,8 +4583,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       startICFLabel->setStartInternalControlFlow();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
       }
-   cg->stopUsingRegister(scratchReg1);
-   cg->stopUsingRegister(scratchReg2); 
+   // cg->stopUsingRegister(scratchReg1);
+   // cg->stopUsingRegister(scratchReg2); 
+   srm->stopUsingRegisters();
    srm->addScratchRegistersToDependencyList(conditions);
    J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
    // We will be generating sequence to call Helper if we have either GoToFalse or HelperCall Test
