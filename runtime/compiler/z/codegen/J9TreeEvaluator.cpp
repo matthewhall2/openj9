@@ -9028,9 +9028,13 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth = %d\n", node->getOpCode().getName(),castClassDepth);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "instanceOfStats/(%s)/SuperClassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
-            // For dynamic cast class genInstanceOfOrCheckcastSuperClassTest will generate branch to either helper call or dynamicCacheTest depending on the next generated test.
-            genTestModifierFlags(cg, node, castClassReg, callLabel, srm, "checkcast");
-            genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcast");
+
+            dynamicCastClass = castClassDepth == -1;
+            auto flags = J9AccInterface | J9AccClassArray;
+            // For dynamic cast class to next 2 calls will generate branch to either helper call or dynamicCacheTest depending on the next generated test.
+            TR::LabelSymbol *callHelperLabel = *(iter+1) == DynamicCacheDynamicCastClassTest ? dynamicCacheTestLabel : callLabel;
+            genTestModifierFlags(cg, node, castClassReg, callHelperLabel, srm, "checkcast");
+            genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm, "checkcast");
             dynamicCastClass = castClassDepth == -1;
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
             // If next test is dynamicCacheTest then generate a Branch to Skip it.
