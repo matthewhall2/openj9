@@ -3246,7 +3246,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
  * Generates instructions to load and test the class depth of toClass and fromClass as well as to check if toClass is in the superclass
  * array of fromClass
  */
-static void *genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::LabelSymbol *failLabel, TR_S390ScratchRegisterManager *srm, const char *callerName)
+static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, int32_t toClassDepth, TR::Register *fromClassReg, TR::LabelSymbol *failLabel, TR_S390ScratchRegisterManager *srm, const char *callerName)
    {
    TR::InstOpCode::Mnemonic loadOp;
    int32_t bytesOffset;
@@ -3327,41 +3327,6 @@ static void *genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::R
       }
    srm->reclaimScratchRegister(superclassArrayReg);
    srm->reclaimScratchRegister(toClassDepthReg);  
-   }
-
-/**
- * Generates code to index in to the superclassarray compare value with toClassReg
- * 
- * toClassDepthReg should have been allocated by the scratch register manager
- */
-static void genCheckSuperclassArray(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *toClassDepthReg, int32_t toClassDepth, TR::Register *fromClassReg, TR_S390ScratchRegisterManager *srm)
-   {
-   TR::Register *superclassArrayReg = srm->findOrCreateScratchRegister();
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
-               generateS390MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg));
-
-   if (toClassDepth == -1)
-      {
-      if (cg->comp()->target().is64Bit())
-         {
-         generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3);
-         }
-      else
-         {
-         generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2);
-         }
-
-      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
-                  generateS390MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg));
-      }
-   else
-      {
-      int32_t superClassOffset = toClassDepth * TR::Compiler->om.sizeofReferenceAddress();
-      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
-                  generateS390MemoryReference(superclassArrayReg, superClassOffset, cg));
-      }
-   srm->reclaimScratchRegister(superclassArrayReg);
-   srm->reclaimScratchRegister(toClassDepthReg);   
    }
 
 
