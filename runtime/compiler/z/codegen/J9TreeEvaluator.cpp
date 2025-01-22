@@ -4410,7 +4410,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    traceMsg(comp, "Outline Super Class Test: %d\n", outLinedTest);
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
-   //TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
    while (numSequencesRemaining > 1)
       {
       switch(*iter)
@@ -4583,7 +4583,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       startICFLabel->setStartInternalControlFlow();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
       }
-
    cg->stopUsingRegister(scratchReg1);
    cg->stopUsingRegister(scratchReg2); 
    srm->addScratchRegistersToDependencyList(conditions);
