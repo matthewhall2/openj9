@@ -9196,7 +9196,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       }
    else
       {
-   //   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+     // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
     //  startICFLabel->setStartInternalControlFlow();
       }
       
@@ -9206,7 +9206,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    if (castClassReg)
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
-//   doneLabel->setEndInternalControlFlow();
+   if (objClassReg)
+      {
+      doneLabel->setEndInternalControlFlow();
+      }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
