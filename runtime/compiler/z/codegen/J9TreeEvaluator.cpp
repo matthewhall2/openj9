@@ -11619,8 +11619,8 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, numOfPostDepConditions+4, cg);
       objClassReg = cg->allocateRegister();
       castClassReg = cg->allocateRegister();
-      //scratch1Reg = cg->allocateRegister();
-      //scratch2Reg = cg->allocateRegister();
+      scratch1Reg = cg->allocateRegister();
+      scratch2Reg = cg->allocateRegister();
       deps->addPostCondition(castClassReg, TR::RealRegister::AssignAny);
       deps->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
       }
@@ -11658,16 +11658,16 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-      ///srm->donateScratchRegister(scratch1Reg);
-      //srm->donateScratchRegister(scratch2Reg);
+      srm->donateScratchRegister(scratch1Reg);
+      srm->donateScratchRegister(scratch2Reg);
       int32_t flags = J9AccInterface | J9AccClassArray;
       genTestModifierFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "isAssignableFrom");
       genSuperclassArrayTest(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "isAssignableFrom");
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       srm->addScratchRegistersToDependencyList(deps);
-      srm->stopUsingRegisters();
-      //cg->stopUsingRegister(scratch1Reg);
-      //cg->stopUsingRegister(scratch2Reg);
+      //srm->stopUsingRegisters();
+      cg->stopUsingRegister(scratch1Reg);
+      cg->stopUsingRegister(scratch2Reg);
       }
    else
       {
