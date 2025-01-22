@@ -3297,7 +3297,7 @@ static void *genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::R
 
       TR_Debug * debugObj = cg->getDebug();
       if (debugObj)
-         debugObj->addInstructionComment(cursor, "Check is fromClassDepth <= toClassDepth and jump to fail");
+         debugObj->addInstructionComment(cursor, "Check if fromClassDepth <= toClassDepth and jump to fail");
       }
    srm->reclaimScratchRegister(fromClassDepthReg);
 
@@ -3327,7 +3327,6 @@ static void *genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::R
       }
    srm->reclaimScratchRegister(superclassArrayReg);
    srm->reclaimScratchRegister(toClassDepthReg);  
-   return toClassDepthReg;
    }
 
 /**
@@ -4453,7 +4452,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR_ASSERT(numSequencesRemaining == 2, "SuperClassTest should always be followed by a GoToFalse and must always be the second last test generated");
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
-
+            
             genTestModifierFlags(cg, node, castClassReg, callLabel, srm, "checkcast");
             genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcast");
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
@@ -9146,7 +9145,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(graDeps, 0, 8+srm->numAvailableRegisters(), cg);
    if (numSequencesRemaining > 0 && *iter == HelperCall)
       genInstanceOfDynamicCacheAndHelperCall(node, cg, castClassReg, objClassReg, resultReg, conditions, srm, doneLabel, callLabel, dynamicCacheTestLabel, branchLabel, trueLabel, falseLabel, dynamicCastClass, generateDynamicCache, cacheCastClass, ifInstanceOf, trueFallThrough);
-      
+
    // cannot use srm->stopUsingRegisters here since these are donated registers
    cg->stopUsingRegister(scratchReg1);
    cg->stopUsingRegister(scratchReg2);
