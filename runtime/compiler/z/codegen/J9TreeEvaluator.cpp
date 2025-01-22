@@ -3273,10 +3273,6 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
             "%s superclass test::J9Class->classDepthAndFlags is wrong size\n", callerName);
       }
 
-   fromClassDepthReg = srm->findOrCreateScratchRegister();
-   generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
-         generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
-
    TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
                "%s superclass test::J9Class->classDepthAndFlags is wrong size\n", callerName);
       
@@ -3285,6 +3281,9 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
 
    if (!eliminateSuperClassArraySizeCheck)
       {
+      fromClassDepthReg = srm->findOrCreateScratchRegister();
+      generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
+         generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
       TR::Instruction *cursor = NULL;
       if (toClassDepth == -1)
          {
@@ -3298,8 +3297,9 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
       TR_Debug * debugObj = cg->getDebug();
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if fromClassDepth <= toClassDepth and jump to fail");
+      srm->reclaimScratchRegister(fromClassDepthReg);
       }
-   srm->reclaimScratchRegister(fromClassDepthReg);
+   
 
    TR::Register *superclassArrayReg = srm->findOrCreateScratchRegister();
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
