@@ -3220,6 +3220,8 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
  */
 static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
    {
+   if (classDepth != -1) return;
+   
    TR::Register *scratchReg = srm->findOrCreateScratchRegister();
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
             generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
