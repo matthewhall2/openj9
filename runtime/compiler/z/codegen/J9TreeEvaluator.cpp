@@ -3218,7 +3218,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
 /** Used in conjunction with genSuperclassArrayTest as part of the Superclass test for checkcast, instanceof, Class.isAssignableFrom
  * Generates branch instruction to jump to <handleFlagsLabel> when at least one of the modifiers of the class in <classReg> matches the given flags
  */
-static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int classDepth, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
+static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t classDepth, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
    {
    if (classDepth != -1) return;
 
@@ -4421,7 +4421,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
             
             int32_t flags = J9AccInterface | J9AccClassArray;
-            genTestModifierFlags(cg, node, castClassReg, castClassDepth, srm, flags, "checkcast");
+            genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags, "checkcast");
             genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcast");
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
             break;
