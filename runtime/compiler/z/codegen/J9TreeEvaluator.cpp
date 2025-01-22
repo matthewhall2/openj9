@@ -3227,7 +3227,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
    generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
          generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
 
-   TR_ASSERT(flags < UINT_MAX && flags > 0),
+   TR_ASSERT(flags < UINT_MAX && flags > 0,
    "%s superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
 
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
