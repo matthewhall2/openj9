@@ -8888,10 +8888,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
 
    // In the evaluator, We need at maximum two scratch registers, so creating a pool of scratch registers with 2 size.
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
-   //TR::Register *scratchReg1 = cg->allocateRegister();
-   //TR::Register *scratchReg2 = cg->allocateRegister();
-   //srm->donateScratchRegister(scratchReg1);
-   //srm->donateScratchRegister(scratchReg2);
+   TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = cg->allocateRegister();
+   srm->donateScratchRegister(scratchReg1);
+   srm->donateScratchRegister(scratchReg2);
 
    bool topClassWasCastClass=false;
    float topClassProbability=0.0;
@@ -8973,7 +8973,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    bool generateDynamicCache = false;
    bool cacheCastClass = false;
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
-  // TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
    while (numSequencesRemaining >   1 || (numSequencesRemaining==1 && *iter!=HelperCall))
       {
       switch (*iter)
@@ -8989,8 +8989,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
             objClassReg = cg->allocateRegister();
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
-       //     startICFLabel->setStartInternalControlFlow();
-         //   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            startICFLabel->setStartInternalControlFlow();
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
             break;
          case GoToTrue:
             traceMsg(comp, "%s: Emitting GoToTrue\n", node->getOpCode().getName());
@@ -9181,8 +9181,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       genInstanceOfDynamicCacheAndHelperCall(node, cg, castClassReg, objClassReg, resultReg, conditions, srm, doneLabel, callLabel, dynamicCacheTestLabel, branchLabel, trueLabel, falseLabel, dynamicCastClass, generateDynamicCache, cacheCastClass, ifInstanceOf, trueFallThrough);
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
-   //cg->stopUsingRegister(scratchReg1);
-   //cg->stopUsingRegister(scratchReg2);
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    if (needResult)
       {
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, oppositeResultLabel);
@@ -9206,7 +9206,6 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    if (castClassReg)
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
-   srm->stopUsingRegisters();
 //   doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
