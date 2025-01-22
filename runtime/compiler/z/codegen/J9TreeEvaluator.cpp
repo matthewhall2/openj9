@@ -11658,7 +11658,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       TR::Instruction *cursor =  generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassReg,
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-      /srm->donateScratchRegister(scratch1Reg);
+      srm->donateScratchRegister(scratch1Reg);
       srm->donateScratchRegister(scratch2Reg);
       int32_t flags = J9AccInterface | J9AccClassArray;
       genTestModifierFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags, "isAssignableFrom");
