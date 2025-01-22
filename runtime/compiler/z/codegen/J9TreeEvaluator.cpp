@@ -3218,7 +3218,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
 /** Used in conjunction with genSuperclassArrayTest as part of the Superclass test for checkcast, instanceof, Class.isAssignableFrom
  * Generates branch instruction to jump to <handleFlagsLabel> when at least one of the modifiers of the class in <classReg> matches the given flags
  */
-static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, const char *callerName)
+static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, int32_t flags, const char *callerName)
    {
    TR::Register *scratchReg = srm->findOrCreateScratchRegister();
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
@@ -3227,10 +3227,10 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
    generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
          generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
 
-   TR_ASSERT(((J9AccInterface | J9AccClassArray) < UINT_MAX && (J9AccInterface | J9AccClassArray) > 0),
+   TR_ASSERT(flags < UINT_MAX && flags > 0),
    "%s superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n", callerName);
 
-   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, static_cast<int32_t>((J9AccInterface | J9AccClassArray)));
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
    TR::Instruction *cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
 
    TR_Debug * debugObj = cg->getDebug();
@@ -4515,7 +4515,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
             
-            genTestModifierFlags(cg, node, castClassReg, callLabel, srm, "checkcast");
+            int32_t flags = J9AccInterface | J9AccClassArray;
+            genTestModifierFlags(cg, node, castClassReg, callLabel, srm, flags, "checkcast");
             genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm, "checkcast");
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
             break;
@@ -9095,7 +9096,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             auto flags = J9AccInterface | J9AccClassArray;
             // For dynamic cast class to next 2 calls will generate branch to either helper call or dynamicCacheTest depending on the next generated test.
             TR::LabelSymbol *callHelperLabel = *(iter+1) == DynamicCacheDynamicCastClassTest ? dynamicCacheTestLabel : callLabel;
-            genTestModifierFlags(cg, node, castClassReg, callHelperLabel, srm, "checkcast");
+            genTestModifierFlags(cg, node, castClassReg, callHelperLabel, srm, flags, "checkcast");
             genSuperclassArrayTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm, "checkcast");
             dynamicCastClass = castClassDepth == -1;
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
@@ -11691,7 +11692,8 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
                                                 generateS390MemoryReference(thisClassReg, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
       srm->donateScratchRegister(scratch1Reg);
       srm->donateScratchRegister(scratch2Reg);
-      genTestModifierFlags(cg, node, castClassReg, outlinedCallLabel, srm, "isAssignableFrom");
+      int32_t flags = J9AccInterface | J9AccClassArray;
+      genTestModifierFlags(cg, node, castClassReg, outlinedCallLabel, srm, flags, "isAssignableFrom");
       genSuperclassArrayTest(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm, "isAssignableFrom");
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       srm->addScratchRegistersToDependencyList(deps);
