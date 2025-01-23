@@ -4389,11 +4389,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::Register *scratchReg2 = cg->allocateRegister();
    srm->donateScratchRegister(scratchReg1);
    srm->donateScratchRegister(scratchReg2);
-   if (comp->getOption(TR_TraceCG))
-      {
-      traceMsg(comp, "First scratch reg is virtual reg: %s",    scratchReg1->getRegisterName(comp));
-      traceMsg(comp, "Second scratch reg is virtual reg: %s", scratchReg2->getRegisterName(comp));
-      }
+   
                
 
    TR::Instruction *gcPoint = NULL;
@@ -4416,6 +4412,12 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    traceMsg(comp, "Outline Super Class Test: %d\n", outLinedTest);
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
+   if (comp->getOption(TR_TraceCG))
+      {
+      traceMsg(comp, "First scratch reg is virtual reg: %s\n",    scratchReg1->getRegisterName(comp));
+      traceMsg(comp, "Second scratch reg is virtual reg: %s\n", scratchReg2->getRegisterName(comp));
+      }
+
    TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
    while (numSequencesRemaining > 1)
       {
@@ -4427,14 +4429,14 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp, "%s: Class Not Evaluated. Evaluating it\n", node->getOpCode().getName());
             castClassReg = cg->evaluate(castClassNode);
             if (comp->getOption(TR_TraceCG))
-               traceMsg(comp, "cast class is in reg: %s", castClassReg->getRegisterName(comp));
+               traceMsg(comp, "cast class is in reg: %s\n", castClassReg->getRegisterName(comp));
             break;
          case LoadObjectClass:
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
             objClassReg = cg->allocateRegister();
             if (comp->getOption(TR_TraceCG))
-               traceMsg(comp, "obj class is in reg: %s", objClassReg->getRegisterName(comp));
+               traceMsg(comp, "obj class is in reg: %s\n", objClassReg->getRegisterName(comp));
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
             startICFLabel->setStartInternalControlFlow();
             generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
@@ -4511,7 +4513,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp, "%s: Emitting Profiled Class Test\n", node->getOpCode().getName());
             TR::Register *arbitraryClassReg1 = srm->findOrCreateScratchRegister();
             if (comp->getOption(TR_TraceCG))
-               traceMsg(comp, "profiled class test reg: %s", arbitraryClassReg1->getRegisterName(comp));
+               traceMsg(comp, "Scratch reg for profiled class test: %s\n", arbitraryClassReg1->getRegisterName(comp));
             uint8_t numPICs = 0;
             TR::Instruction *temp= NULL;
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Profiled", comp->signature()),1,TR::DebugCounter::Undetermined);
@@ -4532,7 +4534,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/CompTimeGuess", comp->signature()),1,TR::DebugCounter::Undetermined);
             TR::Register *arbitraryClassReg2 = srm->findOrCreateScratchRegister();
             if (comp->getOption(TR_TraceCG))
-               traceMsg(comp, "compile time guess test reg: %s", arbitraryClassReg2->getRegisterName(comp));
+               traceMsg(comp, "Scratch reg for compile time guess test: %s\n", arbitraryClassReg2->getRegisterName(comp));
             genLoadAddressConstant(cg, node, (uintptr_t)compileTimeGuessClass, arbitraryClassReg2);
             cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, arbitraryClassReg2, objClassReg, TR::InstOpCode::COND_BE, resultLabel , false, false);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/CompTimeFail", comp->signature()),1,TR::DebugCounter::Undetermined);
@@ -4561,7 +4563,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
                traceMsg(comp,"%s: Emitting CastClassCacheTest\n",node->getOpCode().getName());
             TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
             if (comp->getOption(TR_TraceCG))
-               traceMsg(comp, "cast class cache test reg %s", castClassCacheReg->getRegisterName(comp));
+               traceMsg(comp, "Scratch reg for cast class cache test: %s\n", castClassCacheReg->getRegisterName(comp));
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/Cache", comp->signature()),1,TR::DebugCounter::Undetermined);
             generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
                generateS390MemoryReference(objClassReg, offsetof(J9Class, castClassCache), cg));
