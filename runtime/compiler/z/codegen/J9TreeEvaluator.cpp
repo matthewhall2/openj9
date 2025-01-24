@@ -4502,6 +4502,14 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             {
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/SuperClass", comp->signature()),1,TR::DebugCounter::Undetermined);
             int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+            if (castClassDepth == -1)
+               {
+               cg->generateDebugCounter("matthew/checkcast/depth_unknown", 1, TR::DebugCounter::Undetermined);
+               }
+            else
+               {
+               cg->generateDebugCounter("matthew/checkcast/depth_known", 1, TR::DebugCounter::Undetermined);
+               }
             TR_ASSERT(numSequencesRemaining == 2, "SuperClassTest should always be followed by a GoToFalse and must always be the second last test generated");
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth=%d\n", node->getOpCode().getName(),castClassDepth);
@@ -9091,6 +9099,14 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                * case-4 ifInstanceOf , falseLabel == branchLabel : BRC 0x6, branchLabel
                */
             int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+            if (castClassDepth == -1)
+               {
+               cg->generateDebugCounter("matthew/instanceof/depth_unknown", 1, TR::DebugCounter::Undetermined);
+               }
+            else
+               {
+               cg->generateDebugCounter("matthew/instanceof/depth_known", 1, TR::DebugCounter::Undetermined);
+               }
             dynamicCacheTestLabel = generateLabelSymbol(cg);
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth = %d\n", node->getOpCode().getName(),castClassDepth);
