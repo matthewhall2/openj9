@@ -4426,6 +4426,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       }
 
    TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   bool icfInMainline = false;
    while (numSequencesRemaining > 1)
       {
       switch(*iter)
@@ -4445,8 +4446,12 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "obj class is in reg: %s\n", objClassReg->getRegisterName(comp));
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
-            startICFLabel->setStartInternalControlFlow();
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            if (!outLinedTest)
+               {
+               startICFLabel->setStartInternalControlFlow();
+               generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+               icfInMainline = true;
+               }
             break;
          case GoToTrue:
             TR_ASSERT(false, "Doesn't Make sense, GoToTrue should not be part of multiple sequences");
@@ -4603,10 +4608,11 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       {
       conditions->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
       }
-   else
+   else if (!outLinedTest)
       {
       startICFLabel->setStartInternalControlFlow();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+      icfInMainline = true;
       }
    
    J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
@@ -4665,6 +4671,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperReturnOOLLabel, mergeConditions);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneOOLLabel);
          outlinedSlowPath->swapInstructionListsWithCompilation();
+         
          if (comp->getOption(TR_TraceCG) && debugObj != NULL)
                traceMsg(comp, "Done OOL label has name: %s\n", doneOOLLabel->getName(debugObj));
          }
@@ -4672,8 +4679,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-  
-   doneLabel->setEndInternalControlFlow();
+   if (icfInMainline)
+      {
+      doneLabel->setEndInternalControlFlow();
+      }
    if (comp->getOption(TR_TraceCG) && debugObj != NULL)
                traceMsg(comp, "Done label has name: %s\n", doneLabel->getName(debugObj));
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
