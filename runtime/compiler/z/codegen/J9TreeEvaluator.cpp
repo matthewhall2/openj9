@@ -4390,10 +4390,23 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::Register                  *castClassCopyReg = NULL;
    TR::Register                  *resultReg = NULL;
 
-   // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
-   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(1);
+   int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
    TR::Register *scratchReg1 = cg->allocateRegister();
+   TR::Register *scratchReg2 = NULL;
+   TR_S390ScratchRegisterManager *srm = NULL;
+   // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
+   if (castClassDepth == -1)
+      {
+      srm = cg->generateScratchRegisterManager(2);
+      scratchReg2 = cg->allocateRegister();
+      srm->donateScratchRegister(scratchReg2);
+      }
+   else
+      {
+      srm = cg->generateScratchRegisterManager(1);
+      }
    srm->donateScratchRegister(scratchReg1);
+
    
    TR::Instruction *gcPoint = NULL;
    TR::Instruction *cursor = NULL;
@@ -4494,7 +4507,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          case SuperClassTest:
             {
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/SuperClass", comp->signature()),1,TR::DebugCounter::Undetermined);
-            int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
             if (castClassDepth == -1)
                {
                cg->generateDebugCounter("matthew/checkcast/depth_unknown", 1, TR::DebugCounter::Undetermined);
@@ -4693,6 +4705,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
    cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2);
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
