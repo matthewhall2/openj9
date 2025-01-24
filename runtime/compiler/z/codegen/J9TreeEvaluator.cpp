@@ -4395,8 +4395,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::Register *scratchReg1 = cg->allocateRegister();
    srm->donateScratchRegister(scratchReg1);
    
-               
-
    TR::Instruction *gcPoint = NULL;
    TR::Instruction *cursor = NULL;
    TR_S390OutOfLineCodeSection *outlinedSlowPath = NULL;
@@ -4407,8 +4405,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *resultLabel = doneLabel;
 
-  
-   
    TR_Debug * debugObj = cg->getDebug();
    objectReg = cg->evaluate(objectNode);
 
@@ -4420,7 +4416,6 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (comp->getOption(TR_TraceCG))
       {
       traceMsg(comp, "First scratch reg is virtual reg: %s\n",    scratchReg1->getRegisterName(comp));
-      traceMsg(comp, "Second scratch reg is virtual reg: %s\n", scratchReg2->getRegisterName(comp));
       }
 
    TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
