@@ -3252,6 +3252,7 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
    {
    TR::InstOpCode::Mnemonic loadOp;
    int32_t bytesOffset;
+   TR::Compilation *comp = cg->comp();
    if (cg->comp()->target().is64Bit())
       {
       loadOp = TR::InstOpCode::LLGH;
@@ -3268,6 +3269,8 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
    if (toClassDepth == -1)
       {
       toClassDepthReg = srm->findOrCreateScratchRegister();
+      if (comp->getOption(TR_TraceCG))
+               traceMsg(comp, "Scratch reg holding toClassDepth is: %s\n", toClassDepthReg->getRegisterName(comp));
       generateRXInstruction(cg, loadOp, node, toClassDepthReg,
             generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
 
@@ -3284,6 +3287,8 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
    if (!eliminateSuperClassArraySizeCheck)
       {
       fromClassDepthReg = srm->findOrCreateScratchRegister();
+      if (comp->getOption(TR_TraceCG))
+               traceMsg(comp, "Scratch reg holding fromClassDepth is: %s\n", fromClassDepthReg->getRegisterName(comp));
       generateRXInstruction(cg, loadOp, node, fromClassDepthReg,
          generateS390MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags) + bytesOffset, cg));
       TR::Instruction *cursor = NULL;
@@ -3304,6 +3309,8 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
    
 
    TR::Register *superclassArrayReg = srm->findOrCreateScratchRegister();
+   if (comp->getOption(TR_TraceCG))
+               traceMsg(comp, "Scratch reg holding superclassArray is: %s\n", superclassArrayReg->getRegisterName(comp));
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, superclassArrayReg,
                generateS390MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg));
 
@@ -3320,6 +3327,7 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
 
       generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
                   generateS390MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg));
+      srm->reclaimScratchRegister(toClassDepthReg);  
       }
    else
       {
@@ -3328,7 +3336,6 @@ static void genSuperclassArrayTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
                   generateS390MemoryReference(superclassArrayReg, superClassOffset, cg));
       }
    srm->reclaimScratchRegister(superclassArrayReg);
-   srm->reclaimScratchRegister(toClassDepthReg);  
    }
 
 
@@ -4601,9 +4608,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       startICFLabel->setStartInternalControlFlow();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
       }
-   cg->stopUsingRegister(scratchReg1);
-   cg->stopUsingRegister(scratchReg2); 
-   srm->addScratchRegistersToDependencyList(conditions);
+   
    J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
    // We will be generating sequence to call Helper if we have either GoToFalse or HelperCall Test
    if (numSequencesRemaining > 0 && *iter != GoToTrue)
@@ -4616,6 +4621,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       //Following code is needed to put the Helper Call Outlined.
       if (!outlinedSlowPath)
          {
+         srm->addScratchRegistersToDependencyList(conditions);
          // As SuperClassTest is the costliest test and is guaranteed to give results for checkCast node. Hence it will always be second last test
          // in iter array followed by GoToFalse as last test for checkCastNode
          if ( *(iter-1) != SuperClassTest)
@@ -4654,9 +4660,13 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             mergeConditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(outlinedConditions, deps, cg);
          else
             mergeConditions = outlinedConditions;
+         if (comp->getOption(TR_TraceCG) && debugObj != NULL)
+               traceMsg(comp, "Helper return OOL label has name: %s\n", helperReturnOOLLabel->getName(debugObj));
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperReturnOOLLabel, mergeConditions);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneOOLLabel);
          outlinedSlowPath->swapInstructionListsWithCompilation();
+         if (comp->getOption(TR_TraceCG) && debugObj != NULL)
+               traceMsg(comp, "Done OOL label has name: %s\n", doneOOLLabel->getName(debugObj));
          }
       }
    if (resultReg)
@@ -4664,16 +4674,16 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
   
    doneLabel->setEndInternalControlFlow();
-     
+   if (comp->getOption(TR_TraceCG) && debugObj != NULL)
+               traceMsg(comp, "Done label has name: %s\n", doneLabel->getName(debugObj));
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    cg->stopUsingRegister(castClassReg);
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
-   //cg->stopUsingRegister(scratchReg1);
-   //cg->stopUsingRegister(scratchReg2);
-   srm->stopUsingRegisters();
+   cg->stopUsingRegister(scratchReg1);
+   cg->stopUsingRegister(scratchReg2); 
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
