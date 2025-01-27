@@ -4394,7 +4394,10 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR::Register *scratchReg1 = cg->allocateRegister();
    TR::Register *scratchReg2 = NULL;
    TR_S390ScratchRegisterManager *srm = NULL;
-   // We need here at maximum two scratch registers so forcing scratchRegisterManager to create pool of two registers only.
+
+   // Cannot just use 2 scratch regs here since we need to donate the scratch registers to the SRM
+   // because registers need to be allocated before entering Internal Control Flow.
+   // We only need 2 scratch regs when we don't know the class depth at compile time.
    if (castClassDepth == -1)
       {
       srm = cg->generateScratchRegisterManager(2);
@@ -4452,12 +4455,12 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "obj class is in reg: %s\n", objClassReg->getRegisterName(comp));
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
-            if (!outLinedTest)
-               {
-               startICFLabel->setStartInternalControlFlow();
-               generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
-               icfInMainline = true;
-               }
+
+            // all tests needs objClassReg, so we label OOL section here after the register is allocated
+            // even if all tests except for the Class Equality Test are outlined, there is still 1 branch in the main line 
+            startICFLabel->setStartInternalControlFlow();
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            icfInMainline = true;
             break;
          case GoToTrue:
             TR_ASSERT(false, "Doesn't Make sense, GoToTrue should not be part of multiple sequences");
@@ -4621,7 +4624,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       {
       conditions->addPostCondition(objClassReg, TR::RealRegister::AssignAny);
       }
-   else if (!outLinedTest)
+   else if (!icfInMainline)
       {
       startICFLabel->setStartInternalControlFlow();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
@@ -4692,10 +4695,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-   if (icfInMainline)
-      {
-      doneLabel->setEndInternalControlFlow();
-      }
+   doneLabel->setEndInternalControlFlow();
    if (comp->getOption(TR_TraceCG) && debugObj != NULL)
                traceMsg(comp, "Done label has name: %s\n", doneLabel->getName(debugObj));
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
