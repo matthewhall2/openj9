@@ -8936,25 +8936,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    TR::Register                  *resultReg = NULL;
    TR::Register                  *castClassReg = NULL;
 
-   int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
-   TR::Register *scratchReg1 = cg->allocateRegister();
-   TR::Register *scratchReg2 = NULL;
-   TR_S390ScratchRegisterManager *srm = NULL;
-
-   // Cannot just use 2 scratch regs here since we need to donate the scratch registers to the SRM
-   // because registers need to be allocated before entering Internal Control Flow.
-   // We only need 2 scratch regs when we don't know the class depth at compile time.
-   if (castClassDepth == -1)
-      {
-      srm = cg->generateScratchRegisterManager(2);
-      scratchReg2 = cg->allocateRegister();
-      srm->donateScratchRegister(scratchReg2);
-      }
-   else
-      {
-      srm = cg->generateScratchRegisterManager(1);
-      }
-   srm->donateScratchRegister(scratchReg1);
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
    bool topClassWasCastClass=false;
    float topClassProbability=0.0;
@@ -9117,6 +9099,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                * case-3 ifInstanceOf , trueLabel == branchLabel : BRC 0x8, branchLabel
                * case-4 ifInstanceOf , falseLabel == branchLabel : BRC 0x6, branchLabel
                */
+            int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
             if (castClassDepth == -1)
                {
                cg->generateDebugCounter("matthew/instanceof/depth_unknown", 1, TR::DebugCounter::Undetermined);
@@ -9278,8 +9261,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    if (castClassReg)
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
-   cg->stopUsingRegister(scratchReg1);
-   cg->stopUsingRegister(scratchReg2);
+   srm->stopUsingRegisters();
    doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
