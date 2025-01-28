@@ -4410,22 +4410,23 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
    TR::Register *scratchReg1 = cg->allocateRegister();
    TR::Register *scratchReg2 = NULL;
-   TR_S390ScratchRegisterManager *srm = NULL;
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
    // Cannot just use 2 scratch regs here since we need to donate the scratch registers to the SRM
    // because registers need to be allocated before entering Internal Control Flow.
    // We only need 2 scratch regs when we don't know the class depth at compile time.
-   if (castClassDepth == -1)
-      {
-      srm = cg->generateScratchRegisterManager(2);
-      scratchReg2 = cg->allocateRegister();
-      srm->donateScratchRegister(scratchReg2);
-      }
-   else
-      {
-      srm = cg->generateScratchRegisterManager(1);
-      }
-   srm->donateScratchRegister(scratchReg1);
+   // if (castClassDepth == -1)
+   //    {
+   //    srm = cg->generateScratchRegisterManager(2);
+   //    scratchReg2 = cg->allocateRegister();
+   //    srm->donateScratchRegister(scratchReg2);
+   //    }
+   // else
+   //    {
+   //    srm = cg->generateScratchRegisterManager(1);
+   //    }
+   // srm->donateScratchRegister(scratchReg1);
+
 
    
    TR::Instruction *gcPoint = NULL;
@@ -4692,8 +4693,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       cg->stopUsingRegister(objClassReg);
 
    // cannot use srm->stopUsingRegisters here since these are donated registers
-   cg->stopUsingRegister(scratchReg1);
-   cg->stopUsingRegister(scratchReg2);
+   // cg->stopUsingRegister(scratchReg1);
+   // cg->stopUsingRegister(scratchReg2);
+   srm->stopUsingRegisters();
    cg->decReferenceCount(objectNode);
    cg->decReferenceCount(castClassNode);
    return NULL;
