@@ -3242,7 +3242,6 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
 
-   TR_Debug * debugObj = cg->getDebug();
    if (debugObj)
       {
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
@@ -3307,7 +3306,6 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
          }
 
-      TR_Debug * debugObj = cg->getDebug();
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if fromClassDepth <= toClassDepth and jump to fail");
       srm->reclaimScratchRegister(fromClassDepthReg);
