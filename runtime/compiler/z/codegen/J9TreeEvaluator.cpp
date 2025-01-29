@@ -4467,9 +4467,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
 
             // all tests needs objClassReg, so we label OOL section here after the register is allocated
             // even if all tests except for the Class Equality Test are outlined, there is still 1 branch in the main line 
-            startICFLabel->setStartInternalControlFlow();
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
-            icfInMainline = true;
+            // startICFLabel->setStartInternalControlFlow();
+            // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            // icfInMainline = true;
             break;
          case GoToTrue:
             TR_ASSERT(false, "Doesn't Make sense, GoToTrue should not be part of multiple sequences");
@@ -4621,9 +4621,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       }
    else if (!icfInMainline)
       {
-      startICFLabel->setStartInternalControlFlow();
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
-      icfInMainline = true;
+      // startICFLabel->setStartInternalControlFlow();
+      // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+      // icfInMainline = true;
       }
    
    J9::Z::CHelperLinkage *helperLink =  static_cast<J9::Z::CHelperLinkage*>(cg->getLinkage(TR_CHelper));
@@ -4686,7 +4686,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-   doneLabel->setEndInternalControlFlow();
+   //doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    cg->stopUsingRegister(castClassReg);
    if (objClassReg)
@@ -11693,7 +11693,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       genSuperclassTest(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       srm->addScratchRegistersToDependencyList(deps);
-      //cg->stopUsingRegister(scratch1Reg);
+      srm->stopUsingRegisters();
       }
    else
       {
