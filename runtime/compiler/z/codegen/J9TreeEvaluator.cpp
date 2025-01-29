@@ -8927,6 +8927,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    TR::Register                  *castClassReg = NULL;
 
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+   TR::Register *sr1 = cg->allocateRegister();
+   TR::Register *sr2 = cg->allocateRegister();
+   srm->donateScratchRegister(sr1);
+   srm->donateScratchRegister(sr2);
 
    bool topClassWasCastClass=false;
    float topClassProbability=0.0;
@@ -9240,6 +9244,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
    srm->stopUsingRegisters();
+   cg->stopUsingRegister(sr1);
+   cg->stopUsingRegister(sr2);
    doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
