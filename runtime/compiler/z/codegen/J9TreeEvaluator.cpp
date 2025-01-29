@@ -9022,10 +9022,11 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
          case LoadObjectClass:
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Loading Object Class\n",node->getOpCode().getName());
-            objClassReg = cg->allocateRegister();
             startICFLabel = generateLabelSymbol(cg);
             startICFLabel->setStartInternalControlFlow();
             generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+            objClassReg = cg->allocateRegister();
+            
             TR::TreeEvaluator::genLoadForObjectHeadersMasked(cg, node, objClassReg, generateS390MemoryReference(objectReg, static_cast<int32_t>(TR::Compiler->om.offsetOfObjectVftField()), cg), NULL);
             break;
          case GoToTrue:
