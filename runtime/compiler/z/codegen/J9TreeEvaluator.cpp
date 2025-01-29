@@ -9008,7 +9008,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    bool generateDynamicCache = false;
    bool cacheCastClass = false;
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
-   TR::LabelInstruction *startICFLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
    startICFLabel->setStartInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
    while (numSequencesRemaining >   1 || (numSequencesRemaining==1 && *iter!=HelperCall))
@@ -9212,12 +9212,6 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       ++iter;
       }
 
-   if (!startICFLabel)
-      {
-      startICFLabel = generateLabelSymbol(cg);
-      startICFLabel->setStartInternalControlFlow();
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
-      }
 
    TR::RegisterDependencyConditions *conditions = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(graDeps, 0, 8+srm->numAvailableRegisters(), cg);
    if (numSequencesRemaining > 0 && *iter == HelperCall)
