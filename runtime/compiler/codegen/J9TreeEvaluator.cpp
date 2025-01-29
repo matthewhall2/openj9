@@ -1523,6 +1523,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                {
                sequences[i++] = CastClassCacheTest;
                }
+            sequences[i++] = InterfaceTest;
             if (createDynamicCacheTests)
                sequences[i++] = DynamicCacheObjectClassTest;
             sequences[i++] = HelperCall;
@@ -1601,7 +1602,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
              s == ArrayOfJavaLangObjectTest ||
              s == ClassEqualityTest ||
              s == SuperClassTest ||
-             s == CastClassCacheTest)
+             s == CastClassCacheTest ||
+             s == InterfaceTest)
             {
             if (!objectClassLoaded)
                {
@@ -1616,7 +1618,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
          //
          if (s == ClassEqualityTest ||
              s == SuperClassTest ||
-             s == CastClassCacheTest)
+             s == CastClassCacheTest ||
+             s == InterfaceTest)
             {
             if (!castClassEvaluated)
                {
