@@ -11836,7 +11836,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
-   static char *disableIllegalWriteReport = feGetEnv("late_deps");
+   static char *late_deps = feGetEnv("late_deps");
    if (lateDeps == NULL){
    srm->addScratchRegistersToDependencyList(deps);
    }
