@@ -11837,12 +11837,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    static char *late_deps = feGetEnv("late_deps");
-   if (lateDeps == NULL){
+   if (late_deps == NULL){
    srm->addScratchRegistersToDependencyList(deps);
    }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
-   if (lateDeps != NULL){
+   if (late_deps != NULL){
    srm->addScratchRegistersToDependencyList(deps);
    }
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
