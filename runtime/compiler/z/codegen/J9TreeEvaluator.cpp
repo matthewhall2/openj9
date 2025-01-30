@@ -11839,10 +11839,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
-   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
 
+   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    srm->stopUsingRegisters();
    node->setRegister(resultReg);
    return resultReg;
