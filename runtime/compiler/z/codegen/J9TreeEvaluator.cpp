@@ -11817,8 +11817,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          }
       genTestIsSuper(cg, node, fromClassReg, toClassReg, srm, NULL, NULL, toClassDepth, failLabel, successLabel, helperCallLabel, deps, NULL, false, NULL, NULL);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         srm->addScratchRegistersToDependencyList(deps);
-         srm->stopUsingRegisters();
       }
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
@@ -11844,6 +11842,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    srm->stopUsingRegisters();
+   srm->addScratchRegistersToDependencyList(deps);
    node->setRegister(resultReg);
    return resultReg;
    }
