@@ -11836,13 +11836,17 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
-
+   static char *disableIllegalWriteReport = feGetEnv("late_deps");
+   if (lateDeps == NULL){
+   srm->addScratchRegistersToDependencyList(deps);
+   }
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
-
+   if (lateDeps != NULL){
+   srm->addScratchRegistersToDependencyList(deps);
+   }
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    srm->stopUsingRegisters();
-   srm->addScratchRegistersToDependencyList(deps);
    node->setRegister(resultReg);
    return resultReg;
    }
