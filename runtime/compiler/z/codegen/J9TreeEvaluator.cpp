@@ -3225,20 +3225,26 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
    TR_Debug * debugObj = cg->getDebug();
    TR::LabelSymbol *handleFlagsCountLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *flagsDoNotMatchLabel = generateLabelSymbol(cg);
+      TR::Register *flagReg = srm->findOrCreateScratchRegister();
+   static bool addTrap = feGetEnv("addTrap") != NULL;
    if (!modiferReg)
       {
+         generateRXInstruction(cg, TR::InstOpCode::LHI, node, flagReg, 1);
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
                generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
-
+   if (addTrap){
+   generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
+   }
       cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
             generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
-
+if (addTrap){
+   generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
+   }
       if (debugObj)
          {
          debugObj->addInstructionComment(cursor, "Load castClass modifiers");
          }
       }
-   TR::Register *flagReg = srm->findOrCreateScratchRegister();
    generateRIInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
    generateRRFInstruction(cg, TR::InstOpCode::NRK, node, scratchReg, flagReg, scratchReg);
    static bool addTrap = feGetEnv("addTrap") != NULL;
