@@ -3240,8 +3240,8 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
       }
 
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsCountLabel);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, flagsDoNotMatchLabel);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, handleFlagsCountLabel);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, flagsDoNotMatchLabel);
 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, handleFlagsCountLabel);
@@ -11901,7 +11901,7 @@ if (count > 1){
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, interfaceClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
-   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_BE, successLastInterLabel, false, false);
+   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_MASK8, successLastInterLabel, false, false);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
 }
   
@@ -11916,13 +11916,13 @@ if (count > 2){
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
    cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, iTableNullLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, interfaceClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
-   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_BE, successInterLabel, false, false);
+   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_MASK8, successInterLabel, false, false);
    cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
@@ -12027,7 +12027,7 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          }
          
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
-         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLabel);
       }
    
    cg->generateDebugCounter("inline/interface/testInterfaceFlag/test", 1, TR::DebugCounter::Undetermined);
