@@ -3241,6 +3241,7 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
    TR::Register *flagReg = srm->findOrCreateScratchRegister();
    generateRIInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
    generateRRFInstruction(cg, TR::InstOpCode::NRK, node, scratchReg, flagReg, scratchReg);
+   generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, handleFlagsCountLabel);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, flagsDoNotMatchLabel);
 
