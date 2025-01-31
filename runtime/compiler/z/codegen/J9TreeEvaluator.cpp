@@ -3223,6 +3223,8 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
    TR::Register *scratchReg = modiferReg == NULL ? srm->findOrCreateScratchRegister() : modiferReg;
    TR::Instruction *cursor = NULL;
    TR_Debug * debugObj = cg->getDebug();
+   TR::LabelSymbol *handleFlagsCountLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *flagsDoNotMatchLabel = generateLabelSymbol(cg);
    if (!modiferReg)
       {
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
@@ -3238,8 +3240,16 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
       }
 
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsCountLabel);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, flagsDoNotMatchLabel);
 
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, handleFlagsCountLabel);
+   cg->generateDebugCounter("inline/interface/flagsMatch", 1, TR::DebugCounter::Undetermined);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, handleFlagsLabel);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, flagsDoNotMatchLabel);
+   cg->generateDebugCounter("inline/interface/flagsDontMatch", 1, TR::DebugCounter::Undetermined);
    if (debugObj)
       {
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
@@ -11996,8 +12006,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          }
 
          if (inlineInter){
+            cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/test", 1, TR::DebugCounter::Undetermined);
             TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccAbstract | J9AccClassArray, NULL, true);
+            cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/fail", 1, TR::DebugCounter::Undetermined);
+            cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/test", 1, TR::DebugCounter::Undetermined);
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface, modReg, false);
+            cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/didfail", 1, TR::DebugCounter::Undetermined);
          }else{
                static bool twoCalls = feGetEnv("twoCalls") != NULL;
                if (twoCalls)
@@ -12016,14 +12030,18 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
       }
    
+   cg->generateDebugCounter("inline/interface/testInterfaceFlag/test", 1, TR::DebugCounter::Undetermined);
    genTestModifierFlags(cg, node, toClassReg, 1, interfaceLabel, srm, J9AccInterface);
+   cg->generateDebugCounter("inline/interface/testInterfaceFlag/fail", 1, TR::DebugCounter::Undetermined);
 
+   cg->generateDebugCounter("inline/interface/branchToHelper/main", 1, TR::DebugCounter::Undetermined); // should match the number of interface fails
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
    cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+   cg->generateDebugCounter("inline/interface/callHelper/", 1, TR::DebugCounter::Undetermined);
    TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
