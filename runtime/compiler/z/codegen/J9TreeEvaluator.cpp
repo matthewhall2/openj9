@@ -11875,8 +11875,8 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
 TR::Instruction *cursor  = NULL;
  TR::Register *interfaceClassReg;
    TR::Register *iTableReg;
-   TR::LabelSymbol successInterLabel = generateLabelSymbol(cg);
-      TR::LabelSymbol successLastInterLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *successInterLabel = generateLabelSymbol(cg);
+      TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
