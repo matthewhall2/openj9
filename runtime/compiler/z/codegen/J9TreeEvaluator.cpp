@@ -11919,8 +11919,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    {
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
-   TR::Register *fCR = cg->evaluate(fromClass);
-   TR::Register *tCR = cg->evaluate(toClass);
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
 
    static char* inline_Inter = feGetEnv("inlineInter");
    static bool inlineInter = inline_Inter != NULL;
@@ -11942,20 +11942,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    TR::Compilation *comp = cg->comp();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp->fe());
-
-   static char* loadj9 = feGetEnv("loadj9");
-   if (loadj9){   
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, toClassReg,
-                                                generateS390MemoryReference(tCR, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-   
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, fromClassReg,
-                                                generateS390MemoryReference(fCR, fej9->getOffsetOfClassFromJavaLangClassField(), cg));
-   }
-   else
-   {
-   fromClassReg = fCR;
-   toClassReg = tCR;
-   }
 
    TR::RegisterDependencyConditions* deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
@@ -12006,7 +11992,6 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         srm->addScratchRegistersToDependencyList(deps);
          srm->stopUsingRegisters();
       }
 
@@ -12043,6 +12028,7 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
+   srm->addScratchRegistersToDependencyList(deps);
    deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
    doneLabel->setEndInternalControlFlow();
