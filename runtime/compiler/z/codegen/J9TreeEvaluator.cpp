@@ -11980,7 +11980,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-   
 
    if (!isInterfaceOrAbstract(toClass, cg->comp()))
       {
@@ -12015,6 +12014,8 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
          srm->stopUsingRegisters();
       }
+   
+   genTestModifierFlags(cg, node, toClassReg, 1, interfaceLabel, srm, J9AccInterface);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
