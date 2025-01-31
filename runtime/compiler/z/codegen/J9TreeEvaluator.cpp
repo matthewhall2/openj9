@@ -12012,7 +12012,6 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         srm->stopUsingRegisters();
       }
    
    genTestModifierFlags(cg, node, toClassReg, 1, interfaceLabel, srm, J9AccInterface);
