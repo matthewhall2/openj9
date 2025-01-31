@@ -3247,7 +3247,6 @@ if (addTrap){
       }
    generateRIInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
    generateRRFInstruction(cg, TR::InstOpCode::NRK, node, scratchReg, flagReg, scratchReg);
-   static bool addTrap = feGetEnv("addTrap") != NULL;
    if (addTrap){
    generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
    }
