@@ -3238,8 +3238,9 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
          debugObj->addInstructionComment(cursor, "Load castClass modifiers");
          }
       }
-
-   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
+   TR::Register *flagReg = srm->findOrCreateScratchRegister();
+   generateRIInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
+   generateRILInstruction(cg, TR::InstOpCode::NRK, node, scratchReg, flags, scratchReg);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK4, node, handleFlagsCountLabel);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, flagsDoNotMatchLabel);
 
@@ -12004,7 +12005,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
             }
          }
-
          if (inlineInter){
             cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/test", 1, TR::DebugCounter::Undetermined);
             TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccAbstract | J9AccClassArray, NULL, true);
