@@ -3251,6 +3251,7 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, flagsDoNotMatchLabel);
    cg->generateDebugCounter("inline/interface/flagsDontMatch", 1, TR::DebugCounter::Undetermined);
+   srm->reclaimScratchRegister(flagReg);
    if (debugObj)
       {
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
