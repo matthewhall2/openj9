@@ -11975,10 +11975,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    if (righttointer){
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
-
+   static int countCompInter = 0;
    if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp())){
+      printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
+
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
 
    if (!isInterfaceOrAbstract(toClass, cg->comp()))
