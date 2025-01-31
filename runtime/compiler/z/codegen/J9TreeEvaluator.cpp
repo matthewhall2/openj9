@@ -11653,6 +11653,8 @@ static TR::SymbolReference *getSymbolRef(TR::Node *clazz, TR::Compilation *comp)
    if (clazz->getOpCodeValue() != TR::loadaddr) {
       printf("not loadaddr\n");
       return NULL;
+   }else{
+      printf("found aloadaddr\n");
    }
 
    return clazz->getSymbolReference();
