@@ -11866,7 +11866,7 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
       static char* c = feGetEnv("test_inline_inter");
 
    static int count = c == NULL ? 0 : atoi(c);
-   printf("count is %d\n", c);
+   printf("count is %d\n", count);
 TR::Instruction *cursor  = NULL;
  TR::Register *interfaceClassReg;
    TR::Register *iTableReg;
