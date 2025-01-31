@@ -11906,7 +11906,7 @@ if (count > 2){
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
    cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, failLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, iTableNullLabel);
    // get class
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, interfaceClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
@@ -11920,7 +11920,9 @@ if (count > 2){
   }
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, iTableNullLabel);
-   cg->generateDebugCounter(cg, "inline/interface/nullItable", 1, TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter("inline/interface/nullItable", 1, TR::DebugCounter::Undetermined);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, successInterLabel);
    cg->generateDebugCounter("inline/interface/sucessItable", 1, TR::DebugCounter::Undetermined);
@@ -12026,7 +12028,7 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
  generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
-   cg->generateDebugCounter(cg, "inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter("inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
    if (inlineInter){
                 static bool gentest = feGetEnv("gentest") != NULL;
    if (gentest)
