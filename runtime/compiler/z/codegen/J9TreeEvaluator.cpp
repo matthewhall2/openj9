@@ -11650,7 +11650,10 @@ static TR::SymbolReference *getSymbolRef(TR::Node *clazz, TR::Compilation *comp)
       }
 
    // the next check will not work if we do not have a loadaddr node
-   if (clazz->getOpCodeValue() != TR::loadaddr) return NULL;
+   if (clazz->getOpCodeValue() != TR::loadaddr) {
+      printf("not loadaddr\n");
+      return NULL;
+   }
 
    return clazz->getSymbolReference();
    }
@@ -11964,7 +11967,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
 
-   if (inlineInter && symRef->isClassInterface(cg->comp())){
+   if (inlineInter && symReg != NULL && symRef->isClassInterface(cg->comp())){
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
