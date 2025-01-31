@@ -3229,7 +3229,7 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
    static bool addTrap = feGetEnv("addTrap") != NULL;
    if (!modiferReg)
       {
-         generateRXInstruction(cg, TR::InstOpCode::LHI, node, flagReg, 1);
+         generateRIInstruction(cg, TR::InstOpCode::LHI, node, flagReg, 1);
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
                generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
    if (addTrap){
