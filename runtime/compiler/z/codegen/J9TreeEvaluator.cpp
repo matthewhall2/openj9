@@ -3232,7 +3232,7 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
 
    TR::InstOpCode::Mnemonic loadOp;
    int32_t bytesOffset;
-
+   TR::Compilation *comp = cg->comp();
    if (comp->target().is64Bit())
       {
       loadOp = TR::InstOpCode::LLGH;
@@ -11913,6 +11913,7 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
 
    static int count = c == NULL ? 0 : atoi(c);
    printf("count is %d\n", count);
+
 TR::Instruction *cursor  = NULL;
  TR::Register *interfaceClassReg;
    TR::Register *iTableReg;
@@ -11925,7 +11926,7 @@ TR::Instruction *cursor  = NULL;
 
 TR::InstOpCode::Mnemonic loadOp;
    int32_t bytesOffset;
-
+TR::Compilation *comp = cg->comp();
    if (comp->target().is64Bit())
       {
       loadOp = TR::InstOpCode::LLGH;
