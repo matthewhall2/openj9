@@ -3244,8 +3244,8 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
       bytesOffset = 2;
       }
    
-   int32_t adder1 = addOff1 == NULL ? 0 : bytesOffset;
-   int32_t adder2 = addOff2 == NULL ? 0 : bytesOffset;
+   int32_t adder1 = !addOff1 ? 0 : bytesOffset;
+   int32_t adder2 = !addOff2 ? 0 : bytesOffset;
 
    if (!modiferReg)
       {
@@ -11938,8 +11938,8 @@ TR::Compilation *comp = cg->comp();
       bytesOffset = 2;
       }
    
-   int32_t adder1 = addOff1 == NULL ? 0 : bytesOffset;
-   int32_t adder2 = addOff2 == NULL ? 0 : bytesOffset;
+   int32_t adder1 = !addOff1 ? 0 : bytesOffset;
+   int32_t adder2 = !addOff2 ? 0 : bytesOffset;
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
