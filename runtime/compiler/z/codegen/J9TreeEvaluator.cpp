@@ -12098,10 +12098,13 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
  generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+
    cg->generateDebugCounter("inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
    static bool addTrap = feGetEnv("addTrap2") != NULL;
+      generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+
     if (addTrap){
-   generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
+   generateRRFInstruction(cg, TR::InstOpCode::CRT, node, resultReg, resultReg, 8, true);
    }
    if (inlineInter){
                 static bool gentest = feGetEnv("gentest") != NULL;
