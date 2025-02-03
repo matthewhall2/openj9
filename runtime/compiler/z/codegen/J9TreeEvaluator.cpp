@@ -4542,7 +4542,7 @@ TR::Instruction *cursor  = NULL;
 TR::Compilation *comp = cg->comp();
    bool isTarget64Bit = comp->target().is64Bit();
    bool isCompressedRef = comp->useCompressedPointers();
-TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
+TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGFR : TR::InstOpCode::CLGR) : TR::InstOpCode::CLR;
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
@@ -4552,8 +4552,7 @@ interfaceClassReg = srm->findOrCreateScratchRegister();
 if (count > 1){
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
-   generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+   cursor = generateRRInstruction(cg, cmpOpcode, node, toClassReg, iTableReg);
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
@@ -4583,8 +4582,7 @@ if (count > 2){
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
-   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+   cursor = generateRRInstruction(cg, cmpOpcode, node, toClassReg, iTableReg);
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
