@@ -3227,36 +3227,17 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
    TR::LabelSymbol *flagsDoNotMatchLabel = generateLabelSymbol(cg);
       TR::Register *flagReg = srm->findOrCreateScratchRegister();
    static bool addTrap = feGetEnv("addTrap") != NULL;
-      static bool addOff1 = feGetEnv("addOffsetToJ9Class") != NULL;
-            static bool addOff2 = feGetEnv("addOffsetToJ9ROMClass") != NULL;
-
-   TR::InstOpCode::Mnemonic loadOp;
-   int32_t bytesOffset;
-   TR::Compilation *comp = cg->comp();
-   if (comp->target().is64Bit())
-      {
-      loadOp = TR::InstOpCode::LLGH;
-      bytesOffset = 6;
-      }
-   else
-      {
-      loadOp = TR::InstOpCode::LLH;
-      bytesOffset = 2;
-      }
-   
-   int32_t adder1 = !addOff1 ? 0 : bytesOffset;
-   int32_t adder2 = !addOff2 ? 0 : bytesOffset;
 
    if (!modiferReg)
       {
          generateRIInstruction(cg, TR::InstOpCode::LHI, node, flagReg, 1);
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-               generateS390MemoryReference(classReg, offsetof(J9Class, romClass) + adder1, cg));
+               generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
    if (addTrap){
    generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
    }
       cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
-            generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers) + adder2, cg));
+            generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
 if (addTrap){
    generateRRFInstruction(cg, TR::InstOpCode::CRT, node, flagReg, flagReg, 8, true);
    }
@@ -11930,25 +11911,7 @@ TR::Instruction *cursor  = NULL;
       TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
             TR::LabelSymbol *iTableNullLabel = generateLabelSymbol(cg);
 
-            static bool addOff1 = feGetEnv("addOffsetToJ9Class2") != NULL;
-            static bool addOff2 = feGetEnv("addOffsetToJ9ROMClass2") != NULL;
-
-TR::InstOpCode::Mnemonic loadOp;
-   int32_t bytesOffset;
-TR::Compilation *comp = cg->comp();
-   if (comp->target().is64Bit())
-      {
-      loadOp = TR::InstOpCode::LLGH;
-      bytesOffset = 6;
-      }
-   else
-      {
-      loadOp = TR::InstOpCode::LLH;
-      bytesOffset = 2;
-      }
    
-   int32_t adder1 = !addOff1 ? 0 : bytesOffset;
-   int32_t adder2 = !addOff2 ? 0 : bytesOffset;
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
@@ -11957,9 +11920,9 @@ interfaceClassReg = srm->findOrCreateScratchRegister();
   
 if (count > 1){
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable) + adder1, cg));
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
    cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, interfaceClassReg,
-   generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass) + adder1, cg));
+   generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
@@ -11967,7 +11930,7 @@ if (count > 1){
   
 if (count > 2){
  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable) + adder1, cg));
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
 }
    // load iTable
   if (count > 3) {
@@ -11979,13 +11942,13 @@ if (count > 2){
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
    cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass) + adder2, cg));
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
    cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next) + adder1, cg));
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
   }
 
