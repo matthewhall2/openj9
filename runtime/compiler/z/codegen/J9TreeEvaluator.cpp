@@ -4539,8 +4539,10 @@ TR::Instruction *cursor  = NULL;
    TR::LabelSymbol *successInterLabel = generateLabelSymbol(cg);
       TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
             TR::LabelSymbol *iTableNullLabel = generateLabelSymbol(cg);
-
-   
+TR::Compilation *comp = cg->comp();
+   bool isTarget64Bit = comp->target().is64Bit();
+   bool isCompressedRef = comp->useCompressedPointers();
+TR::InstOpCode cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
@@ -4550,7 +4552,7 @@ interfaceClassReg = srm->findOrCreateScratchRegister();
 if (count > 1){
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, interfaceClassReg,
+   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
@@ -4581,7 +4583,7 @@ if (count > 2){
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
