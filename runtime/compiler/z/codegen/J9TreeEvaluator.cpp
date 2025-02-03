@@ -4673,7 +4673,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
       switch(*iter)
          {
          case InterfaceTest:
+            if (feGetEnv("gentest2") != NULL) {
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, resultLabel);
+            }
             break;
          case EvaluateCastClass:
             TR_ASSERT(!castClassReg, "Cast class already evaluated");
@@ -9219,7 +9221,9 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       switch (*iter)
          {
          case InterfaceTest:
+            if (feGetEnv("gentest2")){
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+            }
             break;
          case EvaluateCastClass:
             TR_ASSERT(!castClassReg, "Cast class already evaluated");
