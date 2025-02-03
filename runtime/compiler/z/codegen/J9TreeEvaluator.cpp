@@ -3274,12 +3274,21 @@ if (addTrap){
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, flagsDoNotMatchLabel);
 
 
+
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, handleFlagsCountLabel);
-   cg->generateDebugCounter("inline/interface/flagsMatch", 1, TR::DebugCounter::Undetermined);
+   if (flags & J9AccInterface){
+      cg->generateDebugCounter("inline/interface/flagsMatch/interface", 1, TR::DebugCounter::Undetermined);
+   }else{
+      cg->generateDebugCounter("inline/interface/flagsMatch/nonInterface", 1, TR::DebugCounter::Undetermined);
+   }
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, handleFlagsLabel);
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, flagsDoNotMatchLabel);
-   cg->generateDebugCounter("inline/interface/flagsDontMatch", 1, TR::DebugCounter::Undetermined);
+   if (flags & J9AccInterface){
+      cg->generateDebugCounter("inline/interface/flagsDontMatch/interface", 1, TR::DebugCounter::Undetermined);
+   }else{
+      cg->generateDebugCounter("inline/interface/flagsDontMatch/noninterface", 1, TR::DebugCounter::Undetermined);
+   }
    srm->reclaimScratchRegister(flagReg);
    if (debugObj)
       {
@@ -12041,6 +12050,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
       cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
       genTestModifierFlags(cg, node, toClassReg, -1, interfaceLabel, srm, J9AccInterface);
+      static bool addTrap = feGetEnv("addTrap3") != NULL;
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
 
