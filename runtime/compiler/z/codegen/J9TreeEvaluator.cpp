@@ -4564,8 +4564,8 @@ cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTable
    generateRIInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableReg, offsetof(J9Class, iTable));
       cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
-   //       cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
+         cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
 
    
   
