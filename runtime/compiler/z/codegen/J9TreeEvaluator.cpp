@@ -4560,7 +4560,7 @@ if (count > 1){
 
 // nullcheck void**itable
 cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, 0, cg));
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
    generateRIInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableReg, offsetof(J9Class, iTable));
       cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
@@ -4568,7 +4568,7 @@ cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTable
          cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
 
    
-  
+  generateS390MemInstruction();
 if (count > 2){
  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
