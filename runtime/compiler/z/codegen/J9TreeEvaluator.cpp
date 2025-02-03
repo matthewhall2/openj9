@@ -11958,10 +11958,10 @@ interfaceClassReg = srm->findOrCreateScratchRegister();
 if (count > 1){
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable) + adder1, cg));
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, interfaceClassReg,
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, interfaceClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass) + adder1, cg));
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
-   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_MASK8, successLastInterLabel, false, false);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
 }
   
@@ -11978,11 +11978,11 @@ if (count > 2){
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, interfaceClassReg,
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass) + adder2, cg));
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
-   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, interfaceClassReg, TR::InstOpCode::COND_MASK8, successInterLabel, false, false);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
    cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, next) + adder1, cg));
