@@ -12039,6 +12039,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    static int countCompInter = 0;
    if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp())){
       printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
+      cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
+      genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
 
@@ -12097,7 +12099,7 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
- generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
 
    cg->generateDebugCounter("inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
    static bool addTrap = feGetEnv("addTrap2") != NULL;
