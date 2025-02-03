@@ -12040,7 +12040,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp())){
       printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
       cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
-      genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface);
+      genTestModifierFlags(cg, node, toClassReg, 1, interfaceLabel, srm, J9AccInterface);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
 
@@ -12059,10 +12059,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          }
          if (inlineInter){
             cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/test", 1, TR::DebugCounter::Undetermined);
-            TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccAbstract | J9AccClassArray, NULL, true);
+            TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, 1, helperCallLabel, srm, J9AccAbstract | J9AccClassArray, NULL, true);
             cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/fail", 1, TR::DebugCounter::Undetermined);
             cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/test", 1, TR::DebugCounter::Undetermined);
-            genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface, modReg, false);
+            genTestModifierFlags(cg, node, toClassReg, 1, interfaceLabel, srm, J9AccInterface, modReg, false);
             cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/didfail", 1, TR::DebugCounter::Undetermined);
          }else{
                static bool twoCalls = feGetEnv("twoCalls") != NULL;
