@@ -1523,6 +1523,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                {
                sequences[i++] = CastClassCacheTest;
                }
+            sequences[i++] = InterfaceTest;
             if (createDynamicCacheTests)
                sequences[i++] = DynamicCacheObjectClassTest;
             sequences[i++] = HelperCall;
