@@ -4534,7 +4534,7 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
    printf("count is %d\n", count);
 
 TR::Instruction *cursor  = NULL;
- TR::Register *interfaceClassReg;
+ TR::Register *iTableAddrReg;
    TR::Register *iTableReg;
    TR::LabelSymbol *successInterLabel = generateLabelSymbol(cg);
       TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
@@ -4545,7 +4545,7 @@ TR::Compilation *comp = cg->comp();
 TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGFR : TR::InstOpCode::CLGR) : TR::InstOpCode::CLR;
 
    if (count > 0){
-interfaceClassReg = srm->findOrCreateScratchRegister();
+iTableAddrReg = srm->findOrCreateScratchRegister();
    iTableReg = srm->findOrCreateScratchRegister();
    }
   
@@ -4571,6 +4571,9 @@ if (count > 2){
  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
 }
+
+// cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableAddrReg, fromClassReg);
+// cursor = generateRIInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableAddrReg, offsetof(J9Class, iTable));
    // load iTable
   if (count > 3) {
  TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
@@ -4585,8 +4588,9 @@ if (count > 2){
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
    cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
+   cursor = generateRInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableReg, offsetof(J9ITable, next));
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+               generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
   }
 
@@ -4605,7 +4609,7 @@ if (count > 2){
 
 
 
-   srm->reclaimScratchRegister(interfaceClassReg);
+   srm->reclaimScratchRegister(iTableAddrReg);
    srm->reclaimScratchRegister(iTableReg);
    }
 
