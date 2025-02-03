@@ -4572,7 +4572,7 @@ cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTable
   
 if (count > 2){
  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTableReg), cg));
 }
    // load iTable
   if (count > 3) {
