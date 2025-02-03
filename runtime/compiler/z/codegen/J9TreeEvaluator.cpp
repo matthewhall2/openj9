@@ -11921,8 +11921,8 @@ TR::Instruction *cursor  = NULL;
       TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
             TR::LabelSymbol *iTableNullLabel = generateLabelSymbol(cg);
 
-            static bool addOff1 = feGetEnv("addOffsetToJ9Class") != NULL;
-            static bool addOff2 = feGetEnv("addOffsetToJ9ROMClass") != NULL;
+            static bool addOff1 = feGetEnv("addOffsetToJ9Class2") != NULL;
+            static bool addOff2 = feGetEnv("addOffsetToJ9ROMClass2") != NULL;
 
 TR::InstOpCode::Mnemonic loadOp;
    int32_t bytesOffset;
