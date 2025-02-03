@@ -4556,6 +4556,17 @@ if (count > 1){
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
 }
+
+// nullcheck void**itable
+cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+            generateS390MemoryReference(fromClassReg, 0, cg));
+   generateRIInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableReg, offsetof(J9Class, iTable));
+      cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
+   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
+         cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
+
+
   
 if (count > 2){
  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
