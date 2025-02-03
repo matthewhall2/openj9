@@ -4542,7 +4542,7 @@ TR::Instruction *cursor  = NULL;
 TR::Compilation *comp = cg->comp();
    bool isTarget64Bit = comp->target().is64Bit();
    bool isCompressedRef = comp->useCompressedPointers();
-TR::InstOpCode cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
+TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
 
    if (count > 0){
 interfaceClassReg = srm->findOrCreateScratchRegister();
