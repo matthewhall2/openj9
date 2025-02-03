@@ -12046,7 +12046,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
    }
    static int countCompInter = 0;
-   if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp())){
+   if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp()) && !symRef->isClassArray(cg->comp())){
       printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
       cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
       genTestModifierFlags(cg, node, toClassReg, -1, interfaceLabel, srm, J9AccInterface);
@@ -12085,7 +12085,6 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
           genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccAbstract | J9AccClassArray | J9AccInterface);  
 
                }
-            
          }
          
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
