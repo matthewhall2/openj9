@@ -4528,71 +4528,56 @@ genInstanceOfOrCheckCastNullTest(TR::Node* node, TR::CodeGenerator* cg, TR::Regi
 
 static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
    {
-      static char* c = feGetEnv("test_inline_inter");
-
-   static int count = c == NULL ? 0 : atoi(c);
-   printf("count is %d\n", count);
-
-TR::Instruction *cursor  = NULL;
- TR::Register *iTableAddrReg;
+   TR::Instruction *cursor  = NULL;
+   TR::Register *interfaceClassReg;
    TR::Register *iTableReg;
    TR::LabelSymbol *successInterLabel = generateLabelSymbol(cg);
-      TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
-            TR::LabelSymbol *iTableNullLabel = generateLabelSymbol(cg);
-TR::Compilation *comp = cg->comp();
+   TR::LabelSymbol *successLastInterLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *iTableNullLabel = generateLabelSymbol(cg);
+   TR::Compilation *comp = cg->comp();
    bool isTarget64Bit = comp->target().is64Bit();
    bool isCompressedRef = comp->useCompressedPointers();
-TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGFR : TR::InstOpCode::CLGR) : TR::InstOpCode::CLR;
+   TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
 
-   if (count > 0){
-iTableAddrReg = srm->findOrCreateScratchRegister();
-   iTableReg = srm->findOrCreateScratchRegister();
-   }
   
-if (count > 1){
+   iTableReg = srm->findOrCreateScratchRegister();
+   
+  
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   cursor = generateRRInstruction(cg, cmpOpcode, node, toClassReg, iTableReg);
+   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
+   generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
          cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
       cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
-}
 
-// nullcheck void**itable
-cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+
+   // load and nullchck I table
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
-      cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
-         cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
 
-   
-if (count > 2){
- cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
-}
-
-// cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableAddrReg, fromClassReg);
-// cursor = generateRIInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableAddrReg, offsetof(J9Class, iTable));
    // load iTable
-  if (count > 3) {
- TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
+   TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
    // nullcheck iTable
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
    cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
-   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    // get class
-   cursor = generateRRInstruction(cg, cmpOpcode, node, toClassReg, iTableReg);
+   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
    cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
    cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
-   cursor = generateRInstruction(cg, TR::InstOpCode::getAddImmOpCode(), node, iTableReg, offsetof(J9ITable, next));
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
-               generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+   cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode, node, iTableReg, iTableReg);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
-  }
+  
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, iTableNullLabel);
    cg->generateDebugCounter("inline/interface/nullItable", 1, TR::DebugCounter::Undetermined);
@@ -4607,9 +4592,6 @@ if (count > 2){
    cg->generateDebugCounter("inline/interface/sucessLastItable", 1, TR::DebugCounter::Undetermined);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, successLabel);
 
-
-
-   srm->reclaimScratchRegister(iTableAddrReg);
    srm->reclaimScratchRegister(iTableReg);
    }
 
