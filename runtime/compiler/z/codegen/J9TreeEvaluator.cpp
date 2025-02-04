@@ -4547,31 +4547,31 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
-         cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
+ //        cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
-      cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
+ //     cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
 
 
    // load and nullchck I table
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
-   cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
+//   cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
-   cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
+   //cg->generateDebugCounter("inline/interface/failItablepointer", 1, TR::DebugCounter::Undetermined);
 
    // load iTable
    TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
    // nullcheck iTable
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
-   cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
+  // cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
    // get class
    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
-   cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
+   //cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successInterLabel); 
-   cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
+   //cg->generateDebugCounter("inline/interface/failItableCheck", 1, TR::DebugCounter::Undetermined);
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg, 
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
    cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode, node, iTableReg, iTableReg);
@@ -12019,7 +12019,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    static int countCompInter = 0;
    if (inlineInter && symRef != NULL && symRef->isClassInterface(cg->comp()) && !symRef->isClassArray(cg->comp())){
       printf("known as interface at compile time (%d). branching to interface label\n", ++countCompInter);
-      cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
+    //  cg->generateDebugCounter("inline/interface/knownAtCompile", 1, TR::DebugCounter::Undetermined);
       genTestModifierFlags(cg, node, toClassReg, -1, interfaceLabel, srm, J9AccInterface);
       static bool addTrap = feGetEnv("addTrap3") != NULL;
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, interfaceLabel);
@@ -12039,12 +12039,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             }
          }
          if (inlineInter){
-            cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/test", 1, TR::DebugCounter::Undetermined);
+    //        cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/test", 1, TR::DebugCounter::Undetermined);
             TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, -1, helperCallLabel, srm, J9AccAbstract | J9AccClassArray, NULL, true);
-            cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/fail", 1, TR::DebugCounter::Undetermined);
-            cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/test", 1, TR::DebugCounter::Undetermined);
+        //    cg->generateDebugCounter("inline/interface/testAbstractOrArrayFlag/fail", 1, TR::DebugCounter::Undetermined);
+         //   cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/test", 1, TR::DebugCounter::Undetermined);
             genTestModifierFlags(cg, node, toClassReg, -1, interfaceLabel, srm, J9AccInterface, modReg, false);
-            cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/didfail", 1, TR::DebugCounter::Undetermined);
+       //     cg->generateDebugCounter("inline/interface/testInterfaceFlagExpectFail/didfail", 1, TR::DebugCounter::Undetermined);
          }else{
                static bool twoCalls = feGetEnv("twoCalls") != NULL;
                if (twoCalls)
@@ -12062,18 +12062,18 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLabel);
       }
    
-   cg->generateDebugCounter("inline/interface/testInterfaceFlag/test", 1, TR::DebugCounter::Undetermined);
+ //  cg->generateDebugCounter("inline/interface/testInterfaceFlag/test", 1, TR::DebugCounter::Undetermined);
    genTestModifierFlags(cg, node, toClassReg, -1, interfaceLabel, srm, J9AccInterface);
-   cg->generateDebugCounter("inline/interface/testInterfaceFlag/fail", 1, TR::DebugCounter::Undetermined);
+ //  cg->generateDebugCounter("inline/interface/testInterfaceFlag/fail", 1, TR::DebugCounter::Undetermined);
 
-   cg->generateDebugCounter("inline/interface/branchToHelper/main", 1, TR::DebugCounter::Undetermined); // should match the number of interface fails
+ //  cg->generateDebugCounter("inline/interface/branchToHelper/main", 1, TR::DebugCounter::Undetermined); // should match the number of interface fails
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
    cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
    outlinedSlowPath->swapInstructionListsWithCompilation();
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-   cg->generateDebugCounter("inline/interface/callHelper/", 1, TR::DebugCounter::Undetermined);
+ //  cg->generateDebugCounter("inline/interface/callHelper/", 1, TR::DebugCounter::Undetermined);
    TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
@@ -12081,7 +12081,7 @@ TR::Register *modReg = genTestModifierFlags(cg, node, toClassReg, toClassDepth, 
 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
 
-   cg->generateDebugCounter("inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
+//   cg->generateDebugCounter("inline/interface/enterTest", 1, TR::DebugCounter::Undetermined);
    static bool addTrap = feGetEnv("addTrap2") != NULL;
       generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
 
