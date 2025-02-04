@@ -4541,14 +4541,14 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
 
    iTableReg = srm->findOrCreateScratchRegister();
      
-  cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
-   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
-   generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
- //        cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
+//   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+//             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
+//    cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
+//    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
+//    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
+//    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+//  //        cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
+//    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
  //     cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
 
 
