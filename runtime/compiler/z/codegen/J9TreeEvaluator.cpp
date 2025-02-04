@@ -4543,7 +4543,7 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
      
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), iTableReg, iTableReg);
+   cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
