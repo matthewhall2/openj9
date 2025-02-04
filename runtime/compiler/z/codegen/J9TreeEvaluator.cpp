@@ -4539,12 +4539,12 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
    bool isCompressedRef = comp->useCompressedPointers();
    TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
 
-  
    iTableReg = srm->findOrCreateScratchRegister();
-   
-  
+     
   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
+   cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), iTableReg, iTableReg);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
  //        cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
