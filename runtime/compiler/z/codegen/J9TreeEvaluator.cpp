@@ -9206,7 +9206,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       switch (*iter)
          {
          case InterfaceTest:
-            if (feGetEnv("gentest2")){
+            if (feGetEnv("gentest3")){
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
             }
             break;
