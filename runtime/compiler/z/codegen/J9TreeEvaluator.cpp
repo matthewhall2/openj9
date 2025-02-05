@@ -4537,22 +4537,11 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
    TR::Compilation *comp = cg->comp();
    bool isTarget64Bit = comp->target().is64Bit();
    bool isCompressedRef = comp->useCompressedPointers();
-   TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
+  // TR::InstOpCode::Mnemonic cmpOpcode = isTarget64Bit ? (isCompressedRef ? TR::InstOpCode::CLGF : TR::InstOpCode::CLG) : TR::InstOpCode::CL;
 
    iTableReg = srm->findOrCreateScratchRegister();
      
-//   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-//             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-//    cursor = generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-//    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, iTableNullLabel);
-//    cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
-//    generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
-//  //        cg->generateDebugCounter("inline/interface/testLastITable", 1, TR::DebugCounter::Undetermined);
-//    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, successLastInterLabel);
- //     cg->generateDebugCounter("inline/interface/failLastITable", 1, TR::DebugCounter::Undetermined);
-
-
-   // load and nullchck I table
+   // load and nullchck Itable
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
 //   cg->generateDebugCounter("inline/interface/testItablePointer", 1, TR::DebugCounter::Undetermined);
@@ -4566,7 +4555,7 @@ static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390Scrat
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
   // cg->generateDebugCounter("inline/interface/enterLoop", 1, TR::DebugCounter::Undetermined);
    // get class
-   cursor = generateRXInstruction(cg, cmpOpcode, node, toClassReg,
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    /// comparse with toClass
    //cg->generateDebugCounter("inline/interface/iTableCheck", 1, TR::DebugCounter::Undetermined);
