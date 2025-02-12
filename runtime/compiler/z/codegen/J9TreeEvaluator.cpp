@@ -4647,7 +4647,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          {
          case InterfaceTest:
             TR_ASSERT_FATAL(castClassReg != NULL && objClassReg != NULL, "Must have cast and obj class reg loaded\n");
-            if (feGetEnv("gentest2") != NULL) {
+            if (feGetEnv("gen_checkcast_inline_itable") != NULL) {
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, resultLabel);
             }
             break;
@@ -9195,7 +9195,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       switch (*iter)
          {
          case InterfaceTest:
-            if (feGetEnv("gentest3")){
+            if (feGetEnv("gen_instanceof_inline_itable")){
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
             }
             break;
