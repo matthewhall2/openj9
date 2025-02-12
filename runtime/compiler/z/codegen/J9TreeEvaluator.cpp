@@ -4647,9 +4647,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          {
          case InterfaceTest:
             TR_ASSERT_FATAL(castClassReg != NULL && objClassReg != NULL, "Must have cast and obj class reg loaded\n");
-            if (feGetEnv("gen_checkcast_inline_itable") != NULL) {
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, resultLabel);
-            }
             break;
          case EvaluateCastClass:
             TR_ASSERT(!castClassReg, "Cast class already evaluated");
