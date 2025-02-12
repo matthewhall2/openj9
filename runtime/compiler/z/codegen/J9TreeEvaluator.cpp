@@ -9193,9 +9193,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       switch (*iter)
          {
          case InterfaceTest:
-            if (feGetEnv("gen_instanceof_inline_itable")){
             genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
-            }
             break;
          case EvaluateCastClass:
             TR_ASSERT(!castClassReg, "Cast class already evaluated");
