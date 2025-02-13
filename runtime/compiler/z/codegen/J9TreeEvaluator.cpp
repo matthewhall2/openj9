@@ -4338,7 +4338,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             const int32_t flags = J9AccInterface | J9AccClassArray;
             TR_ASSERT(flags < UINT_MAX && flags > 0, "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
 
-            genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
+            //genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
             break;
@@ -8905,7 +8905,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
 
             // For dynamic cast class to next 2 calls will generate branch to either helper call or dynamicCacheTest depending on the next generated test.
             TR::LabelSymbol *callHelperLabel = *(iter+1) == DynamicCacheDynamicCastClassTest ? dynamicCacheTestLabel : callLabel;
-            genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, flags);
+            //genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, flags);
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
             // If next test is dynamicCacheTest then generate a Branch to Skip it.
@@ -11489,7 +11489,7 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       const int32_t flags = (J9AccInterface | J9AccClassArray | J9AccAbstract);
       TR_ASSERT(flags < UINT_MAX && flags > 0, "superclass test::(J9AccInterface | J9AccClassArray | J9AccAbstract) is not a 32-bit number\n");
 
-      genTestModifierFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags);
+      //genTestModifierFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags);
       genSuperclassTest(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
       srm->addScratchRegistersToDependencyList(deps);
