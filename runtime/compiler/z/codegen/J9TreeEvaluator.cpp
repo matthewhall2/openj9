@@ -4258,9 +4258,9 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    TR_Debug * debugObj = cg->getDebug();
    objectReg = cg->evaluate(objectNode);
 
-   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
-   startICFLabel->setStartInternalControlFlow();
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+  // TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+  // startICFLabel->setStartInternalControlFlow();
+  // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
 
    // When we topProfiledClass in the profiled information is cast class with frequency greater than 0.5, we expect class equality to succeed so we put rest of the test outlined.
    bool outLinedTest = numSequencesRemaining >= 2 && sequences[numSequencesRemaining-2] == SuperClassTest && topClassProbability >= 0.5 && topClassWasCastClass;
@@ -4493,7 +4493,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    if (resultReg)
       cg->stopUsingRegister(resultReg);
 
-   doneLabel->setEndInternalControlFlow();
+  // doneLabel->setEndInternalControlFlow();
    srm->stopUsingRegisters();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    cg->stopUsingRegister(castClassReg);
@@ -8813,9 +8813,9 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
    bool cacheCastClass = false;
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
-   TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
-   startICFLabel->setStartInternalControlFlow();
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
+   // TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg);
+   // startICFLabel->setStartInternalControlFlow();
+   // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startICFLabel);
    while (numSequencesRemaining >   1 || (numSequencesRemaining==1 && *iter!=HelperCall))
       {
       switch (*iter)
@@ -9039,7 +9039,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
       conditions->addPostConditionIfNotAlreadyInserted(castClassReg, TR::RealRegister::AssignAny);
    srm->addScratchRegistersToDependencyList(conditions);
    srm->stopUsingRegisters();
-   doneLabel->setEndInternalControlFlow();
+   //doneLabel->setEndInternalControlFlow();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, conditions);
    if (objClassReg)
       cg->stopUsingRegister(objClassReg);
