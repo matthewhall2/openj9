@@ -11491,8 +11491,6 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       genTestModifierFlags(cg, node, castClassReg, classDepth, outlinedCallLabel, srm, flags);
       genSuperclassTest(cg, node, castClassReg, classDepth, objClassReg, failLabel, srm);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, doneLabel);
-      srm->addScratchRegistersToDependencyList(deps);
-      srm->stopUsingRegisters();
       }
    else
       {
@@ -11515,6 +11513,8 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       cg->stopUsingRegister(objClassReg);
       cg->stopUsingRegister(castClassReg);
       }
+   srm->addScratchRegistersToDependencyList(deps);
+   srm->stopUsingRegisters();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
 
    return true;
