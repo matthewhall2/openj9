@@ -3242,12 +3242,12 @@ static TR::Register *genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node,
          }
       }
 
-   //TR::Register *flagsReg = srm->findOrCreateScratchRegister();
-   //generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagsReg, flags);
-   //generateRRFInstruction(cg, TR::InstOpCode::NRK, node, flagsReg, scratchReg, flagsReg);
+   TR::Register *flagsReg = srm->findOrCreateScratchRegister();
+   generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagsReg, flags);
+   generateRRFInstruction(cg, TR::InstOpCode::NRK, node, flagsReg, scratchReg, flagsReg);
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
-   //srm->reclaimScratchRegister(flagsReg);
+   srm->reclaimScratchRegister(flagsReg);
    if (debugObj)
       {
       debugObj->addInstructionComment(cursor, "Check if castClass is an interface or class array and jump to helper sequence");
