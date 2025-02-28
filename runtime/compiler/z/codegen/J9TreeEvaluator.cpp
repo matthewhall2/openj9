@@ -11731,7 +11731,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       {
       const int32_t flags = (J9AccInterface | J9AccClassArray);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
-      genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+      if (toClassDepth == -1)
+         {
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+         }
       genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
