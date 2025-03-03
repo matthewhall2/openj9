@@ -639,12 +639,12 @@ done:
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
-		
-		// if (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
-		// 	{
-		// 	rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
-		// 	goto done;
-		// 	}
+		static const bool error_on_conflict = feGetEnv("error_on_conflict") != NULL;
+		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
+			{
+			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
+			goto done;
+			}
 		{
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
