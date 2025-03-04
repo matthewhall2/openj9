@@ -632,6 +632,7 @@ done:
 		static const bool error_on_conflict = getenv("error_on_conflict") != NULL;
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
+			printf("method is non-method\n");
 			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
 			goto done;
 			}
