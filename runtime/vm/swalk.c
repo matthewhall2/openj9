@@ -21,7 +21,7 @@
  *******************************************************************************/
 
 #include "j9.h"
-#include stdlib.h
+#include "stdlib.h"
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 #define walkFrame walkFrameVerbose
 #define walkStackFrames walkStackFramesVerbose
