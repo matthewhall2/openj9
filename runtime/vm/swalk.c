@@ -981,8 +981,13 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		J9JavaVM *vm = walkState->walkThread->javaVM;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
+		static const bool skip_bytecode_walk = getenv("skip_bytecode_walk") != NULL;
+		if (skip_bytecode_walk && walkState->method == walkState->currentThread->javaVM->initialMethods.throwDefaultConflict);
+			{
+			goto done;
+			}
+		{
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
-
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
 #if defined(J9VM_OPT_METHOD_HANDLE)
@@ -1029,7 +1034,8 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 		printFrameType(walkState, walkState->frameFlags ? "J2I" : "Bytecode");
 #endif
-
+	}
+done:
 		if (walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) {
 			WALK_METHOD_CLASS(walkState);
 			walkBytecodeFrameSlots(walkState, walkState->method, walkState->bytecodePCOffset,
