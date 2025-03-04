@@ -987,7 +987,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 			}
 
 
-		{
+	{
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
