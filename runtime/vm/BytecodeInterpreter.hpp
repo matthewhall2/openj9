@@ -425,7 +425,11 @@ retry:
 		*--_sp = (UDATA)_literals;
 		*--_sp = (flags);
 		_pc = (U_8*)(type);
-		_literals = NULL;
+		static const bool dont_set_null = getenv("dont_set_null") != NULL;
+		if (!dont_set_null)
+			{
+			_literals = NULL;
+			}
 		return bp;
 	}
 
@@ -642,7 +646,12 @@ done:
 		static const bool error_on_conflict = getenv("error_on_conflict") != NULL;
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
-			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
+			printf("method is non-method\n");
+			static const bool bframe = getenv("bframe") != NULL;
+			if (bframe) {
+				buildJITResolveFrame(REGISTER_ARGS);
+			}
+			rc = GOTO_RUN_METHOD;
 			goto done;
 			}
 		{
@@ -778,7 +787,7 @@ throwStackOverflow:
 			_literals = (J9Method*)exitPoint;
 			rc = inlineSendTarget(REGISTER_ARGS, VM_MAYBE, VM_MAYBE, VM_MAYBE, VM_MAYBE, true, decompileOccurred);
 		}
-		}
+	}
 done:
 		return rc;
 	}
@@ -9667,6 +9676,13 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
+		// static const bool error_on_conflict = getenv("error_on_conflict_in_link") != NULL;
+		// if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
+		// 	{
+		// 	printf("method is non-method\n");
+		// 	_sp -= 1;
+		// 	return rc;
+		// 	}
 
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
@@ -9677,6 +9693,17 @@ done:
 				if (J9_UNEXPECTED(NULL == mhReceiver)) {
 					goto throw_npe;
 				}
+			}
+		} else {
+			static const bool error_on_conflict_in_link = getenv("error_on_conflict_in_link") != NULL;
+			if (error_on_conflict_in_link) {
+				printf("method is non-method\n");
+				_sp -= 1;
+				static const bool build_frame = getenv("build_frame") != NULL;
+				if (build_frame){
+					buildJITResolveFrame(REGISTER_ARGS);
+				}
+				return rc;
 			}
 		}
 
@@ -9984,9 +10011,19 @@ done:
 		/* Load the conflicting method and error message from this special target */
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
+		static const bool prepare = getenv("prepare") != NULL;
+		if (prepare) {
+		prepareForExceptionThrow(_currentThread);
+		}
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
+		static const bool set_literals = getenv("set_literals") != NULL;
+		if (set_literals){
+			_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		}
+		
 		return GOTO_THROW_CURRENT_EXCEPTION;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */

@@ -98,7 +98,21 @@ public class TestDefenderMethodLookupAsm {
 		try {
 			mh.invoke(K.cast(T_K.newInstance()));
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
-		} catch (IncompatibleClassChangeError e) { }
+		} catch (IncompatibleClassChangeError e) { 
+			System.out.println("caught first incomp error");
+		}
+
+		MethodHandle lookupMH2 = lookup().findStatic(K, "lookup", methodType(Lookup.class));
+		Lookup l2 = (Lookup)lookupMH.invoke();
+		MethodHandle mh2 = l2.findSpecial(K, "w", methodType(char.class), K);
+		try {
+			mh.invokeExact(K.cast(T_K.newInstance()));
+			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
+		} catch (IncompatibleClassChangeError e) { 
+			System.out.println("caught second incomp error");
+		}
+
+
 	}
 	
 	/**

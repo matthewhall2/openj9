@@ -21,7 +21,6 @@
  *******************************************************************************/
 
 #include "j9.h"
-#include "stdlib.h"
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 #define walkFrame walkFrameVerbose
 #define walkStackFrames walkStackFramesVerbose
@@ -955,7 +954,6 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 	lswRecord(walkState, LSW_TYPE_FRAME_TYPE, (void*)(UDATA)LSW_FRAME_TYPE_BYTECODE);
 #endif
-
 	walkState->method = walkState->literals;
 	if (NULL == walkState->method) {
 		walkState->constantPool = NULL;
@@ -982,12 +980,23 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		J9JavaVM *vm = walkState->walkThread->javaVM;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
-		static const bool skip_bytecode_walk = getenv("skip_bytecode_walk") != NULL;
-		if (skip_bytecode_walk && walkState->method == walkState->currentThread->javaVM->initialMethods.throwDefaultConflict);
-			{
-			goto done;
-			}
-		{
+		//walkState->walkThread
+		// volatile J9Method* m = walkState->method;
+		// volatile J9VMThread *current = walkState->currentThread;
+		// volatile J9VMThread *walkThread = walkState->walkThread;
+		// volatile J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
+		// volatile J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
+		// if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
+		// 	{
+		// 	goto done;
+		// 	}
+		
+		// U_8 *bytecodes = walkState->method->bytecodes;
+		// if (NULL == bytecodes){
+		// 	printf("null bytecodes\n");
+		// 	goto done;
+		// }
+		
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
@@ -1035,8 +1044,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 		printFrameType(walkState, walkState->frameFlags ? "J2I" : "Bytecode");
 #endif
-	}
-done:
+	
 		if (walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) {
 			WALK_METHOD_CLASS(walkState);
 			walkBytecodeFrameSlots(walkState, walkState->method, walkState->bytecodePCOffset,
