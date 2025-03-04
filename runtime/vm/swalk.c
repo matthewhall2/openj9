@@ -992,17 +992,18 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 			printf("%p %p %p %p %p", m, current, walkThread, currentDefault, walkDefault);
 		}
 		a = 0;
-		if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
-			{
-			goto done;
-			}
-		{
-		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
-		if (NULL == romMethod){
+		// if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
+		// 	{
+		// 	goto done;
+		// 	}
+		
+		U_8 *bytecodes = walkState->method->bytecodes;
+		if (NULL == bytecodes){
 			printf("null bytecodes\n");
 			goto done;
 		}
-		
+		{
+		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
 #if defined(J9VM_OPT_METHOD_HANDLE)
