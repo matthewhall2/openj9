@@ -21,7 +21,6 @@
  *******************************************************************************/
 
 #include "j9.h"
-#include "stdlib.h"
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 #define walkFrame walkFrameVerbose
 #define walkStackFrames walkStackFramesVerbose
@@ -982,8 +981,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		J9JavaVM *vm = walkState->walkThread->javaVM;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
-		static const bool skip_bytecode_walk = getenv("skip_bytecode_walk") != NULL;
-		if (skip_bytecode_walk && walkState->method == walkState->currentThread->javaVM->initialMethods.throwDefaultConflict);
+		if (walkState->method == walkState->currentThread->javaVM->initialMethods.throwDefaultConflict);
 			{
 			goto done;
 			}
