@@ -982,6 +982,11 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
 		//walkState->walkThread
+		J9Method* m = walkState->method;
+		J9VMThread *current = walkState->currentThread;
+		J9VMThread *walkThread = walkState->walkThread;
+		J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
+		J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
 		if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			goto done;
