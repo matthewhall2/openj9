@@ -987,11 +987,11 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		volatile J9VMThread *walkThread = walkState->walkThread;
 		volatile J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
 		volatile J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
-		static int a = 0;
+		static int a = 1;
 		if (a){
 			printf("%p %p %p %p %p", m, current, walkThread, currentDefault, walkDefault);
 		}
-		a = 1;
+		a = 0;
 		if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			goto done;
