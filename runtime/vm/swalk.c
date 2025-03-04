@@ -998,6 +998,11 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 			}
 		{
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
+		if (NULL == romMethod){
+			printf("null bytecodes\n");
+			goto done;
+		}
+		
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
 #if defined(J9VM_OPT_METHOD_HANDLE)
