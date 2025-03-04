@@ -634,6 +634,7 @@ done:
 			{
 			printf("method is non-method\n");
 			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
+			_currentThread->stackWalkState->method = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 			goto done;
 			}
 		{
