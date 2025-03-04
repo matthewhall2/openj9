@@ -981,7 +981,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		J9JavaVM *vm = walkState->walkThread->javaVM;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
-		static const bool skip_bytecode_walk = getenv("skip_bytecode_walk") != NULL;
+		static const bool skip_bytecode_walk = GetEnv("skip_bytecode_walk") != NULL;
 		if (skip_bytecode_walk && walkState->method == walkState->currentThread->javaVM->initialMethods.throwDefaultConflict);
 			{
 			goto done;
