@@ -981,11 +981,11 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
 		//walkState->walkThread
-		volatile J9Method* m = walkState->method;
-		volatile J9VMThread *current = walkState->currentThread;
-		volatile J9VMThread *walkThread = walkState->walkThread;
-		volatile J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
-		volatile J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
+		// volatile J9Method* m = walkState->method;
+		// volatile J9VMThread *current = walkState->currentThread;
+		// volatile J9VMThread *walkThread = walkState->walkThread;
+		// volatile J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
+		// volatile J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
 		// if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
 		// 	{
 		// 	goto done;
@@ -996,7 +996,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		// 	printf("null bytecodes\n");
 		// 	goto done;
 		// }
-		{
+		
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 
@@ -1044,8 +1044,7 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 		printFrameType(walkState, walkState->frameFlags ? "J2I" : "Bytecode");
 #endif
-	}
-done:
+	
 		if (walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) {
 			WALK_METHOD_CLASS(walkState);
 			walkBytecodeFrameSlots(walkState, walkState->method, walkState->bytecodePCOffset,
