@@ -986,21 +986,16 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		volatile J9VMThread *walkThread = walkState->walkThread;
 		volatile J9Method *currentDefault = current->javaVM->initialMethods.throwDefaultConflict;
 		volatile J9Method *walkDefault = walkThread->javaVM->initialMethods.throwDefaultConflict;
-		static int a = 1;
-		if (a){
-			printf("%p %p %p %p %p", m, current, walkThread, currentDefault, walkDefault);
-		}
-		a = 0;
 		// if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict)
 		// 	{
 		// 	goto done;
 		// 	}
 		
-		U_8 *bytecodes = walkState->method->bytecodes;
-		if (NULL == bytecodes){
-			printf("null bytecodes\n");
-			goto done;
-		}
+		// U_8 *bytecodes = walkState->method->bytecodes;
+		// if (NULL == bytecodes){
+		// 	printf("null bytecodes\n");
+		// 	goto done;
+		// }
 		{
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
