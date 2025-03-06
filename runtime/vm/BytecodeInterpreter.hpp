@@ -425,6 +425,11 @@ retry:
 		*--_sp = (UDATA)_literals;
 		*--_sp = (flags);
 		_pc = (U_8*)(type);
+		static const bool dont_set_null = getenv("dont_set_null") != NULL;
+		if (!dont_set_null)
+		{
+			_literals = NULL;
+		}
 		return bp;
 	}
 
