@@ -425,7 +425,6 @@ retry:
 		*--_sp = (UDATA)_literals;
 		*--_sp = (flags);
 		_pc = (U_8*)(type);
-		_literals = NULL;
 		return bp;
 	}
 
@@ -633,6 +632,7 @@ done:
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			printf("method is non-method\n");
+			_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
 			_currentThread->stackWalkState->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 			goto done;
@@ -9820,7 +9820,7 @@ done:
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
-		_currentThread->stackWalkState->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
