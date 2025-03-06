@@ -640,6 +640,7 @@ done:
 			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
 			goto done;
 			}
+		{
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
@@ -772,6 +773,7 @@ throwStackOverflow:
 			_literals = (J9Method*)exitPoint;
 			rc = inlineSendTarget(REGISTER_ARGS, VM_MAYBE, VM_MAYBE, VM_MAYBE, VM_MAYBE, true, decompileOccurred);
 		}
+	}
 done:
 		return rc;
 	}
@@ -9826,7 +9828,7 @@ done:
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-		_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		//_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 		return GOTO_THROW_CURRENT_EXCEPTION;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
