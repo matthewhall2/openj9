@@ -1022,7 +1022,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 	} else {
 		j9object_t membernameObject = J9_JNI_UNWRAP_REFERENCE(self);
 		jlong vmindex = (jlong)(UDATA)J9OBJECT_U64_LOAD(currentThread, membernameObject, vm->vmindexOffset);
-		volatile jlong target = (jlong)(UDATA)J9OBJECT_U64_LOAD(currentThread, membernameObject, vm->vmtargetOffset);
+		jlong target = (jlong)(UDATA)J9OBJECT_U64_LOAD(currentThread, membernameObject, vm->vmtargetOffset);
 
 		jint flags = J9VMJAVALANGINVOKEMEMBERNAME_FLAGS(currentThread, membernameObject);
 		jint new_flags = 0;
