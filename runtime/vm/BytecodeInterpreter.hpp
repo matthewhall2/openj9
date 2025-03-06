@@ -640,7 +640,6 @@ done:
 			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
 			goto done;
 			}
-		{
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
@@ -772,7 +771,6 @@ throwStackOverflow:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			_literals = (J9Method*)exitPoint;
 			rc = inlineSendTarget(REGISTER_ARGS, VM_MAYBE, VM_MAYBE, VM_MAYBE, VM_MAYBE, true, decompileOccurred);
-		}
 		}
 done:
 		return rc;
