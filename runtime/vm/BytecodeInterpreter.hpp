@@ -9508,7 +9508,12 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-
+		static const bool error_on_conflict = getenv("error_on_conflict_in_link") != NULL;
+		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
+			{
+			printf("method is non-method\n");
+			return rc;
+			}
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
