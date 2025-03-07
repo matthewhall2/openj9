@@ -636,9 +636,9 @@ done:
 		static const bool error_on_conflict = getenv("error_on_conflict") != NULL;
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
-			printf("method is non-method\n");
-			rc = GOTO_RUN_METHOD;
-			goto done;
+			// printf("method is non-method\n");
+			// rc = GOTO_RUN_METHOD;
+			// goto done;
 			}
 		{
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
