@@ -9512,6 +9512,7 @@ done:
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			printf("method is non-method\n");
+			_sp -= 1;
 			return rc;
 			}
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
