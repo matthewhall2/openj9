@@ -637,7 +637,7 @@ done:
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			printf("method is non-method\n");
-			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
+			rc = GOTO_RUN_METHOD;
 			goto done;
 			}
 		{
