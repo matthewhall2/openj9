@@ -9829,6 +9829,7 @@ done:
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
 		_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 		return GOTO_THROW_CURRENT_EXCEPTION;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
