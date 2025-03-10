@@ -98,7 +98,19 @@ public class TestDefenderMethodLookupAsm {
 		try {
 			mh.invoke(K.cast(T_K.newInstance()));
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
-		} catch (NullPointerException e) { }
+		} catch (IncompatibleClassChangeError e) { 
+			System.out.println("caught first incomp error");
+		}
+
+		mh = l.findVirtual(K, "m", methodType(char.class));
+		try {
+			mh.invoke(K.cast(T_K.newInstance()));
+			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
+		} catch (IncompatibleClassChangeError e) { 
+			System.out.println("caught second incomp error");
+		}
+
+
 	}
 	
 	/**
