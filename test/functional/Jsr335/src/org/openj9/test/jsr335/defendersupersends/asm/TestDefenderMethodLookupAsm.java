@@ -98,7 +98,7 @@ public class TestDefenderMethodLookupAsm {
 		try {
 			mh.invoke(K.cast(T_K.newInstance()));
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
-		} catch (IncompatibleClassChangeError e) { }
+		} catch (NullPointerException e) { }
 	}
 	
 	/**
