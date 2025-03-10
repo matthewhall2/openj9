@@ -102,7 +102,7 @@ public class TestDefenderMethodLookupAsm {
 			System.out.println("caught first incomp error");
 		}
 
-		mh = l.findGetter(K, "w", char.class);
+		mh = l.findVirtual(K, "w", methodType(char.class));
 		try {
 			mh.invoke(K.cast(T_K.newInstance()));
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
