@@ -637,7 +637,10 @@ done:
 		if (error_on_conflict && _sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 			{
 			printf("method is non-method\n");
-			buildJITResolveFrame(REGISTER_ARGS);
+			static const bool bframe = getenv("bframe") != NULL;
+			if (bframe) {
+				buildJITResolveFrame(REGISTER_ARGS);
+			}
 			rc = GOTO_RUN_METHOD;
 			goto done;
 			}
