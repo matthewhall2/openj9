@@ -104,7 +104,7 @@ public class TestDefenderMethodLookupAsm {
 
 		mh = l.findVirtual(T_K, "w", methodType(char.class));
 		try {
-			mh.invoke(T_K);
+			mh.invoke(T_K.newInstance());
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
 		} catch (IncompatibleClassChangeError e) { 
 			System.out.println("caught second incomp error");
