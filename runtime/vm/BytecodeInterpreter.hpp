@@ -9531,6 +9531,7 @@ done:
 			if (error_on_conflict_in_link) {
 				printf("method is non-method\n");
 				_sp -= 1;
+				buildJITResolveFrame(REGISTER_ARGS);
 				return rc;
 			}
 		}
