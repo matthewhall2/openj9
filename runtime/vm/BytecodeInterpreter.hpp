@@ -9531,7 +9531,10 @@ done:
 			if (error_on_conflict_in_link) {
 				printf("method is non-method\n");
 				_sp -= 1;
-				buildJITResolveFrame(REGISTER_ARGS);
+				static const bool build_frame = getenv("build_frame") != NULL;
+				if (build_frame){
+					buildJITResolveFrame(REGISTER_ARGS);
+				}
 				return rc;
 			}
 		}
@@ -9840,6 +9843,10 @@ done:
 		/* Load the conflicting method and error message from this special target */
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
+		static const bool prepare = getenv("prepare") != NULL;
+		if (prepare) {
+		prepareForExceptionThrow(_currentThread);
+		}
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
