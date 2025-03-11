@@ -102,9 +102,9 @@ public class TestDefenderMethodLookupAsm {
 			System.out.println("caught first incomp error");
 		}
 
-		mh = l.findVirtual(T_K, "w", methodType(char.class));
+		MethodHandle mh2  = l.findVirtual(T_K, "w", methodType(char.class));
 		try {
-			mh.invoke(T_K.newInstance());
+			mh2.invoke(T_K.newInstance());
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
 		} catch (IncompatibleClassChangeError e) { 
 			System.out.println("caught second incomp error");
