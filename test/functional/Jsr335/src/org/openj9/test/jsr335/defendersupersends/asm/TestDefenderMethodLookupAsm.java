@@ -102,9 +102,9 @@ public class TestDefenderMethodLookupAsm {
 			System.out.println("caught first incomp error");
 		}
 
-		MethodHandle lookupMH2 = lookup().findStatic(T_K, "lookup", methodType(Lookup.class));
+		MethodHandle lookupMH2 = lookup().findStatic(K, "lookup", methodType(Lookup.class));
 		Lookup l2 = (Lookup)lookupMH.invoke();
-		MethodHandle mh2  = l2.findVirtual(T_K, "w", methodType(char.class));
+		MethodHandle mh2  = l2.findVirtual(K, "w", methodType(char.class));
 		try {
 			mh2.invokeExact(K.cast(T_K.newInstance()));
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
