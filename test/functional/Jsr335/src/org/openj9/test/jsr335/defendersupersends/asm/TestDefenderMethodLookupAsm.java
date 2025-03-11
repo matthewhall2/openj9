@@ -106,7 +106,7 @@ public class TestDefenderMethodLookupAsm {
 		Lookup l2 = (Lookup)lookupMH.invoke();
 		MethodHandle mh2  = l2.findVirtual(T_K, "w", methodType(char.class));
 		try {
-			mh2.invoke(T_K.newInstance());
+			mh2.invokeExact(T_K.newInstance());
 			Assert.fail("Successfully invoked MethodHandle with conflicting method definitions.");
 		} catch (IncompatibleClassChangeError e) { 
 			System.out.println("caught second incomp error");
