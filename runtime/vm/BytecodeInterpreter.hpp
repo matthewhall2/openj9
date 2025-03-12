@@ -623,10 +623,13 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		bool check_in_j2i = getenv("check_in_j2i") != NULL;
+		if (check_in_j2i) {
 		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
 			buildJITResolveFrame(REGISTER_ARGS);
 			return GOTO_RUN_METHOD;
 		}
+	}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
