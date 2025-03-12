@@ -614,6 +614,8 @@ done:
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
 
+#define isMethodDefaultConflictJ9Method(method) (method == _currentThread->javaVM->initialMethods.throwDefaultConflict)
+
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
 		REGISTER_ARGS_LIST
@@ -621,6 +623,10 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
+			buildJITResolveFrame(REGISTER_ARGS);
+			return GOTO_RUN_METHOD;
+		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
