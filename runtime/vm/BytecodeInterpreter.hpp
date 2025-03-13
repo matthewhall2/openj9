@@ -9479,7 +9479,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	nullCheckJ9Obj(j9object_t j9Obj, bool fromJIT, UDATA decSP)
 	{
-		if (J9_UNEXPECTED(NULL == j9obj)) {
+		if (J9_UNEXPECTED(NULL == j9Obj)) {
 			if (fromJIT) {
 				_sp -= decSP;
 				buildJITResolveFrame(REGISTER_ARGS);
