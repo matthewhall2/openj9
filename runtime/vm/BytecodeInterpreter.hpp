@@ -9594,13 +9594,13 @@
  
 		 return rc;
  
- throwDefaultConflict:
-		 if (fromJIT) {
-			 _sp -= 1;
-			 buildJITResolveFrame(REGISTER_ARGS);
-		 }
-		 // run() will run throwDefaultConflictForMemberName()
-		 return GOTO_RUN_METHOD;
+//  throwDefaultConflict:
+// 		 if (fromJIT) {
+// 			 _sp -= 1;
+// 			 buildJITResolveFrame(REGISTER_ARGS);
+// 		 }
+// 		 // run() will run throwDefaultConflictForMemberName()
+// 		 return GOTO_RUN_METHOD;
 	 }
  
 	 VMINLINE VM_BytecodeAction
