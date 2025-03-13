@@ -9477,7 +9477,7 @@ done:
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 
 	VMINLINE VM_BytecodeAction
-	nullCheckJ9Obj(j9object_t *j9Obj, bool fromJIT, UDATA decSP)
+	nullCheckJ9Obj(j9object_t j9Obj, bool fromJIT, UDATA decSP)
 	{
 		if (J9_UNEXPECTED(NULL == j9obj)) {
 			if (fromJIT) {
