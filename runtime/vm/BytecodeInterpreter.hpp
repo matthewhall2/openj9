@@ -625,15 +625,16 @@
 	 ) {
 		 // add this check here for the case where we get directly to j2iTransition() from run()
 		 // these this check usually happens in the linkTo* methods
+		 
+		 VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
+		 VM_BytecodeAction rc = GOTO_RUN_METHOD;
+		 void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		 if (isMethodDefaultConflictJ9Method(_sendMethod)) {
 			if (getenv("buildFrame") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
 			 return GOTO_RUN_METHOD;
 		 }
-		 VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
-		 VM_BytecodeAction rc = GOTO_RUN_METHOD;
-		 void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		 J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		 void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		 if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
