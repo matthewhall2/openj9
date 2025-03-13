@@ -9597,7 +9597,9 @@ done:
 throwDefaultConflict:
 		if (fromJIT) {
 			_sp -= 1;
-			buildJITResolveFrame(REGISTER_ARGS);
+			if (getenv("buildFrame") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+			}
 		}
 		// run() will run throwDefaultConflictForMemberName()
 		return GOTO_RUN_METHOD;
@@ -9821,7 +9823,11 @@ done:
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
-		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		if (getenv("nuildframe") != NULL) {
+			buildJITResolveFrame(REGISTER_ARGS);
+		} else {
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		}
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
