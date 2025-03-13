@@ -9481,7 +9481,7 @@ done:
 	{
 		if (J9_UNEXPECTED(NULL == j9obj)) {
 			if (fromJIT) {
-				_sp -= dec_sp;
+				_sp -= decSP;
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
 			return THROW_NPE;
