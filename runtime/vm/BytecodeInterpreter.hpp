@@ -9549,7 +9549,7 @@ done:
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
-				if (nullCheckJ9Obj(mhReceiver, false, false) == THROWE_NPE) return THROW_NPE;
+				if (nullCheckJ9Obj(mhReceiver, false, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
 			goto throwDefaultConflict;
@@ -9631,7 +9631,7 @@ throwDefaultConflict:
 		}
 
 		j9object_t receiverObject = ((j9object_t *)_sp)[methodArgCount - 1];
-		if (nullCheckJ9Obj(receiverObject, fromJIT, true) == THROW_NPE) return THROWE_NPE;
+		if (nullCheckJ9Obj(receiverObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
 
 		/* The vTable offset has been stored in memberNameObject.vmindex.
 		 *
