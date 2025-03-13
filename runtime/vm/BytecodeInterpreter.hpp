@@ -628,6 +628,7 @@
 		 bool doFirst = getenv("dofirst") != NULL;
 		 if (doFirst && isMethodDefaultConflictJ9Method(_sendMethod)) {
 			if (getenv("buildFrame") != NULL) {
+				if (getenv("decSP")) _sp -= 1;
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
 			 return GOTO_RUN_METHOD;
@@ -637,6 +638,7 @@
 		 void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		 if (!doFirst && isMethodDefaultConflictJ9Method(_sendMethod)) {
 			if (getenv("buildFrame") != NULL) {
+				if (getenv("decSP2")) _sp -= 1;
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
 			 return GOTO_RUN_METHOD;
