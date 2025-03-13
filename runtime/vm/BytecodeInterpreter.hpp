@@ -9597,7 +9597,7 @@ done:
 throwDefaultConflict:
 		if (fromJIT) {
 			_sp -= 1;
-			if (getenv("buildFrame") != NULL) {
+			if (getenv("buildFrameLink") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
 		}
