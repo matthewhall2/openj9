@@ -9823,10 +9823,10 @@ done:
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
-		if (getenv("nuildframe") != NULL) {
+		if (getenv("buildframe") != NULL) {
 			buildJITResolveFrame(REGISTER_ARGS);
 		} else {
-			if (getenv("prepar12") != NULL) {
+			if (getenv("prepare1") != NULL) {
 				prepareForExceptionThrow(_currentThread);
 				}
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
@@ -9835,7 +9835,13 @@ done:
 		if (getenv("prepare2") != NULL) {
 		prepareForExceptionThrow(_currentThread);
 		}
-		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		if (getenv("use_new") != NULL) {
+			setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, "Default method conflict found during MethodHandle invocation.");
+		}
+		else {
+			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		}
+
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
 		return GOTO_THROW_CURRENT_EXCEPTION;
