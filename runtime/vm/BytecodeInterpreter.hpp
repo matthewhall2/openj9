@@ -625,16 +625,14 @@
 	 ) {
 		 // add this check here for the case where we get directly to j2iTransition() from run()
 		 // these this check usually happens in the linkTo* methods
-		 bool doFirst = getenv("dofirst") != NULL;
-		 if (doFirst && isMethodDefaultConflictJ9Method(_sendMethod)) {
-			if (getenv("buildFrame") != NULL) {
-				if (getenv("decSP")) {
-					_sp -= 1;
-				}
-				buildJITResolveFrame(REGISTER_ARGS);
-			}
+		 bool check_in_j2i = getenv("check_in_j2i") != NULL;
+		 if (check_in_j2i) {
+		 if (isMethodDefaultConflictJ9Method(_sendMethod)) {
+			 _sp -= 1;
+			 buildJITResolveFrame(REGISTER_ARGS);
 			 return GOTO_RUN_METHOD;
 		 }
+	 }
 		 VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		 VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		 void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
