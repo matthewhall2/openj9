@@ -9829,6 +9829,9 @@ done:
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		}
 		updateVMStruct(REGISTER_ARGS);
+		if (getenv("prepare") != NULL) {
+		prepareForExceptionThrow(_currentThread);
+		}
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
