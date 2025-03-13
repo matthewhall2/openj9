@@ -9826,10 +9826,13 @@ done:
 		if (getenv("nuildframe") != NULL) {
 			buildJITResolveFrame(REGISTER_ARGS);
 		} else {
+			if (getenv("prepar12") != NULL) {
+				prepareForExceptionThrow(_currentThread);
+				}
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		}
 		updateVMStruct(REGISTER_ARGS);
-		if (getenv("prepare") != NULL) {
+		if (getenv("prepare2") != NULL) {
 		prepareForExceptionThrow(_currentThread);
 		}
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
