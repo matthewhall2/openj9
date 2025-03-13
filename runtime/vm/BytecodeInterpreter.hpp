@@ -9477,7 +9477,7 @@ done:
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 
 	VMINLINE VM_BytecodeAction
-	nullCheckJ9Obj(j9object_t j9Obj, bool fromJIT, UDATA decSP)
+	nullCheckJ9Obj(j9object_t j9Obj, bool fromJIT, REGISTER_ARGS_LIST, UDATA decSP)
 	{
 		if (J9_UNEXPECTED(NULL == j9Obj)) {
 			if (fromJIT) {
@@ -9515,7 +9515,7 @@ done:
 		}
 
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
-		if (nullCheckJ9Obj(mhReceiver, fromJIT, 0) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(mhReceiver, fromJIT, REGISTER_ARGS, 0) == THROW_NPE) return THROW_NPE;
 
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
@@ -9539,7 +9539,7 @@ done:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		if (nullCheckJ9Obj(memberNameObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(memberNameObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 
@@ -9549,7 +9549,7 @@ done:
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
-				if (nullCheckJ9Obj(mhReceiver, false, false) == THROW_NPE) return THROW_NPE;
+				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
 			goto throwDefaultConflict;
@@ -9611,7 +9611,7 @@ throwDefaultConflict:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		if (nullCheckJ9Obj(memberNameObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(memberNameObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		J9Method *method = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
@@ -9631,7 +9631,7 @@ throwDefaultConflict:
 		}
 
 		j9object_t receiverObject = ((j9object_t *)_sp)[methodArgCount - 1];
-		if (nullCheckJ9Obj(receiverObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(receiverObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		/* The vTable offset has been stored in memberNameObject.vmindex.
 		 *
@@ -9690,14 +9690,14 @@ throwDefaultConflict:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		if (nullCheckJ9Obj(memberNameObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(memberNameObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		method = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 		methodArgCount = romMethod->argCount;
 
 		receiverObject = ((j9object_t *)_sp)[methodArgCount - 1];
-		if (nullCheckJ9Obj(receiverObject, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(receiverObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 
 		receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
@@ -9783,7 +9783,7 @@ done:
 		}
 
 		j9object_t nativeMH = *(j9object_t *)_sp;
-		if (nullCheckJ9Obj(nativeMH, fromJIT, true) == THROW_NPE) return THROW_NPE;
+		if (nullCheckJ9Obj(nativeMH, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		j9object_t nepObject = J9VMJAVALANGINVOKENATIVEMETHODHANDLE_NEP(_currentThread, nativeMH);
 		j9object_t methodType = J9VMJAVALANGINVOKEMETHODHANDLE_TYPE(_currentThread, nepObject);
