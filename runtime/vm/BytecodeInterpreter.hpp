@@ -633,9 +633,9 @@ done:
 	}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
-		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
+		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
+		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
@@ -9597,8 +9597,7 @@ done:
 throwDefaultConflict:
 		if (fromJIT) {
 			_sp -= 1;
-			if (getenv("buildFrameLink") != NULL) {
-				buildJITResolveFrame(REGISTER_ARGS);
+			buildJITResolveFrame(REGISTER_ARGS);
 			}
 		}
 		// run() will run throwDefaultConflictForMemberName()
@@ -9823,25 +9822,10 @@ done:
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
-		if (getenv("buildframe") != NULL) {
-			buildJITResolveFrame(REGISTER_ARGS);
-		} else {
-			if (getenv("prepare1") != NULL) {
-				prepareForExceptionThrow(_currentThread);
-				}
-			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-		}
+		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
-		if (getenv("prepare2") != NULL) {
-		prepareForExceptionThrow(_currentThread);
-		}
-		if (getenv("use_new") != NULL) {
-			setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, "Default method conflict found during MethodHandle invocation.");
-		}
-		else {
-			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-		}
-
+		setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, "Default method conflict found during MethodHandle invocation.");
+		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
 		return GOTO_THROW_CURRENT_EXCEPTION;
