@@ -628,6 +628,7 @@
 		 bool check_in_j2i = getenv("check_in_j2i") != NULL;
 		 if (check_in_j2i) {
 		 if (isMethodDefaultConflictJ9Method(_sendMethod)) {
+			buildJITResolveFrame(REGISTER_ARGS);
 			 return GOTO_RUN_METHOD;
 		 }
 	 }
