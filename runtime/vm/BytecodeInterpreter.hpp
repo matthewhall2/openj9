@@ -9821,6 +9821,7 @@
 	 throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	 {
 		 /* Load the conflicting method and error message from this special target */
+		 _currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 		 buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		 updateVMStruct(REGISTER_ARGS);
 		 setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
