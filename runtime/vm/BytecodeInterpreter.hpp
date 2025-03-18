@@ -3369,7 +3369,7 @@
 				 }
  #endif /* JAVA_SPEC_VERSION >= 15 */
 				 walkState->walkThread = _currentThread;
-				 if (_currentThread->literals == _currentThread->javaVM->initialMethods->throwDefaultConflict) {
+				 if (_currentThread->literals == _currentThread->javaVM->initialMethods.throwDefaultConflict) {
 					printf("inlThorwableFillInStackTrace: found defaut conflict method\n");
 				 }
 				 updateVMStruct(REGISTER_ARGS);
@@ -9824,10 +9824,10 @@
 	 throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	 {
 		 /* Load the conflicting method and error message from this special target */
-		 if (_currentThread->literals == _currentThread->javaVM->initialMethods->throwDefaultConflict) {
+		 if (_currentThread->literals == _currentThread->javaVM->initialMethods.throwDefaultConflict) {
 			printf("throwDefaultConflictForMemberName (_currentThread->literals): found defaut conflict method\n");
 		 }
-		 if (_literals == _currentThread->javaVM->initialMethods->throwDefaultConflict) {
+		 if (_literals == _currentThread->javaVM->initialMethods.throwDefaultConflict) {
 			printf("throwDefaultConflictForMemberName (_literals): found defaut conflict method\n");
 		 }
 		 _currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
