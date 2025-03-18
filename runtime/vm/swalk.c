@@ -954,7 +954,9 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 	lswRecord(walkState, LSW_TYPE_FRAME_TYPE, (void*)(UDATA)LSW_FRAME_TYPE_BYTECODE);
 #endif
-
+	if (walkState->literals == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict) {
+		return;
+	}
 	walkState->method = walkState->literals;
 	if (NULL == walkState->method) {
 		walkState->constantPool = NULL;
