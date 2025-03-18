@@ -641,7 +641,7 @@ done:
 				_literals = _sendMethod;
 				_currentThread->literals = _sendMethod;
 				}
-			return GOTO_RUN_METHOD;
+			return throwDefaultConflictForMemberName(REGISTER_ARGS);
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
