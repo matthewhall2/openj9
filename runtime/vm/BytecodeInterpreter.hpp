@@ -186,6 +186,7 @@ private:
 #endif
 	MM_ObjectAllocationAPI _objectAllocate;
 	MM_ObjectAccessBarrierAPI _objectAccessBarrier;
+	bool isDefaultConflict;
 
 protected:
 
@@ -624,8 +625,6 @@ done:
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
 
-#define isMethodDefaultConflictJ9Method(method) (method == _currentThread->javaVM->initialMethods.throwDefaultConflict)
-
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
 		REGISTER_ARGS_LIST
@@ -633,20 +632,22 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
-		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
-			if (getenv("build_frame_j2i") != NULL) {
-				buildJITResolveFrame(REGISTER_ARGS);
-				}
-			return THROW_INCOMPATIBLE_CLASS_CHANGE
-		}
-		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
+		
+		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
+		bool isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		isDefaultConflict = isMethodDefaultConflictForMethodHandle;
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
-		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			if (getenv("throwEarly") && isMethodDefaultConflictForMethodHandle) {
+				if (getenv("build_frame_j2i") != NULL) {
+					buildJITResolveFrame(REGISTER_ARGS);
+					}
+				return GOTO_RUN_METHOD;
+			}
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -656,16 +657,38 @@ done:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
+			if (isMethodDefaultConflictForMethodHandle) {
+				// if (getenv("buildNativeStackFrame")) {
+				// 	buildInternalNativeStackFrame(REGISTER_ARGS);
+				// } else {
+				// if (getenv("build_frame_j2i")) {
+				// 	buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				// }
+				// }
+			}
 			/* If a stop request has been posted, handle it instead of running the native */
-			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+			bool isStopFlagSet = J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP);
+			if (isMethodDefaultConflictForMethodHandle || isStopFlagSet) {
+				if (isMethodDefaultConflictForMethodHandle) {
+					if (getenv("build_frame_j2i") != NULL) {
+						buildJITResolveFrame(REGISTER_ARGS);
+						}
+					if (getenv("throwEarly2")) {
+						return GOTO_RUN_METHOD;
+					}
+				} else {
+					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				}
 				_currentThread->currentException = _currentThread->stopThrowable;
 				_currentThread->stopThrowable = NULL;
 				VM_VMAccess::clearPublicFlagsNoMutex(_currentThread, J9_PUBLIC_FLAGS_STOP);
 				omrthread_clear_priority_interrupted();
-				rc = GOTO_THROW_CURRENT_EXCEPTION;
+				if (!isMethodDefaultConflictForMethodHandle) {
+					rc = GOTO_THROW_CURRENT_EXCEPTION;
+				}
 			}
 		} else {
+			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
@@ -1012,7 +1035,7 @@ obj:
 	}
 
 	VMINLINE U_8*
-	nativeReturnBytecodePC(REGISTER_ARGS_LIST, J9ROMMethod* const romMethod)
+	nativeReturnBytecodePC(REGISTER_ARGS_LIST, J9ROMMethod* const romMethod, bool isDefaultConflict = false)
 	{
 		static const U_8 returnFromNativeBytecodes[][4] = {
 			{ JBinvokestatic, 0, 0, JBretFromNative0 }, /* void */
@@ -1030,6 +1053,9 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
+		if (getenv("retZB") && isDefaultConflict) {
+			return (U_8*)returnFromNativeBytecodes[0];
+		}
 		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
 		return (U_8*)returnFromNativeBytecodes[bytecodes[1]];
 	}
@@ -2814,6 +2840,7 @@ ffi_exit:
 		VM_BytecodeAction rc = EXECUTE_BYTECODE;
 		J9StackWalkState *walkState = _currentThread->stackWalkState;
 		updateVMStruct(REGISTER_ARGS);
+		char *code = NULL;
 		/* Toss the pushes in the current stack frame so the GC won't need a description for them and build a special stack frame so we can find classes */
 		prepareForExceptionThrow(_currentThread);
 		/* Fetch the exception and clear it from the vmThread */
@@ -2843,7 +2870,10 @@ ffi_exit:
 				}
 			}
 		}
-		if (J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
+		code = getenv("exCode");
+		if ((isDefaultConflict && code && *code == 'A') || J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JAVA_HANDLER;
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			*--_sp = (UDATA)exception;
 			_pc = (U_8*)walkState->userData2;
@@ -2860,15 +2890,22 @@ ffi_exit:
 					goto done;
 				}
 			}
-		} else if (J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((isDefaultConflict && code && *code == 'N') || J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JNI_HANDLER;
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			_pc = walkState->pc;
 			_arg0EA = walkState->arg0EA;
 			_literals = walkState->literals;
 			_currentThread->j2iFrame = walkState->j2iFrame;
 			_currentThread->currentException = exception;
+			if (isDefaultConflict && code && *code == 'N') {
+				rc = GOTO_DONE;
+			}
 			/* Execute the call-in return bytecode at _pc */
-		} else if (J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((isDefaultConflict && code && *code == 'I') || J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JIT_HANDLER;
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			_currentThread->jitException = (j9object_t)walkState->restartException;
 			_currentThread->j2iFrame = walkState->j2iFrame;
@@ -2880,6 +2917,9 @@ ffi_exit:
 			_currentThread->tempSlot = (UDATA)walkState->userData2;
 			_nextAction = J9_BCLOOP_LOAD_PRESERVED_AND_BRANCH;
 			VM_JITInterface::enableRuntimeInstrumentation(_currentThread);
+			rc = GOTO_DONE;
+		} else if (getenv("lastcase") && isDefaultConflict) {
+			isDefaultConflict = false;
 			rc = GOTO_DONE;
 		} else {
 			Assert_VM_unreachable();
@@ -9678,8 +9718,15 @@ done:
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
-		} else {
-			goto throwDefaultConflict;
+		} else if (getenv("handle_in_lts")) {
+			if (fromJIT) {
+				printf("found def conf in linkto\n");
+				_sp -= 1;
+				if (getenv("build_frame_lts") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+				goto done;
+			}
 		}
 
 		if (fromJIT) {
@@ -9718,18 +9765,22 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-
+done:
 		return rc;
 
-throwDefaultConflict:
-		if (fromJIT) {
-			_sp -= 1;
-			if (getenv("build_frame_lts") != NULL) {
-			buildJITResolveFrame(REGISTER_ARGS);
-			}
-		}
-		// run() will run throwDefaultConflictForMemberName()
-		return THROW_INCOMPATIBLE_CLASS_CHANGE;
+// throwDefaultConflict:
+// 		if (fromJIT) {
+// 			_sp -= 1;
+// 			if (getenv("build_frame_lts") != NULL) {
+// 			buildJITResolveFrame(REGISTER_ARGS);
+// 			}
+// 			if (getenv("set_literals_lts") != NULL) {
+// 				_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+// 				_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+// 				}
+// 		}
+// 		// run() will run throwDefaultConflictForMemberName()
+// 		return GOTO_RUN_METHOD;
 	}
 
 	VMINLINE VM_BytecodeAction
@@ -9743,6 +9794,21 @@ throwDefaultConflict:
 		if (nullCheckJ9Obj(memberNameObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		J9Method *method = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
+		if (_currentThread->javaVM->initialMethods.throwDefaultConflict == method) {
+			if (fromJIT) {
+				_sp -= 1;
+				if (getenv("build_frame_ltv") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+				if (getenv("set_literals_ltv") != NULL) {
+					_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					}
+			}
+			_sendMethod = method;
+			// run() will run throwDefaultConflictForMemberName()
+			return GOTO_RUN_METHOD;
+		}
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 		UDATA methodArgCount = 0;
 		bool isInvokeBasic = (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress));
@@ -9773,7 +9839,20 @@ throwDefaultConflict:
 		UDATA vTableOffset = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
 		J9Class *receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
-
+		if (_currentThread->javaVM->initialMethods.throwDefaultConflict == _sendMethod) {
+			if (fromJIT) {
+				_sp -= 1;
+				if (getenv("build_frame_ltv") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+				if (getenv("set_literals_ltv") != NULL) {
+					_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					}
+			}
+			// run() will run throwDefaultConflictForMemberName()
+			return GOTO_RUN_METHOD;
+		}
 		/* The invokeBasic INL uses the methodArgCount from ramCP to locate the receiver object,
 		 * so when dispatched using linkToVirtual, it will still access the ramCP of the linkToVirtual call
 		 * Hence if the argument count of linkToVirtual doesn't match invokeBasic's romMethod ArgCount, then
@@ -9940,7 +10019,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-
+:
 		return rc;
 	}
 #endif /* JAVA_SPEC_VERSION >= 22 */
@@ -9948,12 +10027,34 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
+	// ========== THIS IS HOW NPE IS THROWN - IT WORKS ==================
+	// 	nullPointer:
+	// updateVMStruct(REGISTER_ARGS);
+	// prepareForExceptionThrow(_currentThread);
+	// setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGNULLPOINTEREXCEPTION, NULL);
+	// VMStructHasBeenUpdated(REGISTER_ARGS);
+	// goto throwCurrentException;
 		/* Load the conflicting method and error message from this special target */
-		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-		updateVMStruct(REGISTER_ARGS);
-		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-		VMStructHasBeenUpdated(REGISTER_ARGS);
-		restoreGenericSpecialStackFrame(REGISTER_ARGS);
+		if (getenv("build_jit_throw")) {
+			buildJITResolveFrame(REGISTER_ARGS);
+		}
+
+		if (getenv("throwLikeNPE")) {
+			updateVMStruct(REGISTER_ARGS);
+			prepareForExceptionThrow(_currentThread);
+			if (getenv("setExpLikeNPE")) {
+				setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, NULL);
+			} else {
+				setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			}
+			VMStructHasBeenUpdated(REGISTER_ARGS);
+		} else {
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+			updateVMStruct(REGISTER_ARGS);
+			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			VMStructHasBeenUpdated(REGISTER_ARGS);
+			restoreGenericSpecialStackFrame(REGISTER_ARGS);
+		}
 		return GOTO_THROW_CURRENT_EXCEPTION;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
@@ -10927,6 +11028,10 @@ targetSync:
 	PERFORM_ACTION(sendTargetSmallSync(REGISTER_ARGS));
 
 targetNonSync:
+	if (_sendMethod == vmThread->javaVM->initialMethods.throwDefaultConflict) {
+		printf("found def con\n");
+		goto done;
+	}
 	PERFORM_ACTION(sendTargetSmallNonSync(REGISTER_ARGS));
 
 targetSyncStatic:
@@ -12226,6 +12331,7 @@ noUpdate:
 #endif
 		, _objectAllocate(currentThread)
 		, _objectAccessBarrier(currentThread)
+		, isDefaultConflict(false)
 	{
 	}
 };

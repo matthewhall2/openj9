@@ -54,6 +54,7 @@ dropPendingSendPushes(J9VMThread *currentThread)
 			Assert_VM_true(bp == currentThread->j2iFrame);
 		} else {
 			J9Method * method = currentThread->literals;
+
 			J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 			UDATA slotCount = J9_ARG_COUNT_FROM_ROM_METHOD(romMethod) + J9_TEMP_COUNT_FROM_ROM_METHOD(romMethod);
 

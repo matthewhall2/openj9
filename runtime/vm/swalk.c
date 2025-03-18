@@ -451,6 +451,9 @@ terminationPoint:
 
 UDATA walkFrame(J9StackWalkState * walkState)
 {
+	// if (walkState->method == walkState->javaVM->initialMethods.throwDefaultConflict) {
+	// 	return J9_STACKWALK_STOP_ITERATING;
+	// }
 	if (0 != walkState->loopBreaker) {
 		walkState->loopBreaker -= 1;
 		if (0 == walkState->loopBreaker) {
@@ -954,7 +957,8 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 #ifdef J9VM_INTERP_LINEAR_STACKWALK_TRACING
 	lswRecord(walkState, LSW_TYPE_FRAME_TYPE, (void*)(UDATA)LSW_FRAME_TYPE_BYTECODE);
 #endif
-
+	
+	
 	walkState->method = walkState->literals;
 	if (NULL == walkState->method) {
 		walkState->constantPool = NULL;

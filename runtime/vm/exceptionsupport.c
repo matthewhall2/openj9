@@ -266,9 +266,28 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 		}
 	} else
 #endif
-
+	{
+	char *exCode = getenv("exCode2");
+	long code = 0;
+	if (exCode && *exCode == 'A') {
+		code = J9_EXCEPT_SEARCH_JAVA_HANDLER;
+	} else if (exCode && *exCode == 'I') {
+		code = J9_EXCEPT_SEARCH_JIT_HANDLER;
+	} else if (exCode && *exCode == 'N') {
+		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
+	} else {
+		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
+	}
+	if (exCode != NULL && walkState->literals == vm->initialMethods.throwDefaultConflict) {
+		printf("ExceptionHandler found default conflict for member name\n");
+		walkState->userData3 = (void *) code;
+		return J9_STACKWALK_STOP_ITERATING;
+	}
+	}
 	/* Special frames (natives in particular) do not handle exceptions */
-
+	// if default confdlict return stop interating
+	
+//(!getenv("useNew") || !(walkState->literals == vm->initialMethods.throwDefaultConflict))
 	if (!IS_SPECIAL_FRAME_PC(walkState->pc)) {
 		J9ROMMethod * romMethod;
 
