@@ -637,7 +637,7 @@ done:
 			if (getenv("build_frame_j2i") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				}
-			return THROW_INCOMPATIBLE_CLASS_CHANGE
+			return THROW_INCOMPATIBLE_CLASS_CHANGE;
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
