@@ -637,6 +637,9 @@ done:
 			if (getenv("build_frame_j2i") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				}
+			if (getenv("set_literals_j2i") != NULL) {
+				_literals = _sendMethod;
+				}
 			return THROW_INCOMPATIBLE_CLASS_CHANGE;
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
@@ -9727,6 +9730,9 @@ throwDefaultConflict:
 			if (getenv("build_frame_lts") != NULL) {
 			buildJITResolveFrame(REGISTER_ARGS);
 			}
+			if (getenv("set_literals_lts") != NULL) {
+				_literals = _sendMethod;
+				}
 		}
 		// run() will run throwDefaultConflictForMemberName()
 		return THROW_INCOMPATIBLE_CLASS_CHANGE;
