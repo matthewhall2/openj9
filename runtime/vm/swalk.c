@@ -981,6 +981,10 @@ walkBytecodeFrame(J9StackWalkState * walkState)
 		J9JavaVM *vm = walkState->walkThread->javaVM;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		UDATA argTempCount = 0;
+		if (walkState->method == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict) {
+			printf("found special default conflict method\n");
+		}
+
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
