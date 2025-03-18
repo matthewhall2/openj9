@@ -3370,7 +3370,10 @@
  #endif /* JAVA_SPEC_VERSION >= 15 */
 				 walkState->walkThread = _currentThread;
 				 if (_currentThread->literals == _currentThread->javaVM->initialMethods.throwDefaultConflict) {
-					printf("inlThorwableFillInStackTrace: found defaut conflict method\n");
+					printf("inlThorwableFillInStackTrace (_currentThread->literals): found defaut conflict method\n");
+				 }
+				 if (_literals == _currentThread->javaVM->initialMethods.throwDefaultConflict) {
+					printf("inlThorwableFillInStackTrace (_literals): found defaut conflict method\n");
 				 }
 				 updateVMStruct(REGISTER_ARGS);
 				 UDATA walkRC = _vm->walkStackFrames(_currentThread, walkState);
@@ -9556,6 +9559,7 @@
 				 if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			 }
 		 } else {
+			printf("linkToStaticSpecial: found default conflict method\n");
 			goto throwDefaultConflict;
 		 }
  
