@@ -641,7 +641,7 @@ done:
 				_literals = _sendMethod;
 				_currentThread->literals = _sendMethod;
 				}
-			return THROW_INCOMPATIBLE_CLASS_CHANGE;
+			return GOTO_RUN_METHOD;
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
@@ -9737,7 +9737,7 @@ throwDefaultConflict:
 				}
 		}
 		// run() will run throwDefaultConflictForMemberName()
-		return THROW_INCOMPATIBLE_CLASS_CHANGE;
+		return GOTO_RUN_METHOD;
 	}
 
 	VMINLINE VM_BytecodeAction
