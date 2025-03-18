@@ -9598,7 +9598,7 @@
  throwDefaultConflict:
 		 if (fromJIT) {
 			 _sp -= 1;
-			 buildJITResolveFrame(REGISTER_ARGS);
+			// buildJITResolveFrame(REGISTER_ARGS);
 		 }
 		 // run() will run throwDefaultConflictForMemberName()
 		 return GOTO_RUN_METHOD;
