@@ -633,6 +633,7 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
 			if (getenv("build_frame_j2i") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -647,7 +648,6 @@ done:
 			return rc;
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
-		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
