@@ -639,6 +639,7 @@ done:
 				}
 			if (getenv("set_literals_j2i") != NULL) {
 				_literals = _sendMethod;
+				_currentThread->literals = _sendMethod;
 				}
 			return THROW_INCOMPATIBLE_CLASS_CHANGE;
 		}
@@ -9732,6 +9733,7 @@ throwDefaultConflict:
 			}
 			if (getenv("set_literals_lts") != NULL) {
 				_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+				_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 				}
 		}
 		// run() will run throwDefaultConflictForMemberName()
