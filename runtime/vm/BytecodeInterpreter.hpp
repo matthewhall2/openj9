@@ -9822,12 +9822,14 @@
 	 {
 		 /* Load the conflicting method and error message from this special target */
 		 _currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		 _literals = currentThread->javaVM->initialMethods.throwDefaultConflict;
 		 buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		 updateVMStruct(REGISTER_ARGS);
 		 setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		 VMStructHasBeenUpdated(REGISTER_ARGS);
 		 restoreGenericSpecialStackFrame(REGISTER_ARGS);
 		 _currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+		 _literals = currentThread->javaVM->initialMethods.throwDefaultConflict;
 		 return GOTO_THROW_CURRENT_EXCEPTION;
 	 }
  #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
