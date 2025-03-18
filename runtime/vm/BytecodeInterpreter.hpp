@@ -9731,7 +9731,7 @@ throwDefaultConflict:
 			buildJITResolveFrame(REGISTER_ARGS);
 			}
 			if (getenv("set_literals_lts") != NULL) {
-				_literals = _sendMethod;
+				_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 				}
 		}
 		// run() will run throwDefaultConflictForMemberName()
