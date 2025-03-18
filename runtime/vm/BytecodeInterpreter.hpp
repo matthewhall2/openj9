@@ -633,6 +633,12 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
+			if (getenv("build_frame_j2i") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+			return THROW_INCOMPATIBLE_CLASS_CHANGE
+		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
@@ -9718,10 +9724,12 @@ done:
 throwDefaultConflict:
 		if (fromJIT) {
 			_sp -= 1;
+			if (getenv("build_frame_lts") != NULL) {
 			buildJITResolveFrame(REGISTER_ARGS);
+			}
 		}
 		// run() will run throwDefaultConflictForMemberName()
-		return GOTO_RUN_METHOD;
+		return THROW_INCOMPATIBLE_CLASS_CHANGE;
 	}
 
 	VMINLINE VM_BytecodeAction
