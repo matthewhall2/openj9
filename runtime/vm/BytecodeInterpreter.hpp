@@ -642,9 +642,7 @@ done:
 				_literals = _sendMethod;
 				_currentThread->literals = _sendMethod;
 				}
-			rc = throwDefaultConflictForMemberName(REGISTER_ARGS);
-			_currentThread->currentException = _currentThread->stopThrowable;
-			_currentThread->stopThrowable = NULL;
+			// calls from linkTo* to here will return GOTO_RUN_METHOD and handle error in run()
 			return rc;
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
@@ -9686,7 +9684,8 @@ done:
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
-			goto throwDefaultConflict;
+			methodArgCount = (UDATA)atoi(getenv("argcount"));
+		//	goto throwDefaultConflict;
 		}
 
 		if (fromJIT) {
