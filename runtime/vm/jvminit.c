@@ -2822,17 +2822,13 @@ VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved)
 				goto _memParseError;
 			}
 #endif /* JAVA_SPEC_VERSION >= 19 */
-#if JAVA_SPEC_VERSION >= 21
+#if JAVA_SPEC_VERSION >= 24
 			{
-				/* Enable yielding of pinned continuations by default. */
-				vm->extendedRuntimeFlags3 |= J9_EXTENDED_RUNTIME3_YIELD_PINNED_CONTINUATION;
-				argIndex = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXNOYIELDPINNEDVIRTUALTHREADS, NULL);
-				argIndex2 = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXYIELDPINNEDVIRTUALTHREADS, NULL);
 				argIndex = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXYIELDPINNEDVIRTUALTHREADS, NULL);
 				argIndex2 = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXNOYIELDPINNEDVIRTUALTHREADS, NULL);
 				if (argIndex > argIndex2) {
-					/* Disable yielding of pinned continuations. */
-					vm->extendedRuntimeFlags3 &= ~J9_EXTENDED_RUNTIME3_YIELD_PINNED_CONTINUATION;
+					/* Enable yielding of pinned continuation. */
+					vm->extendedRuntimeFlags3 |= J9_EXTENDED_RUNTIME3_YIELD_PINNED_CONTINUATION;
 				}
 			}
 #endif /* JAVA_SPEC_VERSION >= 24 */
