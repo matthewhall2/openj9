@@ -9799,7 +9799,20 @@ throwDefaultConflict:
 		UDATA vTableOffset = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
 		J9Class *receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
-
+		if (_currentThread->javaVM->initialMethods.throwDefaultConflict == _sendMethod) {
+			if (fromJIT) {
+				_sp -= 1;
+				if (getenv("build_frame_ltv") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+				if (getenv("set_literals_ltv") != NULL) {
+					_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+					}
+			}
+			// run() will run throwDefaultConflictForMemberName()
+			return GOTO_RUN_METHOD;
+		}
 		/* The invokeBasic INL uses the methodArgCount from ramCP to locate the receiver object,
 		 * so when dispatched using linkToVirtual, it will still access the ramCP of the linkToVirtual call
 		 * Hence if the argument count of linkToVirtual doesn't match invokeBasic's romMethod ArgCount, then
