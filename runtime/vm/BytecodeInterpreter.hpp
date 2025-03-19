@@ -9675,7 +9675,7 @@ throwDefaultConflict:
 					_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 					}
 			}
-			_sendMethod = method
+			_sendMethod = method;
 			// run() will run throwDefaultConflictForMemberName()
 			return GOTO_RUN_METHOD;
 		}
