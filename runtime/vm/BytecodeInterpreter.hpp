@@ -9664,7 +9664,6 @@ throwDefaultConflict:
 		if (nullCheckJ9Obj(memberNameObject, fromJIT, REGISTER_ARGS, true) == THROW_NPE) return THROW_NPE;
 
 		J9Method *method = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		_sendMethod = method;
 		if (_currentThread->javaVM->initialMethods.throwDefaultConflict == method) {
 			if (fromJIT) {
 				_sp -= 1;
@@ -9676,6 +9675,7 @@ throwDefaultConflict:
 					_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 					}
 			}
+			_sendMethod = method
 			// run() will run throwDefaultConflictForMemberName()
 			return GOTO_RUN_METHOD;
 		}
