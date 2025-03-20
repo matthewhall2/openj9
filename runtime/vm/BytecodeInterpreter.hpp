@@ -9609,7 +9609,8 @@ done:
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
-			methodArgCount = (UDATA)atoi(getenv("argcount"));
+			char *c = getenv("argcount");
+			methodArgCount = c ? (UDATA)atoi(c) : 0;
 		//	goto throwDefaultConflict;
 		}
 
@@ -9652,19 +9653,19 @@ done:
 
 		return rc;
 
-throwDefaultConflict:
-		if (fromJIT) {
-			_sp -= 1;
-			if (getenv("build_frame_lts") != NULL) {
-			buildJITResolveFrame(REGISTER_ARGS);
-			}
-			if (getenv("set_literals_lts") != NULL) {
-				_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
-				_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
-				}
-		}
-		// run() will run throwDefaultConflictForMemberName()
-		return GOTO_RUN_METHOD;
+// throwDefaultConflict:
+// 		if (fromJIT) {
+// 			_sp -= 1;
+// 			if (getenv("build_frame_lts") != NULL) {
+// 			buildJITResolveFrame(REGISTER_ARGS);
+// 			}
+// 			if (getenv("set_literals_lts") != NULL) {
+// 				_literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+// 				_currentThread->literals = _currentThread->javaVM->initialMethods.throwDefaultConflict;
+// 				}
+// 		}
+// 		// run() will run throwDefaultConflictForMemberName()
+// 		return GOTO_RUN_METHOD;
 	}
 
 	VMINLINE VM_BytecodeAction
