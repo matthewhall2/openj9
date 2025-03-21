@@ -634,7 +634,7 @@ done:
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
-		if (isMethodDefaultConflictJ9Method(_sendMethod)) {
+		if (getenv("throw_in_j2i") != NULL && isMethodDefaultConflictJ9Method(_sendMethod)) {
 			if (getenv("build_frame_j2i") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				}
