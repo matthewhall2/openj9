@@ -5431,9 +5431,10 @@ TR_ResolvedJ9Method::numberOfTemps()
 U_16
 TR_ResolvedJ9Method::numberOfPendingPushes()
    {
+   U_16 adder =  feGetEnv("addTemps") != NULL ? atoi(feGetEnv("addTemps")) : 0;
    if (_pendingPushSlots < 0)
-      _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod()) + 2;
-   return _pendingPushSlots + 2;
+      _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod()) + adder;
+   return _pendingPushSlots + adder;
    }
 
 U_8 *
