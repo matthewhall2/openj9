@@ -5429,8 +5429,8 @@ U_16
 TR_ResolvedJ9Method::numberOfPendingPushes()
    {
    if (_pendingPushSlots < 0)
-      _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod());
-   return _pendingPushSlots;
+      _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod()) + 2;
+   return _pendingPushSlots + 2;
    }
 
 U_8 *
