@@ -5431,7 +5431,7 @@ TR_ResolvedJ9Method::numberOfPendingPushes()
    U_16 adder =  feGetEnv("addTemps") != NULL ? atoi(feGetEnv("addTemps")) : 0;
    if (_pendingPushSlots < 0)
       {
-      printf("Temps: _pendingPushSlots is negative, using max: %d\n", J9_MAX_STACK_FROM_ROM_METHOD(romMethod()))
+      printf("Temps: _pendingPushSlots is negative, using max: %d\n", J9_MAX_STACK_FROM_ROM_METHOD(romMethod()));
       _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod()) + adder;
       return _pendingPushSlots;
       }
