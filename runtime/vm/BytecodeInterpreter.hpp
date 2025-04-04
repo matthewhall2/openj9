@@ -650,7 +650,11 @@ done:
 
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
-			_literals = (J9Method*)jitReturnAddress;
+			if (getenv("setLit") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
+				_literals = _sendMethod;
+			} else {
+				_literals = (J9Method*)jitReturnAddress;
+			}
 			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
