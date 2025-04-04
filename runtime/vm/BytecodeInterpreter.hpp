@@ -1032,7 +1032,6 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
-		if ()
 		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
 		if (NULL == bytecodes) {
 			printf("default conflict? : null bc\n");
