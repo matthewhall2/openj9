@@ -9616,8 +9616,8 @@ done:
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
-			char *c = getenv("argcount");
-			methodArgCount = c ? (UDATA)atoi(c) : 0;
+			// char *c = getenv("argcount");
+			// methodArgCount = c ? (UDATA)atoi(c) : 0;
 		//	goto throwDefaultConflict;
 		}
 
