@@ -648,7 +648,7 @@ done:
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 
-		J9ROMMethod *const romMethod = isMethodDefaultConflictForMethodHandle(_sendMethod) ? NULL : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
