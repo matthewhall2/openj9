@@ -452,7 +452,7 @@ terminationPoint:
 UDATA walkFrame(J9StackWalkState * walkState)
 {
 	if (walkState->literals == walkState->walkThread->javaVM->initialMethods.throwDefaultConflict) {
-		return J9_STACKWALK_STOP_ITERATING;
+		goto walkIt;
 	}
 
 	if (0 != walkState->loopBreaker) {
