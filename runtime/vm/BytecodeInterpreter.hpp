@@ -624,7 +624,7 @@ done:
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
 
-#define isMethodDefaultConflictJ9Method(method) (method == _currentThread->javaVM->initialMethods.throwDefaultConflict)
+#define isMethodDefaultConflictForMethodHandle(method) (method == _currentThread->javaVM->initialMethods.throwDefaultConflict)
 
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
@@ -634,7 +634,7 @@ done:
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
-		if (getenv("throw_in_j2i") != NULL && isMethodDefaultConflictJ9Method(_sendMethod)) {
+		if (getenv("throw_in_j2i") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 			if (getenv("build_frame_j2i") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				}
@@ -647,11 +647,17 @@ done:
 		}
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
-		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		void *const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
-		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+
+		J9ROMMethod *const romMethod = isMethodDefaultConflictForMethodHandle(_sendMethod) ? NULL : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			if (isMethodDefaultConflictForMethodHandle(romMethod)) {
+				if (getenv("build_frame_j2i_2") != NULL) {
+					buildJITResolveFrame(REGISTER_ARGS);
+				}
+			} else {
+				_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			}
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -671,6 +677,7 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
+			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
