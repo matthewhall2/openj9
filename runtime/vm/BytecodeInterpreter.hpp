@@ -1034,7 +1034,9 @@ obj:
 		};
 		if (isDefaultConflict) {
 			printf("default conflict? : null bc\n");
-			return (U_8*)returnFromNativeBytecodes[0];
+			char *c = getenv("retVal");
+			int index = c != NULL ? atoi(c) : 0;
+			return (U_8*)returnFromNativeBytecodes[index];
 		}
 		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
 		return (U_8*)returnFromNativeBytecodes[bytecodes[1]];
