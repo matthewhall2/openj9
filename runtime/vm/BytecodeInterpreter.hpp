@@ -651,7 +651,7 @@ done:
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -1014,7 +1014,7 @@ obj:
 	}
 
 	VMINLINE U_8*
-	nativeReturnBytecodePC(REGISTER_ARGS_LIST, J9ROMMethod* const romMethod)
+	nativeReturnBytecodePC(REGISTER_ARGS_LIST, J9ROMMethod* const romMethod, bool isDefaultConflict = false)
 	{
 		static const U_8 returnFromNativeBytecodes[][4] = {
 			{ JBinvokestatic, 0, 0, JBretFromNative0 }, /* void */
@@ -1032,11 +1032,11 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
-		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
-		if (NULL == bytecodes || romMethod == (J9ROMMethod*)(-sizeof(romMethod))) {
+		if (isDefaultConflict) {
 			printf("default conflict? : null bc\n");
 			return (U_8*)returnFromNativeBytecodes[0];
 		}
+		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
 		return (U_8*)returnFromNativeBytecodes[bytecodes[1]];
 	}
 
