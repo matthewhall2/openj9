@@ -651,13 +651,7 @@ done:
 		J9ROMMethod *const romMethod = isMethodDefaultConflictForMethodHandle(_sendMethod) ? NULL : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
-			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-				if (getenv("build_frame_j2i_2") != NULL) {
-					buildJITResolveFrame(REGISTER_ARGS);
-				}
-			} else {
-				_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
-			}
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
