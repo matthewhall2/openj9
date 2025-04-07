@@ -267,16 +267,17 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	} else
 #endif
 
+
 	/* Special frames (natives in particular) do not handle exceptions */
 	// if default confdlict return stop interating
-	if (walkState->method == vm->initialMethods.throwDefaultConflict) {
+	if (getenv("useNew") && walkState->method == vm->initialMethods.throwDefaultConflict) {
 		printf("Exception handler search found default conflict - Walk state: %p\n", walkState->pc);
 		if (getenv("retEarlyExHandler")) {
 			return J9_STACKWALK_STOP_ITERATING;
 		}
 	}
 
-	if (!(walkState->method == vm->initialMethods.throwDefaultConflict) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
+	if ((!getenv("useNew") || !(walkState->method == vm->initialMethods.throwDefaultConflict)) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
 		J9ROMMethod * romMethod;
 
 		if (walkState->pc[0] == 0xFF) { /* impdep2 = 0xFF - indicates a JNI call-in frame */
