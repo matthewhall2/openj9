@@ -271,6 +271,9 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	// if default confdlict return stop interating
 	if (walkState->method == vm->initialMethods.throwDefaultConflict) {
 		printf("Exception handler search found default conflict - Walk state: %p\n", walkState->pc);
+		if (getenv("retEarlyExHandler")) {
+			return J9_STACKWALK_STOP_ITERATING;
+		}
 	}
 
 	if (!(walkState->method == vm->initialMethods.throwDefaultConflict) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
