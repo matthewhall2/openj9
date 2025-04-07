@@ -3365,6 +3365,7 @@ typedef struct J9InitializerMethods {
 	struct J9Method* invokePrivateMethod;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	struct J9Method* throwDefaultConflict;
+	struct J9ROMethod* defaultConflictROMMethod;
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 } J9InitializerMethods;
 
