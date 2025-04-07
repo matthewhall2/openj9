@@ -276,8 +276,8 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 			return J9_STACKWALK_STOP_ITERATING;
 		}
 	}
-//(!getenv("useNew") || !(walkState->method == vm->initialMethods.throwDefaultConflict))
-	if ((!getenv("useNew") || !(walkState->method == vm->initialMethods.throwDefaultConflict)) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
+//(!getenv("useNew") || !(walkState->literals == vm->initialMethods.throwDefaultConflict))
+	if ((!getenv("useNew") || !(walkState->literals == vm->initialMethods.throwDefaultConflict)) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
 		J9ROMMethod * romMethod;
 
 		if (walkState->pc[0] == 0xFF) { /* impdep2 = 0xFF - indicates a JNI call-in frame */
