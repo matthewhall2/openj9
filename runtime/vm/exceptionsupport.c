@@ -266,7 +266,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 		}
 	} else
 #endif
-
+	{
 	/* Special frames (natives in particular) do not handle exceptions */
 	// if default confdlict return stop interating
 	int isDefaultConflict = (walkState->method == vm->initialMethods.throwDefaultConflict);
@@ -457,6 +457,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 
 	Trc_VM_exceptionHandlerSearch_Exit(currentThread, J9_STACKWALK_KEEP_ITERATING);
 	return J9_STACKWALK_KEEP_ITERATING;
+	}
 }
 
 
