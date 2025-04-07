@@ -480,11 +480,11 @@ retry:
 	}
 
 	VMINLINE UDATA*
-	buildInternalNativeStackFrame(REGISTER_ARGS_LIST)
+	buildInternalNativeStackFrame(REGISTER_ARGS_LIST, bool isDefaultConflict = false)
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_NATIVE_METHOD, jitStackFrameFlags(REGISTER_ARGS, 0), true);
 		*--_sp = (UDATA)_sendMethod;
-		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount;
+		_arg0EA = bp + isDefaultConflict ? 0 : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount;
 		return bp;
 	}
 
@@ -653,7 +653,7 @@ done:
 			if (getenv("setLit") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 				_literals = _sendMethod;
 				if (getenv("build_inl_frame")) {
-					buildInternalNativeStackFrame(REGISTER_ARGS);
+					buildInternalNativeStackFrame(REGISTER_ARGS, true);
 				}
 				if (getenv("setThreadLit") != NULL) _currentThread->literals = _sendMethod;
 			} else {
