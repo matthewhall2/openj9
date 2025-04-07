@@ -657,7 +657,7 @@ done:
 				_literals = (J9Method*)jitReturnAddress;
 			}
 			if (getenv("build_inl_frame") && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-				buildInternalNativeStackFrame(REGISTER_ARGS, true);
+				buildInternalNativeStackFrame(REGISTER_ARGS, getenv("inl_offset_zero") != NULL);
 			}
 			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
