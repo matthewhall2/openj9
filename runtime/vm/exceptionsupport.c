@@ -277,7 +277,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 		}
 	}
 //(!getenv("useNew") || !(walkState->method == vm->initialMethods.throwDefaultConflict))
-	if (!IS_SPECIAL_FRAME_PC(walkState->pc)) {
+	if ((!getenv("useNew") || !(walkState->method == vm->initialMethods.throwDefaultConflict)) && !IS_SPECIAL_FRAME_PC(walkState->pc)) {
 		J9ROMMethod * romMethod;
 
 		if (walkState->pc[0] == 0xFF) { /* impdep2 = 0xFF - indicates a JNI call-in frame */
