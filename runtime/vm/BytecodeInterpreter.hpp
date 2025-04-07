@@ -652,12 +652,12 @@ done:
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			if (getenv("setLit") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 				_literals = _sendMethod;
-				if (getenv("build_inl_frame")) {
-					buildInternalNativeStackFrame(REGISTER_ARGS, true);
-				}
 				if (getenv("setThreadLit") != NULL) _currentThread->literals = _sendMethod;
 			} else {
 				_literals = (J9Method*)jitReturnAddress;
+			}
+			if (getenv("build_inl_frame") && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
+				buildInternalNativeStackFrame(REGISTER_ARGS, true);
 			}
 			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
