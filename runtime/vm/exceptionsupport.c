@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "j9cfg.h"
 #include "j9consts.h"
@@ -270,7 +269,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 
 	/* Special frames (natives in particular) do not handle exceptions */
 	// if default confdlict return stop interating
-	bool isDefaultConflict = (walkState->method == vm->initialMethods.throwDefaultConflict);
+	int isDefaultConflict = (walkState->method == vm->initialMethods.throwDefaultConflict);
 	if (isDefaultConflict) {
 		printf("Exception handler search found default conflict - Walk state: %p\n", walkState->pc);
 	}
