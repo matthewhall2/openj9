@@ -322,7 +322,7 @@ J9Method cInvokePrivateMethod  = { 0, 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 J9ROMNameAndSignature cDefaultConflictSig = {0, 0};
 J9ROMMethod cDefConflict = {cDefaultConflictSig, 0, 0, 0, 0, 0, 0};
-J9Method cThrowDefaultConflict = { (U_8*)(&cDefConflict), 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT), (void*)J9_JIT_NEVER_TRANSLATE };
+J9Method cThrowDefaultConflict = { 0, 0, J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT), (void*)J9_JIT_NEVER_TRANSLATE };
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
 void
@@ -373,6 +373,8 @@ initializeInitialMethods(J9JavaVM *vm)
 	vm->initialMethods.invokePrivateMethod = &cInvokePrivateMethod;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	vm->initialMethods.throwDefaultConflict = &cThrowDefaultConflict;
+	vm->initialMethods.defaultConflictROMMethod = &cDefConflict;
+	vm->initialMethods.throwDefaultConflict->bytecodes = vm->initialMethods.defaultConflictROMMethod;
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 }
 
