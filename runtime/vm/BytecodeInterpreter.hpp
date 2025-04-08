@@ -655,8 +655,10 @@ done:
 				if (getenv("buildNativeStackFrame")) {
 					buildInternalNativeStackFrame(REGISTER_ARGS);
 				} else {
+				if (getenv("build_frame_j2i")) {
+					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				}
 				}
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
@@ -9915,7 +9917,9 @@ done:
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
-		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		if (getenv("build_frame_throw")) {
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		}
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
