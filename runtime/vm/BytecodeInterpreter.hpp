@@ -634,34 +634,13 @@ done:
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
-		if (getenv("throw_in_j2i") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-			if (getenv("build_frame_j2i") != NULL) {
-				buildJITResolveFrame(REGISTER_ARGS);
-				}
-			if (getenv("set_literals_j2i") != NULL) {
-				_literals = _sendMethod;
-				_currentThread->literals = _sendMethod;
-				}
-			// calls from linkTo* to here will return GOTO_RUN_METHOD and handle error in run()
-			return rc;
-		}
+		
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
-			if (getenv("setLit") != NULL && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-				_literals = _sendMethod;
-				if (getenv("setThreadLit") != NULL) _currentThread->literals = _sendMethod;
-			} else {
-				_literals = (J9Method*)jitReturnAddress;
-			}
-			if (getenv("build_inl_frame") && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-				buildInternalNativeStackFrame(REGISTER_ARGS, getenv("inl_offset_zero") != NULL);
-			}
-			
-
-			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -671,7 +650,7 @@ done:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
-			if (getenv("buildMethodFrame")) {
+			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
@@ -1045,12 +1024,7 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
-		if (getenv("handleDef") && isDefaultConflict) {
-			printf("default conflict? : null bc\n");
-			char *c = getenv("retVal");
-			int index = c != NULL ? atoi(c) : 0;
-			return (U_8*)returnFromNativeBytecodes[index];
-		}
+	
 		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
 		return (U_8*)returnFromNativeBytecodes[bytecodes[1]];
 	}
