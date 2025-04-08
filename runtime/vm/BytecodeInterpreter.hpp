@@ -480,11 +480,11 @@ retry:
 	}
 
 	VMINLINE UDATA*
-	buildInternalNativeStackFrame(REGISTER_ARGS_LIST, bool isDefaultConflict = false)
+	buildInternalNativeStackFrame(REGISTER_ARGS_LIST)
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_NATIVE_METHOD, jitStackFrameFlags(REGISTER_ARGS, 0), true);
 		*--_sp = (UDATA)_sendMethod;
-		_arg0EA = bp + (isDefaultConflict ? (U_8)0 : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount);
+		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount);
 		return bp;
 	}
 
@@ -652,7 +652,12 @@ done:
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
+				if (getenv("buildNativeStackFrame")) {
+					buildInternalNativeStackFrame(REGISTER_ARGS);
+				} else {
+
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				}
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
