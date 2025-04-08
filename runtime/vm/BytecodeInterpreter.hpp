@@ -1030,7 +1030,7 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
-		if (isDefaultConflict) {
+		if (getenv("retZB") && isDefaultConflict) {
 			return (U_8*)returnFromNativeBytecodes[0];
 		}
 		U_8 *bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(romMethod);
