@@ -659,9 +659,7 @@ done:
 			if (getenv("build_inl_frame") && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 				buildInternalNativeStackFrame(REGISTER_ARGS, getenv("inl_offset_zero") != NULL);
 			}
-			if (getenv("buildMethodFrame")) {
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
-			}
+			
 
 			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
@@ -673,6 +671,9 @@ done:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
+			if (getenv("buildMethodFrame")) {
+				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+			}
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
