@@ -659,6 +659,10 @@ done:
 			if (getenv("build_inl_frame") && isMethodDefaultConflictForMethodHandle(_sendMethod)) {
 				buildInternalNativeStackFrame(REGISTER_ARGS, getenv("inl_offset_zero") != NULL);
 			}
+			if (getenv("buildMethodFrame")) {
+				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+			}
+
 			_pc = getenv("retZero") != NULL ? (U_8*)0 : nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
