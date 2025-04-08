@@ -1044,7 +1044,7 @@ obj:
 			{ JBinvokestatic, 0, 0, JBretFromNative1 }, /* object */
 #endif /* J9VM_ENV_DATA64 */
 		};
-		if (isDefaultConflict) {
+		if (getenv("handleDef") && isDefaultConflict) {
 			printf("default conflict? : null bc\n");
 			char *c = getenv("retVal");
 			int index = c != NULL ? atoi(c) : 0;
