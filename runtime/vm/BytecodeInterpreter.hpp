@@ -640,7 +640,7 @@ done:
 		J9ROMMethod *const romMethod = isMethodDefaultConflictForMethodHandle ? NULL : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
@@ -1612,6 +1612,9 @@ obj:
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 			case J9_OBJECT_MONITOR_YIELD_VIRTUAL: {
 				rc = yieldPinnedContinuation(REGISTER_ARGS, JAVA_LANG_VIRTUALTHREAD_BLOCKING, returnState);
+				omrthread_monitor_enter(_vm->blockedVirtualThreadsMutex);
+				omrthread_monitor_notify(_vm->blockedVirtualThreadsMutex);
+				omrthread_monitor_exit(_vm->blockedVirtualThreadsMutex);
 				break;
 			}
 			case J9_OBJECT_MONITOR_OOM:
@@ -3029,15 +3032,37 @@ done:
 					}
 
 					if ((NULL != objectMonitor) && (NULL != objectMonitor->waitingContinuations)) {
-						bool isNotifyAll = (omrthread_monitor_notify_all == notifyFunction);
-						bool notified = VM_ContinuationHelpers::notifyVirtualThread(_currentThread, objectMonitor, isNotifyAll);
+						omrthread_monitor_enter(_vm->blockedVirtualThreadsMutex);
+						J9VMContinuation *head = objectMonitor->waitingContinuations;
+						if ((NULL != head) && (NULL != head->vthread)) {
+							if (omrthread_monitor_notify == notifyFunction) {
+								objectMonitor->waitingContinuations = head->nextWaitingContinuation;
+								head->nextWaitingContinuation = _vm->blockedContinuations;
+								_vm->blockedContinuations = head;
+								J9VMJAVALANGVIRTUALTHREAD_SET_ONWAITINGLIST(_currentThread, head->vthread, JNI_TRUE);
+								J9VMJAVALANGVIRTUALTHREAD_SET_NOTIFIED(_currentThread, head->vthread, JNI_TRUE);
+							} else {
+								J9VMContinuation *next = head;
+								J9VMContinuation *prev = NULL;
+								while (NULL != next) {
+									J9VMJAVALANGVIRTUALTHREAD_SET_ONWAITINGLIST(_currentThread, next->vthread, JNI_TRUE);
+									J9VMJAVALANGVIRTUALTHREAD_SET_NOTIFIED(_currentThread, next->vthread, JNI_TRUE);
+									prev = next;
+									next = next->nextWaitingContinuation;
+								}
+								prev->nextWaitingContinuation = _vm->blockedContinuations;
+								_vm->blockedContinuations = head;
+								objectMonitor->waitingContinuations = NULL;
+							}
+							omrthread_monitor_notify(_vm->blockedVirtualThreadsMutex);
+							omrthread_monitor_exit(_vm->blockedVirtualThreadsMutex);
 
-						/* If a virtual thread has been successfully notified, return directly without
-						 * triggering the native notify API.
-						 */
-						if (notified && !isNotifyAll) {
-							returnVoidFromINL(REGISTER_ARGS, 1);
-							goto done;
+							if (omrthread_monitor_notify == notifyFunction) {
+								returnVoidFromINL(REGISTER_ARGS, 1);
+								goto done;
+							}
+						} else {
+							omrthread_monitor_exit(_vm->blockedVirtualThreadsMutex);
 						}
 					}
 				}
@@ -5793,26 +5818,10 @@ ffi_OOM:
 			j9object_t waitObject = *(j9object_t *)(_sp + 3);
 			rc = tryEnterBlockingMonitor(REGISTER_ARGS, waitObject, J9VM_CONTINUATION_RETURN_FROM_OBJECT_WAIT);
 			if ((NULL != _currentThread->currentContinuation) && (EXECUTE_BYTECODE == rc)) {
-				waitObject = *(j9object_t *)(_sp + 3);
 				omrthread_monitor_t monitor = getMonitorForWait(_currentThread, waitObject);
 				monitor->count = _currentThread->currentContinuation->waitingMonitorEnterCount;
-				_currentThread->ownedMonitorCount += monitor->count - 1;
 				_currentThread->currentContinuation->waitingMonitorEnterCount = 0;
-
-				/* Only throw an exception if the virtual thread has not been notified. */
-				if (J9VMJAVALANGTHREAD_DEADINTERRUPT(_currentThread, _currentThread->threadObject)
-				&& !J9VMJAVALANGVIRTUALTHREAD_NOTIFIED(_currentThread, _currentThread->threadObject)
-				) {
-					/* Build a native frame on vthread stack before throwing exception. */
-					buildInternalNativeStackFrame(REGISTER_ARGS);
-					updateVMStruct(REGISTER_ARGS);
-					prepareForExceptionThrow(_currentThread);
-					setCurrentException(_currentThread, J9VMCONSTANTPOOL_JAVALANGINTERRUPTEDEXCEPTION, NULL);
-					VMStructHasBeenUpdated(REGISTER_ARGS);
-					rc = GOTO_THROW_CURRENT_EXCEPTION;
-				} else {
-					returnVoidFromINL(REGISTER_ARGS, 4);
-				}
+				returnVoidFromINL(REGISTER_ARGS, 4);
 			}
 			break;
 		}
