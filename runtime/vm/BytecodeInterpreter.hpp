@@ -484,7 +484,7 @@ retry:
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_NATIVE_METHOD, jitStackFrameFlags(REGISTER_ARGS, 0), true);
 		*--_sp = (UDATA)_sendMethod;
-		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount);
+		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->argCount;
 		return bp;
 	}
 
