@@ -637,6 +637,7 @@ done:
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		bool isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		isDefaultConflict = isMethodDefaultConflictForMethodHandle;
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
@@ -2818,8 +2819,9 @@ ffi_exit:
 			}
 		}
 		code = getenv("exCode");
-		if ((code && *code == 'A') || J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
+		if ((isDefaultConflict && code && *code == 'A') || J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JAVA_HANDLER;
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			*--_sp = (UDATA)exception;
 			_pc = (U_8*)walkState->userData2;
@@ -2836,9 +2838,9 @@ ffi_exit:
 					goto done;
 				}
 			}
-		} else if ((code && *code == 'N') || J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((isDefaultConflict && code && *code == 'N') || J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JNI_HANDLER;
-
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			_pc = walkState->pc;
 			_arg0EA = walkState->arg0EA;
@@ -2846,9 +2848,9 @@ ffi_exit:
 			_currentThread->j2iFrame = walkState->j2iFrame;
 			_currentThread->currentException = exception;
 			/* Execute the call-in return bytecode at _pc */
-		} else if ((code && *code == 'I') || J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((isDefaultConflict && code && *code == 'I') || J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JIT_HANDLER;
-
+			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			_currentThread->jitException = (j9object_t)walkState->restartException;
 			_currentThread->j2iFrame = walkState->j2iFrame;
