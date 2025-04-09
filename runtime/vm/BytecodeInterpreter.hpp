@@ -2866,7 +2866,7 @@ ffi_exit:
 			_nextAction = J9_BCLOOP_LOAD_PRESERVED_AND_BRANCH;
 			VM_JITInterface::enableRuntimeInstrumentation(_currentThread);
 			rc = GOTO_DONE;
-		} else if (isDefaultConflict) {
+		} else if (getenv("lastcase") && isDefaultConflict) {
 			isDefaultConflict = false;
 			rc = GOTO_DONE;
 		} else {
