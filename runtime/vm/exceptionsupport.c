@@ -267,8 +267,20 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	} else
 #endif
 
+	char *exCode = getenv("exCode");
+	int code = 0;
+	if (exCode && *exCode == 'A') {
+		code = J9_EXCEPT_SEARCH_JAVA_HANDLER;
+	} else if (exCode && *exCode == 'I') {
+		code = J9_EXCEPT_SEARCH_JIT_HANDLER;
+	} else if (excode && *exCode == 'N') {
+		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
+	} else {
+		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
+	}
 	if (walkState->literals == vm->initialMethods.throwDefaultConflict) {
-		walkState->userData3 = (void *) J9_EXCEPT_SEARCH_JNI_HANDLER;
+		printf("ExceptionHandler found default conflict for member name\n");
+		walkState->userData3 = (void *) code;
 		return J9_STACKWALK_STOP_ITERATING;
 	}
 	/* Special frames (natives in particular) do not handle exceptions */
