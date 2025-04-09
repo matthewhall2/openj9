@@ -12183,7 +12183,7 @@ noUpdate:
 	 */
 	VMINLINE
 	INTERPRETER_CLASS(J9VMThread *currentThread)
-		: _vm(currentThread->javaVM), isDefaultConflict(false)
+		: _vm(currentThread->javaVM)
 #if !defined(LOCAL_CURRENT_THREAD)
 		, _currentThread(currentThread)
 #endif
@@ -12206,6 +12206,7 @@ noUpdate:
 #endif
 		, _objectAllocate(currentThread)
 		, _objectAccessBarrier(currentThread)
+		, isDefaultConflict(false)
 	{
 	}
 };
