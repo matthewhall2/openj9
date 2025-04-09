@@ -186,7 +186,6 @@ private:
 #endif
 	MM_ObjectAllocationAPI _objectAllocate;
 	MM_ObjectAccessBarrierAPI _objectAccessBarrier;
-	bool defaultConflictErrorForMethodhandles;
 
 protected:
 
@@ -12176,7 +12175,7 @@ noUpdate:
 	 */
 	VMINLINE
 	INTERPRETER_CLASS(J9VMThread *currentThread)
-		: _vm(currentThread->javaVM), defaultConflictErrorForMethodhandles(false)
+		: _vm(currentThread->javaVM)
 #if !defined(LOCAL_CURRENT_THREAD)
 		, _currentThread(currentThread)
 #endif
