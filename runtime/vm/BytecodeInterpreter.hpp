@@ -10915,7 +10915,7 @@ targetSync:
 	PERFORM_ACTION(sendTargetSmallSync(REGISTER_ARGS));
 
 targetNonSync:
-	if (_senMethod == vmThread->javaVM->initialMethods.throwDefaultConflict) {
+	if (_sendMethod == vmThread->javaVM->initialMethods.throwDefaultConflict) {
 		printf("found def con\n");
 		goto done;
 	}
