@@ -624,8 +624,6 @@ done:
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
 
-#define isMethodDefaultConflictForMethodHandle(method) (method == _currentThread->javaVM->initialMethods.throwDefaultConflict)
-
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
 		REGISTER_ARGS_LIST
@@ -637,11 +635,11 @@ done:
 		
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		void *const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
-
+		bool isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		if (isMethodDefaultConflictForMethodHandle(_sendMethod) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle(_sendMethod));
+			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod, isMethodDefaultConflictForMethodHandle);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -651,24 +649,28 @@ done:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
-			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
+			if (isMethodDefaultConflictForMethodHandle) {
 				if (getenv("buildNativeStackFrame")) {
 					buildInternalNativeStackFrame(REGISTER_ARGS);
 				} else {
 				if (getenv("build_frame_j2i")) {
 					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
-
 				}
 				}
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
-			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+			bool isStopFlagSet = J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP);
+			if (isMethodDefaultConflictForMethodHandle || isStopFlagSet) {
+				if (!isMethodDefaultConflictForMethodHandle) {
+					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				}
 				_currentThread->currentException = _currentThread->stopThrowable;
 				_currentThread->stopThrowable = NULL;
 				VM_VMAccess::clearPublicFlagsNoMutex(_currentThread, J9_PUBLIC_FLAGS_STOP);
 				omrthread_clear_priority_interrupted();
-				rc = GOTO_THROW_CURRENT_EXCEPTION;
+				if (!isMethodDefaultConflictForMethodHandle) {
+					rc = GOTO_THROW_CURRENT_EXCEPTION;
+				}
 			}
 		} else {
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
