@@ -278,7 +278,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	} else {
 		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
 	}
-	if (walkState->literals == vm->initialMethods.throwDefaultConflict) {
+	if (exCode != NULL && walkState->literals == vm->initialMethods.throwDefaultConflict) {
 		printf("ExceptionHandler found default conflict for member name\n");
 		walkState->userData3 = (void *) code;
 		return J9_STACKWALK_STOP_ITERATING;
