@@ -10908,17 +10908,17 @@ throwStackOverflow:
 		}
 		goto targetSync;
 	}
-	printf("target non sync\n");
 	goto targetNonSync;
 }
 
 targetSync:
-	printf("in sync target\n");
 	PERFORM_ACTION(sendTargetSmallSync(REGISTER_ARGS));
-	printf("fallthrough synctarget\n");
 
 targetNonSync:
-	printf("in non-sync target\n");
+	if (_senMethod == vmThread->javaVM->initialMethods.throwDefaultConflict) {
+		printf("found def con\n");
+		goto done;
+	}
 	PERFORM_ACTION(sendTargetSmallNonSync(REGISTER_ARGS));
 
 targetSyncStatic:
