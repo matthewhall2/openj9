@@ -267,7 +267,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	} else
 #endif
 	{
-	char *exCode = getenv("exCode");
+	char *exCode = getenv("exCode2");
 	long code = 0;
 	if (exCode && *exCode == 'A') {
 		code = J9_EXCEPT_SEARCH_JAVA_HANDLER;
