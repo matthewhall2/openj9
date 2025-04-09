@@ -2815,7 +2815,9 @@ ffi_exit:
 				}
 			}
 		}
-		if (J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
+		char *code = getenv("exCode");
+		if ((code && code == 'A') || J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JAVA_HANDLER;
 			_sp = walkState->unwindSP;
 			*--_sp = (UDATA)exception;
 			_pc = (U_8*)walkState->userData2;
@@ -2832,7 +2834,9 @@ ffi_exit:
 					goto done;
 				}
 			}
-		} else if (J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((code && code == 'N') || J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JNI_HANDLER;
+
 			_sp = walkState->unwindSP;
 			_pc = walkState->pc;
 			_arg0EA = walkState->arg0EA;
@@ -2840,7 +2844,9 @@ ffi_exit:
 			_currentThread->j2iFrame = walkState->j2iFrame;
 			_currentThread->currentException = exception;
 			/* Execute the call-in return bytecode at _pc */
-		} else if (J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
+		} else if ((code && code == 'I') || J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
+			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JIT_HANDLER;
+
 			_sp = walkState->unwindSP;
 			_currentThread->jitException = (j9object_t)walkState->restartException;
 			_currentThread->j2iFrame = walkState->j2iFrame;
