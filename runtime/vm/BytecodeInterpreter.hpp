@@ -2787,6 +2787,7 @@ ffi_exit:
 		VM_BytecodeAction rc = EXECUTE_BYTECODE;
 		J9StackWalkState *walkState = _currentThread->stackWalkState;
 		updateVMStruct(REGISTER_ARGS);
+		char *code = NULL;
 		/* Toss the pushes in the current stack frame so the GC won't need a description for them and build a special stack frame so we can find classes */
 		prepareForExceptionThrow(_currentThread);
 		/* Fetch the exception and clear it from the vmThread */
@@ -2816,7 +2817,7 @@ ffi_exit:
 				}
 			}
 		}
-		char *code = getenv("exCode");
+		code = getenv("exCode");
 		if ((code && *code == 'A') || J9_EXCEPT_SEARCH_JAVA_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JAVA_HANDLER;
 			_sp = walkState->unwindSP;
