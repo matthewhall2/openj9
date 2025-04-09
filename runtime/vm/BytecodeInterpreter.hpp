@@ -2840,7 +2840,6 @@ ffi_exit:
 			}
 		} else if ((isDefaultConflict && code && *code == 'N') || J9_EXCEPT_SEARCH_JNI_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JNI_HANDLER;
-			J9_EXCEPT_SEARCH_NO_HANDLER
 			isDefaultConflict = false;
 			_sp = walkState->unwindSP;
 			_pc = walkState->pc;
