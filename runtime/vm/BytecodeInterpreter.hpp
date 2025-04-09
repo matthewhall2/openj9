@@ -2847,6 +2847,9 @@ ffi_exit:
 			_literals = walkState->literals;
 			_currentThread->j2iFrame = walkState->j2iFrame;
 			_currentThread->currentException = exception;
+			if (isDefaultConflict && code && *code == 'N') {
+				rc = GOTO_DONE;
+			}
 			/* Execute the call-in return bytecode at _pc */
 		} else if ((isDefaultConflict && code && *code == 'I') || J9_EXCEPT_SEARCH_JIT_HANDLER == (UDATA)walkState->userData3) {
 			walkState->userData3 = (void*)J9_EXCEPT_SEARCH_JIT_HANDLER;
