@@ -9926,7 +9926,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-
+:
 		return rc;
 	}
 #endif /* JAVA_SPEC_VERSION >= 22 */
@@ -10908,13 +10908,17 @@ throwStackOverflow:
 		}
 		goto targetSync;
 	}
+	printf("target non sync\n");
 	goto targetNonSync;
 }
 
 targetSync:
+	printf("in sync target\n");
 	PERFORM_ACTION(sendTargetSmallSync(REGISTER_ARGS));
+	printf("fallthrough synctarget\n");
 
 targetNonSync:
+	printf("in non-sync target\n");
 	PERFORM_ACTION(sendTargetSmallNonSync(REGISTER_ARGS));
 
 targetSyncStatic:
@@ -10960,6 +10964,7 @@ runMethod: {
 		}
 		/* Intentional fall-through */
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_NON_SYNC):
+		priintf("going to targetnonsync (jump)\n");
 		goto targetNonSync;
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_COUNT_SYNC):
 		if (countAndCompile(REGISTER_ARGS)) {
