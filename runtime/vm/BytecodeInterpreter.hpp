@@ -10964,7 +10964,6 @@ runMethod: {
 		}
 		/* Intentional fall-through */
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_NON_SYNC):
-		printf("going to targetnonsync (jump)\n");
 		goto targetNonSync;
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_COUNT_SYNC):
 		if (countAndCompile(REGISTER_ARGS)) {
