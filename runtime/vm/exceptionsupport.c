@@ -273,7 +273,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 		code = J9_EXCEPT_SEARCH_JAVA_HANDLER;
 	} else if (exCode && *exCode == 'I') {
 		code = J9_EXCEPT_SEARCH_JIT_HANDLER;
-	} else if (excode && *exCode == 'N') {
+	} else if (exCode && *exCode == 'N') {
 		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
 	} else {
 		code = J9_EXCEPT_SEARCH_JNI_HANDLER;
