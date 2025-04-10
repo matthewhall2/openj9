@@ -652,7 +652,7 @@ done:
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
-			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
+			if (isMethodDefaultConflictForMethodHandle) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				return rc;
 			}
