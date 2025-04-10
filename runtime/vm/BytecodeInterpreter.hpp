@@ -9940,17 +9940,35 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
+	// ========== THIS IS HOW NPE IS THROWN - IT WORKS ==================
+	// 	nullPointer:
+	// updateVMStruct(REGISTER_ARGS);
+	// prepareForExceptionThrow(_currentThread);
+	// setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGNULLPOINTEREXCEPTION, NULL);
+	// VMStructHasBeenUpdated(REGISTER_ARGS);
+	// goto throwCurrentException;
 		/* Load the conflicting method and error message from this special target */
-		if (getenv("build_frame_throw")) {
-			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-		} else if (getenv("build_jit_throw")) {
+		if (getenv("build_jit_throw")) {
 			buildJITResolveFrame(REGISTER_ARGS);
 		}
+
+		if (getenv("throwLikeNPE")) {
+			updateVMStruct(REGISTER_ARGS);
+			prepareForExceptionThrow(_currentThread);
+			if (getenv("setExpLikeNPE") {
+				setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			} else {
+				setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, NULL);
+			}
+			VMStructHasBeenUpdated(REGISTER_ARGS);
+		} else {
+		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
 		return GOTO_THROW_CURRENT_EXCEPTION;
+		}
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
