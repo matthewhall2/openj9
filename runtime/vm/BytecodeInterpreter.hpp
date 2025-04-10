@@ -9631,9 +9631,15 @@ done:
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
-			// char *c = getenv("argcount");
-			// methodArgCount = c ? (UDATA)atoi(c) : 0;
-		//	goto throwDefaultConflict;
+			if (fromJIT && getenv("throwNPEForDefCon")) {
+				printf("found def conf in linkto\n");
+				_sp -= 1;
+				if (getenv("build_frame_lts") != NULL) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				}
+				rc = THROW_NPE;
+				goto done;
+			}
 		}
 
 		if (fromJIT) {
@@ -9672,7 +9678,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-
+done:
 		return rc;
 
 // throwDefaultConflict:
@@ -9937,6 +9943,8 @@ done:
 		/* Load the conflicting method and error message from this special target */
 		if (getenv("build_frame_throw")) {
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		} else if (getenv("build_jit_throw")) {
+			buildJITResolveFrame(REGISTER_ARGS);
 		}
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
