@@ -9631,13 +9631,12 @@ done:
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
 		} else {
-			if (fromJIT && getenv("throwNPEForDefCon")) {
+			if (fromJIT) {
 				printf("found def conf in linkto\n");
 				_sp -= 1;
 				if (getenv("build_frame_lts") != NULL) {
 				buildJITResolveFrame(REGISTER_ARGS);
 				}
-				rc = THROW_NPE;
 				goto done;
 			}
 		}
@@ -9955,10 +9954,10 @@ done:
 		if (getenv("throwLikeNPE")) {
 			updateVMStruct(REGISTER_ARGS);
 			prepareForExceptionThrow(_currentThread);
-			if (getenv("setExpLikeNPE") {
-				setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-			} else {
+			if (getenv("setExpLikeNPE")) {
 				setCurrentExceptionUTF(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, NULL);
+			} else {
+				setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 			}
 			VMStructHasBeenUpdated(REGISTER_ARGS);
 		} else {
