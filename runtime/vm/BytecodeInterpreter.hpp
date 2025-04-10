@@ -9643,7 +9643,7 @@ done:
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
 				if (nullCheckJ9Obj(mhReceiver, false, REGISTER_ARGS, false) == THROW_NPE) return THROW_NPE;
 			}
-		} else {
+		} else if (getenv("handle_in_lts")) {
 			if (fromJIT) {
 				printf("found def conf in linkto\n");
 				_sp -= 1;
