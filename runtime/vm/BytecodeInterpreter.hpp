@@ -638,7 +638,7 @@ done:
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
-		J9ROMMethod *const romMethod = isMethodDefaultConflictForMethodHandle ? NULL : J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
@@ -653,7 +653,8 @@ done:
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle(_sendMethod)) {
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				buildJITResolveFrame(REGISTER_ARGS);
+				return rc;
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
@@ -9924,13 +9925,11 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
-		/* Load the conflicting method and error message from this special target */
-		//buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-		updateVMStruct(REGISTER_ARGS);
-		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-		VMStructHasBeenUpdated(REGISTER_ARGS);
-		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-		return GOTO_THROW_CURRENT_EXCEPTION;
+	updateVMStruct(REGISTER_ARGS);
+	prepareForExceptionThrow(_currentThread);
+	setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+	VMStructHasBeenUpdated(REGISTER_ARGS);
+	return GOTO_THROW_CURRENT_EXCEPTION;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
