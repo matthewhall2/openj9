@@ -2226,6 +2226,7 @@ done:
 		if (immediateAsyncPending()) {
 			rc = GOTO_ASYNC_CHECK;
 		} else if (VM_VMHelpers::exceptionPending(_currentThread)) {
+			printf("Throwing initial static exception\n");
 			rc = GOTO_THROW_CURRENT_EXCEPTION;
 		}
 		return rc;
@@ -2235,7 +2236,7 @@ done:
 	initialSpecialMethod(REGISTER_ARGS_LIST)
 	{
 		if (getenv("printMsg"))
-			printf("found initial special method");
+			printf("found initial special method\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool split = (JBinvokespecialsplit == _pc[0]);
 		U_16 index = *(U_16*)(_pc + 1);
@@ -2252,6 +2253,7 @@ done:
 		if (immediateAsyncPending()) {
 			rc = GOTO_ASYNC_CHECK;
 		} else if (VM_VMHelpers::exceptionPending(_currentThread)) {
+			printf("Throwing initial special exception\n");
 			rc = GOTO_THROW_CURRENT_EXCEPTION;
 		} else {
 			rc = invokespecialLogic(REGISTER_ARGS, false, split);
@@ -2275,6 +2277,7 @@ done:
 		if (immediateAsyncPending()) {
 			rc = GOTO_ASYNC_CHECK;
 		} else if (VM_VMHelpers::exceptionPending(_currentThread)) {
+			printf("Throwing initial virtual exception\n");
 			rc = GOTO_THROW_CURRENT_EXCEPTION;
 		} else {
 			rc = invokevirtualLogic(REGISTER_ARGS, false);
