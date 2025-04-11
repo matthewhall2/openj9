@@ -2205,7 +2205,8 @@ done:
 	VMINLINE VM_BytecodeAction
 	initialStaticMethod(REGISTER_ARGS_LIST)
 	{
-		printf("Found initial static method\n");
+		if (getenv("printMsg"))
+			printf("Found initial static method\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool split = (JBinvokestaticsplit == _pc[0]);
 		U_16 index = *(U_16*)(_pc + 1);
@@ -2233,7 +2234,8 @@ done:
 	VMINLINE VM_BytecodeAction
 	initialSpecialMethod(REGISTER_ARGS_LIST)
 	{
-		printf("found initial special method");
+		if (getenv("printMsg"))
+			printf("found initial special method");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool split = (JBinvokespecialsplit == _pc[0]);
 		U_16 index = *(U_16*)(_pc + 1);
@@ -2260,7 +2262,8 @@ done:
 	VMINLINE VM_BytecodeAction
 	initialVirtualMethod(REGISTER_ARGS_LIST)
 	{
-		printf("found initial virtual method\n");
+		if (getenv("printMsg"))
+			printf("found initial virtual method\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		U_16 index = *(U_16*)(_pc + 1);
 		J9ConstantPool *ramConstantPool = J9_CP_FROM_METHOD(_literals);
