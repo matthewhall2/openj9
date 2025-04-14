@@ -5431,11 +5431,14 @@ TR_ResolvedJ9Method::numberOfPendingPushes()
    U_16 adder =  feGetEnv("addTemps") != NULL ? atoi(feGetEnv("addTemps")) : 0;
    if (_pendingPushSlots < 0)
       {
-      if (feGetEnv("printTempSlots"))
-         printf("Temps: _pendingPushSlots is negative, using max: %d\n", J9_MAX_STACK_FROM_ROM_METHOD(romMethod()));
+      traceMsg(TR::comp(), "Negative pp slots: %d\n", _pendingPushSlots);
+      if (feGetEnv("printTempSlots")) {
+         printf("Temps: _pendingPushSlots is negative, using max: %d\n", J9_MAX_STACK_FROM_ROM_METHOD(romMethod()));  
+      }
       _pendingPushSlots = J9_MAX_STACK_FROM_ROM_METHOD(romMethod()) + adder;
       return _pendingPushSlots;
       }
+   traceMsg(TR::comp(), "Num PP Slots: %d\n", _pendingPushSlots);
    return _pendingPushSlots + adder;
    }
 

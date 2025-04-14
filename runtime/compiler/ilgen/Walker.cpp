@@ -1375,6 +1375,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads)
 
       if (!isPlaceholderCall(n))
          {
+         traceMsg(comp(), "Walker: Save Stack - !isPlaceHolder - Index: %d\n", i);
          TR::SymbolReference * symRef = symRefTab()->findOrCreatePendingPushTemporary(_methodSymbol, slot, getDataType(n));
          if (_stackTemps.topIndex() < tempIndex || _stackTemps[tempIndex] != n)
             {
@@ -1423,6 +1424,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads)
          for (int32_t j = 0; j < n->getNumChildren(); ++j)
             {
             TR::Node* child = n->getChild(j);
+            traceMsg(comp(), "Walker: Save Stack - store children to pp slots - Index: %d\n", i);
             TR::SymbolReference * symRef = symRefTab()->findOrCreatePendingPushTemporary(_methodSymbol, slot, getDataType(child));
             if (_stackTemps.topIndex() < tempIndex || _stackTemps[tempIndex] != child)
                {
@@ -1708,6 +1710,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
       TR::Node * n = _stack->element(i);
       if (_stack->size() - numArgs <= i)
          {
+         traceMsg(comp(), "Walker: Stash args for OSR - Index: %d\n", i);
          TR::SymbolReference * symRef = symRefTab()->findOrCreatePendingPushTemporary(_methodSymbol, slot, getDataType(n));
          osrMethodData->addArgInfo(_bcIndex, arg, symRef->getReferenceNumber());
          arg++;
@@ -1742,6 +1745,7 @@ TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
    for (int32_t i = 0; i < _stack->size(); ++i)
       {
       TR::Node *n = _stack->element(i);
+      traceMsg(comp(), "Walker: Stash Pending push liveness for OSR - Index: %d\n", i);
       TR::SymbolReference *symRef = symRefTab()->findOrCreatePendingPushTemporary(_methodSymbol, slot, getDataType(n));
       if (livePP)
          livePP->set(symRef->getReferenceNumber());
