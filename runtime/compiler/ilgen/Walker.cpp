@@ -1205,7 +1205,9 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
                   // contain an OSR transition. Therefore, it is necessary to save the current
                   // method's state now, so that it is available when the transition is made.
                   handlePendingPushSaveSideEffects(n);
+                  traceMsg(comp(), "--> Save Stack: PostEx - isCheck\n");
                   saveStack(-1);
+                  traceMsg(comp(), "--> stashPendingPushLivenessForOSR: PostEx - isCheck\n");
                   stashPendingPushLivenessForOSR();
                   }
                else if (comp()->getOption(TR_TraceOSR))
@@ -1220,9 +1222,10 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
                // Save the stack after the treetop has been created and appended
                handlePendingPushSaveSideEffects(n);
                TR::TreeTop *toReturn = _block->append(TR::TreeTop::create(comp(), n));
+               traceMsg(comp(), "--> Save Stack: Post Ex - not isCheck\n");
                saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
+               traceMsg(comp(), "--> stashPendingPushLivenessForOSR: PostEx - not isCheck\n");
                stashPendingPushLivenessForOSR(comp()->getOSRInductionOffset(n));
-
                ret = toReturn;
                }
             }
@@ -1234,7 +1237,9 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
             // region so that the FSD stackwalker can copy it to the VM frame as
             // part of decompilation
             //
+            traceMsg(comp(), "--> Save Stack: Not Post Ex\n");
             saveStack(-1);
+            traceMsg(comp(), "--> stashPendingPushLivenessForOSR: Not PostEx\n");
             stashPendingPushLivenessForOSR();
             }
          }
@@ -1242,9 +1247,6 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
    if (!ret)
       ret =  _block->append(TR::TreeTop::create(comp(), n));
    traceMsg(comp(), "---> genTreeTop - End\n");
-   TR::TreeTop *traceStop  = _block->getExit();
-   TR::TreeTop *traceStart = traceStop->getPrevTreeTop();
-   printTrees(comp(), traceStart->getNextTreeTop(), traceStop, "trees");
    return ret;
    }
 
@@ -1743,7 +1745,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
 void
 TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
    {
-   traceMsg(comp(), "Walker: Stash PP - Start\n");
+   traceMsg(comp(), "--> Walker: Stash PP - Start\n");
    if (!comp()->pendingPushLivenessDuringIlgen())
       return;
 
@@ -1774,7 +1776,7 @@ TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
          }
       slot += n->getNumberOfSlots();
       }
-      traceMsg(comp(), "Walker: Stash PP - End\n");
+      traceMsg(comp(), "--> Walker: Stash PP - End\n");
    }
 
 void
@@ -4633,7 +4635,9 @@ break
 
    if (needOSRBookkeeping)
       {
+      traceMsg(comp(), "--> OSR Bookkeeping - saving stack\n");
       saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
+      traceMsg(comp(), "--> stashPendingPushLivenessForOSR: PostEx - bookkeeping\n");
       stashPendingPushLivenessForOSR(osrInductionOffset);
       if (comp()->supportsInduceOSR() && comp()->getOSRMode() == TR::voluntaryOSR)
          {
