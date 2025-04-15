@@ -1338,7 +1338,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex)
    }
 
 void
-TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads, bool bookKeeping = false)
+TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads, bool bookKeeping)
    {
    traceMsg(comp(), "---> Walker: Save Stack - Start\n");
    if (_stack->isEmpty() || bookKeeping)

@@ -90,7 +90,7 @@ private:
    bool trace(){ return comp()->getOption(TR_TraceBC) || comp()->getOption(TR_TraceILGen); }
 
    virtual void         saveStack(int32_t);
-   void                 saveStack(int32_t targetIndex, bool anchorLoads);
+   void                 saveStack(int32_t targetIndex, bool anchorLoads, bool bookKeeping = false);
 
    // GenBranch
    //
