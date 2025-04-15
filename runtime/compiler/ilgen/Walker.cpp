@@ -1112,9 +1112,10 @@ TR_J9ByteCodeIlGenerator::genBinary(TR::ILOpCodes nodeop, int32_t numChildren)
 TR::TreeTop *
 TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
    {
+   traceMsg(comp(), "---> genTreeTop - Start\n");
    if (!n->getOpCode().isTreeTop())
       n = TR::Node::create(TR::treetop, 1, n);
-
+   TR::TreeTop *ret = NULL;
    //In involuntaryOSR, exception points are OSR points but we don't need to
    //handle pending pushes for them because the operand stack is always empty at catch.
    bool isExceptionOnlyPoint = comp()->getOSRMode() == TR::involuntaryOSR && !n->canGCandReturn(comp()) && n->canGCandExcept();
@@ -1212,7 +1213,7 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
                   traceMsg(comp(), "Skipping OSR stack state for repeated call n%dn in treetop n%dn\n", n->getFirstChild()->getGlobalIndex(), n->getGlobalIndex());
                   }
 
-               return _block->append(TR::TreeTop::create(comp(), n));
+               ret =  _block->append(TR::TreeTop::create(comp(), n));
                }
             else
                {
@@ -1222,7 +1223,7 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
                saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
                stashPendingPushLivenessForOSR(comp()->getOSRInductionOffset(n));
 
-               return toReturn;
+               ret = toReturn;
                }
             }
          else
@@ -1238,7 +1239,13 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
             }
          }
       }
-   return _block->append(TR::TreeTop::create(comp(), n));
+   if (!ret)
+      ret =  _block->append(TR::TreeTop::create(comp(), n));
+   traceMsg(comp(), "---> genTreeTop - End\n");
+   TR::TreeTop *traceStop  = _block->getExit();
+   TR::TreeTop *traceStart = traceStop->getPrevTreeTop();
+   printTrees(comp(), traceStart->getNextTreeTop(), traceStop, "trees");
+   return ret
    }
 
 void
