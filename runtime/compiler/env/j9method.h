@@ -522,6 +522,8 @@ public:
    virtual TR_PersistentJittedBodyInfo *getExistingJittedBodyInfo();
 
    static bool                     isInvokePrivateVTableOffset(UDATA vTableOffset);
+   int32_t                         _pendingPushSlots;
+
 
    /**
     * @brief Create TR::ParameterSymbols from the signature of a method, and add them
@@ -565,7 +567,6 @@ protected:
    J9Class *                       _j9classForNewInstance;
    uintptr_t                      _jniProperties;
    void *                          _jniTargetAddress;
-   int32_t                         _pendingPushSlots;
    };
 
 #if defined(J9VM_INTERP_AOT_COMPILE_SUPPORT)
