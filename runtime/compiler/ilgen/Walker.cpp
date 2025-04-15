@@ -1379,6 +1379,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads, bool 
    //
    int32_t slot = 0;
    tempIndex = 0;
+   traceMsg(comp(), "Stack size: %d", _stack->size());
    for (i = 0; i < _stack->size(); ++i)
       {
       TR::Node * n = _stack->element(i);
@@ -1432,6 +1433,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads, bool 
          // A placeholder call has several children which represent the true contents of the stack
          // For correctness, these children should be stored into pending push slots
          //
+         traceMsg(comp(), "Num Children: %d", n->getNumChildren());
          for (int32_t j = 0; j < n->getNumChildren(); ++j)
             {
             TR::Node* child = n->getChild(j);
@@ -1720,6 +1722,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
    // It is necessary to walk the whole stack to determine the slot numbers
    int32_t slot = 0;
    int arg = 0;
+   traceMsg(comp(), "Stack size: %d", _stack->size());
    for (int32_t i = 0; i < _stack->size(); ++i)
       {
       TR::Node * n = _stack->element(i);
@@ -1760,6 +1763,7 @@ TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
 
    int32_t slot = 0;
    int arg = 0;
+   traceMsg(comp(), "Stack size: %d", _stack->size());
    for (int32_t i = 0; i < _stack->size(); ++i)
       {
       TR::Node *n = _stack->element(i);
