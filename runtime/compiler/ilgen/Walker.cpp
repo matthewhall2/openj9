@@ -3267,6 +3267,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       loadInvokeCacheArrayElements(callSiteTableEntrySymRef, invokeCacheArray, isUnresolved);
 
    if (comp()->getOption(TR_TraceILGen))
+      traceMsg(comp(), "OPENJDK MH invokedyn ILGen\n");
       printStack(comp(), _stack, "(Stack after load from callsite table)");
 
    TR::Node* callNode = genInvokeDirect(targetMethodSymRef);
@@ -3285,6 +3286,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    TR::Node *receiver = pop();
 
    if (comp()->getOption(TR_TraceILGen))
+traceMsg(comp(), "Original MH invokedyn ILGen\n");
       printStack(comp(), _stack, "(Stack after load from callsite table)");
 
    // If the receiver handle is resolved, we can use a more specific symref
