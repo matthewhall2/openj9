@@ -3266,8 +3266,8 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    if (!isInvokeCacheAppendixNull)
       loadInvokeCacheArrayElements(callSiteTableEntrySymRef, invokeCacheArray, isUnresolved);
 
+   traceMsg(comp(), "OPENJDK MH invokedyn ILGen\n");
    if (comp()->getOption(TR_TraceILGen))
-      traceMsg(comp(), "OPENJDK MH invokedyn ILGen\n");
       printStack(comp(), _stack, "(Stack after load from callsite table)");
 
    TR::Node* callNode = genInvokeDirect(targetMethodSymRef);
