@@ -1331,6 +1331,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex)
 void
 TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads)
    {
+   traceMsg(comp(), "---> Walker: Save Stack - Start\n");
    if (_stack->isEmpty())
       return;
 
@@ -1458,6 +1459,7 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads)
          TR_ASSERT_FATAL(!createTargetStack, "Cannot store and later load placeholder calls in current implementation");
          }
       }
+      traceMsg(comp(), "---> Walker: Save Stack - End\n");
    }
 
 // Bad code results if code following saveStack generated stores
@@ -1589,6 +1591,7 @@ TR_J9ByteCodeIlGenerator::isAtBBStart(int32_t bcIndex)
 void
 TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
    {
+   traceMsg(comp(), "---> Walker: Stash Args - Start\n");
    if (!_couldOSRAtNextBC &&
        !isAtBBStart(_bcIndex)) // _couldOSRAtNextBC doesn't work if the curent bc is at bbstart,
                                // conversatively assume OSR transition can happen at bbstart
@@ -1638,6 +1641,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
          symRef = symRefTab()->findOrCreateSpecialMethodSymbol(_methodSymbol, next2Bytes() | J9_SPECIAL_SPLIT_TABLE_INDEX_FLAG);
          break;
       default:
+         traceMsg(comp(), "---> Walker: Stash Args - End\n");
          return;
       }
 
@@ -1720,6 +1724,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
          }
       slot += n->getNumberOfSlots();
       }
+      traceMsg(comp(), "---> Walker: Stash Args - End\n");
    }
 
 // Under voluntary OSR, it is preferable to keep only the essential symrefs live
