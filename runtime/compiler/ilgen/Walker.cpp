@@ -1338,10 +1338,10 @@ TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex)
    }
 
 void
-TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads)
+TR_J9ByteCodeIlGenerator::saveStack(int32_t targetIndex, bool anchorLoads, bool bookKeeping = false)
    {
    traceMsg(comp(), "---> Walker: Save Stack - Start\n");
-   if (_stack->isEmpty())
+   if (_stack->isEmpty() || bookKeeping)
       return;
 
    static const char *disallowOSRPPS2 = feGetEnv("TR_DisallowOSRPPS2");
@@ -4637,7 +4637,7 @@ break
    if (needOSRBookkeeping)
       {
       traceMsg(comp(), "--> OSR Bookkeeping - saving stack: target index: %d, anchorLoads: %d\n", -1, !comp()->pendingPushLivenessDuringIlgen());
-      saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
+      saveStack(-1, !comp()->pendingPushLivenessDuringIlgen(), needOSRBookkeeping);
       traceMsg(comp(), "--> stashPendingPushLivenessForOSR: PostEx - bookkeeping\n");
       stashPendingPushLivenessForOSR(osrInductionOffset);
       if (comp()->supportsInduceOSR() && comp()->getOSRMode() == TR::voluntaryOSR)
