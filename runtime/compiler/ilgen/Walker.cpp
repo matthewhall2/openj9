@@ -1245,7 +1245,7 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
    TR::TreeTop *traceStop  = _block->getExit();
    TR::TreeTop *traceStart = traceStop->getPrevTreeTop();
    printTrees(comp(), traceStart->getNextTreeTop(), traceStop, "trees");
-   return ret
+   return ret;
    }
 
 void
