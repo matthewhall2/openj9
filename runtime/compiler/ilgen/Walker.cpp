@@ -3710,6 +3710,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::Node *invokedynamicReceiver,
    TR::KnownObjectTable::Index *requiredKoi)
    {
+   traceMsg(comp(), "--> GenInvokeInner - Start\n");
    TR::MethodSymbol * symbol = symRef->getSymbol()->castToMethodSymbol();
    bool isStatic     = symbol->isStatic();
    bool isDirectCall = indirectCallFirstChild == NULL;
@@ -4635,7 +4636,7 @@ break
 
    if (needOSRBookkeeping)
       {
-      traceMsg(comp(), "--> OSR Bookkeeping - saving stack\n");
+      traceMsg(comp(), "--> OSR Bookkeeping - saving stack: target index: %d, anchorLoads: %d\n", -1, !comp()->pendingPushLivenessDuringIlgen());
       saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
       traceMsg(comp(), "--> stashPendingPushLivenessForOSR: PostEx - bookkeeping\n");
       stashPendingPushLivenessForOSR(osrInductionOffset);
@@ -4709,6 +4710,7 @@ break
       }
 
    _intrinsicErrorHandling = false;
+   traceMsg(comp(), "--> GenInvokeInner - End\n");
    return callNode;
    }
 
