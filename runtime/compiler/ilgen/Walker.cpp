@@ -249,6 +249,7 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
 
       _bc = convertOpCodeToByteCodeEnum(opcode);
       stashArgumentsForOSR(_bc);
+      traceMsg(comp(), "-----> Stack size before bc: %d\n", _stack->size());
       switch (_bc)
          {
          case J9BCinvokeinterface2:
@@ -559,6 +560,7 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
          default:
             break;
          }
+         traceMsg(comp(), "-----> Stack size after bc: %d\n", _stack->size());
 
       if (comp()->getOption(TR_TraceILGen))
          {
@@ -1044,6 +1046,7 @@ TR_J9ByteCodeIlGenerator::expandPlaceholderCalls(int32_t depthLimit)
 TR::Node *
 TR_J9ByteCodeIlGenerator::genNodeAndPopChildren(TR::ILOpCodes opcode, int32_t numChildren, TR::SymbolReference * symRef, int32_t firstIndex, int32_t lastIndex)
    {
+   traceMsg(comp(), "gen node and pop children: last index: %d, first index: %d\n", lastIndex, firstIndex);
    if (numPlaceholderCalls(lastIndex-firstIndex+1) > 0) // JSR292
       {
       symRef = expandPlaceholderSignature(symRef, lastIndex-firstIndex+1);
@@ -1064,8 +1067,11 @@ TR_J9ByteCodeIlGenerator::genNodeAndPopChildren(TR::ILOpCodes opcode, int32_t nu
       }
 
    TR::Node * node = TR::Node::createWithSymRef(opcode, numChildren, symRef);
-   for (int32_t i = lastIndex; i >= firstIndex; --i)
+   traceMsg(comp(), "popping children: last index: %d, first index: %d\n", lastIndex, firstIndex);
+   for (int32_t i = lastIndex; i >= firstIndex; --i) {
+      traceMsg(comp(), "popping child\n");
       node->setAndIncChild(i, pop());
+   }
    return node;
    }
 
@@ -1612,8 +1618,10 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
    if (comp()->isPeekingMethod()
        || !comp()->getOption(TR_EnableOSR)
        || _cannotAttemptOSR
-       || !comp()->isOSRTransitionTarget(TR::postExecutionOSR))
-      return;
+       || !comp()->isOSRTransitionTarget(TR::postExecutionOSR)) {
+         traceMsg(comp(), "---> Walker: Stash Args - End - early");
+         return;
+       }
 
    // Determine the symref to extract the number of arguments required by this bytecode
    TR::SymbolReference *symRef;
@@ -1639,6 +1647,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
          symRef = symRefTab()->findOrCreateInterfaceMethodSymbol(_methodSymbol, next2Bytes(3));
          break;
       case J9BCinvokedynamic:
+         traceMsg(comp(), "---> Walker: Stash Args: Invokedyn bytecode\n");
          symRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, next2Bytes(), &unresolvedInCP, &isInvokeCacheAppendixNull);
          break;
       case J9BCinvokehandle:
@@ -1660,6 +1669,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
    int32_t numArgs = symbol->getMethod()->numberOfExplicitParameters() + (symbol->isStatic() ? 0 : 1);
 
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+      traceMsg(comp(), "--> Walker: Stash Args - OpenJDK MH enabled\n");
    // If the transition target is invokehandle/invokedynamic, the arguments to be
    // stashed are those already pushed onto the stack before generating the bytecode,
    // regardless of the number of arguments needed by the generated call.
@@ -1706,9 +1716,8 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
          if (unresolvedInCP)
             numArgsToNotStash += 1; // MemberName
          }
+      traceMsg(comp(), "Original num args for invokedynamic/handle: %d, num args to not stash for OSR: %d, stack size: %d\n", numArgs, numArgsToNotStash, _stack->size());
 
-      if (trace())
-         traceMsg(comp(), "Original num args for invokedynamic/handle: %d, num args to not stash for OSR: %d, stack size: %d\n", numArgs, numArgsToNotStash, _stack->size());
       }
 
    numArgs -= numArgsToNotStash;
@@ -3231,6 +3240,7 @@ static char *suffixedName(char *baseName, char typeSuffix, char *buf, int32_t bu
 void
 TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    {
+   traceMsg(comp(), "---> genInvokeDyn - Start\n");
    if (comp()->getOption(TR_FullSpeedDebug) && !isPeekingMethod())
       comp()->failCompilation<J9::FSDHasInvokeHandle>("FSD_HAS_INVOKEHANDLE 0");
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
@@ -3276,10 +3286,21 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    // ------------------------------------------------------
    bool isUnresolved = false;
    bool isInvokeCacheAppendixNull = false;
+   traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - Callsite Index: %d\n", callSiteIndex);
    TR::SymbolReference * targetMethodSymRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, callSiteIndex, &isUnresolved, &isInvokeCacheAppendixNull);
-   if (isUnresolved)
+   traceMsg(comp(), "---> genInvokeDyn: Name - %s", targetMethodSymRef->getName(comp()->getDebug()));
+
+   traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - CP Index: %d\n", targetMethodSymRef->getCPIndex());
+
+   if (isUnresolved) {
+      traceMsg(comp(), "---> genInvokeDyn: unresolved\n");
       targetMethodSymRef->getSymbol()->setDummyResolvedMethod(); // linkToStatic is a dummy TR_ResolvedMethod
+   }
    TR::SymbolReference *callSiteTableEntrySymRef = symRefTab()->findOrCreateCallSiteTableEntrySymbol(_methodSymbol, callSiteIndex);
+   traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for callsite - CP Index: %d\n", callSiteTableEntrySymRef->getCPIndex());
+   traceMsg(comp(), "---> genInvokeDyn: Callsite entry name - %s", callSiteTableEntrySymRef->getName(comp()->getDebug()));
+
+
    TR_ResolvedJ9Method* owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
    uintptr_t * invokeCacheArray = (uintptr_t *) owningMethod->callSiteTableEntryAddress(callSiteIndex);
 
@@ -3287,6 +3308,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       loadInvokeCacheArrayElements(callSiteTableEntrySymRef, invokeCacheArray, isUnresolved);
 
    traceMsg(comp(), "OPENJDK MH invokedyn ILGen\n");
+   traceMsg(comp(), "---> Stack size before callsite load: %d\n", _stack->size());
    if (comp()->getOption(TR_TraceILGen))
       printStack(comp(), _stack, "(Stack after load from callsite table)");
 
@@ -3326,7 +3348,8 @@ traceMsg(comp(), "Original MH invokedyn ILGen\n");
    _invokeDynamicCalls->set(_bcIndex);
 
 #endif // J9VM_OPT_OPENJDK_METHODHANDLE
-   }
+traceMsg(comp(), "---> genInvokeDyn - End\n");
+}
 
 TR::Node *
 TR_J9ByteCodeIlGenerator::genInvokeHandle(int32_t cpIndex)
@@ -3716,14 +3739,21 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    {
    traceMsg(comp(), "--> GenInvokeInner - Start\n");
    TR::MethodSymbol * symbol = symRef->getSymbol()->castToMethodSymbol();
+   traceMsg(comp(), "Method symref name: %s, symbolName: %s\n", symRef->getSymbol()->getName(), symbol->getName());
+   traceMsg(comp(), "--< genInvokeInner - Stack size at start of generation: %d\n", _stack->size());
+
+      
+
    bool isStatic     = symbol->isStatic();
    bool isDirectCall = indirectCallFirstChild == NULL;
 
    TR::Method * calledMethod = symbol->getMethod();
+   traceMsg(comp(), "---> genInvokeInner: Number of explicit params: %d, isStatic: %d\n", calledMethod->numberOfExplicitParameters(), isStatic);
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
 
    if (pushRequiredConst(requiredKoi))
       {
+      traceMsg(comp(), "Push const require\n");
       TR::Node *result = pop();
 
       int32_t argsToPop = numArgs - int32_t(invokedynamicReceiver != NULL);
@@ -4086,6 +4116,7 @@ break
     */
    if (symbol->getRecognizedMethod() == TR::java_lang_invoke_MethodHandleImpl_profileBoolean)
       {
+      traceMsg(comp(), "Popping stack. New Size: %d\n", _stack->size());
       pop();
       TR::Node *resultNode = _stack->top();
       genTreeTop(resultNode);
@@ -4142,6 +4173,8 @@ break
 
    if (symbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_supportsIntrinsicCaseConversion)
       {
+         traceMsg(comp(), "Popping stack. New Size: %d\n", _stack->size());
+
       pop(); //pop the receiver since it's not used
       loadConstant(TR::iconst, cg()->getSupportsInlineStringCaseConversion() ? 1 : 0);
       return NULL;
@@ -4189,6 +4222,7 @@ break
    TR::Node * receiver = 0;
    if (isDirectCall)
       {
+      traceMsg(comp(), "--> genInvokeInner - direct call\n");
       TR::ILOpCodes callOpCode = calledMethod->directCallOpCode();
       TR::ResolvedMethodSymbol *resolvedMethodSymbol = symbol->getResolvedMethodSymbol();
       bool needToGenAndPop = false;
@@ -4216,6 +4250,7 @@ break
 
       if (needToGenAndPop)
          {
+         traceMsg(comp(), "need to gen and pop\n");
          callNode = genNodeAndPopChildren(callOpCode, numArgs, symRef);
          }
       if (!isStatic)
@@ -4235,12 +4270,14 @@ break
          // included in the numArgs calculation.  That's why we pass
          // numChildren as numArgs+1 below.
          //
+         traceMsg(comp(), "---> invokedynReceiver - gen node and pop\n");
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 2);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          callNode->setAndIncChild(1, invokedynamicReceiver);
          }
       else
          {
+         traceMsg(comp(), "---> genInvokeInner - not invokedynamicReceiver\n");
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 1);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          }
@@ -4368,6 +4405,7 @@ break
                      push(receiver);
                      push(jlClazzLoad);
                      TR::SymbolReference *symRef = symRefTab()->findOrCreateMethodSymbol(_methodSymbol->getResolvedMethodIndex(), -1, replacementMethod, TR::MethodSymbol::Static);
+                     traceMsg(comp(), "---> genInvokeInner - replacementNode\n");
                      callNode = genNodeAndPopChildren(replacementMethod->directCallOpCode(), 2, symRef);
                      isStatic = true;
                      callNode->getChild(0)->recursivelyDecReferenceCount();
@@ -4443,6 +4481,7 @@ break
                          push(receiver);
                          push(jlClazzLoad);
                          TR::SymbolReference *symRef = symRefTab()->findOrCreateMethodSymbol(_methodSymbol->getResolvedMethodIndex(), -1, replacementMethod, TR::MethodSymbol::Static);
+                         traceMsg(comp(), "---> genInvokeInner - replacementMethod\n");
                          callNode = genNodeAndPopChildren(replacementMethod->directCallOpCode(), 2, symRef);
                          isStatic = true;
                          callNode->getChild(0)->recursivelyDecReferenceCount();
@@ -4519,11 +4558,11 @@ break
 
    TR::ResolvedMethodSymbol * resolvedMethodSymbol = symbol->getResolvedMethodSymbol();
 
-
    // fast pathing for JITHelpers methods
    //
    if (!strncmp(comp()->getCurrentMethod()->classNameChars(), "com/ibm/jit/JITHelpers", 22))
       {
+      traceMsg(comp(), "--> genInvokeInner - ccom/ibm/jit/JITHelpers\n");
       bool isCallGetLength = false;
       bool isCallAddressAsPrimitive32 = false;
       bool isCallAddressAsPrimitive64 = false;
@@ -4547,6 +4586,7 @@ break
        (resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject32 ||
         resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject64))
       {
+      traceMsg(comp(), "--> genInvokeInner - com_ibm_jit_JITHelpers_getJ9ClassFromObject32\n");
       TR::Node* obj = callNode->getChild(1);
       TR::Node* vftLoad = TR::Node::createWithSymRef(callNode, TR::aloadi, 1, obj, symRefTab()->findOrCreateVftSymbolRef());
       if (resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_getJ9ClassFromObject32)
@@ -4569,6 +4609,7 @@ break
        !isPeekingMethod() &&
        resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_isArray)
       {
+      traceMsg(comp(), "--> genInvokeInner - com_ibm_jit_JITHelpers_isArray\n");
       TR::Node* obj = callNode->getChild(1);
       TR::Node* vftLoad = TR::Node::createWithSymRef(callNode, TR::aloadi, 1, obj, symRefTab()->findOrCreateVftSymbolRef());
 
@@ -4590,6 +4631,7 @@ break
        resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_getClassInitializeStatus &&
        !isPeekingMethod())
       {
+      traceMsg(comp(), "--> genInvokeInner - com_ibm_jit_JITHelpers_getClassInitializeStatus\n");
       TR::Node* jlClass = callNode->getChild(1);
       TR::Node* j9Class = TR::Node::createWithSymRef(callNode, TR::aloadi, 1, jlClass, symRefTab()->findOrCreateClassFromJavaLangClassSymbolRef());
 
@@ -4613,6 +4655,7 @@ break
       }
    else if (symbol->isNative() && isDirectCall)
       {
+      traceMsg(comp(), "--> genInvokeInner - Native Direct Call\n");
       if (!comp()->getOption(TR_DisableInliningOfNatives) &&
           symbol->castToResolvedMethodSymbol()->getRecognizedMethod() != TR::unknownMethod)
          {
@@ -4630,13 +4673,19 @@ break
             resultNode = callNode;
          }
       }
-   else
+   else {
+      traceMsg(comp(), "--> genInvokeInner - default\n");
       resultNode = callNode;
+   }
+
 
    TR::DataType returnType = calledMethod->returnType();
    if (returnType != TR::NoType)
       {
+      traceMsg(comp(), "Pushing return node to stack\n");
+      traceMsg(comp(), "Stack size before push: %d\n", _stack->size());
       push(resultNode);
+      traceMsg(comp(), "Stack size after push: %d\n", _stack->size());
       }
 
    if (needOSRBookkeeping)
@@ -4703,6 +4752,7 @@ break
          {
          push(callNode->getFirstChild());
          genFlush(0);
+         traceMsg(comp(), "Popping stack. New Size: %d\n", _stack->size());
          pop();
          }
       }

@@ -444,6 +444,7 @@ TR::SymbolReference *
 J9::SymbolReferenceTable::findOrCreateDynamicMethodSymbol(TR::ResolvedMethodSymbol * owningMethodSymbol, int32_t callSiteIndex, bool * unresolvedInCP, bool * isInvokeCacheAppendixNull)
    {
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+   traceMsg(comp(), "--> Finding Dynamic Method Symbol - Callsite index: %d, unresolved in cp: %d, is appendix null: %d\n", callSiteIndex, *unresolvedInCP, *isInvokeCacheAppendixNull);
    TR_ResolvedMethod  * method = owningMethodSymbol->getResolvedMethod()->getResolvedDynamicMethod(comp(), callSiteIndex, unresolvedInCP, isInvokeCacheAppendixNull);
    if (method)
       owningMethodSymbol->setMayHaveInlineableCall(true);

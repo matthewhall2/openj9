@@ -566,7 +566,7 @@ protected:
    J9Class *                       _j9classForNewInstance;
    uintptr_t                      _jniProperties;
    void *                          _jniTargetAddress;
-   TR_J9ByteCodeIlGenerator::saveStack
+   int32_t                         _pendingPushSlots;
    };
 
 #if defined(J9VM_INTERP_AOT_COMPILE_SUPPORT)

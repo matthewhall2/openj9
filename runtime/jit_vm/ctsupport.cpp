@@ -244,6 +244,7 @@ jitParseSignature (const J9UTF8 *signature, U_8 *paramBuffer, UDATA *paramElemen
 		}
 		++sigChar; /* eat the type char */
 	}
+	*paramBuffer = 0;
 }
 
 /**

@@ -240,9 +240,14 @@ final class MethodHandleResolver {
 	@SuppressWarnings("unused")
 	private static final Object resolveInvokeDynamic(long j9class, String name, String methodDescriptor, long bsmData) throws Throwable {
 /*[IF OPENJDK_METHODHANDLES]*/
+		System.out.println("resolving invokedynamic");
+		System.out.println(name);
+		System.out.println(methodDescriptor);
+
 		VMLangAccess access = VM.getVMLangAccess();
 		Object internalConstantPool = access.getInternalConstantPoolFromJ9Class(j9class);
 		Class<?> classObject = getClassFromJ9Class(j9class);
+		System.out.println(classObject.getName());
 
 		MethodType type = null;
 		Object[] result = new Object[2];
@@ -293,11 +298,21 @@ final class MethodHandleResolver {
 			 * reattempted on the subsequent visit to the invokedynamic instruction in the interpreter.
 			 */
 			if (e instanceof BootstrapMethodError) {
+				System.out.println("could not link invokedyn");
 				throw e;
+			} else if (e instanceof StackOverflowError) {
+				System.out.println("Stack overflow in string concat < 11");
 			}
 /*[ENDIF] JAVA_SPEC_VERSION < 11*/
 
+			if (e instanceof StackOverflowError) {
+				System.out.println("Stack overflow in string concat >= 11");
+				//throw new BootstrapMethodError(e);
+				//throw e;
+			}
+
 			if (type == null) {
+				System.out.print("bootstrap method error");
 				throw new BootstrapMethodError(e);
 			}
 
@@ -331,8 +346,10 @@ final class MethodHandleResolver {
 				throw new Error(nsme);
 			}
 		}
+		System.out.println("returning result");
 		return (Object)result;
 /*[ELSE] OPENJDK_METHODHANDLES*/
+System.out.println("should not be here");
 		MethodHandle result = null;
 		MethodType type = null;
 

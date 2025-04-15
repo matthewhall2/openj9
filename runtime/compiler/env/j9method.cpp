@@ -305,8 +305,28 @@ void
 TR_J9MethodBase::parseSignature(TR_Memory * trMemory)
    {
    U_8 tempArgTypes[512];
+   if (getenv("traceSig")) {
+      traceMsg(TR::comp(), "--> Sig: %.*s\n", J9UTF8_LENGTH(_signature), J9UTF8_DATA(_signature));
+   }
    jitParseSignature(_signature, tempArgTypes, &_paramElements, &_paramSlots);
+   if (getenv("traceSig")) {
+      traceMsg(TR::comp(), "--> parseSig: Num Params: %d, slots: %d\n", _paramElements, _paramSlots);
+   }
    _argTypes = (U_8 *) trMemory->allocateHeapMemory((_paramElements + 1) * sizeof(U_8));
+   if (getenv("countTemps")) {
+
+      int count = 0;
+      int i = 0;
+      while (i < 512) {
+         if (tempArgTypes[i] != 0) {
+            count++;
+         } else {
+            break;
+         }
+         i++;
+      }
+      TR_ASSERT_FATAL(count ==  + 1, "Number of params does not match length of temp arg types\n");
+   }
    memcpy(_argTypes, tempArgTypes, (_paramElements + 1));
    }
 
@@ -5429,6 +5449,7 @@ U_16
 TR_ResolvedJ9Method::numberOfPendingPushes()
    {
    U_16 adder =  feGetEnv("addTemps") != NULL ? atoi(feGetEnv("addTemps")) : 0;
+   traceMsg(TR::comp(), "--> number of PP - Max Stack: %d\n", J9_MAX_STACK_FROM_ROM_METHOD(romMethod()));
    if (_pendingPushSlots < 0)
       {
       traceMsg(TR::comp(), "Negative pp slots: %d\n", _pendingPushSlots);
