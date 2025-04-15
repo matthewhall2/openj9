@@ -1736,6 +1736,7 @@ TR_J9ByteCodeIlGenerator::stashArgumentsForOSR(TR_J9ByteCode byteCode)
 void
 TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
    {
+   traceMsg(comp(), "Walker: Stash PP - Start\n");
    if (!comp()->pendingPushLivenessDuringIlgen())
       return;
 
@@ -1766,6 +1767,7 @@ TR_J9ByteCodeIlGenerator::stashPendingPushLivenessForOSR(int32_t offset)
          }
       slot += n->getNumberOfSlots();
       }
+      traceMsg(comp(), "Walker: Stash PP - End\n");
    }
 
 void
