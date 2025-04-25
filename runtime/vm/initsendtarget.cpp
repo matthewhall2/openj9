@@ -350,7 +350,7 @@ initializeInitialMethods(J9JavaVM *vm)
 			#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
 			storeInitialVMMethods(vm, cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod
-				#if defined(J9VM_OPT_SNAPSHOTS)
+				#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 				, cThrowDefaultConflict
 				#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 			);
@@ -373,7 +373,7 @@ initializeInitialMethods(J9JavaVM *vm)
 
 		memset(cInitialVirtualMethod, 0, sizeof(J9Method));
 		cInitialVirtualMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_VIRTUAL);
-		
+
 		#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		memset(cThrowDefaultConflict, 0, sizeof(J9Method));
 		cThrowDefaultConflict->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);

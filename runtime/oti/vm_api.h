@@ -5414,7 +5414,7 @@ teardownVMSnapshotImpl(J9JavaVM *javaVM);
  */
 void
 storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod
-	#if defined(J9VM_OPT_SNAPSHOTS)
+	#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	, J9Method *cThrowDefaultConflict
 	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 );
@@ -5430,7 +5430,7 @@ storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method
  */
 void
 setInitialVMMethods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod
-	#if defined(J9VM_OPT_SNAPSHOTS)
+	#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	, J9Method **cThrowDefaultConflict
 	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 );

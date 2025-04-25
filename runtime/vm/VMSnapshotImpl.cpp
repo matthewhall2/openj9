@@ -103,7 +103,7 @@ VMSnapshotImpl::initializeMonitor()
 
 void
 VMSnapshotImpl::storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod
-	#if defined(J9VM_OPT_SNAPSHOTS)
+	#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	, J9Method *cThrowDefaultConflict
 	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */)
 {
@@ -116,7 +116,7 @@ VMSnapshotImpl::storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cI
 
 void
 VMSnapshotImpl::setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod
-	#if defined(J9VM_OPT_SNAPSHOTS)
+	#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	, J9Method **cThrowDefaultConflict
 	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */)
 {
@@ -1228,7 +1228,7 @@ teardownVMSnapshotImpl(J9JavaVM *javaVM)
 
 extern "C" void
 storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod
-#if defined(J9VM_OPT_SNAPSHOTS)
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 , J9Method* cThrowDefaultConflict
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 )
@@ -1237,7 +1237,7 @@ storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method
 	Assert_VM_notNull(vmSnapshotImpl);
 
 	vmSnapshotImpl->storeInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod
-		#if defined(J9VM_OPT_SNAPSHOTS)
+		#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		, cThrowDefaultConflict
 		#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	);
@@ -1245,7 +1245,7 @@ storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method
 
 extern "C" void
 setInitialVMMethods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod
-	#if defined(J9VM_OPT_SNAPSHOTS)
+	#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	, J9Method** cThrowDefaultConflict
 	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 )
@@ -1254,7 +1254,7 @@ setInitialVMMethods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method 
 	Assert_VM_notNull(vmSnapshotImpl);
 
 	vmSnapshotImpl->setInitialMethods(cInitialStaticMethod, cInitialSpecialMethod, cInitialVirtualMethod
-#if defined(J9VM_OPT_SNAPSHOTS)
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 , cThrowDefaultConflict
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	);
