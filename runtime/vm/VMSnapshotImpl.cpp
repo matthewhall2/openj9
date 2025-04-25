@@ -110,7 +110,7 @@ VMSnapshotImpl::storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cI
 	WSRP_SET(_snapshotHeader->cInitialStaticMethod, cInitialStaticMethod);
 	WSRP_SET(_snapshotHeader->cInitialSpecialMethod, cInitialSpecialMethod);
 	WSRP_SET(_snapshotHeader->cInitialVirtualMethod, cInitialVirtualMethod);
-	WSRP_SET(_snapshotHeader->cthrowDefaultConflict, cthrowDefaultConflict);
+	WSRP_SET(_snapshotHeader->cThrowDefaultConflict, cThrowDefaultConflict);
 
 }
 
@@ -123,7 +123,7 @@ VMSnapshotImpl::setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cI
 	*cInitialStaticMethod = WSRP_GET(_snapshotHeader->cInitialStaticMethod, J9Method *);
 	*cInitialSpecialMethod = WSRP_GET(_snapshotHeader->cInitialSpecialMethod, J9Method *);
 	*cInitialVirtualMethod = WSRP_GET(_snapshotHeader->cInitialVirtualMethod, J9Method *);
-	*cthrowDefaultConflict = WSRP_GET(_snapshotHeader->cthrowDefaultConflict, J9Method *);
+	*cThrowDefaultConflict = WSRP_GET(_snapshotHeader->cThrowDefaultConflict, J9Method *);
 }
 
 bool

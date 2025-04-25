@@ -336,7 +336,11 @@ initializeInitialMethods(J9JavaVM *vm)
 
 #if defined(J9VM_OPT_SNAPSHOTS)
 	if (IS_RESTORE_RUN(vm)) {
-		setInitialVMMethods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod);
+		setInitialVMMethods(vm, &cInitialStaticMethod, &cInitialSpecialMethod, &cInitialVirtualMethod
+			#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+			, cThrowDefaultConflict
+			#endif
+		);
 	} else
 #endif /* defined(J9VM_OPT_SNAPSHOTS) */
 	{
