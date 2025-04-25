@@ -436,7 +436,7 @@ public class IndyTest {
         String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4 + "," + var3;
     }
 
-    @Test(groups = {"level.sanity"})
+    @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
         IndyTest tester = new IndyTest();
         Thread thread = new Thread(() -> tester.recurse());
