@@ -442,9 +442,11 @@ public class IndyTest {
         Thread thread = new Thread(() -> tester.recurse());
         thread.start();
         
+		try {
         Thread.sleep(30000); // let thread run for 30s
 		tester.stop();
 		thread.join();
+		} catch (InterruptedException e) {}
 		System.out.println("Ran with no errors");
     }
 }
