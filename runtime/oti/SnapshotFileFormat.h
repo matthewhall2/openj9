@@ -122,6 +122,9 @@ typedef struct J9SnapshotHeader {
 	J9WSRP cInitialStaticMethod;
 	J9WSRP cInitialSpecialMethod;
 	J9WSRP cInitialVirtualMethod;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+	J9WSRP cthrowDefaultConflict;
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 } J9SnapshotHeader;
 
 /*

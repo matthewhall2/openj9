@@ -842,6 +842,9 @@ computeVTable(J9VMThread *vmStruct, J9ClassLoader *classLoader, J9Class *supercl
 
 		if (superclass == NULL) {
 			/* no inherited slots, write default slot in header */
+			#if defined(J9VM_OPT_SNAPSHOTS)
+			vTableHeader->throwDefaultConflict = (J9Method *)vm->initialMethods.throwDefaultConflict;
+	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 			vTableHeader->initialVirtualMethod = (J9Method *)vm->initialMethods.initialVirtualMethod;
 			vTableHeader->invokePrivateMethod = (J9Method *)vm->initialMethods.invokePrivateMethod;
 		} else {

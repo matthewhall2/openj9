@@ -1775,6 +1775,9 @@ exit:
 		if ((method == initialMethods->initialStaticMethod)
 		|| (method == initialMethods->initialSpecialMethod)
 		|| (method == initialMethods->initialVirtualMethod)
+		#if defined(J9VM_OPT_SNAPSHOTS)
+		|| (method == initialMethods->throwDefaultConflict)
+		#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 		) {
 			method = NULL;
 		}

@@ -5413,7 +5413,11 @@ teardownVMSnapshotImpl(J9JavaVM *javaVM);
  * @param cInitialVirtualMethod[in] the initial virtual method
  */
 void
-storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod);
+storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod
+	#if defined(J9VM_OPT_SNAPSHOTS)
+	, J9Method *cThrowDefaultConflict
+	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+);
 
 /**
  * Sets JavaVM initial methods to addresses stored in the snapshot header
@@ -5425,7 +5429,11 @@ storeInitialVMMethods(J9JavaVM *javaVM, J9Method *cInitialStaticMethod, J9Method
  * @param cInitialVirtualMethod[in] the initial virtual method
  */
 void
-setInitialVMMethods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod);
+setInitialVMMethods(J9JavaVM *javaVM, J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod
+	#if defined(J9VM_OPT_SNAPSHOTS)
+	, J9Method **cThrowDefaultConflict
+	#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+);
 
 /**
  * Run class load hooks and assign class object to J9Class.

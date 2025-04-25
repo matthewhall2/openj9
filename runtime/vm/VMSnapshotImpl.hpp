@@ -132,8 +132,17 @@ public:
 	void destroyMonitor();
 	VMSnapshotImplPortLibrary *getVMSnapshotImplPortLibrary() { return _vmSnapshotImplPortLibrary; }
 
-	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod);
-	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod);
+	void storeInitialMethods(J9Method *cInitialStaticMethod, J9Method *cInitialSpecialMethod, J9Method *cInitialVirtualMethod
+		#if defined(J9VM_OPT_SNAPSHOTS)
+		, J9Method *cThrowDefaultConflict
+		#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+	);
+
+	void setInitialMethods(J9Method **cInitialStaticMethod, J9Method **cInitialSpecialMethod, J9Method **cInitialVirtualMethod
+		#if defined(J9VM_OPT_SNAPSHOTS)
+		, J9Method **cThrowDefaultConflict
+		#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+	);
 
 	J9ITable *getInvalidITable() { return _invalidITable; }
 };

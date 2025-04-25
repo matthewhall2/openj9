@@ -4041,6 +4041,9 @@ typedef struct J9VTableHeader {
 	UDATA size;
 	J9Method* initialVirtualMethod;
 	J9Method* invokePrivateMethod;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+	J9Method* throwDefaultConflict;
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 } J9VTableHeader;
 
 typedef struct J9ClassCastParms {
