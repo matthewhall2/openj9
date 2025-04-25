@@ -437,7 +437,7 @@ public class IndyTest {
     }
 
     @Test(groups = {"level.sanity"})
-    public void test() {
+    public void testOSRRecurseStringConcat() {
         IndyTest tester = new IndyTest();
         Thread thread = new Thread(() -> tester.recurse());
         thread.start();
