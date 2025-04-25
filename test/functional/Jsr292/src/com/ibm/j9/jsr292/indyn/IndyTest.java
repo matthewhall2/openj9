@@ -426,7 +426,7 @@ public class IndyTest {
             String t = "Test" + var3 + ",";
             try {
                 java.lang.reflect.Method method = IndyTest.class.getMethod("recurse", void.class);
-                method.invoke(this, (Object) strArr1);
+                method.invoke(this);
             } catch (NoSuchMethodException e) {
                 // ...
             } catch (IllegalAccessException e) {
@@ -435,7 +435,7 @@ public class IndyTest {
                 // ...
             }
         }
-        String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4;
+        String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4 + "," + var3;
     }
 
     @Test(groups = {"level.sanity"})
