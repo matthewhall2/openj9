@@ -25,8 +25,6 @@ import org.openj9.test.util.VersionCheck;
 
 import org.testng.annotations.Test;
 
-import com.ibm.j9.jsr292.TestResolveMakeConcatWithConstantsInRecursion;
-
 import org.testng.Assert;
 import org.testng.AssertJUnit;
 import static org.objectweb.asm.Opcodes.ARETURN;
