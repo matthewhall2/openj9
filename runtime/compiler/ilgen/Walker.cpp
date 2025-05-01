@@ -248,7 +248,6 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
          traceMsg(comp(), "%4x: %s\n", _bcIndex, ((TR_J9VM *)fej9())->getByteCodeName(opcode));
 
       _bc = convertOpCodeToByteCodeEnum(opcode);
-      _bc
       stashArgumentsForOSR(_bc);
       traceMsg(comp(), "-----> Stack size before bc: %d\n", _stack->size());
       switch (_bc)
