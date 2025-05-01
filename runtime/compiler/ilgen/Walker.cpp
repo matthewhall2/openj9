@@ -3251,6 +3251,16 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    TR::SymbolReference * targetMethodSymRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, callSiteIndex, &isUnresolved, &isInvokeCacheAppendixNull);
    if (isUnresolved)
       targetMethodSymRef->getSymbol()->setDummyResolvedMethod(); // linkToStatic is a dummy TR_ResolvedMethod
+
+   TR::SymbolReference *methodSymRef = symRefTab()->findOrCreateStaticMethodSymbol(_methodSymbol, next2Bytes());
+   auto owningMethod3 = (TR_ResolvedJ9Method*)_methodSymbol->getResolvedMethod();
+   bool unresolvedInCP;
+   TR_ResolvedMethod *method =
+      owningMethod3->getResolvedPossiblyPrivateVirtualMethod(
+         comp(),
+         next2Bytes(),
+         /* ignoreRtResolve = */ false,
+         &unresolvedInCP);
    
    int32_t len = 0;
    const char* sig = targetMethodSymRef->getTypeSignature(len);
