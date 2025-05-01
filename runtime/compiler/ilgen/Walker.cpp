@@ -3253,7 +3253,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       targetMethodSymRef->getSymbol()->setDummyResolvedMethod(); // linkToStatic is a dummy TR_ResolvedMethod
    
    int32_t len = 0;
-   // const char* sig = targetMethodSymRef->getTypeSignature(len);
+   const char* sig = targetMethodSymRef->getTypeSignature(len);
    printf("---> genInvokeDyn: TypeSig - %.*s\n", len, sig);
 
    TR::SymbolReference *callSiteTableEntrySymRef = symRefTab()->findOrCreateCallSiteTableEntrySymbol(_methodSymbol, callSiteIndex);
