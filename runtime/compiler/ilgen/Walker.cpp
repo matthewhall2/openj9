@@ -3294,7 +3294,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - CP Index: %d\n", targetMethodSymRef->getCPIndex());
    int32_t len = 0;
    const char* sig = targetMethodSymRef->getTypeSignature(len);
-   printf("---> genInvokeDyn: TypeSig - %.*s\n", len, sig);
+   //printf("---> genInvokeDyn: TypeSig - %.*s\n", len, sig);
 
 
    if (isUnresolved) {
