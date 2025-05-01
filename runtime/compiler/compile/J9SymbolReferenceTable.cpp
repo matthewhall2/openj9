@@ -445,11 +445,13 @@ J9::SymbolReferenceTable::findOrCreateDynamicMethodSymbol(TR::ResolvedMethodSymb
    {
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    TR_ResolvedMethod  * method = owningMethodSymbol->getResolvedMethod()->getResolvedDynamicMethod(comp(), callSiteIndex, unresolvedInCP, isInvokeCacheAppendixNull);
-   printf("--> genInvokeDyn - find sig: %s\n", method->signature(trMemory()));
+   printf("--> genInvokeDyn - find sig: %s\n", owningMethodSymbol->getResolvedMethod()->signature(trMemory()));
+   printf("--> genInvokeDyn - find dyn sig: %s\n", method->signature(trMemory()));
    if (method)
       owningMethodSymbol->setMayHaveInlineableCall(true);
 
    TR::SymbolReference * symRef = findOrCreateMethodSymbol(owningMethodSymbol->getResolvedMethodIndex(), -1, method, TR::MethodSymbol::Static);
+
 #else
    List<TR::SymbolReference> *methods = dynamicMethodSymrefsByCallSiteIndex(callSiteIndex);
    ListIterator<TR::SymbolReference> li(methods);
@@ -463,6 +465,7 @@ J9::SymbolReferenceTable::findOrCreateDynamicMethodSymbol(TR::ResolvedMethodSymb
    methods->add(symRef);
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
    return symRef;
+   
    }
 
 
