@@ -3267,7 +3267,11 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    if (!owningMethod2->isUnresolvedCallSiteTableEntry(callSiteIndex))
    {
    TR_ResolvedMethod *specimen = fej9()->createMethodHandleArchetypeSpecimen(trMemory(), (uintptr_t*)owningMethod2->callSiteTableEntryAddress(callSiteIndex), owningMethod2);
+   if (specimen) {
    printf("---> genInvokeDyn: specifmen sig: %.*s\n", specimen->signatureLength(), specimen->signature(trMemory()));
+   } else {
+      printf("no specimen\n");
+   }
    }
 
 
