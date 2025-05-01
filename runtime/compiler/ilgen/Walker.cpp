@@ -3263,9 +3263,11 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    printf("---> genInvokeDyn: own sig: %.*s\n", ownLen, ownSig);
    printf("---> genInvokeDyn: _method sig: %.*s\n", _method->signatureLength(), _method->signature(trMemory()));
    TR_ResolvedMethod * owningMethod2 = _methodSymbol->getResolvedMethod();
-
+   if (!owningMethod2->isUnresolvedCallSiteTableEntry(callSiteIndex))
+   {
    TR_ResolvedMethod *specimen = fej9()->createMethodHandleArchetypeSpecimen(trMemory(), (uintptr_t*)owningMethod2->callSiteTableEntryAddress(callSiteIndex), owningMethod2);
    printf("---> genInvokeDyn: specifmen sig: %.*s\n", specimen->signatureLength(), specimen->signature(trMemory()));
+   }
 
 
 
