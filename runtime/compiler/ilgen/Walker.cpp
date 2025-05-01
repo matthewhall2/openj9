@@ -248,6 +248,7 @@ TR::Block * TR_J9ByteCodeIlGenerator::walker(TR::Block * prevBlock)
          traceMsg(comp(), "%4x: %s\n", _bcIndex, ((TR_J9VM *)fej9())->getByteCodeName(opcode));
 
       _bc = convertOpCodeToByteCodeEnum(opcode);
+      _bc
       stashArgumentsForOSR(_bc);
       traceMsg(comp(), "-----> Stack size before bc: %d\n", _stack->size());
       switch (_bc)
@@ -1167,6 +1168,7 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
             (n->getFirstChild()->getSymbolReference()->isUnresolved() || true || // turned OSR off for indirect calls for 727 due to failed guards being seen
              n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->virtualMethodIsOverridden() ||
              comp()->getPersistentInfo()->isClassLoadingPhase() ||
+             comp()->getClass
              (comp()->getOption(TR_EnableHCR) &&
               (!n->getFirstChild()->getSecondChild()->getOpCode().isLoadVarDirect() || !n->getFirstChild()->getSecondChild()->getSymbol()->isParm())) ||
              (n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->maxBytecodeIndex() > osrIndirectCallBCThresh)))
@@ -3288,9 +3290,15 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    bool isInvokeCacheAppendixNull = false;
    traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - Callsite Index: %d\n", callSiteIndex);
    TR::SymbolReference * targetMethodSymRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, callSiteIndex, &isUnresolved, &isInvokeCacheAppendixNull);
+
    traceMsg(comp(), "---> genInvokeDyn: Name - %s", targetMethodSymRef->getName(comp()->getDebug()));
 
    traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - CP Index: %d\n", targetMethodSymRef->getCPIndex());
+   int len = 0;
+   const char* sig = targetMethodSymRef->getTypeSignature(&len);
+
+   traceMsg(comp(), "---> genInvokeDyn: TypeSig - %.*s\n", len, sig);
+
 
    if (isUnresolved) {
       traceMsg(comp(), "---> genInvokeDyn: unresolved\n");
@@ -3319,11 +3327,10 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       {
       comp()->failCompilation<J9::AOTHasInvokeHandle>("COMPILATION_AOT_HAS_INVOKEHANDLE 0");
       }
-
    TR::SymbolReference *symRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, callSiteIndex);
-
    // Compute the receiver handle
    //
+   symRef->getTp
    loadFromCallSiteTable(callSiteIndex);
    TR::Node *receiver = pop();
 
@@ -3741,7 +3748,9 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::MethodSymbol * symbol = symRef->getSymbol()->castToMethodSymbol();
    traceMsg(comp(), "Method symref name: %s, symbolName: %s\n", symRef->getSymbol()->getName(), symbol->getName());
    traceMsg(comp(), "--< genInvokeInner - Stack size at start of generation: %d\n", _stack->size());
-
+   if (invokedynamicReceiver) {
+      traceMsg(comp(), "Receiver Args: %d\n", invokedynamicReceiver->getNumArguments());
+   }
       
 
    bool isStatic     = symbol->isStatic();
@@ -5713,7 +5722,7 @@ TR_J9ByteCodeIlGenerator::loadFromCP(TR::DataType type, int32_t cpIndex)
                   traceMsg(comp(), "  Constant Dynamic not supported in AOT.\n");
                comp()->failCompilation<J9::AOTHasConstantDynamic>("Constant Dynamic not supported in AOT.");
                }
-
+            _methodSymbol->getResolvedMethod()->romClassPtr();
             bool isCondyUnresolved = _methodSymbol->getResolvedMethod()->isUnresolvedConstantDynamic(cpIndex);
             J9UTF8 *returnTypeUtf8 = (J9UTF8 *)_methodSymbol->getResolvedMethod()->getConstantDynamicTypeFromCP(cpIndex);
             int returnTypeUtf8Length = J9UTF8_LENGTH(returnTypeUtf8);
