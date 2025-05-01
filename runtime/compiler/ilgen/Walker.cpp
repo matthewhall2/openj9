@@ -3253,6 +3253,9 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       targetMethodSymRef->getSymbol()->setDummyResolvedMethod(); // linkToStatic is a dummy TR_ResolvedMethod
 
    printf("callsite index: %d\n", callSiteIndex);
+   _bcIndex += 2;
+   printf("other index: %d \n", next2Bytes());
+   bcIndex -= 2;
    
 
    //TR::SymbolReference *methodSymRef = symRefTab()->findOrCreateStaticMethodSymbol(_methodSymbol, next2Bytes());
