@@ -3295,7 +3295,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
 
    traceMsg(comp(), "---> genInvokeDyn - Finding method symbol for target - CP Index: %d\n", targetMethodSymRef->getCPIndex());
    int32_t len = 0;
-   const char* sig = targetMethodSymRef->getTypeSignature(&len);
+   const char* sig = targetMethodSymRef->getTypeSignature(len);
 
    traceMsg(comp(), "---> genInvokeDyn: TypeSig - %.*s\n", len, sig);
 
@@ -5722,7 +5722,6 @@ TR_J9ByteCodeIlGenerator::loadFromCP(TR::DataType type, int32_t cpIndex)
                   traceMsg(comp(), "  Constant Dynamic not supported in AOT.\n");
                comp()->failCompilation<J9::AOTHasConstantDynamic>("Constant Dynamic not supported in AOT.");
                }
-            _methodSymbol->getResolvedMethod()->romClassPtr();
             bool isCondyUnresolved = _methodSymbol->getResolvedMethod()->isUnresolvedConstantDynamic(cpIndex);
             J9UTF8 *returnTypeUtf8 = (J9UTF8 *)_methodSymbol->getResolvedMethod()->getConstantDynamicTypeFromCP(cpIndex);
             int returnTypeUtf8Length = J9UTF8_LENGTH(returnTypeUtf8);
