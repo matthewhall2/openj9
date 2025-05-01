@@ -3262,6 +3262,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    int16_t ownLen = owningMethod->signatureLength();
    printf("---> genInvokeDyn: own sig: %.*s\n", ownLen, ownSig);
    printf("---> genInvokeDyn: _method sig: %.*s\n", _method->signatureLength(), _method->signature(trMemory()));
+
    TR_ResolvedMethod * owningMethod2 = _methodSymbol->getResolvedMethod();
    if (!owningMethod2->isUnresolvedCallSiteTableEntry(callSiteIndex))
    {
@@ -3288,7 +3289,6 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
       }
 
    TR::SymbolReference *symRef = symRefTab()->findOrCreateDynamicMethodSymbol(_methodSymbol, callSiteIndex);
-   _method->sig
    // Compute the receiver handle
    //
    loadFromCallSiteTable(callSiteIndex);
