@@ -1167,7 +1167,6 @@ TR_J9ByteCodeIlGenerator::genTreeTop(TR::Node * n)
             (n->getFirstChild()->getSymbolReference()->isUnresolved() || true || // turned OSR off for indirect calls for 727 due to failed guards being seen
              n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->virtualMethodIsOverridden() ||
              comp()->getPersistentInfo()->isClassLoadingPhase() ||
-             comp()->getClass
              (comp()->getOption(TR_EnableHCR) &&
               (!n->getFirstChild()->getSecondChild()->getOpCode().isLoadVarDirect() || !n->getFirstChild()->getSecondChild()->getSymbol()->isParm())) ||
              (n->getFirstChild()->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->maxBytecodeIndex() > osrIndirectCallBCThresh)))
