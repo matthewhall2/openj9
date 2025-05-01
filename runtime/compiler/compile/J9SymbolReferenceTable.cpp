@@ -445,7 +445,7 @@ J9::SymbolReferenceTable::findOrCreateDynamicMethodSymbol(TR::ResolvedMethodSymb
    {
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    TR_ResolvedMethod  * method = owningMethodSymbol->getResolvedMethod()->getResolvedDynamicMethod(comp(), callSiteIndex, unresolvedInCP, isInvokeCacheAppendixNull);
-   printf("--> genInvokeDyn - find sig: %.*s", method->signatureLength(), method->signature(trMemory()));
+   printf("--> genInvokeDyn - find sig: %s\n", method->signature(trMemory()));
    if (method)
       owningMethodSymbol->setMayHaveInlineableCall(true);
 
