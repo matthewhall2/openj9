@@ -3755,7 +3755,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
       J9ROMNameAndSignature *nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
       J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
-      paramCount = countParams(J9UTF8_DATA(sig))
+      paramCount = countParams(J9UTF8_DATA(sig));
       printf("sig: %s\n", J9UTF8_DATA(sig));
       printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
       TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
