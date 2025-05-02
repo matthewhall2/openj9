@@ -3744,23 +3744,25 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::MethodSymbol * symbol = symRef->getSymbol()->castToMethodSymbol();
    bool isStatic     = symbol->isStatic();
    bool isDirectCall = indirectCallFirstChild == NULL;
-
+   
    TR::Method * calledMethod = symbol->getMethod();
-   int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
-
+   int32_t numArgs = calledMethod->numberOfExplicitParameters();// + (isStatic ? 0 : 1);
+   int32_t paramCount = numArgs;
    if (callsiteIndex > -1) {
-   TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
-   J9ROMClass *ownerROM = owner->romClassPtr();
-   J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(ownerROM);
-	J9ROMNameAndSignature *nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
+      TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
+      J9ROMClass *ownerROM = owner->romClassPtr();
+      J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(ownerROM);
+      J9ROMNameAndSignature *nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
-   J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
-   int32_t paramCount = 0;
-   printf("sig: %s\n", J9UTF8_DATA(sig));
-   printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
-
+      J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
+      paramCount = countParams(J9UTF8_DATA(sig))
+      printf("sig: %s\n", J9UTF8_DATA(sig));
+      printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
+      TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
+      numArgs = paramCount;
    }
 
+   numArgs += (isStatic ? 0 : 1);
 
    if (pushRequiredConst(requiredKoi))
       {
