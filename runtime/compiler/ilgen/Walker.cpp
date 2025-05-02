@@ -3719,7 +3719,7 @@ TR_J9ByteCodeIlGenerator::genInvoke(TR::SymbolReference * symRef, TR::Node *indi
    return callNode;
    }
 
-static int32_t countParams(char *sig) {
+static int32_t countParams(unsigned char *sig) {
    sig++; // skip opening brace
    int32_t count = 0;
    while (sig != ')') {
