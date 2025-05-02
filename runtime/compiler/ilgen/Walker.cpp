@@ -4687,7 +4687,7 @@ break
    printf("stack size before return node: %d\n", _stack->size());
    if (callsiteIndex > -1) {
       int32_t numPopped = startingStackSize - _stack->size();
-      while (numPopped < paramCount + 1) {
+      while (numPopped < paramCount + (isStatic ? 0 : 1)) { 
          printf("popping more\n");
          pop();
          numPopped++;
