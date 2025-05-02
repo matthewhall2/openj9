@@ -4688,10 +4688,12 @@ break
    if (callsiteIndex == -1) {
       int32_t numPopped = startingStackSize - _stack->size();
       while (numPopped < paramCount) {
+         printf("popping more\n");
          pop();
          numPopped++;
       }
    }
+   printf("new stack size before return node: %d\n", _stack->size());
    if (returnType != TR::NoType)
       {
       push(resultNode);
