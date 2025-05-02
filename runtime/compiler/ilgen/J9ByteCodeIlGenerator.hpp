@@ -156,7 +156,7 @@ private:
       TR::Node *invokedynamicReceiver,
       TR::KnownObjectTable::Index *requiredKoi, int32_t callsiteIndex);
 
-   TR::Node *    genInvokeDirect(TR::SymbolReference *symRef, int32_t callsiteIndex = -1){ return genInvoke(symRef, NULL, callsiteIndex); }
+   TR::Node *    genInvokeDirect(TR::SymbolReference *symRef, int32_t callsiteIndex = -1){ return genInvoke(symRef, NULL, NULL, callsiteIndex); }
    TR::Node *    genInvokeWithVFTChild(TR::SymbolReference *);
    TR::Node *    getReceiverFor(TR::SymbolReference *);
    void          stashArgumentsForOSR(TR_J9ByteCode byteCode);
