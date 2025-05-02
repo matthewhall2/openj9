@@ -3749,6 +3749,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
    int32_t paramCount = numArgs;
    printf("stack size at start of genInvokeInner: %d\n", _stack->size());
+   int32_t startingStackSize = _stack->size();
    printf("method has %d explicit params (isStatic %d)\n", calledMethod->numberOfExplicitParameters(), isStatic);
    if (callsiteIndex > -1 && getenv("properArgs")) {
       TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
@@ -4684,6 +4685,13 @@ break
 
    TR::DataType returnType = calledMethod->returnType();
    printf("stack size before return node: %d\n", _stack->size());
+   if (callsiteIndex == -1) {
+      int32_t numPopped = startingStackSize - _stack->size();
+      while (numPopped < paramCount) {
+         pop();
+         numPopped++;
+      }
+   }
    if (returnType != TR::NoType)
       {
       push(resultNode);
