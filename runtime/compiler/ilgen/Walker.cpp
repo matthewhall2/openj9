@@ -3719,6 +3719,21 @@ TR_J9ByteCodeIlGenerator::genInvoke(TR::SymbolReference * symRef, TR::Node *indi
    return callNode;
    }
 
+static int32_t countParams(char *sig) {
+   sig++; // skip opening brace
+   int32_t count = 0;
+   while (sig != ')') {
+      if (sig == 'L') {
+         while (sig != ';') {
+            sig++;
+         }
+      }
+      count++;
+      sig++;
+   }
+   return count;
+}
+ 
 TR::Node*
 TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::SymbolReference * symRef,
@@ -3737,11 +3752,12 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
    J9ROMClass *ownerROM = owner->romClassPtr();
    J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(ownerROM);
-   J9ROMNameAndSignature *nameAndSig;
-	nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
+	J9ROMNameAndSignature *nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
    J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
+   int32_t paramCount = 0;
    printf("sig: %s\n", J9UTF8_DATA(sig));
+   printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
 
    }
 
