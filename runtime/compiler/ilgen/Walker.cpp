@@ -3741,7 +3741,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
 	nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
    J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
-   printf("sig: %s", J9UTF8_DATA(sig));
+   printf("sig: %s\n", J9UTF8_DATA(sig));
 
    }
 
