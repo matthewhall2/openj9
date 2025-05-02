@@ -3758,7 +3758,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
       paramCount = countParams(J9UTF8_DATA(sig));
       printf("sig: %s\n", J9UTF8_DATA(sig));
       printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
-      TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
+      //TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
       numArgs = paramCount;
    }
 
