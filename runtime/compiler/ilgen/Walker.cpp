@@ -3746,7 +3746,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    bool isDirectCall = indirectCallFirstChild == NULL;
    
    TR::Method * calledMethod = symbol->getMethod();
-   int32_t numArgs = calledMethod->numberOfExplicitParameters();// + (isStatic ? 0 : 1);
+   int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
    int32_t paramCount = numArgs;
    if (callsiteIndex > -1 && getenv("properArgs")) {
       TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
@@ -3759,10 +3759,9 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
       printf("sig: %s\n", J9UTF8_DATA(sig));
       printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
       //TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
-      numArgs = paramCount;
+      numArgs = paramCount + 1;
    }
 
-   numArgs += (isStatic ? 0 : 1);
 
    if (pushRequiredConst(requiredKoi))
       {
