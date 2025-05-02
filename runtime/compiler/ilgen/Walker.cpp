@@ -3759,9 +3759,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
       printf("sig: %s\n", J9UTF8_DATA(sig));
       printf("arg count: %d\n", countParams(J9UTF8_DATA(sig)));
       //TR_ASSERT(numArgs == paramCount, "bootstrap method does not have expected number of arguments\n");
-      numArgs = paramCount;
    }
-
 
    if (pushRequiredConst(requiredKoi))
       {
@@ -4276,7 +4274,16 @@ break
          // included in the numArgs calculation.  That's why we pass
          // numChildren as numArgs+1 below.
          //
+         printf("invokedyn\n");
+         printf("stack before: %d (num children: %d, firstIndex: %d)\n", _stack->size(), numArgs + 1, 2);
+         uint32_t before = _stack->size();
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 2);
+         uint32_t after = _stack->size();
+         uint32_t needToPop = paramCount - 2;
+         printf("stack after: %d", _stack->size());
+         for (int i = before - after; i < needToPop; i++) {
+            pop();
+         }
          callNode->setAndIncChild(0, indirectCallFirstChild);
          callNode->setAndIncChild(1, invokedynamicReceiver);
          }
