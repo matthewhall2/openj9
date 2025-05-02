@@ -3735,7 +3735,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
 
    TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
    J9ROMClass *ownerROM = owner->romClassPtr();
-   J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(romClass);
+   J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(ownerROM);
    J9ROMNameAndSignature *nameAndSig;
 	nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
