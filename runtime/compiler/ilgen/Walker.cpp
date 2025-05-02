@@ -3748,6 +3748,8 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::Method * calledMethod = symbol->getMethod();
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
    int32_t paramCount = numArgs;
+   printf("stack size at start of genInvokeInner: %d\n", _stack_size());
+   printf("method has %d explicit params (isStatic %d)\n", calledMethod->numberOfExplicitParameters(), isStatic);
    if (callsiteIndex > -1 && getenv("properArgs")) {
       TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
       J9ROMClass *ownerROM = owner->romClassPtr();
@@ -4282,7 +4284,7 @@ break
          uint32_t needToPop = paramCount - 2;
          printf("stack after: %d", _stack->size());
          for (int i = before - after; i < needToPop; i++) {
-            pop();
+          //  pop();
          }
          callNode->setAndIncChild(0, indirectCallFirstChild);
          callNode->setAndIncChild(1, invokedynamicReceiver);
@@ -4681,6 +4683,7 @@ break
       resultNode = callNode;
 
    TR::DataType returnType = calledMethod->returnType();
+   printf("stack size before return node: %d", _stack->size());
    if (returnType != TR::NoType)
       {
       push(resultNode);
