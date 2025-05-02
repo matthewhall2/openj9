@@ -154,7 +154,7 @@ private:
       TR::SymbolReference *,
       TR::Node *indirectCallFirstChild,
       TR::Node *invokedynamicReceiver,
-      TR::KnownObjectTable::Index *requiredKoi, int32_t callsiteIndex);
+      TR::KnownObjectTable::Index *requiredKoi, int32_t callsiteIndex = -1);
 
    TR::Node *    genInvokeDirect(TR::SymbolReference *symRef, int32_t callsiteIndex = -1){ return genInvoke(symRef, NULL, NULL, callsiteIndex); }
    TR::Node *    genInvokeWithVFTChild(TR::SymbolReference *);
