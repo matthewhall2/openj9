@@ -4683,7 +4683,7 @@ break
       resultNode = callNode;
 
    TR::DataType returnType = calledMethod->returnType();
-   printf("stack size before return node: %d", _stack->size());
+   printf("stack size before return node: %d\n", _stack->size());
    if (returnType != TR::NoType)
       {
       push(resultNode);
@@ -4691,6 +4691,7 @@ break
 
    if (needOSRBookkeeping)
       {
+      printf("bookkeeping\n");
       saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
       stashPendingPushLivenessForOSR(osrInductionOffset);
       if (comp()->supportsInduceOSR() && comp()->getOSRMode() == TR::voluntaryOSR)
