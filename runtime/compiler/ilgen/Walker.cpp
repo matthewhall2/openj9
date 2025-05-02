@@ -3701,7 +3701,7 @@ static TR::SymbolReference * getPrimitiveValueFieldSymbolReference(TR_J9ByteCode
    }
 
 TR::Node*
-TR_J9ByteCodeIlGenerator::genInvoke(TR::SymbolReference * symRef, TR::Node *indirectCallFirstChild, TR::Node *invokedynamicReceiver)
+TR_J9ByteCodeIlGenerator::genInvoke(TR::SymbolReference * symRef, TR::Node *indirectCallFirstChild, TR::Node *invokedynamicReceiver, int32_t callsiteIndex)
    {
    TR::KnownObjectTable::Index requiredKoi;
    TR::Node *callNode = genInvokeInner(
@@ -3724,7 +3724,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::SymbolReference * symRef,
    TR::Node *indirectCallFirstChild,
    TR::Node *invokedynamicReceiver,
-   TR::KnownObjectTable::Index *requiredKoi)
+   TR::KnownObjectTable::Index *requiredKoi, int32_t callsiteIndex)
    {
    TR::MethodSymbol * symbol = symRef->getSymbol()->castToMethodSymbol();
    bool isStatic     = symbol->isStatic();
@@ -3732,6 +3732,11 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
 
    TR::Method * calledMethod = symbol->getMethod();
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
+
+   TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
+   J9ROMClass *ownerROM = owner->romClassPtr();
+   J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(romClass);
+	nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
 
    if (pushRequiredConst(requiredKoi))
       {
