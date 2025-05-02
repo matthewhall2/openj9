@@ -3705,7 +3705,7 @@ TR_J9ByteCodeIlGenerator::genInvoke(TR::SymbolReference * symRef, TR::Node *indi
    {
    TR::KnownObjectTable::Index requiredKoi;
    TR::Node *callNode = genInvokeInner(
-      symRef, indirectCallFirstChild, invokedynamicReceiver, &requiredKoi);
+      symRef, indirectCallFirstChild, invokedynamicReceiver, &requiredKoi, callsiteIndex);
 
    if (requiredKoi == TR::KnownObjectTable::UNKNOWN)
       return callNode;
