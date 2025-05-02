@@ -3304,7 +3304,7 @@ TR_J9ByteCodeIlGenerator::genInvokeDynamic(int32_t callSiteIndex)
    if (comp()->getOption(TR_TraceILGen))
       printStack(comp(), _stack, "(Stack after load from callsite table)");
 
-   TR::Node* callNode = genInvokeDirect(targetMethodSymRef);
+   TR::Node* callNode = genInvokeDirect(targetMethodSymRef, callSiteIndex);
 
 #else
    if (comp()->compileRelocatableCode())
@@ -3733,11 +3733,18 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    TR::Method * calledMethod = symbol->getMethod();
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
 
+   if (callsiteIndex > -1) {
    TR_ResolvedJ9Method* owner = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
    J9ROMClass *ownerROM = owner->romClassPtr();
    J9SRP *callSiteData = (J9SRP *) J9ROMCLASS_CALLSITEDATA(ownerROM);
    J9ROMNameAndSignature *nameAndSig;
 	nameAndSig = SRP_PTR_GET(callSiteData + callsiteIndex, J9ROMNameAndSignature*);
+
+   J9UTF8* sig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
+   printf("sig: %s", J9UTF8_DATA(sig));
+
+   }
+
 
    if (pushRequiredConst(requiredKoi))
       {
