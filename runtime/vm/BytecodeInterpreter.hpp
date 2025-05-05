@@ -638,7 +638,7 @@ done:
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		if (isMethodDefaultConflictForMethodHandle) {
-			buildJITResolveFrame(REGISTER_ARGS);
+			//buildJITResolveFrame(REGISTER_ARGS);
 			//return THROW_NPE;
 		}
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
