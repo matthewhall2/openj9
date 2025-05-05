@@ -639,7 +639,7 @@ done:
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		if (isMethodDefaultConflictForMethodHandle) {
 			buildJITResolveFrame(REGISTER_ARGS);
-			return THROW_NPE;
+			//return THROW_NPE;
 		}
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
