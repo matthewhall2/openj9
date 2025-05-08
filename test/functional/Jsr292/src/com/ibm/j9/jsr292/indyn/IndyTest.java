@@ -493,13 +493,10 @@ public class IndyTest {
 
     @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
-		ClassLoader c = new ClassLoader() {
-			public Class<?> defineClass(String name, byte[] b) {
-        return defineClass(name, b, 0, b.length);
-    }
-		};
-
-		Class<?> cls = c.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", IndyTest.generate());
+		ClassLoader c = new ClassLoader();
+		byte[] b = IndyTest.generate();
+		System.out.println(b.length);
+		Class<?> cls = c.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", b, 0, b.length);
 
  	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
