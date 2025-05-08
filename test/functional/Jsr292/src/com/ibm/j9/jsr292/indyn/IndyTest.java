@@ -427,7 +427,7 @@ public class IndyTest {
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "TestBSMError", null, "java/lang/Object", null);
-		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()V", null, null);
+		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()Ljava/lang/String;", null, null);
 		mv.visitCode();
 
 		Handle bsm = new Handle(
