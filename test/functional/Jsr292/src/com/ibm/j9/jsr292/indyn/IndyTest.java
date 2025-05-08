@@ -500,7 +500,7 @@ public class IndyTest {
 
     @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
-		ClassLoader c = new ByteArrayClassLoader();
+		ByteArrayClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
 		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
