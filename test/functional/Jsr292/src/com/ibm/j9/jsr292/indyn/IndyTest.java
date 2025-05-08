@@ -437,9 +437,14 @@ public class IndyTest {
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;",
 			false
 		);
+		mv.visitFieldInsn(GETSTATIC, "java/lang/System", 
+        "out", "Ljava/io/PrintStream;");
+    mv.visitLdcInsn("Hello World!");
+    mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", 
+        "println", "(Ljava/lang/String;)V", false);
 		mv.visitInvokeDynamicInsn("test", "()Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(1,1);
+		mv.visitMaxs(3,3);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
@@ -488,12 +493,15 @@ public class IndyTest {
 
     @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
-		Class<?> cls = new ClassLoader() {
-    public Class<?> defineClass(String name, byte[] b) {
+		ClassLoader c = new ClassLoader() {
+			public Class<?> defineClass(String name, byte[] b) {
         return defineClass(name, b, 0, b.length);
     }
-}.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", IndyTest.generate());
- for (Method method : cls.getDeclaredMethods()) {
+		}
+
+		Class<?> cls = c.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", IndyTest.generate());
+
+ 	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
         }
 try {
