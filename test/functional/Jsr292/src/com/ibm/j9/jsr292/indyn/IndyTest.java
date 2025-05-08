@@ -493,7 +493,7 @@ public class IndyTest {
 
 	public class ByteArrayClassLoader extends ClassLoader {
 
-    public Class getc(String name, byte[] b) {
+    public Class<?> getc(String name, byte[] b) {
         return defineClass(name,b,0,b.length);
     }
 }
