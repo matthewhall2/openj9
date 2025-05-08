@@ -479,19 +479,14 @@ public class IndyTest {
         String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4 + "," + var3;
     }
 
-	// test that String concatenation doesn't not give wrong callsite (resulting in ILGen assertion error)
-	// when resolution is done in deep recursion
     @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
-		IndyTest tester = new IndyTest();
-		Thread thread = new Thread(() -> tester.recurse());
-		thread.start();
+		Class<?> cls = new ClassLoader() {
+    public Class<?> defineClass(String name, byte[] b) {
+        return defineClass(name, b, 0, b.length);
+    }
+}.defineClass("IndyTest", GenClassWithIndy.generate());
 
-		try {
-        	Thread.sleep(30000); // let thread run for 30s
-			tester.stop();
-			thread.join();
-		} catch (InterruptedException e) {}
-		System.out.println("Ran with no errors");
+cls.getMethod("main", String[].class).invoke(null, (Object) new String[0]);
     }
 }
