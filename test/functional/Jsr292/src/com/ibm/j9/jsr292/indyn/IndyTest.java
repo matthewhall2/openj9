@@ -496,6 +496,8 @@ cls.getMethod("test").invoke(null);
 	Assert.fail("Cannot access method");
 } catch(NoSuchMethodException e) {
 	Assert.fail("No Method");
+} catch (java.lang.reflect.InvocationTargetException e) {
+	Assert.fail("no target");
 }
     }
 }
