@@ -497,7 +497,7 @@ public class IndyTest {
 			public Class<?> defineClass(String name, byte[] b) {
         return defineClass(name, b, 0, b.length);
     }
-		}
+		};
 
 		Class<?> cls = c.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", IndyTest.generate());
 
