@@ -490,6 +490,7 @@ public class IndyTest {
     }
 }.defineClass("TestBSMError", IndyTest.generate());
 
-cls.getMethod("test").invoke(null, (Object) new String[0]);
+
+cls.getMethod("test").invoke(null);
     }
 }
