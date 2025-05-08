@@ -493,7 +493,7 @@ public class IndyTest {
 
 	public class ByteArrayClassLoader extends ClassLoader {
 
-    public Class findClass(String name, byte[] b) {
+    public Class getc(String name, byte[] b) {
         return defineClass(name,b,0,b.length);
     }
 }
@@ -503,7 +503,7 @@ public class IndyTest {
 		ClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
-		Class<?> cls = c.findClass("com.ibm.j9.jsr292.indyn.TestBSMError", b);
+		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
 
  	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
