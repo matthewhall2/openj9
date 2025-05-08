@@ -438,7 +438,7 @@ public class IndyTest {
 			false
 		);
 		mv.visitInvokeDynamicInsn("test", "()Ljava/lang/String;", bsm);
-		mv.visitInsn(RETURN);
+		mv.visitInsn(ARETURN);
 		mv.visitMaxs(1,1);
 		mv.visitEnd();
 		cw.visitEnd();
