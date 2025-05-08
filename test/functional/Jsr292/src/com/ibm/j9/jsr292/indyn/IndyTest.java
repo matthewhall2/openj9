@@ -447,7 +447,7 @@ public class IndyTest {
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt, String template) throws Throwable {
 		if (thrower == null) {
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class));
-			return ConstantCallSite(target);
+			return new ConstantCallSite(target);
 		}
 		System.out.println("Throwing\n");
 		throw thrower;
