@@ -427,7 +427,7 @@ public class IndyTest {
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "TestBSMError", null, "java/lang/Object", null);
-		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "testtest", "()V", null, null);
+		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()V", null, null);
 		mv.visitCode();
 
 		Handle bsm = new Handle(
@@ -446,8 +446,11 @@ public class IndyTest {
 	}
 
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt, String template) throws Throwable {
+		System.out.println("in bsm");
 		if (thrower == null) {
+			System.out.println("no thrower, finding");
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class));
+			System.out.println("found");
 			return new ConstantCallSite(target);
 		}
 		System.out.println("Throwing\n");
