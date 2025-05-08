@@ -486,7 +486,7 @@ public class IndyTest {
     public Class<?> defineClass(String name, byte[] b) {
         return defineClass(name, b, 0, b.length);
     }
-}.defineClass("IndyTest", GenClassWithIndy.generate());
+}.defineClass("TestBSMError", Indy.generate());
 
 cls.getMethod("test").invoke(null, (Object) new String[0]);
     }
