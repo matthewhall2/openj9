@@ -434,7 +434,7 @@ public class IndyTest {
 			H_INVOKESTATIC,
 			"com/ibm/j9/jsr292/indyn/IndyTest",
 			"bootstrap",
-			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;",
+			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
 			false
 		);
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", 
@@ -450,7 +450,7 @@ public class IndyTest {
 		return cw.toByteArray();
 	}
 
-	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt, String template) throws Throwable {
+	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
 		System.out.println("in bsm");
 		if (thrower == null) {
 			System.out.println("no thrower, finding");
