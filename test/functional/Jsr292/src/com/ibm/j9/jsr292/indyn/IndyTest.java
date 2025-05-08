@@ -490,7 +490,12 @@ public class IndyTest {
     }
 }.defineClass("TestBSMError", IndyTest.generate());
 
-
+try {
 cls.getMethod("test").invoke(null);
+} catch(IllegalAccessException e) {
+	Assert.fail("Cannot access method");
+} catch(NoSuchMethodException e) {
+	Assert.fail("No Method");
+}
     }
 }
