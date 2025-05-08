@@ -470,26 +470,6 @@ public class IndyTest {
 		return "test" + x;
 	}
 
-    public void recurse() {
-        if (!running) {
-			return;
-		}
-        for (int i = 1; i < 5; i++) {
-
-            String t = "Test" + var3 + "," + var4;
-            try {
-                java.lang.reflect.Method method = IndyTest.class.getMethod("recurse", void.class);
-                method.invoke(this);
-            } catch (NoSuchMethodException e) {
-                // ...
-            } catch (IllegalAccessException e) {
-                // ...
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                // ...
-            }
-        }
-        String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4 + "," + var3;
-    }
 
 	public class ByteArrayClassLoader extends ClassLoader {
 
@@ -515,6 +495,7 @@ cls.getMethod("test").invoke(null);
 } catch(NoSuchMethodException e) {
 	Assert.fail("No Method");
 } catch (java.lang.reflect.InvocationTargetException e) {
+	e.getCause().printStackTrace();
 	Assert.fail("no target");
 }
     }
