@@ -489,7 +489,9 @@ public class IndyTest {
         return defineClass(name, b, 0, b.length);
     }
 }.defineClass("TestBSMError", IndyTest.generate());
-
+ for (Method method : cls.getDeclaredMethods()) {
+            System.out.println(method.getName());
+        }
 try {
 cls.getMethod("test").invoke(null);
 } catch(IllegalAccessException e) {
