@@ -419,7 +419,7 @@ public class IndyTest {
 		running = false;
 	}
 
-	private static Throwable thrower = new NullPointerException();
+	private static Throwable thrower = null;
 
 	private static byte[] generate() {
 		ClassWriter cw = new ClassWriter(0);
@@ -436,7 +436,7 @@ public class IndyTest {
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;",
 			false
 		);
-		mv.visitInvokeDynamicInsn("run", "()V", bsm);
+		mv.visitInvokeDynamicInsn("test", "()V", bsm);
 		mv.visitInsn(RETURN);
 		mv.visitMaxs(1,1);
 		mv.visitEnd();
