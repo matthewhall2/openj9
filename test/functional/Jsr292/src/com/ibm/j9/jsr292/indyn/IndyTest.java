@@ -491,12 +491,21 @@ public class IndyTest {
         String val = "Value: " + IndyTest.var1 + "," + Double.doubleToLongBits(var2) + "," + var3 + "," + var4 + "," + var3;
     }
 
+	public class ByteArrayClassLoader extends ClassLoader {
+
+    public Class findClass(String name, byte[] b) {
+        byte[] ba = /* go obtain your byte array by the name */;
+
+        return defineClass(name,b,0,b.length);
+    }
+}
+
     @Test(groups = {"level.extended"})
     public void testOSRRecurseStringConcat() {
-		ClassLoader c = new ClassLoader();
+		ClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
-		Class<?> cls = c.defineClass("com.ibm.j9.jsr292.indyn.TestBSMError", b, 0, b.length);
+		Class<?> cls = c.findClass("com.ibm.j9.jsr292.indyn.TestBSMError", b, 0, b.length);
 
  	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
