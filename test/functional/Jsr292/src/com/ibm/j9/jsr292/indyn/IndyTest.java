@@ -32,6 +32,7 @@ import static org.objectweb.asm.Opcodes.*;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -443,7 +444,7 @@ public class IndyTest {
 	}
 
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt, String template) throws Throwable {
-		if (thrower == NULL) {
+		if (thrower == null) {
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class));
 			return ConstantCallSite(target);
 		}
