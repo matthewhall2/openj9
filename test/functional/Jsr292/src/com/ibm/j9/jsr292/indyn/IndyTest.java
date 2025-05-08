@@ -423,7 +423,7 @@ public class IndyTest {
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "TestBSMError", null, "java/lang/Object", null);
-		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "(I)V", null, null);
+		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()V", null, null);
 		mv.visitCode();
 
 		Handle bsm = new Handle(
@@ -451,7 +451,7 @@ public class IndyTest {
 	}
 
 	public static String sanity() {
-		return "Sanity"
+		return "Sanity";
 	}
 
 	public String test(int x) {
@@ -487,6 +487,6 @@ public class IndyTest {
     }
 }.defineClass("IndyTest", GenClassWithIndy.generate());
 
-cls.getMethod("main", String[].class).invoke(null, (Object) new String[0]);
+cls.getMethod("test").invoke(null, (Object) new String[0]);
     }
 }
