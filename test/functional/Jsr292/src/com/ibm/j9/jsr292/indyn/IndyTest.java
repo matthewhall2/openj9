@@ -37,6 +37,7 @@ import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.lang.reflect.Method;
 
 public class IndyTest {
 
