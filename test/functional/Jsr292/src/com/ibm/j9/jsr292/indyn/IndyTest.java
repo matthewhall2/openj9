@@ -419,7 +419,7 @@ public class IndyTest {
 		running = false;
 	}
 
-	private static Throwable thrower;
+	private static Throwable thrower = new NullPointerException();
 
 	private static byte[] generate() {
 		ClassWriter cw = new ClassWriter(0);
