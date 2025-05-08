@@ -494,8 +494,6 @@ public class IndyTest {
 	public class ByteArrayClassLoader extends ClassLoader {
 
     public Class findClass(String name, byte[] b) {
-        byte[] ba = /* go obtain your byte array by the name */;
-
         return defineClass(name,b,0,b.length);
     }
 }
