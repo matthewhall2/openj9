@@ -503,7 +503,7 @@ public class IndyTest {
 		ClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
-		Class<?> cls = c.findClass("com.ibm.j9.jsr292.indyn.TestBSMError", b, 0, b.length);
+		Class<?> cls = c.findClass("com.ibm.j9.jsr292.indyn.TestBSMError", b);
 
  	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
