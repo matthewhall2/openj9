@@ -436,7 +436,7 @@ public class IndyTest {
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;",
 			false
 		);
-		mv.visitInvokeDynamicInsn("test", "()V", bsm);
+		mv.visitInvokeDynamicInsn("test", "()Ljava/lang/String;", bsm);
 		mv.visitInsn(RETURN);
 		mv.visitMaxs(1,1);
 		mv.visitEnd();
