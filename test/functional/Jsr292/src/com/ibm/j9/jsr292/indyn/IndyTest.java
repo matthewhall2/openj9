@@ -466,7 +466,7 @@ public class IndyTest {
 		return "Sanity";
 	}
 
-	public String test(int x) {
+	public String dummy(int x) {
 		return "test" + x;
 	}
 
