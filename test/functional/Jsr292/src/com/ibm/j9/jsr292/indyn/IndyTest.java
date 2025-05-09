@@ -444,8 +444,8 @@ public class IndyTest {
         mv.visitVarInsn(ISTORE, 1);
 
 		mv.visitLabel(loopStart);
-		mv.visitVarInsn(ILOAD, 1);        // load i
         mv.visitIntInsn(BIPUSH, 2000000000);      // load 10
+		mv.visitVarInsn(ILOAD, 1);        // load i
         mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// if (acc % 2 != 0) goto isOdd;
