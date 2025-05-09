@@ -476,9 +476,9 @@ public class IndyTest {
 
 		try {
 			if (t == null){
-				Assert.assertTrue(cls.getMethod("test").invoke(null).equals("Sanity"));
+				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("Sanity"));
 			} else {
-				cls.getMethod("test").invoke(null);
+				cls.getMethod("dummy").invoke(null);
 			}
 		} catch(IllegalAccessException e) {
 			Assert.fail("Cannot access method");
