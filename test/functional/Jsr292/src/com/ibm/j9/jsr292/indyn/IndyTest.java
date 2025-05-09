@@ -463,7 +463,7 @@ public class IndyTest {
 	@DataProvider(name="throwableProvider")
 	public static Throwable[] throwableProvider() {
 		return new Throwable[] {new NullPointerException(), new StackOverflowError(), null, new IllegalArgumentException(), 
-			new StringConcatException(), new ClassCastException()}
+			new StringConcatException(), new ClassCastException()};
 	}
 
 	@Test(groups = {"level.extended"}, dataProvider="throwableProvider")
@@ -476,7 +476,7 @@ public class IndyTest {
 
 		try {
 			if (t == null){
-				Assert.assertTrue(cls.getMethod("test").invoke(null).equals("Sanity"))
+				Assert.assertTrue(cls.getMethod("test").invoke(null).equals("Sanity"));
 			} else {
 				cls.getMethod("test").invoke(null);
 			}
