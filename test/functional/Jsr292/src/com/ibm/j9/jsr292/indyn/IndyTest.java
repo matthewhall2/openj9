@@ -444,8 +444,8 @@ public class IndyTest {
         mv.visitVarInsn(ISTORE, 1);
 
 		mv.visitLabel(loopStart);
-        mv.visitIntInsn(BIPUSH, 2000000000);      // load 10
 		mv.visitVarInsn(ILOAD, 1);        // load i
+		mv.visitLdcInsn(1000000000);
         mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// if (acc % 2 != 0) goto isOdd;
@@ -467,7 +467,6 @@ public class IndyTest {
         mv.visitVarInsn(ILOAD, 1);        // i
         mv.visitInsn(ISUB);
         mv.visitVarInsn(ISTORE, 0);       // acc = acc - i
-
 		mv.visitLabel(afterCondition);
 
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
