@@ -426,13 +426,13 @@ public class IndyTest {
 		ClassWriter cw = new ClassWriter(0);
 		MethodVisitor mv;
 
-		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "TestBSMError", null, "java/lang/Object", null);
+		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()Ljava/lang/String;", null, null);
 		mv.visitCode();
 
 		Handle bsm = new Handle(
 			H_INVOKESTATIC,
-			"IndyTest",
+			"com/ibm/j9/jsr292/indyn/IndyTest",
 			"bootstrap",
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
 			false
@@ -483,7 +483,7 @@ public class IndyTest {
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
-		Class<?> cls = c.getc("TestBSMError", b);
+		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
 
  	for (Method method : cls.getDeclaredMethods()) {
             System.out.println(method.getName());
