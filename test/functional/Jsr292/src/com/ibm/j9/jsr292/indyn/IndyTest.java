@@ -489,7 +489,7 @@ public class IndyTest {
             System.out.println(method.getName());
         }
 try {
-cls.getMethod("test").invoke(null);
+System.out.println(cls.getMethod("test").invoke(null));
 } catch(IllegalAccessException e) {
 	Assert.fail("Cannot access method");
 } catch(NoSuchMethodException e) {
