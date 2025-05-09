@@ -470,6 +470,10 @@ public class IndyTest {
 
 		mv.visitLabel(afterCondition);
 
+		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitVarInsn(ILOAD, 0); // load acc (slot 0)
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+
 		// i++
         mv.visitIincInsn(1, 1);           // i = i + 1
 
