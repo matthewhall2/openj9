@@ -443,7 +443,6 @@ public class IndyTest {
         mv.visitInsn(ICONST_0);
         mv.visitVarInsn(ISTORE, 1);
 
-		Label loopStart = new Label();
 		mv.visitLabel(loopStart);
 		mv.visitVarInsn(ILOAD, 1);        // load i
         mv.visitIntInsn(BIPUSH, 2000000000);      // load 10
