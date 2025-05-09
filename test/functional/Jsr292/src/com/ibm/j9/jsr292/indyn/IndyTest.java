@@ -432,8 +432,6 @@ public class IndyTest {
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
 
-		mv.visitInsn(ICONST_0);
-		mv.visitVarInsn(ISTORE, 0);
 		Label loopStart = new Label();
 		Label loopEnd = new Label();
 		// acc = 0
