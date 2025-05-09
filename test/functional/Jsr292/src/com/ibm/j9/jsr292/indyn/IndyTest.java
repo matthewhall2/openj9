@@ -449,14 +449,13 @@ public class IndyTest {
         mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// call nextInt()
-		mv.visitVarInsn(ALOAD, 2); // push Random instance
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
-
 		// load acc
 		mv.visitVarInsn(ILOAD, 0);
-
+		mv.visitVarInsn(ALOAD, 2); // push Random instance
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
 		// add
 		mv.visitInsn(IADD);
+		mv.visitVarInsn(ISTORE, 0);
 
 		// i++
         mv.visitIincInsn(1, 1);           // i = i + 1
