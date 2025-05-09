@@ -428,13 +428,14 @@ public class IndyTest {
 			false
 		);
 
+		mv.visitTypeInsn(NEW, "java/util/Random");
+		mv.visitInsn(DUP);
+		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
+
 		mv.visitInsn(ICONST_0);
 		mv.visitVarInsn(ISTORE, 0);
 		Label loopStart = new Label();
 		Label loopEnd = new Label();
-        Label isOdd = new Label();
-        Label afterCondition = new Label();
-
 		// acc = 0
         mv.visitInsn(ICONST_0);
         mv.visitVarInsn(ISTORE, 0);
@@ -448,27 +449,14 @@ public class IndyTest {
 		mv.visitLdcInsn(1000000000);
         mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
-		// if (acc % 2 != 0) goto isOdd;
-        mv.visitVarInsn(ILOAD, 0);        // acc
-        mv.visitInsn(ICONST_2);
-        mv.visitInsn(IREM);
-        mv.visitJumpInsn(IFNE, isOdd);
+		// call nextInt()
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
 
-		// acc += i;
-        mv.visitVarInsn(ILOAD, 0);        // acc
-        mv.visitVarInsn(ILOAD, 1);        // i
-        mv.visitInsn(IADD);
-        mv.visitVarInsn(ISTORE, 0);       // acc = acc + i
-        mv.visitJumpInsn(GOTO, afterCondition);
+		// load acc
+		mv.visitVarInsn(ILOAD, 0);
 
-		// acc -= i;
-        mv.visitLabel(isOdd);
-        mv.visitVarInsn(ILOAD, 0);        // acc
-        mv.visitVarInsn(ILOAD, 1);        // i
-        mv.visitInsn(ISUB);
-        mv.visitVarInsn(ISTORE, 0);       // acc = acc - i
-		mv.visitLabel(afterCondition);
-
+		// add
+		mv.visitInsn(IADD);
 
 		// i++
         mv.visitIincInsn(1, 1);           // i = i + 1
@@ -488,7 +476,7 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 2);
+		mv.visitMaxs(6, 3);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
