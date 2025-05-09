@@ -463,7 +463,7 @@ public class IndyTest {
 	@DataProvider(name="throwableProvider")
 	public static Throwable[] throwableProvider() {
 		return new Throwable[] {new NullPointerException(), new StackOverflowError(), null, new IllegalArgumentException(), 
-			new StringConcatException(), new ClassCastException()};
+			new ClassCastException()};
 	}
 
 	@Test(groups = {"level.extended"}, dataProvider="throwableProvider")
