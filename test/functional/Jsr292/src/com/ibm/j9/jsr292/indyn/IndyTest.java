@@ -24,6 +24,7 @@ package com.ibm.j9.jsr292.indyn;
 import org.openj9.test.util.VersionCheck;
 
 import org.testng.annotations.Test;
+import org.testng.annotations.DataProvider;
 
 import org.testng.Assert;
 import org.testng.AssertJUnit;
@@ -410,24 +411,13 @@ public class IndyTest {
 		}
 	}
 
-	private static long var1 = 1871533038L;
-    private double var2 = 1;
-    private int var3 = 1;
-    private int var4 = 4;
-	private volatile boolean running = true;
-
-	private void stop() {
-		running = false;
-	}
-
-	private static Throwable thrower = null;
-
+	// generate method with invokedynamic bytecode that uses the BSM "bootstrap" below
 	private static byte[] generate() {
 		ClassWriter cw = new ClassWriter(0);
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
-		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "test", "()Ljava/lang/String;", null, null);
+		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()Ljava/lang/String;", null, null);
 		mv.visitCode();
 
 		Handle bsm = new Handle(
@@ -437,66 +427,66 @@ public class IndyTest {
 			"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
 			false
 		);
-		mv.visitFieldInsn(GETSTATIC, "java/lang/System", 
-        "out", "Ljava/io/PrintStream;");
-    mv.visitLdcInsn("Hello World!");
-    mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", 
-        "println", "(Ljava/lang/String;)V", false);
-		mv.visitInvokeDynamicInsn("test", "()Ljava/lang/String;", bsm);
+
+		mv.visitLdcInsn(1L);
+		mv.visitLdcInsn(2L);
+		mv.visitLdcInsn(3);
+		mv.visitLdcInsn(4);
+		mv.visitInvokeDynamicInsn("test", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(3,3);
+		mv.visitMaxs(6, 1);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
 	}
 
+	private static Throwable thrower = null;
+
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
-		System.out.println("in bsm");
 		if (thrower == null) {
-			System.out.println("no thrower, finding");
-			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class));
-			System.out.println("found");
+			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
 		}
-		System.out.println("Throwing\n");
 		throw thrower;
 	}
 
-	public static String sanity() {
+	public static String sanity(long a, long b, int c, int d) {
 		return "Sanity";
 	}
 
-	public String dummy(int x) {
-		return "test" + x;
+	private class ByteArrayClassLoader extends ClassLoader {
+    	public Class<?> getc(String name, byte[] b) {
+        	return defineClass(name,b,0,b.length);
+    	}
 	}
 
+	@DataProvider(name="throwableProvider")
+	public static Throwable[] throwableProvider() {
+		return new Throwable[] {new NullPointerException(), new StackOverflowError(), null, new IllegalArgumentException(), 
+			new StringConcatException(), new ClassCastException()}
+	}
 
-	public class ByteArrayClassLoader extends ClassLoader {
-
-    public Class<?> getc(String name, byte[] b) {
-        return defineClass(name,b,0,b.length);
-    }
-}
-
-    @Test(groups = {"level.extended"})
-    public void testOSRRecurseStringConcat() {
+	@Test(groups = {"level.extended"}, dataProvider="throwableProvider")
+	public void testBSMErrorThrow(Throwable t) {
+		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
 		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
 
- 	for (Method method : cls.getDeclaredMethods()) {
-            System.out.println(method.getName());
-        }
-try {
-System.out.println(cls.getMethod("test").invoke(null));
-} catch(IllegalAccessException e) {
-	Assert.fail("Cannot access method");
-} catch(NoSuchMethodException e) {
-	Assert.fail("No Method");
-} catch (java.lang.reflect.InvocationTargetException e) {
-	e.getCause().printStackTrace();
-	Assert.fail("no target");
-}
+		try {
+			if (t == null){
+				Assert.assertTrue(cls.getMethod("test").invoke(null).equals("Sanity"))
+			} else {
+				cls.getMethod("test").invoke(null);
+			}
+		} catch(IllegalAccessException e) {
+			Assert.fail("Cannot access method");
+		} catch(NoSuchMethodException e) {
+			Assert.fail("No Method");
+		} catch (java.lang.reflect.InvocationTargetException e) {
+			e.getCause().printStackTrace();
+			Assert.fail("no target");
+		}
     }
 }
