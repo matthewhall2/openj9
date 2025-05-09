@@ -428,9 +428,60 @@ public class IndyTest {
 			false
 		);
 
+		mv.visitInsn(ICONST_0);
+		mv.visitVarInsn(ISTORE, 0);
+		Label loopStart = new Label();
+		Label loopEnd = new Label();
+        Label isOdd = new Label();
+        Label afterCondition = new Label();
+
+		// acc = 0
+        mv.visitInsn(ICONST_0);
+        mv.visitVarInsn(ISTORE, 0);
+
+        // i = 0
+        mv.visitInsn(ICONST_0);
+        mv.visitVarInsn(ISTORE, 1);
+
+		Label loopStart = new Label();
+		mv.visitLabel(loopStart);
+		mv.visitVarInsn(ILOAD, 1);        // load i
+        mv.visitIntInsn(BIPUSH, 2000000000);      // load 10
+        mv.visitJumpInsn(IF_ICMPGE, loopEnd);
+
+		// if (acc % 2 != 0) goto isOdd;
+        mv.visitVarInsn(ILOAD, 0);        // acc
+        mv.visitInsn(ICONST_2);
+        mv.visitInsn(IREM);
+        mv.visitJumpInsn(IFNE, isOdd);
+
+		// acc += i;
+        mv.visitVarInsn(ILOAD, 0);        // acc
+        mv.visitVarInsn(ILOAD, 1);        // i
+        mv.visitInsn(IADD);
+        mv.visitVarInsn(ISTORE, 0);       // acc = acc + i
+        mv.visitJumpInsn(GOTO, afterCondition);
+
+		// acc -= i;
+        mv.visitLabel(isOdd);
+        mv.visitVarInsn(ILOAD, 0);        // acc
+        mv.visitVarInsn(ILOAD, 1);        // i
+        mv.visitInsn(ISUB);
+        mv.visitVarInsn(ISTORE, 0);       // acc = acc - i
+
+		mv.visitLabel(afterCondition);
+
+		// i++
+        mv.visitIincInsn(1, 1);           // i = i + 1
+
+        // goto loopStart
+        mv.visitJumpInsn(GOTO, loopStart);
+
+        mv.visitLabel(loopEnd);
+
 		mv.visitLdcInsn(1L);
 		mv.visitLdcInsn(2L);
-		mv.visitLdcInsn(3);
+		mv.visitVarInsn(ILOAD, 0);
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
