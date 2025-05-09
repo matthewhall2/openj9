@@ -413,7 +413,7 @@ public class IndyTest {
 
 	// generate method with invokedynamic bytecode that uses the BSM "bootstrap" below
 	private static byte[] generate() {
-		ClassWriter cw = new ClassWriter(0);
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
@@ -484,7 +484,6 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 2);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
