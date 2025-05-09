@@ -417,6 +417,8 @@ public class IndyTest {
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
+		cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_VOLATILE, "myVar", "I", null, null).visitEnd();
+
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()Ljava/lang/String;", null, null);
 		mv.visitCode();
 
@@ -444,9 +446,12 @@ public class IndyTest {
         mv.visitVarInsn(ISTORE, 1);
 
 		mv.visitLabel(loopStart);
-		mv.visitVarInsn(ILOAD, 1);        // load i
-		mv.visitLdcInsn(1000000000);
-        mv.visitJumpInsn(IF_ICMPGE, loopEnd);
+		// GETSTATIC LoopClass.myVar
+		mv.visitFieldInsn(GETSTATIC, "com/ibm/j9/jsr292/indyn/TestBSMError", "myVar", "I");
+
+		// Compare against 1
+		mv.visitInsn(ICONST_1);
+		mv.visitJumpInsn(IF_ICMPEQ, loopEnd); // if (myVar == 1) goto loopCheck
 
 		// call nextInt()
 		// load acc
