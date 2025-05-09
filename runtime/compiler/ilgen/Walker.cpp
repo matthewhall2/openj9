@@ -3690,6 +3690,7 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
 
    TR::Method * calledMethod = symbol->getMethod();
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
+   printf("Walker: %d params\n", numArgs);
 
    if (pushRequiredConst(requiredKoi))
       {
