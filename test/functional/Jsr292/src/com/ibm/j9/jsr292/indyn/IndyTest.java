@@ -431,6 +431,7 @@ public class IndyTest {
 		mv.visitTypeInsn(NEW, "java/util/Random");
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
+		mv.visitVarInsn(ASTORE, 2); // store Random in slot 2
 
 		Label loopStart = new Label();
 		Label loopEnd = new Label();
@@ -448,6 +449,7 @@ public class IndyTest {
         mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// call nextInt()
+		mv.visitVarInsn(ALOAD, 2); // push Random instance
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
 
 		// load acc
@@ -474,7 +476,7 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 3);
+		mv.visitMaxs(6, 4);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
