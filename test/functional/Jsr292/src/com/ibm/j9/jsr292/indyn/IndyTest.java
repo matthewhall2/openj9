@@ -501,7 +501,7 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(9, 9);
+		mv.visitMaxs(6, 9);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
