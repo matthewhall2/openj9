@@ -3693,6 +3693,10 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    if (_bc == J9BCinvokedynamic)
       {
          printf("Walker: %d params\n", numArgs);
+         printf("stack size at start: %d\n", _stack->size());
+         printf("num args: %d\n", numArgs);
+
+
       }
 
    if (pushRequiredConst(requiredKoi))
