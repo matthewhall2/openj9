@@ -500,7 +500,7 @@ public class IndyTest {
 		//mv.visitVarInsn(ILOAD, 0);
 		mv.visitLdcInsn(3);
 		mv.visitLdcInsn(4);
-		mv.visitInvokeDynamicInsn("bootstrap", "(JJII)Ljava/lang/String;", bsm);
+		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
 		mv.visitMaxs(6, 1);
 		mv.visitEnd();
@@ -512,13 +512,13 @@ public class IndyTest {
 
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
 		if (thrower == null) {
-			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "bootstrap", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
+			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
 		}
 		throw thrower;
 	}
 
-	public static String bootstrap(long a, long b, int c, int d) {
+	public static String sanity(long a, long b, int c, int d) {
 		return "bootstrap";
 	}
 
