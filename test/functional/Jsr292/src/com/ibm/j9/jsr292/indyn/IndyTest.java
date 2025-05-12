@@ -432,7 +432,7 @@ public class IndyTest {
 		mv.visitTypeInsn(NEW, "java/util/Random");
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
-		mv.visitVarInsn(ASTORE, 2); // store Random in slot 
+		mv.visitVarInsn(ASTORE, 2); // store Random in slot 2
 		
 		// new BufferedWriter(new FileWriter("output.txt"))
 		mv.visitTypeInsn(NEW, "java/io/BufferedWriter");
@@ -448,19 +448,18 @@ public class IndyTest {
 		Label loopEnd = new Label();
         // i = 0
         mv.visitInsn(ICONST_0);
-        mv.visitVarInsn(ISTORE, 1);
+        mv.visitVarInsn(ISTORE, 0);
 
 		mv.visitLabel(loopStart);
 
-		mv.visitVarInsn(ILOAD, 1);
+		mv.visitVarInsn(ILOAD, 0);
 		mv.visitLdcInsn(1000000);
 		mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// call nextInt()
-		// load acc
 		mv.visitVarInsn(ALOAD, 2); // push Random instance
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
-		mv.visitVarInsn(ISTORE, 0);
+		mv.visitVarInsn(ISTORE, 1);
 
 		// writer.write("Line: " + i)
 		// get writer
@@ -471,7 +470,7 @@ public class IndyTest {
 		mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
 		mv.visitLdcInsn("Line: ");
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
-		mv.visitVarInsn(ILOAD, 0);
+		mv.visitVarInsn(ILOAD, 1);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;", false);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
 		// call writer.write(str)
@@ -482,7 +481,7 @@ public class IndyTest {
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "newLine", "()V", false);
 
 		// i++
-        mv.visitIincInsn(1, 1);           // i = i + 1
+        mv.visitIincInsn(0, 1);           // i = i + 1
 
         // goto loopStart
         mv.visitJumpInsn(GOTO, loopStart);
@@ -490,7 +489,7 @@ public class IndyTest {
         mv.visitLabel(loopEnd);
 
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		mv.visitVarInsn(ILOAD, 0); // load acc (slot 0)
+		mv.visitVarInsn(ILOAD, 1); // load acc (slot 0)
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
 
 		mv.visitLdcInsn(1L);
