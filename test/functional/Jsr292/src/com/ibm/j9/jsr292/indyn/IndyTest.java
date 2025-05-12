@@ -515,6 +515,7 @@ public class IndyTest {
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
 		}
+		System.out.println("Throwing");
 		throw thrower;
 	}
 
@@ -546,7 +547,7 @@ public class IndyTest {
 			if (t == null){
 				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap"));
 			} else {
-				cls.getMethod("dummy").invoke();
+				cls.getMethod("dummy").invoke(null);
 			}
 		} catch(IllegalAccessException e) {
 			Assert.fail("Cannot access method");
