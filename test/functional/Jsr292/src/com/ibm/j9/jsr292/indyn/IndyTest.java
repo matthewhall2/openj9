@@ -510,7 +510,7 @@ public class IndyTest {
 
 	private static Throwable thrower = null;
 
-	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws BootstrapMethodError {
+	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
 		if (thrower == null) {
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
