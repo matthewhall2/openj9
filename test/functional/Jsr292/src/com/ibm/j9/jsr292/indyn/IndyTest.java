@@ -456,7 +456,7 @@ public class IndyTest {
 		mv.visitLabel(loopStart);
 
 		mv.visitVarInsn(ILOAD, 0);
-		mv.visitLdcInsn(1000000);
+		mv.visitLdcInsn(1000000000);
 		mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// call nextInt()
