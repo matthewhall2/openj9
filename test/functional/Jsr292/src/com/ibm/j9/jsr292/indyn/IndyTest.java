@@ -512,14 +512,14 @@ public class IndyTest {
 
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
 		if (thrower == null) {
-			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
+			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "bootstrap", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
 		}
 		throw thrower;
 	}
 
-	public static String sanity(long a, long b, int c, int d) {
-		return "Sanity";
+	public static String bootstrap(long a, long b, int c, int d) {
+		return "bootstrap";
 	}
 
 	private class ByteArrayClassLoader extends ClassLoader {
@@ -544,7 +544,7 @@ public class IndyTest {
 
 		try {
 			if (t == null){
-				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("Sanity"));
+				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap"));
 			} else {
 				cls.getMethod("dummy").invoke(null);
 			}
