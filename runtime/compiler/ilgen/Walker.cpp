@@ -4613,6 +4613,7 @@ break
 
    if (needOSRBookkeeping)
       {
+      printf("Book keeping\n");
       saveStack(-1, !comp()->pendingPushLivenessDuringIlgen());
       stashPendingPushLivenessForOSR(osrInductionOffset);
       if (comp()->supportsInduceOSR() && comp()->getOSRMode() == TR::voluntaryOSR)
