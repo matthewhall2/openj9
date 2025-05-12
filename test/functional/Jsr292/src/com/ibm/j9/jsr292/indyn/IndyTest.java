@@ -444,6 +444,9 @@ public class IndyTest {
 		mv.visitMethodInsn(INVOKESPECIAL, "java/io/BufferedWriter", "<init>", "(Ljava/io/Writer;)V", false);
 		mv.visitVarInsn(ASTORE, 3); // BufferedWriter in slot 3
 
+		mv.visitInsn(ICONST_0);
+		mv.visitVarInsn(ISTORE, 1);  // slot 1 now contains an int
+
 		Label loopStart = new Label();
 		Label loopEnd = new Label();
         // i = 0
@@ -498,7 +501,7 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 5);
+		//mv.visitMaxs(6, 5);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
