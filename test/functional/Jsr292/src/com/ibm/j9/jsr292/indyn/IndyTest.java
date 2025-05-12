@@ -417,7 +417,6 @@ public class IndyTest {
 		MethodVisitor mv;
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
-		cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_VOLATILE, "myVar", "I", null, null).visitEnd();
 
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()Ljava/lang/String;", null, null);
 		mv.visitCode();
@@ -433,34 +432,54 @@ public class IndyTest {
 		mv.visitTypeInsn(NEW, "java/util/Random");
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
-		mv.visitVarInsn(ASTORE, 2); // store Random in slot 2
+		mv.visitVarInsn(ASTORE, 2); // store Random in slot 
+		
+		// new BufferedWriter(new FileWriter("output.txt"))
+		mv.visitTypeInsn(NEW, "java/io/BufferedWriter");
+		mv.visitInsn(DUP);
+		mv.visitTypeInsn(NEW, "java/io/FileWriter");
+		mv.visitInsn(DUP);
+		mv.visitLdcInsn("output.txt");
+		mv.visitMethodInsn(INVOKESPECIAL, "java/io/FileWriter", "<init>", "(Ljava/lang/String;)V", false);
+		mv.visitMethodInsn(INVOKESPECIAL, "java/io/BufferedWriter", "<init>", "(Ljava/io/Writer;)V", false);
+		mv.visitVarInsn(ASTORE, 3); // BufferedWriter in slot 3
 
 		Label loopStart = new Label();
 		Label loopEnd = new Label();
-		// acc = 0
-        mv.visitInsn(ICONST_0);
-        mv.visitVarInsn(ISTORE, 0);
-
         // i = 0
         mv.visitInsn(ICONST_0);
         mv.visitVarInsn(ISTORE, 1);
 
 		mv.visitLabel(loopStart);
-		// GETSTATIC LoopClass.myVar
-		mv.visitFieldInsn(GETSTATIC, "com/ibm/j9/jsr292/indyn/TestBSMError", "myVar", "I");
 
-		// Compare against 1
-		mv.visitInsn(ICONST_1);
-		mv.visitJumpInsn(IF_ICMPEQ, loopEnd); // if (myVar == 1) goto loopCheck
+		mv.visitVarInsn(ILOAD, 1);
+		mv.visitLdcInsn(1000000);
+		mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
 		// call nextInt()
 		// load acc
-		mv.visitVarInsn(ILOAD, 0);
 		mv.visitVarInsn(ALOAD, 2); // push Random instance
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
-		// add
-		mv.visitInsn(IADD);
 		mv.visitVarInsn(ISTORE, 0);
+
+		// writer.write("Line: " + i)
+		// get writer
+		mv.visitVarInsn(ALOAD, 3);
+		// build string
+		mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+		mv.visitInsn(DUP);
+		mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+		mv.visitLdcInsn("Line: ");
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
+		mv.visitVarInsn(ILOAD, 0);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;", false);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+		// call writer.write(str)
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "write", "(Ljava/lang/String;)V", false);
+
+		// writer.newLine()
+		mv.visitVarInsn(ALOAD, 3);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "newLine", "()V", false);
 
 		// i++
         mv.visitIincInsn(1, 1);           // i = i + 1
@@ -480,7 +499,7 @@ public class IndyTest {
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 4);
+		mv.visitMaxs(6, 5);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
