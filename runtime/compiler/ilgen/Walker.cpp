@@ -4605,12 +4605,13 @@ break
    else
       resultNode = callNode;
 
+   printf("stack size before: %d\n", _stack->size());
    TR::DataType returnType = calledMethod->returnType();
    if (returnType != TR::NoType)
       {
       push(resultNode);
       }
-
+   printf("stack size after: %d\n", _stack->size());
    if (needOSRBookkeeping)
       {
       printf("Book keeping\n");
