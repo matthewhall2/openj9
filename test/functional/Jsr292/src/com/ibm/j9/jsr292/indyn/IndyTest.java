@@ -429,79 +429,80 @@ public class IndyTest {
 			false
 		);
 
-		mv.visitTypeInsn(NEW, "java/util/Random");
-		mv.visitInsn(DUP);
-		mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
-		mv.visitVarInsn(ASTORE, 2); // store Random in slot 2
+		// mv.visitTypeInsn(NEW, "java/util/Random");
+		// mv.visitInsn(DUP);
+		// mv.visitMethodInsn(INVOKESPECIAL, "java/util/Random", "<init>", "()V", false);
+		// mv.visitVarInsn(ASTORE, 2); // store Random in slot 2
 		
-		// new BufferedWriter(new FileWriter("output.txt"))
-		mv.visitTypeInsn(NEW, "java/io/BufferedWriter");
-		mv.visitInsn(DUP);
-		mv.visitTypeInsn(NEW, "java/io/FileWriter");
-		mv.visitInsn(DUP);
-		mv.visitLdcInsn("output.txt");
-		mv.visitMethodInsn(INVOKESPECIAL, "java/io/FileWriter", "<init>", "(Ljava/lang/String;)V", false);
-		mv.visitMethodInsn(INVOKESPECIAL, "java/io/BufferedWriter", "<init>", "(Ljava/io/Writer;)V", false);
-		mv.visitVarInsn(ASTORE, 3); // BufferedWriter in slot 3
+		// // new BufferedWriter(new FileWriter("output.txt"))
+		// mv.visitTypeInsn(NEW, "java/io/BufferedWriter");
+		// mv.visitInsn(DUP);
+		// mv.visitTypeInsn(NEW, "java/io/FileWriter");
+		// mv.visitInsn(DUP);
+		// mv.visitLdcInsn("output.txt");
+		// mv.visitMethodInsn(INVOKESPECIAL, "java/io/FileWriter", "<init>", "(Ljava/lang/String;)V", false);
+		// mv.visitMethodInsn(INVOKESPECIAL, "java/io/BufferedWriter", "<init>", "(Ljava/io/Writer;)V", false);
+		// mv.visitVarInsn(ASTORE, 3); // BufferedWriter in slot 3
 
-		mv.visitInsn(ICONST_0);
-		mv.visitVarInsn(ISTORE, 1);  // slot 1 now contains an int
+		// mv.visitInsn(ICONST_0);
+		// mv.visitVarInsn(ISTORE, 1);  // slot 1 now contains an int
 
-		Label loopStart = new Label();
-		Label loopEnd = new Label();
-        // i = 0
-        mv.visitInsn(ICONST_0);
-        mv.visitVarInsn(ISTORE, 0);
+		// Label loopStart = new Label();
+		// Label loopEnd = new Label();
+        // // i = 0
+        // mv.visitInsn(ICONST_0);
+        // mv.visitVarInsn(ISTORE, 0);
 
-		mv.visitLabel(loopStart);
+		// mv.visitLabel(loopStart);
 
-		mv.visitVarInsn(ILOAD, 0);
-		mv.visitLdcInsn(1000000000);
-		mv.visitJumpInsn(IF_ICMPGE, loopEnd);
+		// mv.visitVarInsn(ILOAD, 0);
+		// mv.visitLdcInsn(1000000000);
+		// mv.visitJumpInsn(IF_ICMPGE, loopEnd);
 
-		// call nextInt()
-		mv.visitVarInsn(ALOAD, 2); // push Random instance
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
-		mv.visitVarInsn(ISTORE, 1);
+		// // call nextInt()
+		// mv.visitVarInsn(ALOAD, 2); // push Random instance
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Random", "nextInt", "()I", false);
+		// mv.visitVarInsn(ISTORE, 1);
 
-		// writer.write("Line: " + i)
-		// get writer
-		mv.visitVarInsn(ALOAD, 3);
-		// build string
-		mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
-		mv.visitInsn(DUP);
-		mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
-		mv.visitLdcInsn("Line: ");
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
-		mv.visitVarInsn(ILOAD, 1);
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;", false);
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
-		// call writer.write(str)
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "write", "(Ljava/lang/String;)V", false);
+		// // writer.write("Line: " + i)
+		// // get writer
+		// mv.visitVarInsn(ALOAD, 3);
+		// // build string
+		// mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+		// mv.visitInsn(DUP);
+		// mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+		// mv.visitLdcInsn("Line: ");
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
+		// mv.visitVarInsn(ILOAD, 1);
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(I)Ljava/lang/StringBuilder;", false);
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+		// // call writer.write(str)
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "write", "(Ljava/lang/String;)V", false);
 
-		// writer.newLine()
-		mv.visitVarInsn(ALOAD, 3);
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "newLine", "()V", false);
+		// // writer.newLine()
+		// mv.visitVarInsn(ALOAD, 3);
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/BufferedWriter", "newLine", "()V", false);
 
-		// i++
-        mv.visitIincInsn(0, 1);           // i = i + 1
+		// // i++
+        // mv.visitIincInsn(0, 1);           // i = i + 1
 
-        // goto loopStart
-        mv.visitJumpInsn(GOTO, loopStart);
+        // // goto loopStart
+        // mv.visitJumpInsn(GOTO, loopStart);
 
-        mv.visitLabel(loopEnd);
+        // mv.visitLabel(loopEnd);
 
-		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		mv.visitVarInsn(ILOAD, 1); // load acc (slot 0)
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+		// mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		// mv.visitVarInsn(ILOAD, 1); // load acc (slot 0)
+		// mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
 
 		mv.visitLdcInsn(1L);
 		mv.visitLdcInsn(2L);
-		mv.visitVarInsn(ILOAD, 0);
+		//mv.visitVarInsn(ILOAD, 0);
+		mv.visitLdcInsn(3);
 		mv.visitLdcInsn(4);
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitInsn(ARETURN);
-		mv.visitMaxs(6, 9);
+		mv.visitMaxs(6, 1);
 		mv.visitEnd();
 		cw.visitEnd();
 		return cw.toByteArray();
@@ -509,7 +510,7 @@ public class IndyTest {
 
 	private static Throwable thrower = null;
 
-	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
+	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws BootstrapMethodError {
 		if (thrower == null) {
 			MethodHandle target = MethodHandles.lookup().findStatic(IndyTest.class, "sanity", MethodType.methodType(String.class, long.class, long.class, int.class, int.class));
 			return new ConstantCallSite(target);
