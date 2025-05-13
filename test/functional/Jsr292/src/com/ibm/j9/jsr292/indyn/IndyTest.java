@@ -456,7 +456,7 @@ public class IndyTest {
 	}
 
 	public static String sanity(long a, long b, int c, int d) {
-		return "bootstrap";
+		return "bootstrap" + a "," + b + "," + c + "," + d;
 	}
 
 	private class ByteArrayClassLoader extends ClassLoader {
@@ -481,7 +481,7 @@ public class IndyTest {
 
 		try {
 			if (t == null){
-				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap"));
+				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap1,2,3,4"));
 			} else {
 				cls.getMethod("dummy").invoke(null);
 			}
