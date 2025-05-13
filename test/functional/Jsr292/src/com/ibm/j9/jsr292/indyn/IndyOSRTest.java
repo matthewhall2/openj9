@@ -124,7 +124,7 @@ public class IndyOSRTest {
 		} catch(NoSuchMethodException e) {
 			Assert.fail("Cannot find dummy method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			if (t == null)
+			if (t == null) {
 				Assert.fail("Bootsrap method should not throw error when parameter t is null");
 			}
 		} catch (Throwable t2) {
@@ -143,11 +143,9 @@ public class IndyOSRTest {
 		} catch(NoSuchMethodException e) {
 			Assert.fail("Cannot find dummy method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			if (t == null)
+			if (t == null) {
 				Assert.fail("Bootsrap method should not throw error when parameter t is null");
 			}
-		} catch (Throwable t2) {
-			System.out.println("Caught something");
-		}
+        }
     }
 }
