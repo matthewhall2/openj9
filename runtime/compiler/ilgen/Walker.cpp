@@ -3690,9 +3690,10 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
 
    TR::Method * calledMethod = symbol->getMethod();
    int32_t numArgs = calledMethod->numberOfExplicitParameters() + (isStatic ? 0 : 1);
-   printf("Name %s\n", calledMethod->nameChars());
    if (_bc == J9BCinvokedynamic)
       {
+         printf("Name %s\n", calledMethod->nameChars());
+
          printf("Walker: %d params\n", numArgs);
          printf("stack size at start: %d\n", _stack->size());
          printf("num args: %d\n", numArgs);
