@@ -99,7 +99,7 @@ public class IndyOSRTest {
 	}
 
 	@DataProvider(name="throwableProvider")
-	public static Throwable[] throwableProvider() {
+	public static Object[][] throwableProvider() {
 		return new Object[][] {{new NullPointerException(), 1}, {new StackOverflowError(), 2}, {new IllegalArgumentException(), 3}, 
 		{new ClassCastException(), 4}};
 	}
@@ -108,7 +108,7 @@ public class IndyOSRTest {
 	public void testBSMErrorThrow(Exception t, int version) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
-		byte[] b = IndyTest.generate(version);
+		byte[] b = IndyOSRTest.generate(version);
 		System.out.println(b.length);
 		Class<?> cls = c.getc(dummyClassFullName + version, b);
 
