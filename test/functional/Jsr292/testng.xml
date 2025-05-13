@@ -119,8 +119,7 @@
 
 	<test name="jsr292_InDyn_OSRTest">
 		<classes>
-			<class name="com.ibm.j9.jsr292.indyn.IndyTest"/>
-			<class name="com.ibm.j9.jsr292.indyn.ComplexIndyTest"/>
+			<class name="com.ibm.j9.jsr292.indyn.IndyOSRTest"/>
 		</classes>
 	</test>
 
