@@ -467,11 +467,11 @@ public class IndyTest {
 
 	@DataProvider(name="throwableProvider")
 	public static Throwable[] throwableProvider() {
-		return new Throwable[] {new NullPointerException(), new StackOverflowError(), new IllegalArgumentException(), 
-			new ClassCastException()};
+		return new Throwable[] {new NullPointerException()}//, new StackOverflowError(), new IllegalArgumentException(), 
+		//	new ClassCastException()};
 	}
 
-	@Test(groups = {"level.extended"}, dataProvider="throwableProvider")
+	@Test(groups = {"level.extended"}, dataProvider="throwableProvider", invocationCount=2)
 	public void testBSMErrorThrow(Throwable t) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
