@@ -456,7 +456,7 @@ public class IndyTest {
 	}
 
 	public static String sanity(long a, long b, int c, int d) {
-		return "bootstrap" + a "," + b + "," + c + "," + d;
+		return "bootstrap" + a + "," + b + "," + c + "," + d;
 	}
 
 	private class ByteArrayClassLoader extends ClassLoader {
