@@ -471,13 +471,34 @@ public class IndyTest {
 		//	new ClassCastException()};
 	}
 
-	@Test(groups = {"level.extended"}, dataProvider="throwableProvider", invocationCount=2)
+	@Test(groups = {"level.extended"}, dataProvider="throwableProvider", invocationCount=1)
 	public void testBSMErrorThrow(Throwable t) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyTest.generate();
 		System.out.println(b.length);
 		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
+
+		try {
+			if (t == null){
+				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap1,2,3,4"));
+			} else {
+				cls.getMethod("dummy").invoke(null);
+			}
+		} catch(IllegalAccessException e) {
+			Assert.fail("Cannot access method");
+		} catch(NoSuchMethodException e) {
+			Assert.fail("No Method");
+		} catch (java.lang.reflect.InvocationTargetException e) {
+			System.out.println("inv targ ex");
+			if (e instanceof BootstrapMethodError ) {
+				System.out.println("bootstrap error");
+			}
+			e.getCause().printStackTrace();
+			Assert.fail("no target");
+		} catch (Throwable t2) {
+			System.out.println("Caught something");
+		}
 
 		try {
 			if (t == null){
