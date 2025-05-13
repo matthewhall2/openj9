@@ -490,9 +490,10 @@ public class IndyTest {
 		} catch(NoSuchMethodException e) {
 			Assert.fail("No Method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
+			System.out.println("inv targ ex");
 			e.getCause().printStackTrace();
 			Assert.fail("no target");
-		} catch (Throwable t) {
+		} catch (Throwable t2) {
 			System.out.println("Caught something");
 		}
     }
