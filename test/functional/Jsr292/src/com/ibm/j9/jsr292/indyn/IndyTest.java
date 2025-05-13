@@ -485,8 +485,6 @@ public class IndyTest {
 			} else {
 				cls.getMethod("dummy").invoke(null);
 			}
-		} catch (thrower.getClass()) {
-
 		} catch(IllegalAccessException e) {
 			Assert.fail("Cannot access method");
 		} catch(NoSuchMethodException e) {
