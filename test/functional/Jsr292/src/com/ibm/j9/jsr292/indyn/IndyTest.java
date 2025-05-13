@@ -411,12 +411,16 @@ public class IndyTest {
 		}
 	}
 
+	private static Throwable thrower = null;
+	private static String dummyClassPathName = "com/ibm/j9/jsr292/indyn/TestBSMError";
+	private static String dummyClassFullName = "com.ibm.j9.jsr292.indyn.TestBSMError";
+
 	// generate method with invokedynamic bytecode that uses the BSM "bootstrap" below
 	private static byte[] generate(int version) {
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		MethodVisitor mv;
 		String name = "com/ibm/j9/jsr292/indyn/TestBSMError" + version;
-		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, name, null, "java/lang/Object", null);
+		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, dummyClassPathName, null, "java/lang/Object", null);
 
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()V", null, null);
 		mv.visitCode();
@@ -444,7 +448,7 @@ public class IndyTest {
 		return cw.toByteArray();
 	}
 
-	private static Throwable thrower = null;
+	
 
 	public static CallSite bootstrap(MethodHandles.Lookup lookup, String name, MethodType mt) throws Throwable {
 		if (thrower == null) {
@@ -467,19 +471,19 @@ public class IndyTest {
 
 	@DataProvider(name="throwableProvider")
 	public static Throwable[] throwableProvider() {
-		return new Throwable[] {new NullPointerException()};//, new StackOverflowError(), new IllegalArgumentException(), 
-		//	new ClassCastException()};
+		return new Object[][] {{new NullPointerException(), 1}, {new StackOverflowError(), 2}, {new IllegalArgumentException(), 3}, 
+		{new ClassCastException(), 4}};
 	}
 
 	@Test(groups = {"level.extended"}, dataProvider="throwableProvider", invocationCount=1)
-	public void testBSMErrorThrow(Throwable t) {
+	public void testBSMErrorThrow(Throwable t, int version) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
-		int version = 1;
 		byte[] b = IndyTest.generate(version);
 		System.out.println(b.length);
-		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError" + version, b);
+		Class<?> cls = c.getc(dummyClassFullName + version, b);
 
+		// attempt once in the interpreter
 		try {
 			if (t == null){
 				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap1,2,3,4"));
@@ -487,18 +491,20 @@ public class IndyTest {
 				cls.getMethod("dummy").invoke(null);
 			}
 		} catch(IllegalAccessException e) {
-			Assert.fail("Cannot access method");
+			Assert.fail("Cannot access dummy method");
 		} catch(NoSuchMethodException e) {
-			Assert.fail("No Method");
+			Assert.fail("Cannot find dummy method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			System.out.println("inv targ ex");
-			
-			e.getCause().printStackTrace();
-		//	Assert.fail("no target");
+			if (t != null) {
+				Assert.pass("We expect an invocation fail on the first attempt");
+			} else {
+				Assert.fail("Bootsrap method should not throw error when parameter t is null");
+			}
 		} catch (Throwable t2) {
 			System.out.println("Caught something");
 		}
 
+		// run again after compilation
 		try {
 			if (t == null){
 				Assert.assertTrue(cls.getMethod("dummy").invoke(null).equals("bootstrap1,2,3,4"));
@@ -506,14 +512,15 @@ public class IndyTest {
 				cls.getMethod("dummy").invoke(null);
 			}
 		} catch(IllegalAccessException e) {
-			Assert.fail("Cannot access method");
+			Assert.fail("Cannot access dummy method");
 		} catch(NoSuchMethodException e) {
-			Assert.fail("No Method");
+			Assert.fail("Cannot find dummy method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
-			System.out.println("inv targ ex");
-			
-			e.getCause().printStackTrace();
-			Assert.fail("no target");
+			if (t != null) {
+				Assert.pass("We expect an invocation fail on the first attempt");
+			} else {
+				Assert.fail("Bootsrap method should not throw error when parameter t is null");
+			}
 		} catch (Throwable t2) {
 			System.out.println("Caught something");
 		}
