@@ -48,8 +48,7 @@ public class IndyOSRTest {
 	private static byte[] generate(int version) {
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		MethodVisitor mv;
-		String name = "com/ibm/j9/jsr292/indyn/TestBSMError" + version;
-		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, dummyClassPathName, null, "java/lang/Object", null);
+		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, dummyClassPathName + version, null, "java/lang/Object", null);
 
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()V", null, null);
 		mv.visitCode();
