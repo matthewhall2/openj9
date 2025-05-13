@@ -467,7 +467,7 @@ public class IndyTest {
 
 	@DataProvider(name="throwableProvider")
 	public static Throwable[] throwableProvider() {
-		return new Throwable[] {new NullPointerException()}//, new StackOverflowError(), new IllegalArgumentException(), 
+		return new Throwable[] {new NullPointerException()};//, new StackOverflowError(), new IllegalArgumentException(), 
 		//	new ClassCastException()};
 	}
 
