@@ -457,7 +457,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 		<command>TR_EnableStartupNextGenHCRAtAllOpts=1 $(JAVA_COMMAND) $(JVM_OPTIONS) \
 	-cp $(Q)$(TEST_RESROOT)$(D)jsr292test.jar$(P)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(LIB_DIR)$(D)asm-all.jar$(Q) \
 	org.testng.TestNG -d $(REPORTDIR) $(Q)$(TEST_RESROOT)$(D)testng$(XMLSUFFIX).xml$(Q) \
-	-testnames jsr292_InDynTest \
+	-testnames jsr292_InDyn_OSRTest \
 	-groups $(TEST_GROUP) \
 	-excludegroups $(DEFAULT_EXCLUDE); \
 	$(TEST_STATUS)</command>
