@@ -491,6 +491,9 @@ public class IndyTest {
 			Assert.fail("No Method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
 			System.out.println("inv targ ex");
+			if (e instanceof BootstrapMethodError ) {
+				System.out.println("bootstrap error");
+			}
 			e.getCause().printStackTrace();
 			Assert.fail("no target");
 		} catch (Throwable t2) {
