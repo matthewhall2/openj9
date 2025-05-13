@@ -412,11 +412,11 @@ public class IndyTest {
 	}
 
 	// generate method with invokedynamic bytecode that uses the BSM "bootstrap" below
-	private static byte[] generate() {
+	private static byte[] generate(int version) {
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		MethodVisitor mv;
-
-		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
+		String name = "com/ibm/j9/jsr292/indyn/TestBSMError" + version;
+		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, name, null, "java/lang/Object", null);
 
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()V", null, null);
 		mv.visitCode();
@@ -475,9 +475,10 @@ public class IndyTest {
 	public void testBSMErrorThrow(Throwable t) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
-		byte[] b = IndyTest.generate();
+		int version = 1;
+		byte[] b = IndyTest.generate(version);
 		System.out.println(b.length);
-		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError", b);
+		Class<?> cls = c.getc("com.ibm.j9.jsr292.indyn.TestBSMError" + version, b);
 
 		try {
 			if (t == null){
@@ -491,9 +492,7 @@ public class IndyTest {
 			Assert.fail("No Method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
 			System.out.println("inv targ ex");
-			if (e instanceof BootstrapMethodError ) {
-				System.out.println("bootstrap error");
-			}
+			
 			e.getCause().printStackTrace();
 			Assert.fail("no target");
 		} catch (Throwable t2) {
@@ -512,9 +511,7 @@ public class IndyTest {
 			Assert.fail("No Method");
 		} catch (java.lang.reflect.InvocationTargetException e) {
 			System.out.println("inv targ ex");
-			if (e instanceof BootstrapMethodError ) {
-				System.out.println("bootstrap error");
-			}
+			
 			e.getCause().printStackTrace();
 			Assert.fail("no target");
 		} catch (Throwable t2) {
