@@ -105,7 +105,7 @@ public class IndyOSRTest {
 	}
 
 	@Test(groups = {"level.extended"}, dataProvider="throwableProvider", invocationCount=1)
-	public void testBSMErrorThrow(Exception t, int version) {
+	public void testBSMErrorThrow(Throwable t, int version) {
 		thrower = t;
 		ByteArrayClassLoader c = new ByteArrayClassLoader();
 		byte[] b = IndyOSRTest.generate(version);
