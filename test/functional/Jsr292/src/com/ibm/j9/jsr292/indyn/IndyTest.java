@@ -418,6 +418,9 @@ public class IndyTest {
 
 		cw.visit(VersionCheck.major() + V1_8 - 8, ACC_PUBLIC, "com/ibm/j9/jsr292/indyn/TestBSMError", null, "java/lang/Object", null);
 
+		cw.visitField(ACC_STATIC, "var1", "J", null, null).visitEnd();
+        cw.visitField(ACC_PUBLIC, "var3", "I", null, null).visitEnd();
+
 		mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "dummy", "()V", null, null);
 		mv.visitCode();
 
@@ -430,11 +433,11 @@ public class IndyTest {
 		);
 
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		mv.visitLdcInsn(1L);
-		mv.visitLdcInsn(2L);
-		//mv.visitVarInsn(ILOAD, 0);
-		mv.visitLdcInsn(3);
-		mv.visitLdcInsn(4);
+		mv.visitFieldInsn(GETSTATIC, "Example", "var1", "J");
+		mv.visitFieldInsn(GETSTATIC, "Example", "var1", "J");
+		mv.visitFieldInsn(GETFIELD, "Example", "var3", "I");
+        mv.visitFieldInsn(GETFIELD, "Example", "var3", "I");
+
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 		mv.visitInsn(RETURN);
