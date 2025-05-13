@@ -433,10 +433,10 @@ public class IndyTest {
 		);
 
 		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		mv.visitFieldInsn(GETSTATIC, "Example", "var1", "J");
-		mv.visitFieldInsn(GETSTATIC, "Example", "var1", "J");
-		mv.visitFieldInsn(GETFIELD, "Example", "var3", "I");
-        mv.visitFieldInsn(GETFIELD, "Example", "var3", "I");
+		mv.visitFieldInsn(GETSTATIC, "com/ibm/j9/jsr292/indyn/TestBSMError", "var1", "J");
+		mv.visitFieldInsn(GETSTATIC, "Exacom/ibm/j9/jsr292/indyn/TestBSMErrormple", "var1", "J");
+		mv.visitFieldInsn(GETFIELD, "Exacom/ibm/j9/jsr292/indyn/TestBSMErrormple", "var3", "I");
+        mv.visitFieldInsn(GETFIELD, "Exacom/ibm/j9/jsr292/indyn/TestBSMErrormple", "var3", "I");
 
 		mv.visitInvokeDynamicInsn("sanity", "(JJII)Ljava/lang/String;", bsm);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
