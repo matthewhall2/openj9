@@ -3747,8 +3747,6 @@ TR_J9ByteCodeIlGenerator::genInvokeInner(
    // need to track stack size at beginning and end of ILGeneration for invokeDynamic for the case
    // where we get the special error throwing MethodHandle
    int32_t startingStackSize = _stack->size();
-   if (numExpectedArgs != -1)
-      numArgs = numExpectedArgs;
 
    if (pushRequiredConst(requiredKoi))
       {
@@ -4263,12 +4261,14 @@ break
          // included in the numArgs calculation.  That's why we pass
          // numChildren as numArgs+1 below.
          //
+         printf("indy rec\n")
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 2);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          callNode->setAndIncChild(1, invokedynamicReceiver);
          }
       else
          {
+            printf("indy rec else\n")
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 1);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          }
@@ -4664,17 +4664,17 @@ break
     * takes 0 arguments (occurs when an error is thrown during resolveInvokeDynamic()). In that case, we will not have
     * popped all the arguments off the stack, so we need to pop the expected number.
     */
-   // int32_t numPopped = startingStackSize - _stack->size();
-   // if (numPopped < numExpectedArgs)
-   //    {
-   //    if (comp()->getOption(TR_TraceILGen))
-   //       traceMsg(comp(), "InvokeDynamic recieved error throwing MethodHandle. Popping extra args.\n");
-   //    while (numPopped < numExpectedArgs)
-   //       {
-   //       pop();
-   //       numPopped++;
-   //       }
-   //    }
+   int32_t numPopped = startingStackSize - _stack->size();
+   if ((numExpectedArgs != -1) && (numPopped < numExpectedArgs))
+      {
+      if (comp()->getOption(TR_TraceILGen))
+         traceMsg(comp(), "InvokeDynamic recieved error throwing MethodHandle. Popping extra args.\n");
+      while (numPopped < numExpectedArgs)
+         {
+         pop();
+         numPopped++;
+         }
+      }
    traceMsg(comp(), "stack size: %d\n", _stack->size());
 
 
