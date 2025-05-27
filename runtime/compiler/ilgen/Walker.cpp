@@ -4261,14 +4261,14 @@ break
          // included in the numArgs calculation.  That's why we pass
          // numChildren as numArgs+1 below.
          //
-         printf("indy rec\n")
+         printf("indy rec\n");
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 2);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          callNode->setAndIncChild(1, invokedynamicReceiver);
          }
       else
          {
-            printf("indy rec else\n")
+            printf("indy rec else\n");
          callNode = genNodeAndPopChildren(callOpCode, numArgs + 1, symRef, 1);
          callNode->setAndIncChild(0, indirectCallFirstChild);
          }
