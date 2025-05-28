@@ -12097,8 +12097,8 @@ done:
 		if (ranInvokeBasic) {
 			printf("at final done label\n");
 		}
-		ranInvokeBasic = false;
 		updateVMStruct(REGISTER_ARGS);
+		ranInvokeBasic = false;
 noUpdate:
 #if defined(TRACE_TRANSITIONS)
 		switch(_nextAction) {
