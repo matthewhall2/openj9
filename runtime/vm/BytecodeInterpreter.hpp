@@ -402,7 +402,9 @@ retry:
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
+		printf("sp: %p\n". _sp);
 		thread->pc = _pc;
+		printf("pc: %p", _pc);
 		thread->literals = _literals;
 	}
 
@@ -9512,10 +9514,11 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		printf("in invokebasic");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		UDATA mhReceiverIndex = 0;
-
+		printf("fromJIT: %d\n", fromJIT);
 		if (fromJIT) {
 			/* tempSlot contains the number of stack slots for the arguments, and the MH
 			 * receiver is the first argument.
@@ -9528,24 +9531,29 @@ done:
 			UDATA volatile methodIndexAndArgCount = ramMethodRef->methodIndexAndArgCount;
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
-
+ 		printf("Getting receiver\n");
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
+			printf("done invoke basic (npe)\n");
 			return THROW_NPE;
 		}
-
+		printf("Extracting LF, MN, setting _sendMethod\n");
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+		printf("done extractions\n");
 
 		if (fromJIT) {
+			printf("From jit: restore jit return address\n");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+			printf("From jit: calling j2iTransition\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
+			printf("From jit: done j2iTransition\n");
 		}
-
+		printf("done invoke basic: rc %d\n", rc);
 		return rc;
 	}
 
@@ -12081,6 +12089,7 @@ executeBytecodeFromLocal:
 		}
 
 done:
+		printf("at final done label\n");
 		updateVMStruct(REGISTER_ARGS);
 noUpdate:
 #if defined(TRACE_TRANSITIONS)
