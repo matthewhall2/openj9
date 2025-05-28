@@ -164,6 +164,7 @@ class INTERPRETER_CLASS
  */
 private:
 	J9JavaVM * const _vm;
+	bool ranInvokeBasic = false;
 #if !defined(LOCAL_CURRENT_THREAD)
 	J9VMThread * const _currentThread;
 #endif
@@ -402,10 +403,13 @@ retry:
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
-		printf("sp: %p\n", _sp);
+		if (ranInvokeBasic)
+			printf("sp: %p\n", _sp);
 		thread->pc = _pc;
-		printf("pc: %p", _pc);
+		if (ranInvokeBasic)
+			printf("pc: %p\n", _pc);
 		thread->literals = _literals;
+		ranInvokeBasic = false;
 	}
 
 	VMINLINE void
@@ -9514,6 +9518,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		ranInvokeBasic = true;
 		printf("in invokebasic");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
@@ -12089,7 +12094,10 @@ executeBytecodeFromLocal:
 		}
 
 done:
-		printf("at final done label\n");
+		if (ranInvokeBasic) {
+			printf("at final done label\n");
+		}
+		ranInvokeBasic = false;
 		updateVMStruct(REGISTER_ARGS);
 noUpdate:
 #if defined(TRACE_TRANSITIONS)
