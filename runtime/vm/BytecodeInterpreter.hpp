@@ -402,9 +402,9 @@ retry:
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
-		printf("sp: %p\n". _sp);
+		printf("sp: %s\n". _sp);
 		thread->pc = _pc;
-		printf("pc: %p", _pc);
+		printf("pc: %s", _pc);
 		thread->literals = _literals;
 	}
 
