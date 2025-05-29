@@ -638,8 +638,10 @@ done:
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		if (isMethodDefaultConflictForMethodHandle) {
-			//buildJITResolveFrame(REGISTER_ARGS);
-			//return THROW_NPE;
+			if (getenv("npeOnDefCon")) {
+				buildJITResolveFrame(REGISTER_ARGS);
+				return THROW_NPE;
+			}
 		}
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
@@ -657,7 +659,9 @@ done:
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle) {
-				buildJITResolveFrame(REGISTER_ARGS);
+				if (getenv("buildFrame")) {
+					buildJITResolveFrame(REGISTER_ARGS);
+				}
 				return rc;
 			}
 
