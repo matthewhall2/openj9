@@ -711,7 +711,7 @@ done:
 							printf("j2i mh: immediately run\n");
 						if (methodCanBeRunCompiled(_sendMethod)) {
 							if (ranInvokeBasic)
-								printf("j2i mh: method can be run compiled\n")
+								printf("j2i mh: method can be run compiled\n");
 							rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_pc, (void*)preCount);
 							goto done;
 						}
