@@ -400,6 +400,8 @@ retry:
 	VMINLINE void
 	updateVMStruct(REGISTER_ARGS_LIST)
 	{
+		if (ranInvokeBasic)
+			printf("update vm struct\n");
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
@@ -408,7 +410,6 @@ retry:
 		thread->pc = _pc;
 		if (ranInvokeBasic)
 			printf("pc: %p\n", _pc);
-		ranInvokeBasic = false;
 		thread->literals = _literals;
 	}
 
@@ -652,6 +653,9 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			if (ranInvokeBasic) {
+				printf("j2i: def con or native or abstract\n");
+			}
 			if (isMethodDefaultConflictForMethodHandle)
 				printf("def con method\n");
 			_literals = (J9Method*)jitReturnAddress;
@@ -685,6 +689,9 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
+			if (ranInvokeBasic) {
+				printf("j2i: nodef con and not native and not abstract\n");
+			}
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
@@ -692,11 +699,19 @@ done:
 			UDATA postCount = 0;
 			UDATA result = 0;
 			do {
+				if (ranInvokeBasic)
+					printf("j2i: compile loop\n");
 				preCount = (UDATA)_sendMethod->extra;
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
+					if (ranInvokeBasic)
+						printf("j2i: precount (extra) - no bits set of J9_STARTPC_NOT_TRANSLATED\n");
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
+						if (ranInvokeBasic)
+							printf("j2i mh: immediately run\n");
 						if (methodCanBeRunCompiled(_sendMethod)) {
+							if (ranInvokeBasic)
+								printf("j2i mh: method can be run compiled\n")
 							rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_pc, (void*)preCount);
 							goto done;
 						}
@@ -711,6 +726,8 @@ done:
 				postCount = preCount - _currentThread->jitCountDelta;
 				if ((IDATA)postCount < 0) {
 					/* Attempt to compile the method */
+					if (ranInvokeBasic)
+						printf("j2i: attempting to compile\n");
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
 					UDATA *bp = buildMethodFrame(REGISTER_ARGS, _sendMethod, J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
