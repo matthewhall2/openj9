@@ -164,6 +164,7 @@ class INTERPRETER_CLASS
  */
 private:
 	J9JavaVM * const _vm;
+	bool ranInvokeBasic = false;
 #if !defined(LOCAL_CURRENT_THREAD)
 	J9VMThread * const _currentThread;
 #endif
@@ -402,7 +403,12 @@ retry:
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
+		if (ranInvokeBasic)
+			printf("sp: %p\n", _sp);
 		thread->pc = _pc;
+		if (ranInvokeBasic)
+			printf("pc: %p\n", _pc);
+		ranInvokeBasic = false;
 		thread->literals = _literals;
 	}
 
@@ -646,6 +652,8 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			if (isMethodDefaultConflictForMethodHandle)
+				printf("def con method\n");
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 
@@ -666,6 +674,8 @@ done:
 			}
 
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
+				if (ranInvokeBasic)
+					printf("j2i: stop flags set\n");
 				/* If a stop request has been posted, handle it instead of running the native */
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 				_currentThread->currentException = _currentThread->stopThrowable;
@@ -719,14 +729,24 @@ done:
 					/* If the method is now compiled, run it compiled, otherwise run it bytecoded */
 					UDATA const jitStartAddress = (UDATA)_sendMethod->extra;
 					if (startAddressIsCompiled(jitStartAddress)) {
+						if (ranInvokeBasic)
+							printf("j2i: start address is compiled\n");
 						if (methodCanBeRunCompiled(_sendMethod)) {
+							if (ranInvokeBasic)
+								printf("j2i: method can be run compiled\n");
 							if (decompileOccurred) {
+								if (ranInvokeBasic)
+									printf("j2i: decompile occured\n");
 								/* The return address is not currently on the stack.  It will be pushed into the
 								 * next stack slot.
 								 */
 								_currentThread->decompilationStack->pcAddress = (U_8**)(_sp - 1);
 							}
+							if (ranInvokeBasic)
+								printf("j2i: starting promoted method\n");
 							rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_pc, (void*)jitStartAddress);
+							if (ranInvokeBasic)
+								printf("j2i: done promoted method\n");
 							goto done;
 						}
 					}
@@ -737,6 +757,8 @@ done:
 			} while (result != preCount);
 			/* Run the method interpreted */
 			{
+				if (ranInvokeBasic)
+					printf("j2i: running method interpreted\n");
 				UDATA stackUse = VM_VMHelpers::calculateStackUse(romMethod, sizeof(J9SFJ2IFrame));
 				UDATA *checkSP = _sp - stackUse;
 				if ((checkSP > _sp) || VM_VMHelpers::shouldGrowForSP(_currentThread, checkSP)) {
@@ -782,9 +804,13 @@ throwStackOverflow:
 			_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			_literals = (J9Method*)exitPoint;
+			if (ranInvokeBasic)
+				printf("j2i: running inline sendTarget\n");
 			rc = inlineSendTarget(REGISTER_ARGS, VM_MAYBE, VM_MAYBE, VM_MAYBE, VM_MAYBE, true, decompileOccurred);
 		}
 done:
+		if (ranInvokeBasic)
+			printf("j2i: done label\n");
 		return rc;
 	}
 
@@ -9627,8 +9653,11 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		ranInvokeBasic = true;
+		printf("in invokebasic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
+		printf("fromJIT: %d\n", fromJIT);
 		UDATA mhReceiverIndex = 0;
 
 		if (fromJIT) {
@@ -9645,23 +9674,29 @@ done:
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
 
+		printf("Getting receiver\n");
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
 			}
+			printf("done invoke basic (npe)\n");
 			return THROW_NPE;
 		}
 
+		printf("Extracting LF, MN, setting _sendMethod\n");
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
-
+		printf("done extractions:\nLF: %p\nMN: %p\n_sendMethod: %p\n", lambdaForm, memberName, _sendMethod);
 		if (fromJIT) {
+			printf("From jit: restore jit return address\n");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+			printf("From jit: calling j2iTransition\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
+			printf("From jit: done j2iTransition\n");
 		}
-
+		printf("done invoke basic: rc %d\n", rc);
 		return rc;
 	}
 
@@ -9762,12 +9797,12 @@ throw_npe:
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 		UDATA methodArgCount = 0;
 		bool isInvokeBasic = (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress));
-
 		/* In MethodHandle.loop API it may generate a invokeBasic NamedFunction (see LambdaForm$NamedFunction(MethodType basicInvokerType))
 		 * that is linked by linkToVirtual. As invokeBasic is signature polymorphic, the romMethod->argCount may not match the actual
 		 * parameter count on stack so VM have to retrieve the argCount from the target MemberName's methodType for these special cases.
 		 */
 		if (isInvokeBasic) {
+			printf("link to virtual invoke basic - getting MT and arg count\n");
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 			/* +1 to account for the receiver */
 			methodArgCount = VM_VMHelpers::methodTypeParameterSlotCount(_currentThread, methodType) + 1;
@@ -9805,9 +9840,11 @@ throw_npe:
 		 * invokeBasic operation is inlined here to directly dispatch the actual target.
 		 */
 		if (isInvokeBasic) {
+			printf("link to virtual invoke basic - extracting LF and MN, setting method\n");
 			j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, receiverObject);
 			j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 			_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+			printf("link to virtual invoke basic - done extractions:\nLF: %p\nMN: %p\n_sendMethod: %p\n", lambdaForm, memberName, _sendMethod);
 		}
 
 		if (fromJIT) {
@@ -12199,7 +12236,10 @@ executeBytecodeFromLocal:
 
 done:
 		updateVMStruct(REGISTER_ARGS);
+		ranInvokeBasic = false;
 noUpdate:
+		ranInvokeBasic = false;
+
 #if defined(TRACE_TRANSITIONS)
 		switch(_nextAction) {
 		case J9_BCLOOP_EXECUTE_BYTECODE:
