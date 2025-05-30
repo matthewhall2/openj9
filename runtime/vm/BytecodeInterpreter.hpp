@@ -654,10 +654,19 @@ done:
 		}
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+
+		J9ROMNameAndSignature *nameAndSig = J9ROMMETHOD_NAMEANDSIGNATURE(romMethod);
+		J9UTF8 *mName = J9ROMNAMEANDSIGNATURE_NAME(nameAndSig);
+		J9UTF8 *mSig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
+		if (startLogging && (ranInvokeBasic || getenv("logall"))) {
+			printf("j2i: Method name: %s    Sig: %s\n", J9UTF8_DATA(mName), J9UTF8_DATA(mSig));
+		}
+
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			if (startLogging && (ranInvokeBasic || getenv("logall"))) {
-				printf("j2i: def con or native or abstract\n");
+				printf("j2i: def con or native or abstract:\nNative: %d\nAbstract: %d\n", J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative), J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccAbstract));
 			}
+
 			if (isMethodDefaultConflictForMethodHandle)
 				printf("def con method\n");
 			_literals = (J9Method*)jitReturnAddress;
