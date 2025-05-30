@@ -165,6 +165,7 @@ class INTERPRETER_CLASS
 private:
 	J9JavaVM * const _vm;
 	bool ranInvokeBasic = false;
+	int state = -1;
 #if !defined(LOCAL_CURRENT_THREAD)
 	J9VMThread * const _currentThread;
 #endif
@@ -400,15 +401,15 @@ retry:
 	VMINLINE void
 	updateVMStruct(REGISTER_ARGS_LIST)
 	{
-		if (ranInvokeBasic && getenv("printVMUpdate"))
+		if (ranInvokeBasic || getenv("logall"))
 			printf("update vm struct\n");
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
 		thread->sp = _sp;
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("sp: %p\n", _sp);
 		thread->pc = _pc;
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("pc: %p\n", _pc);
 		thread->literals = _literals;
 	}
@@ -653,7 +654,7 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
-			if (ranInvokeBasic) {
+			if (ranInvokeBasic || getenv("logall")) {
 				printf("j2i: def con or native or abstract\n");
 			}
 			if (isMethodDefaultConflictForMethodHandle)
@@ -678,7 +679,7 @@ done:
 			}
 
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
-				if (ranInvokeBasic)
+				if (ranInvokeBasic || getenv("logall"))
 					printf("j2i: stop flags set\n");
 				/* If a stop request has been posted, handle it instead of running the native */
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
@@ -689,7 +690,7 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
-			if (ranInvokeBasic) {
+			if (ranInvokeBasic || getenv("logall")) {
 				printf("j2i: nodef con and not native and not abstract\n");
 			}
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
@@ -699,18 +700,18 @@ done:
 			UDATA postCount = 0;
 			UDATA result = 0;
 			do {
-				if (ranInvokeBasic)
+				if (ranInvokeBasic || getenv("logall"))
 					printf("j2i: compile loop\n");
 				preCount = (UDATA)_sendMethod->extra;
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
-					if (ranInvokeBasic)
+					if (ranInvokeBasic || getenv("logall"))
 						printf("j2i: precount (extra) - no bits set of J9_STARTPC_NOT_TRANSLATED\n");
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
-						if (ranInvokeBasic)
+						if (ranInvokeBasic || getenv("logall"))
 							printf("j2i mh: immediately run\n");
 						if (methodCanBeRunCompiled(_sendMethod)) {
-							if (ranInvokeBasic)
+							if (ranInvokeBasic || getenv("logall"))
 								printf("j2i mh: method can be run compiled\n");
 							rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_pc, (void*)preCount);
 							goto done;
@@ -726,7 +727,7 @@ done:
 				postCount = preCount - _currentThread->jitCountDelta;
 				if ((IDATA)postCount < 0) {
 					/* Attempt to compile the method */
-					if (ranInvokeBasic)
+					if (ranInvokeBasic || getenv("logall"))
 						printf("j2i: attempting to compile\n");
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
@@ -747,23 +748,23 @@ done:
 					/* If the method is now compiled, run it compiled, otherwise run it bytecoded */
 					UDATA const jitStartAddress = (UDATA)_sendMethod->extra;
 					if (startAddressIsCompiled(jitStartAddress)) {
-						if (ranInvokeBasic)
+						if (ranInvokeBasic || getenv("logall"))
 							printf("j2i: start address is compiled\n");
 						if (methodCanBeRunCompiled(_sendMethod)) {
-							if (ranInvokeBasic)
+							if (ranInvokeBasic || getenv("logall"))
 								printf("j2i: method can be run compiled\n");
 							if (decompileOccurred) {
-								if (ranInvokeBasic)
+								if (ranInvokeBasic || getenv("logall"))
 									printf("j2i: decompile occured\n");
 								/* The return address is not currently on the stack.  It will be pushed into the
 								 * next stack slot.
 								 */
 								_currentThread->decompilationStack->pcAddress = (U_8**)(_sp - 1);
 							}
-							if (ranInvokeBasic)
+							if (ranInvokeBasic || getenv("logall"))
 								printf("j2i: starting promoted method\n");
 							rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_pc, (void*)jitStartAddress);
-							if (ranInvokeBasic)
+							if (ranInvokeBasic || getenv("logall"))
 								printf("j2i: done promoted method\n");
 							goto done;
 						}
@@ -775,7 +776,7 @@ done:
 			} while (result != preCount);
 			/* Run the method interpreted */
 			{
-				if (ranInvokeBasic)
+				if (ranInvokeBasic || getenv("logall"))
 					printf("j2i: running method interpreted\n");
 				UDATA stackUse = VM_VMHelpers::calculateStackUse(romMethod, sizeof(J9SFJ2IFrame));
 				UDATA *checkSP = _sp - stackUse;
@@ -822,12 +823,12 @@ throwStackOverflow:
 			_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			_literals = (J9Method*)exitPoint;
-			if (ranInvokeBasic)
+			if (ranInvokeBasic || getenv("logall"))
 				printf("j2i: running inline sendTarget\n");
 			rc = inlineSendTarget(REGISTER_ARGS, VM_MAYBE, VM_MAYBE, VM_MAYBE, VM_MAYBE, true, decompileOccurred);
 		}
 done:
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("j2i: done label\n");
 		return rc;
 	}
@@ -841,7 +842,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, returnAddress);
 		}
 		_currentThread->tempSlot =  (UDATA)jumpAddress;
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("promoted method on transition from jit - jumpAddress (thread.tempSplot): %d\n", _currentThread->tempSlot);
 		_nextAction = J9_BCLOOP_LOAD_PRESERVED_AND_BRANCH;
 		VM_JITInterface::enableRuntimeInstrumentation(_currentThread);
@@ -12256,7 +12257,7 @@ executeBytecodeFromLocal:
 		}
 
 done:
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("at last done label at end of run()\n");
 		updateVMStruct(REGISTER_ARGS);
 noUpdate:
@@ -12303,7 +12304,7 @@ noUpdate:
 			break;
 		}
 #endif
-		if (ranInvokeBasic)
+		if (ranInvokeBasic || getenv("logall"))
 			printf("next action: %d\n", _nextAction);
 		ranInvokeBasic = false;
 		return _nextAction;
