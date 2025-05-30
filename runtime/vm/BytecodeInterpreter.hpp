@@ -10262,6 +10262,7 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
+		startLogging = getenv("logFromStart") != NULL;
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
 		char currentMethodName[1024];
@@ -11070,7 +11071,8 @@ runMethod: {
 #else
 	switch(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress)) {
 #endif
-
+	if (startLogging)
+		printf("Running method - send target: %d\n", J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_STATIC):
 		PERFORM_ACTION(initialStaticMethod(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_SPECIAL):
@@ -11426,28 +11428,39 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 	}
 #endif
 }
-
+	if (startLogging)
+		printf("end of run method\n");
 i2j:
+	if (startLogging)
+		printf("i2j\n");
 	PERFORM_ACTION(i2jTransition(REGISTER_ARGS));
 
 jni:
+	if (startLogging)
+		printf("jni");
 	PERFORM_ACTION(runJNINative(REGISTER_ARGS));
 
 runMethodHandle: {
 #if defined(J9VM_OPT_METHOD_HANDLE)
+	if (startLogging)
+		printf("try running mh\n");
 	j9object_t methodHandle = (j9object_t)_currentThread->tempSlot;
 	void *compiledEntryPoint = VM_VMHelpers::methodHandleCompiledEntryPoint(_vm, _currentThread, methodHandle);
 	if (NULL != compiledEntryPoint) {
 		_currentThread->floatTemp1 = compiledEntryPoint;
 		goto runMethodHandleCompiled;
 	}
+	printf("count and compile MH\n");
 	methodHandle = countAndCompileMethodHandle(REGISTER_ARGS, methodHandle, &compiledEntryPoint);
+	printf("done count and compile MH\n");
 	/* update tempSlot as countAndCompile may release VMAccess */
 	_currentThread->tempSlot = (UDATA)methodHandle;
 	if (NULL != compiledEntryPoint) {
 		_currentThread->floatTemp1 = compiledEntryPoint;
 		goto runMethodHandleCompiled;
 	}
+	if (startLogging)
+		printf("interpreting MH\n");
 	PERFORM_ACTION(interpretMethodHandle(REGISTER_ARGS, methodHandle));
 #else
 	Assert_VM_unreachable();
@@ -11456,6 +11469,8 @@ runMethodHandle: {
 
 runMethodHandleCompiled:
 #if defined(J9VM_OPT_METHOD_HANDLE)
+	if (startLogging)
+		printf("running mh compiled\n");
 	/* VMThread->tempSlot will hold the MethodHandle.
 	 * VMThread->floatTemp1 will hold the compiledEntryPoint
 	 */
@@ -11469,6 +11484,8 @@ runMethodHandleCompiled:
 
 runMethodFromMethodHandle:
 #if defined(J9VM_OPT_METHOD_HANDLE)
+	if (startLogging)
+		printf("running method from mh\n");
 	_sendMethod = (J9Method *)_currentThread->tempSlot;
 	goto runMethod;
 #else
