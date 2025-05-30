@@ -400,7 +400,7 @@ retry:
 	VMINLINE void
 	updateVMStruct(REGISTER_ARGS_LIST)
 	{
-		if (ranInvokeBasic)
+		if (ranInvokeBasic && getenv("printVMUpdate"))
 			printf("update vm struct\n");
 		J9VMThread *const thread = _currentThread;
 		thread->arg0EA = _arg0EA;
