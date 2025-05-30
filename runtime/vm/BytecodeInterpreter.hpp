@@ -731,6 +731,7 @@ done:
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
 					UDATA *bp = buildMethodFrame(REGISTER_ARGS, _sendMethod, J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
+					printf("vm struct ");
 					updateVMStruct(REGISTER_ARGS);
 					/* this call cannot change bp as no java code is run */
 					UDATA oldState = VM_VMHelpers::setVMState(_currentThread, J9VMSTATE_JIT);
@@ -840,6 +841,8 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, returnAddress);
 		}
 		_currentThread->tempSlot =  (UDATA)jumpAddress;
+		if (ranInvokeBasic)
+			printf("promoted method on transition from jit - jumpAddress (thread.tempSplot): %d\n", _currentThread->tempSlot);
 		_nextAction = J9_BCLOOP_LOAD_PRESERVED_AND_BRANCH;
 		VM_JITInterface::enableRuntimeInstrumentation(_currentThread);
 		return GOTO_DONE;
@@ -12253,6 +12256,7 @@ executeBytecodeFromLocal:
 		}
 
 done:
+		printf("at last done label at end of run()\n");
 		updateVMStruct(REGISTER_ARGS);
 		ranInvokeBasic = false;
 noUpdate:
