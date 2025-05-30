@@ -10793,6 +10793,7 @@ public:
 		DEBUG_UPDATE_VMSTRUCT(); \
 		DEBUG_MUST_HAVE_VM_ACCESS(_currentThread); \
 		VM_BytecodeAction returnCode = functionCall; \
+		printf("performing action: %d\n", returnCode); \
 		switch (returnCode) { \
 		case EXECUTE_BYTECODE: \
 			EXECUTE_CURRENT_BYTECODE(); \
