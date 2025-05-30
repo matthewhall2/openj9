@@ -731,7 +731,7 @@ done:
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
 					UDATA *bp = buildMethodFrame(REGISTER_ARGS, _sendMethod, J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
-					printf("vm struct ");
+					printf("j2i: vm struct\n");
 					updateVMStruct(REGISTER_ARGS);
 					/* this call cannot change bp as no java code is run */
 					UDATA oldState = VM_VMHelpers::setVMState(_currentThread, J9VMSTATE_JIT);
@@ -12256,11 +12256,10 @@ executeBytecodeFromLocal:
 		}
 
 done:
-		printf("at last done label at end of run()\n");
+		if (ranInvokeBasic)
+			printf("at last done label at end of run()\n");
 		updateVMStruct(REGISTER_ARGS);
-		ranInvokeBasic = false;
 noUpdate:
-		ranInvokeBasic = false;
 
 #if defined(TRACE_TRANSITIONS)
 		switch(_nextAction) {
@@ -12304,6 +12303,9 @@ noUpdate:
 			break;
 		}
 #endif
+		if (ranInvokeBasic)
+			printf("next action: %d\n", _nextAction);
+		ranInvokeBasic = false;
 		return _nextAction;
 	}
 
