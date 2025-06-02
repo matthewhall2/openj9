@@ -625,12 +625,15 @@ cacheCastable:
 					iTable = iTable->next;
 				}
 			} else if (J9CLASS_IS_ARRAY(castClass)) {
+				printf("to class is array\n");
 				/* the instanceClass must be an array to continue */
 				if (J9CLASS_IS_ARRAY(instanceClass)) {
+					printf("from class is array\n");
 					/* castClass is an array - if base type, they must be the same primitive type */
 					UDATA castArity = ((J9ArrayClass*)castClass)->arity;
 					J9Class *castClassLeafComponent = ((J9ArrayClass*)castClass)->leafComponentType;
 					if (J9CLASS_IS_MIXED(castClassLeafComponent)) {
+						printf("to class is mixed\n")
 						UDATA instanceArity = ((J9ArrayClass*)instanceClass)->arity;
 						if (instanceArity > castArity) {
 							J9Class *workingInstanceClass = instanceClass;
@@ -654,6 +657,7 @@ cacheCastable:
 								) {
 #endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
 									if (J9CLASS_IS_MIXED(instanceClassLeafComponent)) {
+										printf("from class is mixed\n");
 										/* we know arities are the same, so skip directly to the terminal case */
 										instanceClass = instanceClassLeafComponent;
 										castClass = castClassLeafComponent;
