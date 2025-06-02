@@ -633,7 +633,7 @@ cacheCastable:
 					UDATA castArity = ((J9ArrayClass*)castClass)->arity;
 					J9Class *castClassLeafComponent = ((J9ArrayClass*)castClass)->leafComponentType;
 					if (J9CLASS_IS_MIXED(castClassLeafComponent)) {
-						printf("to class is mixed\n")
+						printf("to class is mixed\n");
 						UDATA instanceArity = ((J9ArrayClass*)instanceClass)->arity;
 						if (instanceArity > castArity) {
 							J9Class *workingInstanceClass = instanceClass;
