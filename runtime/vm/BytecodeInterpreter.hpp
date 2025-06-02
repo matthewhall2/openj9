@@ -656,6 +656,9 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
+		if (startLogging && enableLogging && (ranInvokeBasic || getenv("logall"))) {
+			printf("in j2i\n");
+		}
 		J9ROMNameAndSignature *nameAndSig = J9ROMMETHOD_NAMEANDSIGNATURE(romMethod);
 		J9UTF8 *mName = J9ROMNAMEANDSIGNATURE_NAME(nameAndSig);
 		J9UTF8 *mSig = J9ROMNAMEANDSIGNATURE_SIGNATURE(nameAndSig);
