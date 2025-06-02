@@ -584,6 +584,7 @@ public:
 	static VMINLINE bool
 	inlineCheckCast(J9Class *instanceClass, J9Class *castClass, bool updateCache = true)
 	{
+		printf("Starting case check:\n");
 		J9Class *initialInstanceClass = instanceClass;
 		J9Class *initialCastClass = castClass;
 		bool didRetry = false;
@@ -663,6 +664,8 @@ cacheCastable:
 										castClass = castClassLeafComponent;
 										didRetry = true;
 										goto retry;
+									} else {
+										printf("from class is not mixed\n");
 									}
 #if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
 								}
@@ -671,8 +674,12 @@ cacheCastable:
 							}
 							/* else the arity of the instance wasn't high enough, so we fail */
 						}
+					} else {
+						printf("to class is not mixed\n");
 					}
 					/* else we have a base type castClass and it isn't equal (from the trivial case at the top), so it can't be valid so we fail */
+				} else {
+					printf("from class is not array\n");
 				}
 			}
 			/* fallthrough cases are all invalid casts that should be cached */
