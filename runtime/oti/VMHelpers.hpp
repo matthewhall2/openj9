@@ -632,7 +632,7 @@ cacheCastable:
 				UDATA castArity = ((J9ArrayClass*)castClass)->arity;
 				UDATA instanceArity = ((J9ArrayClass*)instanceClass)->arity;
 				J9Class *castClassLeafComponent = ((J9ArrayClass*)castClass)->leafComponentType;
-				
+
 				if (J9CLASS_IS_MIXED(castClassLeafComponent)) {
 					/* mismatched arity is the easy case since the castClass leaf type must be java.lang.Object and the castClassLeafComponent
 					 * must be mixed for the cast to succeed.
