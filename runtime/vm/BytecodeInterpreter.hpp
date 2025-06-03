@@ -10269,7 +10269,7 @@ public:
 	run(J9VMThread *vmThread)
 	{
 		enableLogging = getenv("enableLogging") != NULL;
-		startLogging =  startLogging || nableLogging && getenv("logFromStart") != NULL;
+		startLogging =  startLogging || (enableLogging && getenv("logFromStart") != NULL);
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
 		char currentMethodName[1024];
