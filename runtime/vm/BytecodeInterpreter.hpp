@@ -746,7 +746,9 @@ done:
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
 					UDATA *bp = buildMethodFrame(REGISTER_ARGS, _sendMethod, J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
-					printf("j2i: vm struct\n");
+					if (startLogging && enableLogging && (ranInvokeBasic || getenv("logall")))
+						printf("j2i: vm struct\n");
+
 					updateVMStruct(REGISTER_ARGS);
 					/* this call cannot change bp as no java code is run */
 					UDATA oldState = VM_VMHelpers::setVMState(_currentThread, J9VMSTATE_JIT);
@@ -10267,7 +10269,7 @@ public:
 	run(J9VMThread *vmThread)
 	{
 		enableLogging = getenv("enableLogging") != NULL;
-		startLogging =  enableLogging && getenv("logFromStart") != NULL;
+		startLogging =  startLogging || nableLogging && getenv("logFromStart") != NULL;
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
 		char currentMethodName[1024];
