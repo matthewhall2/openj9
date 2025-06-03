@@ -626,8 +626,7 @@ cacheCastable:
 				}
 			/* if the cast class is an array, the instance class has to be an array to continue */
 			} else if (J9CLASS_IS_ARRAY(castClass) && J9CLASS_IS_ARRAY(instanceClass)) {
-				printf("to class is array\n");
-				printf("from class is array\n");
+			
 				/* castClass is an array - if base type, they must be the same primitive type */
 				UDATA castArity = ((J9ArrayClass*)castClass)->arity;
 				UDATA instanceArity = ((J9ArrayClass*)instanceClass)->arity;
@@ -652,14 +651,12 @@ cacheCastable:
 								) {
 	#endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
 									if (J9CLASS_IS_MIXED(instanceClassLeafComponent)) {
-										printf("from class is mixed\n");
 										/* we know arities are the same, so skip directly to the terminal case */
 										castClass = castClassLeafComponent;
 										instanceClass = instanceClassLeafComponent;
 										didRetry = true;
 										goto retry;
 									} else {
-										printf("from class is not mixed\n");
 									}
 	#if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
 								}
