@@ -586,6 +586,8 @@ public:
 	{
 		J9Class *initialInstanceClass = instanceClass;
 		J9Class *initialCastClass = castClass;
+		bool didRetry = false;
+	retry:
 		bool castable = true;
 		/* start with the trivial case - do not cache successful equality check to avoid cache pollution */
 		if (!isSameOrSuperclass(castClass, instanceClass)) {
@@ -652,8 +654,10 @@ cacheCastable:
 								if (J9CLASS_IS_MIXED(instanceClassLeafComponent)) {
 									printf("from class is mixed\n");
 									/* we know arities are the same, so skip directly to the terminal case */
-									castable = isSameOrSuperclass(castClassLeafComponent, instanceClassLeafComponent);
-									
+									castClass = castClassLeafComponent;
+									instanceClass = instanceClassLeafComponent;
+									didRetry = true;
+									goto retry;
 								} else {
 									printf("from class is not mixed\n");
 								}
@@ -661,6 +665,7 @@ cacheCastable:
 							}
 							/* else fail since a nullable array class cannot be cast to a null-restricted class */
 #endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
+				}
 			}
 
 			/* fallthrough cases are all invalid casts that should be cached */
@@ -670,7 +675,7 @@ cacheCastable:
 			castable = false;
 		}
 done:
-		if (updateCache) {
+		if (didRetry && updateCache) {
 			if (castable) {
 				initialInstanceClass->castClassCache = (UDATA)initialCastClass;
 			} else {
