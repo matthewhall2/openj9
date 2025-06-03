@@ -632,39 +632,40 @@ cacheCastable:
 				UDATA castArity = ((J9ArrayClass*)castClass)->arity;
 				UDATA instanceArity = ((J9ArrayClass*)instanceClass)->arity;
 				J9Class *castClassLeafComponent = ((J9ArrayClass*)castClass)->leafComponentType;
-
-				/* mismatched arity is the easy case since the castClass leaf type must be java.lang.Object and the castClassLeafComponent
-				 * must be mixed for the cast to succeed.
-				 * Case where the 
-				 */
-				bool castClassLeafComponentIsMixed = J9CLASS_IS_MIXED(castClassLeafComponent);
-				if (castClassLeafComponentIsMixed && (instanceArity > castArity)) {
-					if (getClassDepth(castClassLeafComponent) == 0) {
-						// passes if leaf type if java.lang.Object, fails otherwise
-						goto done;
-					}
-				} else if (castClassLeafComponentIsMixed && (instanceArity == castArity)) {
-					// don't allow casts of the form [[primitive -> [[Ljava..lang.Object
-					J9Class *instanceClassLeafComponent = ((J9ArrayClass*)instanceClass)->leafComponentType;
-#if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
-							if (J9_IS_J9ARRAYCLASS_NULL_RESTRICTED(instanceClass)
-								|| !J9_IS_J9ARRAYCLASS_NULL_RESTRICTED(castClass)
-							) {
-#endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
-								if (J9CLASS_IS_MIXED(instanceClassLeafComponent)) {
-									printf("from class is mixed\n");
-									/* we know arities are the same, so skip directly to the terminal case */
-									castClass = castClassLeafComponent;
-									instanceClass = instanceClassLeafComponent;
-									didRetry = true;
-									goto retry;
-								} else {
-									printf("from class is not mixed\n");
+				
+				if (J9CLASS_IS_MIXED(castClassLeafComponent)) {
+					/* mismatched arity is the easy case since the castClass leaf type must be java.lang.Object and the castClassLeafComponent
+					 * must be mixed for the cast to succeed.
+					 * Case where the 
+					 */
+					if (instanceArity > castArity) {
+						if (getClassDepth(castClassLeafComponent) == 0) {
+							// passes if leaf type if java.lang.Object, fails otherwise
+							goto done;
+						}
+					} else if (instanceArity == castArity) {
+						// don't allow casts of the form [[primitive -> [[Ljava..lang.Object
+						J9Class *instanceClassLeafComponent = ((J9ArrayClass*)instanceClass)->leafComponentType;
+	#if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
+								if (J9_IS_J9ARRAYCLASS_NULL_RESTRICTED(instanceClass)
+									|| !J9_IS_J9ARRAYCLASS_NULL_RESTRICTED(castClass)
+								) {
+	#endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
+									if (J9CLASS_IS_MIXED(instanceClassLeafComponent)) {
+										printf("from class is mixed\n");
+										/* we know arities are the same, so skip directly to the terminal case */
+										castClass = castClassLeafComponent;
+										instanceClass = instanceClassLeafComponent;
+										didRetry = true;
+										goto retry;
+									} else {
+										printf("from class is not mixed\n");
+									}
+	#if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
 								}
-#if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
-							}
-							/* else fail since a nullable array class cannot be cast to a null-restricted class */
-#endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
+								/* else fail since a nullable array class cannot be cast to a null-restricted class */
+	#endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
+					}
 				}
 			}
 
