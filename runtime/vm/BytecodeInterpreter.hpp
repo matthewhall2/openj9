@@ -10266,7 +10266,7 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
-		enableLogging = getenv("enableLogging");
+		enableLogging = getenv("enableLogging") != NULL;
 		startLogging =  enableLogging && getenv("logFromStart") != NULL;
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
