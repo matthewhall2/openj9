@@ -9703,6 +9703,7 @@ done:
 			 * receiver is the first argument.
 			 */
 			J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
+			printf("invokeBasicCallSite at %p\n", site);
 			mhReceiverIndex = site->numArgSlots - 1;
 		} else {
 			U_16 index = *(U_16 *)(_pc + 1);
@@ -9712,8 +9713,9 @@ done:
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
 
-		printf("Getting receiver\n");
+		printf("Getting receiver at index %d\n", mhReceiverIndex);
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		printf("receiver is: %p\n", mhReceiver);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
