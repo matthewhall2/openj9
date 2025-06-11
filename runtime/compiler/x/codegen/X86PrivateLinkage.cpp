@@ -616,6 +616,8 @@ void J9::X86::PrivateLinkage::createPrologue(TR::Instruction *cursor)
       }
 
    cg()->setRegisterSaveDescription(registerSaveDescription);
+   if (trace)
+      traceMsg(comp(), "Preserved Registers Size: %d\nOutgoing arg size: %d\nReserves outgoing args in prologue %d\n", preservedRegsSize, outgoingArgSize, _properties.getReservesOutgoingArgsInPrologue());
 
    // Compute frame size
    //
