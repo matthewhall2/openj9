@@ -9759,7 +9759,7 @@ done:
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
-			printf("method arg count: %d\n", methodArgCount);
+			printf("method %p has arg count: %d\n", _sendMethod, methodArgCount);
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
@@ -9800,8 +9800,8 @@ done:
 			} else {
 				printf("appendix is not null\n");
 			}
-			for (int i = 0; i < methodArgCount + 1; i++) {
-				printf("stack pointer + %d: %p\n", i, &(_sp[i]));
+			for (int i = 0; i < methodArgCount + 2; i++) {
+				printf("stack pointer + %d at %p: %p\n", i, _sp + i, (void*)_sp[i]);
 			}
 
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
