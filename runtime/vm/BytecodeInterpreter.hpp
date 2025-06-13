@@ -9801,7 +9801,7 @@ done:
 				printf("appendix is not null\n");
 			}
 			for (int i = 0; i < methodArgCount + 1; i++) {
-				printf("stack pointer + %d: %p\n", i, _sp[i]);
+				printf("stack pointer + %d: %p\n", i, &(_sp[i]));
 			}
 
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
