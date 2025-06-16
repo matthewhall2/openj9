@@ -682,7 +682,7 @@ done:
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
-			printtf("fixed frame\n");
+			prittf("fixed frame\n");
 			_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
