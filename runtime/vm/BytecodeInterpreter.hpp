@@ -9816,7 +9816,12 @@ done:
 
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
-			_sp[methodArgCount] = (UDATA)memberNameObject;
+			if (methodArgCount > 0) {	
+				_sp[methodArgCount] = (UDATA)memberNameObject;
+			}
+			for (UDATA i = 0; i < methodArgCount + 2; i++) {
+				printf("After shift:\nstack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
+			}
 			printf("Jit return address: %p\n", (void *)_literals);
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
