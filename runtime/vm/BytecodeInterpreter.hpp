@@ -9795,6 +9795,7 @@ done:
 			 *		_sp[0] = MemberName
 			 *		_sp[1] = Argument ...
 			 */
+			printf("float temp: %d\n", (IDATA)_currentThread->floatTemp1);
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
 				printf("appendix is null\n");
 				stackOffset = 2;
