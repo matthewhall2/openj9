@@ -9803,8 +9803,15 @@ done:
 			 *		_sp[0] = MemberName
 			 *		_sp[1] = Argument ...
 			 */
-			printf("float temp: %ld\n", (IDATA)_currentThread->floatTemp1);
-			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
+			IDATA slotCount = (IDATA)_currentThread->floatTemp1;
+			printf("float temp: %ld\n", slotCount);
+			UDATA adder = 0;
+			if (slotCount >= 0 && getenv("useSlotCount")) {
+				methodArgCount = (UDATA)slotCount;
+				if (getenv("addForAppendix"))
+					adder = 1;
+			}
+			if ((slotCount != jitResolvedCall) && (NULL == ((j9object_t *)_sp)[1])) {
 				printf("lts: appendix is null\n");
 				stackOffset = 2;
 			} else {
@@ -9816,8 +9823,8 @@ done:
 
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
-			if (methodArgCount > 0) {	
-				_sp[methodArgCount] = (UDATA)memberNameObject;
+			if (methodArgCount > 0) {
+				_sp[methodArgCount + adder] = (UDATA)memberNameObject;
 			}
 			for (UDATA i = 0; i < methodArgCount + 2; i++) {
 				printf("After shift:\nstack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
