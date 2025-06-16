@@ -859,7 +859,7 @@ done:
 		}
 		_currentThread->tempSlot =  (UDATA)jumpAddress;
 		if (startLogging && enableLogging && (ranInvokeBasic || getenv("logall")))
-			printf("promoted method on transition from jit - jumpAddress (thread.tempSplot): %d\n", _currentThread->tempSlot);
+			printf("promoted method on transition from jit - jumpAddress (thread.tempSplot): %lu\n", _currentThread->tempSlot);
 		_nextAction = J9_BCLOOP_LOAD_PRESERVED_AND_BRANCH;
 		VM_JITInterface::enableRuntimeInstrumentation(_currentThread);
 		return GOTO_DONE;
