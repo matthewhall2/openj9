@@ -855,10 +855,10 @@ done:
 	promotedMethodOnTransitionFromJIT(REGISTER_ARGS_LIST, void *returnAddress, void *jumpAddress, bool writeJITReturnToTemp = false)
 	{
 		if (writeJITReturnToTemp) {
-			printf("writing jit return to floattemp1\n");
+			//printf("writing jit return to floattemp1\n");
 			_currentThread->floatTemp1 = returnAddress;
 		} else {
-			printf("not writig to temp 1\n");
+		//	printf("not writig to temp 1\n");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, returnAddress);
 		}
 		_currentThread->tempSlot =  (UDATA)jumpAddress;
