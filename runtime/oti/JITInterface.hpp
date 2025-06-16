@@ -290,17 +290,24 @@ public:
 	static VMINLINE void
 	restoreJITReturnAddress(J9VMThread *vmThread, UDATA * &sp, void *returnAddress)
 	{
+		printf("restoring jit return address\n");
 #if defined(J9VM_ARCH_X86)
+		printf("restoring in x86\n");
 		*--sp = (UDATA)returnAddress;
 #elif defined(J9VM_ARCH_POWER)
+printf("restoring in power\n");
 		((J9JITRegisters*)vmThread->entryLocalStorage->jitGlobalStorageBase)->lr = (UDATA)returnAddress;
 #elif defined(J9VM_ARCH_ARM)
+printf("restoring in arm\n");
 		((J9JITRegisters*)vmThread->entryLocalStorage->jitGlobalStorageBase)->gpr.numbered[14] = (UDATA)returnAddress;
 #elif defined(J9VM_ARCH_AARCH64)
+printf("restoring in aarch64\n");
 		((J9JITRegisters*)vmThread->entryLocalStorage->jitGlobalStorageBase)->gpr.numbered[30] = (UDATA)returnAddress; // LR
 #elif defined(J9VM_ARCH_S390)
+printf("restoring in s390\n");
 		((J9JITRegisters*)vmThread->entryLocalStorage->jitGlobalStorageBase)->gpr.numbered[14] = (UDATA)returnAddress;
 #elif defined(J9VM_ARCH_RISCV)
+printf("restoring in risc V\n");
 		((J9JITRegisters*)vmThread->entryLocalStorage->jitGlobalStorageBase)->gpr.named.RA = (UDATA)returnAddress;
 #else
 #error UNKNOWN PROCESSOR
