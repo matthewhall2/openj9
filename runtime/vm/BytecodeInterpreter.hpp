@@ -5849,6 +5849,7 @@ ffi_OOM:
 	VMINLINE VM_BytecodeAction
 	native2InterpreterTransition(REGISTER_ARGS_LIST)
 	{
+		printf("native 2 interp\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		J9UpcallMetaData *data = (J9UpcallMetaData *)_currentThread->returnValue2;
 		j9object_t mhMetaData = J9_JNI_UNWRAP_REFERENCE(data->mhMetaData);
@@ -5869,7 +5870,10 @@ ffi_OOM:
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
 		j9object_t appendix = (j9object_t)J9JAVAARRAYOFOBJECT_LOAD(_currentThread, invokeCacheArray, 1);
 		if (NULL != appendix) {
+			printf("n2i: appendix is not null\n");
 			*(j9object_t*)--_sp = appendix;
+		} else {
+			printf("n2i: appendix is null\n");
 		}
 
 		return rc;
@@ -9801,10 +9805,10 @@ done:
 			 */
 			printf("float temp: %ld\n", (IDATA)_currentThread->floatTemp1);
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
-				printf("appendix is null\n");
+				printf("lts: appendix is null\n");
 				stackOffset = 2;
 			} else {
-				printf("appendix is not null\n");
+				printf("lts: appendix is not null\n");
 			}
 			for (UDATA i = 0; i < methodArgCount + 2; i++) {
 				printf("stack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
@@ -11462,7 +11466,7 @@ i2j:
 
 jni:
 	if (startLogging && enableLogging )
-		printf("jni\n");
+		printf("jni native\n");
 	PERFORM_ACTION(runJNINative(REGISTER_ARGS));
 
 runMethodHandle: {
