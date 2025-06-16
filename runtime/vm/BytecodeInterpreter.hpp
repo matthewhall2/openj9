@@ -9713,7 +9713,7 @@ done:
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
 
-		printf("Getting receiver at index %d\n", mhReceiverIndex);
+		printf("Getting receiver at index %lu\n", mhReceiverIndex);
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
 		printf("receiver is: %p\n", mhReceiver);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
@@ -9743,6 +9743,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	linkToStaticSpecial(REGISTER_ARGS_LIST)
 	{
+		printf("link to static\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
@@ -9759,7 +9760,7 @@ done:
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
-			printf("method %p has arg count: %d\n", _sendMethod, methodArgCount);
+			printf("method %p has arg count: %lu\n", _sendMethod, methodArgCount);
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
@@ -9800,8 +9801,8 @@ done:
 			} else {
 				printf("appendix is not null\n");
 			}
-			for (int i = 0; i < methodArgCount + 2; i++) {
-				printf("stack pointer + %d at %p: %p\n", i, _sp + i, (void*)_sp[i]);
+			for (UDATA i = 0; i < methodArgCount + 2; i++) {
+				printf("stack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
 			}
 
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
@@ -11089,7 +11090,7 @@ runMethod: {
 	switch(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress)) {
 #endif
 	if (startLogging && enableLogging )
-		printf("Running method - send target: %d\n", J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
+		printf("Running method - send target: %lu\n", J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_STATIC):
 		PERFORM_ACTION(initialStaticMethod(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_SPECIAL):
@@ -12350,7 +12351,7 @@ noUpdate:
 		}
 #endif
 		if (startLogging && enableLogging && (ranInvokeBasic || getenv("logall")))
-			printf("next action: %d\n", _nextAction);
+			printf("next action: %lu\n", _nextAction);
 		ranInvokeBasic = false;
 		return _nextAction;
 	}
