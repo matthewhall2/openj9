@@ -290,9 +290,9 @@ public:
 	static VMINLINE void
 	restoreJITReturnAddress(J9VMThread *vmThread, UDATA * &sp, void *returnAddress)
 	{
-		printf("restoring jit return address\n");
+		//printf("restoring jit return address\n");
 #if defined(J9VM_ARCH_X86)
-		printf("restoring in x86\n");
+		//printf("restoring in x86\n");
 		*--sp = (UDATA)returnAddress;
 #elif defined(J9VM_ARCH_POWER)
 printf("restoring in power\n");
