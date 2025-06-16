@@ -9813,7 +9813,9 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-
+		if (getenv("dontPop")) {
+			_sp += 1;
+		}
 		return rc;
 
 throw_npe:
