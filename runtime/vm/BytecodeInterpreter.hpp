@@ -678,9 +678,11 @@ done:
 
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
+			printf("variable frame\n");
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
+			printtf("fixed frame\n");
 			_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
@@ -853,8 +855,10 @@ done:
 	promotedMethodOnTransitionFromJIT(REGISTER_ARGS_LIST, void *returnAddress, void *jumpAddress, bool writeJITReturnToTemp = false)
 	{
 		if (writeJITReturnToTemp) {
+			printf("writing jit return to floattemp1\n");
 			_currentThread->floatTemp1 = returnAddress;
 		} else {
+			printf("not writig to temp 1\n");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, returnAddress);
 		}
 		_currentThread->tempSlot =  (UDATA)jumpAddress;
@@ -9809,7 +9813,7 @@ done:
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
-
+			printf("Jit return address: %p\n", (void *)_literals);
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
