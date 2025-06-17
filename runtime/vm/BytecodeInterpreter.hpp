@@ -9817,7 +9817,7 @@ done:
 			} else {
 				printf("lts: appendix is not null\n");
 			}
-			for (UDATA i = 0; i < methodArgCount + 2; i++) {
+			for (UDATA i = 0; i < methodArgCount + 1; i++) {
 				printf("stack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
 			}
 
@@ -9826,7 +9826,7 @@ done:
 			if (methodArgCount > 0) {
 				_sp[methodArgCount + adder] = (UDATA)memberNameObject;
 			}
-			for (UDATA i = 0; i < methodArgCount + 2; i++) {
+			for (UDATA i = 0; i < methodArgCount + 1; i++) {
 				printf("After shift:\nstack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
 			}
 			printf("Jit return address: %p\n", (void *)_literals);
