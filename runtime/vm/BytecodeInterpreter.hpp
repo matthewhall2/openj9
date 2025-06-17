@@ -603,6 +603,7 @@ retry:
 			}
 			/* If we got here straight from JIT, jump directly to the method - do not follow the interpreter path */
 			if (0 != _currentThread->jitStackFrameFlags) {
+				printf("got here straight from jit\n");
 				rc = promotedMethodOnTransitionFromJIT(REGISTER_ARGS, (void*)_literals, jitStartAddress);
 				goto done;
 			}
@@ -678,7 +679,7 @@ done:
 
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
-			printf("variable frame\n");
+			//printf("variable frame\n");
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
@@ -963,6 +964,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	jitTransition(REGISTER_ARGS_LIST, UDATA argCount, void *jitStartAddress)
 	{
+		printf("back to JIT\n");
 		UDATA returnSP = ((UDATA)(_sp + argCount)) | J9_STACK_FLAGS_J2_IFRAME;
 		/* Align the java stack such that sp is double-slot aligned upon entry to the JIT code */
 		if (J9_ARE_ANY_BITS_SET((UDATA)_sp, sizeof(UDATA))) {
@@ -9780,6 +9782,7 @@ done:
 
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
+			
 			_sp -= 1;
 			UDATA stackOffset = 1;
 
@@ -9833,9 +9836,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
-		if (getenv("dontPop")) {
-			_sp += 1;
-		}
+		
 		return rc;
 
 throw_npe:
@@ -11473,7 +11474,7 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 		printf("end of run method\n");
 i2j:
 	if (startLogging && enableLogging )
-		printf("i2j\n");
+		printf("i2j transition\n");
 	PERFORM_ACTION(i2jTransition(REGISTER_ARGS));
 
 jni:
