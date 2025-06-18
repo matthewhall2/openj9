@@ -1575,6 +1575,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
 void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop* treetop, TR::Node* node, TR::Node* vmTargetNode, TR::list<TR::SymbolReference *>* argsList, TR::Node* inlCallNode)
    {
+   bool useInt = feGetEnv("useIntForSig") != NULL;
    TR::SymbolReference *extraField = comp()->getSymRefTab()->findOrCreateJ9MethodExtraFieldSymbolRef(offsetof(struct J9Method, extra));
    TR::Node *extra = TR::Node::createWithSymRef(node, comp()->il.opCodeForIndirectLoad(extraField->getSymbol()->getDataType()), 1, vmTargetNode, extraField);
    TR::SymbolReference *extraTempSlotSymRef = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(),extraField->getSymbol()->getDataType());
@@ -1612,7 +1613,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
       TR_OpaqueMethodBlock *dummyInvoke = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
       int signatureLength;
       char * signature = getSignatureForComputedCall(
-         "J",
+         useInt ? "I": "J",
          "",
          comp(),
          node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
@@ -1652,6 +1653,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
 
 void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkToVirtual(TR::TreeTop * treetop, TR::Node * node)
    {
+   bool useInt = feGetEnv("useIntForSig") != NULL;
    TR::Node *receiver = node->getChild(0);
    TR::Node *memberNameNode = node->getChild(node->getNumChildren() - 1);
 
@@ -1682,9 +1684,9 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
       "java/lang/invoke/MemberName.vmindex J");
 
    TR::Node *vftOffset =
-      TR::Node::createWithSymRef(node, TR::aloadi, 1, memberNameNode, vmIndexSymRef);
-
-   if (!comp()->target().is64Bit())
+      TR::Node::createWithSymRef(node, TR::lloadi, 1, memberNameNode, vmIndexSymRef);
+   bool useAllLong =  feGetEnv("useAllLong") != NULL;
+   if (!comp()->target().is64Bit() && !useAllLong)
       vftOffset = TR::Node::create(node, TR::l2i, 1, vftOffset);
 
    makeIntoDispatchVirtualCall(node, vftOffset, vftNode, memberNameNode);
@@ -1693,6 +1695,8 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *node, TR::Node *vftOffset, TR::Node *vftNode, TR::Node *memberNameNode)
    {
+   bool useAllLong =  feGetEnv("useAllLong") != NULL;
+   bool useInt = feGetEnv("useIntForSig") != NULL || useAllLong;
    // Construct a dummy "resolved method" for JITHelpers.dispatchVirtual()V to
    // dispatch through the VFT.
    TR_J9VMBase *fej9 = comp()->fej9();
@@ -1701,7 +1705,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
 
    int signatureLength;
    char *signature = getSignatureForComputedCall(
-      "JJ",
+      useInt ? "II": "JJ",
       "",
       comp(),
       node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
@@ -1726,10 +1730,11 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
          dispatchVirtualResolvedMethod,
          TR::MethodSymbol::ComputedStatic);
 
-   TR::ILOpCodes indirectCallOp =
-      node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
+   TR::ILOpCodes callOp = feGetEnv("makeDirectCall") != NULL ?  node->getSymbol()->castToMethodSymbol()->getMethod()->directCallOpCode() :  node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
+  // TR::ILOpCodes indirectCallOp =
+   //   node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
 
-   TR::Node::recreateWithSymRef(node, indirectCallOp, dispatchVirtualSymRef);
+   TR::Node::recreateWithSymRef(node, callOp, dispatchVirtualSymRef);
 
    // 2 extra args prepended (address in vtable entry and vtable slot index),
    // and last arg (MemberName object) removed, so net 1 extra child.
@@ -1742,8 +1747,8 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
       ? TR::Node::lconst(node, sizeof(J9Class))
       : TR::Node::iconst(node, sizeof(J9Class));
 
-   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : TR::isub;
-   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : TR::aiadd;
+   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : (useAllLong ? TR::lsub : TR::isub);
+   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : (useAllLong ? TR::aladd : TR::aiadd);
 
    TR::SymbolReference *genericIntShadow =
       comp()->getSymRefTab()->createGenericIntShadowSymbolReference(0);
@@ -1753,7 +1758,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *jitVftOffset = TR::Node::create(subOp, 2, xconstSizeofJ9Class, vftOffset);
    TR::Node *jitVftSlotPtr = TR::Node::create(axadd, 2, vftNode, jitVftOffset);
 
-   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : TR::iloadi;
+   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : (useAllLong ? TR::lloadi : TR::iloadi);
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
 

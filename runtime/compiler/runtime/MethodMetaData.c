@@ -2510,6 +2510,7 @@ UDATA osrScratchBufferSize(J9VMThread* currentThread, J9JITExceptionTable *metaD
 J9JITInvokeBasicCallSite *
 jitGetInvokeBasicCallSiteFromPC(J9VMThread *vmThread, UDATA jitPC)
    {
+   printf("getting ib callsite\n");
    J9JITExceptionTable *metadata =
       vmThread->javaVM->jitConfig->jitGetExceptionTableFromPC(vmThread, jitPC);
 
@@ -2524,7 +2525,7 @@ jitGetInvokeBasicCallSiteFromPC(J9VMThread *vmThread, UDATA jitPC)
          return site;
          }
       }
-
+      printf("site does not exist\n");
    assert(0); // unreachable - the site must exist
    return NULL;
    }

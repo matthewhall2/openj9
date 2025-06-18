@@ -186,6 +186,8 @@ private:
 #endif
 	MM_ObjectAllocationAPI _objectAllocate;
 	MM_ObjectAccessBarrierAPI _objectAccessBarrier;
+	bool startTrapping = false;
+	int IBCount = 0;
 
 protected:
 
@@ -576,6 +578,10 @@ retry:
 	VMINLINE VM_BytecodeAction
 	i2jTransition(REGISTER_ARGS_LIST)
 	{
+		if (getenv("enableRunTrap12")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("i2j trap\n");
+			asm("int3");
+		}
 		VM_BytecodeAction rc = RUN_METHOD_INTERPRETED;
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void* const jitStartAddress = _sendMethod->extra;
@@ -631,14 +637,26 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		printf("in j2i transition\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		if (_sendMethod == _currentThread->javaVM->initialMethods.initialSpecialMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.initialStaticMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.initialVirtualMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.invokePrivateMethod) {
+				printf("found initial method in j2i tranasition\n");
+			}
+		printf("send method: %p, throw def con: %p\n", _sendMethod, _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		printf("rom method: %p\n", romMethod);
 		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
+		printf("exit point: %p\n", exitPoint);
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			printf("abstract or native\n");
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			printf("pc: %p\n", _pc);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -787,17 +805,23 @@ done:
 	VMINLINE J9Method*
 	j2iVirtualMethod(REGISTER_ARGS_LIST, j9object_t receiver, UDATA interfaceVTableIndex)
 	{
+		printf("in j2i for virtual method\n");
 		J9Method *method = NULL;
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
+		printf("jit return address is: %p\n", jitReturnAddress);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
-
-		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
+		printf("jit vtable offset is: %lu (as int %u)\n", jitVTableOffset, jitVTableOffset);
+		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG) || getenv("indexIsMethod")) {
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
+			printf("method is %p\n", method);
 		} else {
 			UDATA vTableOffset = sizeof(J9Class) - jitVTableOffset;
+			printf("vtable offet is: %d (as int %u)\n", vTableOffset, vTableOffset);
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
+			printf("class is %p\n", clazz);
 			method = *(J9Method**)((UDATA)clazz + vTableOffset);
+			printf("method is %p\n", method);
 		}
 		return method;
 	}
@@ -1029,7 +1053,9 @@ obj:
 	VMINLINE VM_BytecodeAction
 	j2iInvokeExact(REGISTER_ARGS_LIST, j9object_t methodHandle)
 	{
+		printf("start j2i invoke exact\n");
 #if defined(J9VM_OPT_METHOD_HANDLE)
+		printf("j2i invoke exact\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHODHANDLE;
 		static U_8 const bcReturnFromJ2I[] = { JBinvokestatic, 0, 0, JBreturnFromJ2I };
@@ -2382,6 +2408,10 @@ done:
 	VMINLINE VM_BytecodeAction
 	runJNINative(REGISTER_ARGS_LIST)
 	{
+		if (getenv("enableNativeTrap\n")) {
+			printf("native trap\n");
+			asm("int3");
+		}
 		VM_BytecodeAction rc = GOTO_DONE;
 		void *jniMethodStartAddress = _sendMethod->extra;
 		U_8 returnType = 0;
@@ -5995,6 +6025,8 @@ done:
 	VMINLINE VM_BytecodeAction
 	iconst(REGISTER_ARGS_LIST, I_32 value)
 	{
+		if (getenv("iconst_trace"))
+			printf("in iconst\n");
 		_pc += 1;
 		_sp -= 1;
 		*(I_32*)_sp = value;
@@ -9601,6 +9633,13 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		IBCount++;
+		printf("invoke basic count: %d\n", IBCount);
+		if (getenv("enableIBTrap")) {
+			printf("IB trap\n");
+			asm("int3");
+		}
+		printf("in invoke basic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		UDATA mhReceiverIndex = 0;
@@ -9609,17 +9648,40 @@ done:
 			/* JIT body metadata specifies the number of stack slots for the arguments, and the MH
 			 * receiver is the first argument.
 			 */
-			J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
-			mhReceiverIndex = site->numArgSlots - 1;
+			mhReceiverIndex = _currentThread->tempSlot - 1;
+			printf("old way jit: num arg slots: %d\n", _currentThread->tempSlot);
+			if (getenv("IBUseOld")) {
+				mhReceiverIndex = _currentThread->tempSlot - 1;
+				//printf("old way jit: num arg slots: %d\n", site->numArgSlots);
+			} else {
+				printf("IB: finding callsite\n");
+				J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
+				printf("callsite is: %p\n", site);
+				mhReceiverIndex = site->numArgSlots - 1;
+				printf("jit: num arg slots: %d\n", site->numArgSlots);
+			}
+			if (getenv("firstArgAtZero")) {
+				mhReceiverIndex = 0;
+			}
+			
 		} else {
+			printf("not from jit\n");
 			U_16 index = *(U_16 *)(_pc + 1);
 			J9ConstantPool *ramConstantPool = J9_CP_FROM_METHOD(_literals);
 			J9RAMMethodRef *ramMethodRef = ((J9RAMMethodRef *)ramConstantPool) + index;
 			UDATA volatile methodIndexAndArgCount = ramMethodRef->methodIndexAndArgCount;
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
-
-		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		
+		printf("receiver index: %d\n", mhReceiverIndex);
+		j9object_t mhReceiver;
+		if (getenv("tryDiff")) {
+			//mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+			mhReceiver = (j9object_t)(_sp[mhReceiverIndex]);
+		} else {
+			mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		}
+		printf("mh receiver: %p\n", mhReceiver);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9628,12 +9690,22 @@ done:
 		}
 
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
+		printf("mh lambdaForm: %p\n", lambdaForm);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
+		printf("mh memberName: %p\n", memberName);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+		printf("mh _sendMethod: %p\n", _sendMethod);
+		printf("Found send method\n");
 
 		if (fromJIT) {
+			if (getenv("removeMH")) {
+				_sp++;
+			}
+			printf("resotring returhn address");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+			printf("going to interpreter\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
+			printf("done transition. rc: %d, next action: %d\n", rc, _nextAction);
 		}
 
 		return rc;
@@ -9687,18 +9759,18 @@ done:
 			 *		_sp[0] = MemberName
 			 *		_sp[1] = Appendix (if not null)
 			 *		_sp[2] = Argument ...
-			 *
+			 *-
 			 * Or:
 			 *		_sp[0] = MemberName
 			 *		_sp[1] = Argument ...
 			 */
-			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
-				stackOffset = 2;
-			}
 
-			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
-			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
-			_sp[methodArgCount] = (UDATA)memberNameObject;
+			// we only want the args on the stack when calling the target method
+			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
+				_sp += 2;
+			} else {
+				_sp += 1;
+			}
 
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
@@ -9718,6 +9790,7 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToVirtual(REGISTER_ARGS_LIST)
 	{
+		printf("in link to virtual\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 
@@ -9785,13 +9858,7 @@ throw_npe:
 		}
 
 		if (fromJIT) {
-			/* Restore SP to before popping memberNameObject. */
-			_sp -= 1;
-
-			/* Shift arguments by 1 and place memberNameObject before the first argument. */
-			memmove(_sp, _sp + 1, methodArgCount * sizeof(UDATA));
-			_sp[methodArgCount] = (UDATA)memberNameObject;
-
+			// run the method with the arguments from the stack - do not restore pointer to MN
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
@@ -9894,13 +9961,7 @@ foundITable:
 		}
 
 		if (fromJIT) {
-			/* Restore SP to before popping memberNameObject. */
-			_sp -= 1;
-
-			/* Shift arguments by 1 and place memberNameObject before the first argument. */
-			memmove(_sp, _sp + 1, methodArgCount * sizeof(UDATA));
-			_sp[methodArgCount] = (UDATA)memberNameObject;
-
+			// run the method with the arguments from the stack - do not restore pointer to MN
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
@@ -9982,20 +10043,27 @@ done:
 	countAndCompileMethodHandle(REGISTER_ARGS_LIST, j9object_t methodHandle, void **compiledEntryPoint)
 	{
 #if defined(J9VM_OPT_METHOD_HANDLE)
+		printf("count and compile mh\n");
 		J9JITConfig *jitConfig = _vm->jitConfig;
 		if (NULL != jitConfig) {
+			printf("getting thunks\n");
 			j9object_t thunks = J9VMJAVALANGINVOKEMETHODHANDLE_THUNKS(_currentThread, methodHandle);
+			printf("got thunks\n");
 			bool isUpdated = false;
 			I_32 count = 0;
 			do {
+				printf("getting count of thunk\n");
 				count = J9VMJAVALANGINVOKETHUNKTUPLE_INVOCATIONCOUNT(_currentThread, thunks);
+				printf("got count\nswapping");
 				isUpdated = _objectAccessBarrier.inlineMixedObjectCompareAndSwapU32(
 					_currentThread,
 					thunks,
 					J9VMJAVALANGINVOKETHUNKTUPLE_INVOCATIONCOUNT_OFFSET(_currentThread),
 					count,
 					count + 1);
-			} while(!isUpdated);
+					printf("swapped\n");
+			} while(!isUpdated);\
+			printf("count is %d\n", count);
 
 			if (count == (IDATA)_vm->methodHandleCompileCount) {
 				j9object_t currentType = J9VMJAVALANGINVOKEMETHODHANDLE_TYPE(_currentThread, methodHandle);
@@ -10166,6 +10234,10 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
+		if (getenv("enableRunTrap1")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+			printf("start of run\n");
+			asm("int3");
+		}
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
 		char currentMethodName[1024];
@@ -10668,7 +10740,11 @@ public:
 #endif /* JAVA_SPEC_VERSION >= 19 */
 	};
 #endif /* !defined(USE_COMPUTED_GOTO) */
-
+if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+			printf("end of jump table\n");
+			asm("int3");
+		}
+	printf("send target table addr: %p\nbytecode table addr: %p\n", sendTargetTable, bytecodeTable);
 /*
  * Important: To work around an XLC compiler bug, the cases in PERFORM_ACTION below
  * must be in the identical order to their declaration in BytecodeAction.hpp.
@@ -10776,9 +10852,17 @@ public:
 #else
 #define SINGLE_STEP()
 #endif
-
+	if (getenv("enableRunTrap3")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("first switch (vm thread ret val)\n");
+			asm("int3");
+		}
+	printf("first switch (vm thread ret val)\n");
+	printf("vm threade ret val: %u\n", vmThread->returnValue);
 	switch (vmThread->returnValue) {
 	case J9_BCLOOP_RUN_METHOD:
+	//printf("run method\n");
+		printf("action data: %p\n", actionData);
+		printf("run method\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10786,6 +10870,7 @@ public:
 #endif
 		goto runMethod;
 	case J9_BCLOOP_RUN_METHOD_INTERPRETED:
+		printf("run method interpreted\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10793,6 +10878,7 @@ public:
 #endif
 		goto runMethodInterpreted;
 	case J9_BCLOOP_RUN_METHOD_HANDLE:
+		printf("run methohandle\n");
 		/* Stash MethodHandle into tempSlot where MHInterpreter expects to find it */
 		vmThread->tempSlot = (UDATA)actionData;
 #if defined(TRACE_TRANSITIONS)
@@ -10801,6 +10887,7 @@ public:
 #endif
 		goto runMethodHandle;
 	case J9_BCLOOP_EXECUTE_BYTECODE:
+	printf("execute bytecode\n");
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _literals, _pc, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_EXECUTE_BYTECODE %s\n", vmThread, currentMethodName);
@@ -10808,25 +10895,33 @@ public:
 		EXECUTE_CURRENT_BYTECODE();
 #if defined(DEBUG_VERSION)
 	case J9_BCLOOP_HANDLE_POP_FRAMES:
+		printf("pop frames\n");
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_HANDLE_POP_FRAMES\n", vmThread);
 #endif
 		goto popFrames;
 #endif
 	case J9_BCLOOP_THROW_CURRENT_EXCEPTION:
+	printf("throw current exception\n");
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_THROW_CURRENT_EXCEPTION exception=%p\n", vmThread, vmThread->currentException);
 #endif
 		goto throwCurrentException;
 	case J9_BCLOOP_CHECK_ASYNC:
+	printf("check async\n");
 		goto asyncCheck;
 	case J9_BCLOOP_J2I_VIRTUAL: {
+		printf("j2i virtual\n");
 		j9object_t receiver = (j9object_t)actionData;
+		printf("reciever is: %p\n", receiver);
 		UDATA interfaceVTableIndex = vmThread->tempSlot;
+		printf("interface vtable index is: %lu (as int %u)\n", interfaceVTableIndex, interfaceVTableIndex);
 		actionData = (void*)j2iVirtualMethod(REGISTER_ARGS, receiver, interfaceVTableIndex);
+		printf("action data is: %p", actionData);
 		// intentional fall-through
 	}
 	case J9_BCLOOP_J2I_TRANSITION:
+	printf("j2i transition\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10834,6 +10929,7 @@ public:
 #endif
 		PERFORM_ACTION(j2iTransition(REGISTER_ARGS));
 	case J9_BCLOOP_J2I_INVOKE_EXACT: {
+		printf("j2i invoke exact\n");
 		j9object_t methodHandle = (j9object_t)actionData;
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_J2I_INVOKE_EXACT methodHandle=%p\n", vmThread, methodHandle);
@@ -10841,6 +10937,7 @@ public:
 		PERFORM_ACTION(j2iInvokeExact(REGISTER_ARGS, methodHandle));
 	}
 	case J9_BCLOOP_I2J_TRANSITION:
+		printf("i2j transition\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10848,31 +10945,44 @@ public:
 #endif
 		goto i2j;
 	case J9_BCLOOP_RETURN_FROM_JIT:
+	printf("return from jit\n");
 		PERFORM_ACTION(returnFromJIT(REGISTER_ARGS, (UDATA)actionData, false));
 	case J9_BCLOOP_RETURN_FROM_JIT_CTOR:
+	printf("return from jit ctor\n");
 		PERFORM_ACTION(returnFromJIT(REGISTER_ARGS, 0, true));
 	case J9_BCLOOP_FILL_OSR_BUFFER:
+	printf("fill osr buffer\n");
 		PERFORM_ACTION(fillOSRBuffer(REGISTER_ARGS, actionData));
 	case J9_BCLOOP_EXIT_INTERPRETER:
+	printf("exit interpreter\n");
 		_nextAction = J9_BCLOOP_EXIT_INTERPRETER;
 		goto done;
 #if defined(DO_HOOKS)
 	case J9_BCLOOP_ENTER_METHOD_MONITOR:
+	printf("enter monitor\n");
+
 		_sendMethod = (J9Method *)actionData;
 		PERFORM_ACTION(enterMethodMonitor(REGISTER_ARGS));
 	case J9_BCLOOP_REPORT_METHOD_ENTER:
+	printf("report method enter\n");
+
 		_sendMethod = (J9Method *)actionData;
 		goto methodEnter;
 #endif /* DO_HOOKS */
 #if JAVA_SPEC_VERSION >= 16
 	case J9_BCLOOP_N2I_TRANSITION:
+		printf("n2i transition\n");
 		PERFORM_ACTION(native2InterpreterTransition(REGISTER_ARGS));
 #endif /* JAVA_SPEC_VERSION >= 16 */
 #if JAVA_SPEC_VERSION >= 24
 	case J9_BCLOOP_YIELD_FOR_JIT_MONENT:
+	printf("yield for jit monent\n");
+
 		PERFORM_ACTION(yieldPinnedContinuation(REGISTER_ARGS, JAVA_LANG_VIRTUALTHREAD_BLOCKING, J9VM_CONTINUATION_RETURN_FROM_JIT_MONITOR_ENTER));
 #endif /* JAVA_SPEC_VERSION >= 24 */
 	default:
+	printf("default case\n");
+
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: UNKNOWN %d\n", vmThread, vmThread->returnValue);
 #endif
@@ -10886,11 +10996,25 @@ methodEnter:
 #endif /* DO_HOOKS */
 
 runMethodInterpreted:
+printf("run method interpreted\n");
+if (getenv("enableRunTrap8")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("run method interpreted\n");
+			asm("int3");
+		}
 	if (J9_ARE_ANY_BITS_SET(J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->modifiers, J9AccNative)) {
+		if (getenv("enableRunTrap9")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("going to jni\n");
+			asm("int3");
+		}
 		goto jni;
 	}
+	
 	/* intentional fall-through to targetLargeStack */
 targetLargeStack: {
+	if (getenv("enableRunTrap4")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("target large stack\n");
+			asm("int3");
+		}
 	J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 	U_32 modifiers = romMethod->modifiers;
 	UDATA stackUse = VM_VMHelpers::calculateStackUse(romMethod);
@@ -10907,6 +11031,10 @@ targetLargeStack: {
 		updateVMStruct(REGISTER_ARGS);
 		if (currentUsed > maxStackSize) {
 throwStackOverflow:
+if (getenv("enableRunTrap7")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+			printf("stack overflow\n");
+			asm("int3");
+		}
 			if (J9_ARE_ANY_BITS_SET(_currentThread->privateFlags, J9_PRIVATE_FLAGS_STACK_OVERFLOW)) {
 				// vmStruct already up-to-date in all paths to here
 				fatalRecursiveStackOverflow(_currentThread);
@@ -10916,6 +11044,7 @@ throwStackOverflow:
 			VMStructHasBeenUpdated(REGISTER_ARGS);
 			goto throwCurrentException;
 		}
+		
 		currentUsed += _vm->stackSizeIncrement;
 		if (currentUsed > maxStackSize) {
 			currentUsed = maxStackSize;
@@ -10957,10 +11086,14 @@ targetObjectConstructor:
 
 targetZeroing:
 	PERFORM_ACTION(sendTargetSmallZeroing(REGISTER_ARGS));
-
+if (getenv("enableRunTrap5")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+	printf("before pop frames\n");
+			asm("int3");
+		}
 
 #if defined(DEBUG_VERSION)
 popFrames:
+printf("handle pop frames\n");
 	PERFORM_ACTION(handlePopFramesInterrupt(REGISTER_ARGS));
 #endif
 
@@ -10968,12 +11101,18 @@ dlt:
 	PERFORM_ACTION(performDLT(REGISTER_ARGS));
 
 runMethod: {
+	printf("run method\n");
+	if (getenv("enableRunTrap6")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+	printf("before pop frames\n");
+			asm("int3");
+		}
 #if defined(USE_COMPUTED_GOTO)
+	
 	EXECUTE_SEND_TARGET(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 #else
 	switch(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress)) {
 #endif
-
+		printf("decoded: %d\n", J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_STATIC):
 		PERFORM_ACTION(initialStaticMethod(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_SPECIAL):
@@ -11331,13 +11470,23 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 }
 
 i2j:
+printf("i2j\n");
+if (getenv("enableRunTrap11")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("i2j trap\n");
+			asm("int3");
+		}
 	PERFORM_ACTION(i2jTransition(REGISTER_ARGS));
 
 jni:
+if (getenv("enableRunTrap10")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+		printf("jni trap\n");
+			asm("int3");
+		}
 	PERFORM_ACTION(runJNINative(REGISTER_ARGS));
 
 runMethodHandle: {
 #if defined(J9VM_OPT_METHOD_HANDLE)
+printf("run method handle\n");
 	j9object_t methodHandle = (j9object_t)_currentThread->tempSlot;
 	void *compiledEntryPoint = VM_VMHelpers::methodHandleCompiledEntryPoint(_vm, _currentThread, methodHandle);
 	if (NULL != compiledEntryPoint) {
@@ -11353,6 +11502,7 @@ runMethodHandle: {
 	}
 	PERFORM_ACTION(interpretMethodHandle(REGISTER_ARGS, methodHandle));
 #else
+printf("shold not get here\n");
 	Assert_VM_unreachable();
 #endif /* J9VM_OPT_METHOD_HANDLE */
 }
@@ -11564,6 +11714,8 @@ executeBytecodeFromLocal:
 			SINGLE_STEP();
 			PERFORM_ACTION(iconst(REGISTER_ARGS, 0x3F800000));
 		JUMP_TARGET(JBfconst2):
+			if (getenv("iconst_trace"))
+				printf("in jbfconst2\n");
 			SINGLE_STEP();
 			PERFORM_ACTION(iconst(REGISTER_ARGS, 0x40000000));
 		JUMP_TARGET(JBdconst1):

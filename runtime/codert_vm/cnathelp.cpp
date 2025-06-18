@@ -170,6 +170,7 @@ buildBranchJITResolveFrame(J9VMThread *currentThread, void *pc, UDATA flags)
 static VMINLINE void*
 restoreJITResolveFrame(J9VMThread *currentThread, void *oldPC, bool checkAsync = true, bool checkException = true)
 {
+	printf("in restore jit resolve frame\n");
 	void* addr = NULL;
 	J9SFJITResolveFrame *resolveFrame = (J9SFJITResolveFrame*)currentThread->sp;
 	if (checkAsync) {
@@ -190,6 +191,7 @@ restoreJITResolveFrame(J9VMThread *currentThread, void *oldPC, bool checkAsync =
 		void *newPC = resolveFrame->returnAddress;
 		if (!samePCs(oldPC, newPC)) {
 			addr = JIT_RUN_ON_JAVA_STACK(newPC);
+			printf("jit run on java stack\ntempslot is now: %lu (int %u)\nAddr is: %p\n", currentThread->tempSlot, currentThread->tempSlot, addr);
 			goto done;
 		}
 	}
@@ -3135,6 +3137,7 @@ old_fast_jitObjectHashCode(J9VMThread *currentThread)
 static VMINLINE void*
 old_slow_jitInduceOSRAtCurrentPCImpl(J9VMThread *currentThread, void *oldPC)
 {
+	printf("in old_slow_jitInduceOSRAtCurrentPCImpl\n");
 	induceOSROnCurrentThread(currentThread);
 	/* If the OSR was successful, a decompilation will have been added to the resolve frame */
 	J9SFJITResolveFrame *resolveFrame = (J9SFJITResolveFrame*)currentThread->sp;
@@ -3144,6 +3147,7 @@ old_slow_jitInduceOSRAtCurrentPCImpl(J9VMThread *currentThread, void *oldPC)
 		newPC = setNativeOutOfMemoryErrorFromJIT(currentThread, 0, 0);
 	} else {
 		newPC = JIT_RUN_ON_JAVA_STACK(newPC);
+		printf("tempslot is now: %lu (int %u)\nnewPC is: %p\n", currentThread->tempSlot, currentThread->tempSlot, newPC);
 	}
 	return newPC;
 }
@@ -3184,6 +3188,7 @@ old_slow_jitInduceOSRAtCurrentPC(J9VMThread *currentThread)
 void J9FASTCALL
 old_slow_jitInterpretNewInstanceMethod(J9VMThread *currentThread)
 {
+	printf("in old_slow_jitInterpretNewInstanceMethod\n");
 	/* JIT has passed two parameters, but only the first one matters to this call.
 	 * The parmCount has to be 1 in order for JIT_PARM_IN_MEMORY to function correctly
 	 * in the register case.
@@ -3210,6 +3215,7 @@ old_slow_jitInterpretNewInstanceMethod(J9VMThread *currentThread)
 	JIT_PARM_IN_MEMORY(1) = JIT_DIRECT_CALL_PARM(1);
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 	currentThread->tempSlot = (UDATA)J9_BUILDER_SYMBOL(icallVMprJavaSendStatic1);
+	printf("tempslot: %lu (as int %d)\n", currentThread->tempSlot, currentThread->tempSlot);
 	jitRegisters->JIT_J2I_METHOD_REGISTER = (UDATA)J9VMJAVALANGJ9VMINTERNALS_NEWINSTANCEIMPL_METHOD(vm);
 }
 
@@ -3301,6 +3307,7 @@ done:
 void J9FASTCALL
 old_slow_jitTranslateNewInstanceMethod(J9VMThread *currentThread)
 {
+	printf("in old_slow_jitTranslateNewInstanceMethod\n");
 	OLD_SLOW_ONLY_JIT_HELPER_PROLOGUE(2);
 	j9object_t objectClassObject = (j9object_t)JIT_DIRECT_CALL_PARM(1);
 	j9object_t callerClassObject = (j9object_t)JIT_DIRECT_CALL_PARM(2);
@@ -3341,6 +3348,7 @@ redo:
 		address = J9_BUILDER_SYMBOL(jitInterpretNewInstanceMethod);
 	}
 	currentThread->tempSlot = (UDATA)address;
+	printf("new inst... address: %lu (as int %d)\n", currentThread->tempSlot, currentThread->tempSlot);
 	SLOW_JIT_HELPER_EPILOGUE();
 }
 
@@ -3389,6 +3397,7 @@ void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 {
 	UDATA const interfaceVTableIndex = currentThread->tempSlot;
+	printf("interface v table index: %lu (as int %d)\n", interfaceVTableIndex, interfaceVTableIndex);
 	j9object_t const receiver = (j9object_t)currentThread->returnValue2;
 	J9JavaVM *vm = currentThread->javaVM;
 	J9JITConfig *jitConfig = vm->jitConfig;
@@ -3398,18 +3407,23 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	UDATA interpVTableOffset = sizeof(J9Class) - jitVTableOffset;
 	J9Method *method = *(J9Method**)((UDATA)clazz + interpVTableOffset);
 	UDATA thunk = 0;
+	printf("in old_slow_icallVMprJavaSendPatchupVirtual\n");
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
-	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress)) {
+	printf("openjdk mh\n");
+	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress) && !getenv("helperUseOld")) {
 		/* Because invokeBasic() is signature-polymorphic, the signature from the ROM method is irrelevant.
 		 * We need the J2I thunk that corresponds to the signature that the JIT was using at the call site.
 		 * Since this varies depending on the call site, we can't replace the VFT entry with the J2I thunk.
 		 */
+		printf("finding callsite and thunk\n");
 		J9JITInvokeBasicCallSite *site = jitGetInvokeBasicCallSiteFromPC(currentThread, (UDATA)jitReturnAddress);
 		thunk = (UDATA)site->j2iThunk;
+		printf("thunk was set to %p\n", (void*)thunk);
 	}
 	else
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	{
+		printf("not invoke basic\n");
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
 		J9ROMNameAndSignature *nas = &romMethod->nameAndSignature;
 		thunk = (UDATA)jitConfig->thunkLookUpNameAndSig(jitConfig, nas);
@@ -3417,10 +3431,11 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		UDATA *jitVTableSlot = (UDATA*)((UDATA)clazz + jitVTableOffset);
 		VM_AtomicSupport::lockCompareExchange(jitVTableSlot, patchup, thunk);
 	}
+	printf("thunk was set to %p\n", (void*)thunk);
 	currentThread->tempSlot = thunk;
 }
 
-#endif /* J9SW_NEEDS_JIT_2_INTERP_THUNKS */
+#endif /* (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS) || !defined(J9VM_ENV_DATA64)) */
 
 /* New-style helpers */
 

@@ -5366,19 +5366,29 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
    uint8_t numArgSlots = (uint8_t)numArgSlots32;
 
    void *j2iThunk = NULL;
+   
    if (rm == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
       {
+      printf("fetching dispatchVirtyual j2i thunk\n");
       TR::Method *m = methodSymbol->getMethod();
-      char *sig = fej9->getJ2IThunkSignatureForDispatchVirtual(
-         m->signatureChars(), m->signatureLength(), comp());
-
-      int32_t sigLen = strlen(sig);
-      j2iThunk = fej9->getJ2IThunk(sig, sigLen, comp());
-      TR_ASSERT_FATAL_WITH_NODE(callNode, j2iThunk != NULL, "missing J2I thunk");
-
-      if (comp()->getOption(TR_TraceCG))
+      if (!(self()->comp()->target().cpu.isX86() && self()->comp()->target().is32Bit()))
          {
-         traceMsg(comp(), "  J2I thunk: %p\n", j2iThunk);
+         char *sig = fej9->getJ2IThunkSignatureForDispatchVirtual(
+            m->signatureChars(), m->signatureLength(), comp());
+         printf("dispatchVirtual sig: %s\n", sig);
+         int32_t sigLen = strlen(sig);
+         j2iThunk = fej9->getJ2IThunk(sig, sigLen, comp());
+         TR_ASSERT_FATAL_WITH_NODE(callNode, j2iThunk != NULL, "missing J2I thunk");
+
+         if (comp()->getOption(TR_TraceCG))
+            {
+            traceMsg(comp(), "  J2I thunk: %p\n", j2iThunk);
+            }
+         } else {
+            if (feGetEnv("dontAddIBCallsiteOnX86")) {
+               printf("skipping adding\n");
+               return;
+            }
          }
       }
 
