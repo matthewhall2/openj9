@@ -9824,8 +9824,12 @@ done:
 				printf("stack pointer + %lu at %p: %p\n", i, _sp + i, (void*)_sp[i]);
 			}
 
+			if (getenv("removeMN") != NULL) {
+				_sp += stackOffset;
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
+			} else {
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
+			}
 			if (methodArgCount > 0) {
 				_sp[methodArgCount + adder] = (UDATA)memberNameObject;
 			}
