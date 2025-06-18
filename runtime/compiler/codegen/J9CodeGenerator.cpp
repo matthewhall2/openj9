@@ -5369,16 +5369,19 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
    if (rm == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
       {
       TR::Method *m = methodSymbol->getMethod();
-      char *sig = fej9->getJ2IThunkSignatureForDispatchVirtual(
-         m->signatureChars(), m->signatureLength(), comp());
-
-      int32_t sigLen = strlen(sig);
-      j2iThunk = fej9->getJ2IThunk(sig, sigLen, comp());
-      TR_ASSERT_FATAL_WITH_NODE(callNode, j2iThunk != NULL, "missing J2I thunk");
-
-      if (comp()->getOption(TR_TraceCG))
+      if (!(self()->comp()->target().cpu.isX86() && self()->comp()->target().is32Bit()))
          {
-         traceMsg(comp(), "  J2I thunk: %p\n", j2iThunk);
+         char *sig = fej9->getJ2IThunkSignatureForDispatchVirtual(
+            m->signatureChars(), m->signatureLength(), comp());
+
+         int32_t sigLen = strlen(sig);
+         j2iThunk = fej9->getJ2IThunk(sig, sigLen, comp());
+         TR_ASSERT_FATAL_WITH_NODE(callNode, j2iThunk != NULL, "missing J2I thunk");
+
+         if (comp()->getOption(TR_TraceCG))
+            {
+            traceMsg(comp(), "  J2I thunk: %p\n", j2iThunk);
+            }
          }
       }
 
