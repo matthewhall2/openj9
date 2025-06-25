@@ -9975,20 +9975,27 @@ done:
 	countAndCompileMethodHandle(REGISTER_ARGS_LIST, j9object_t methodHandle, void **compiledEntryPoint)
 	{
 #if defined(J9VM_OPT_METHOD_HANDLE)
+		printf("count and compile mh\n");
 		J9JITConfig *jitConfig = _vm->jitConfig;
 		if (NULL != jitConfig) {
+			printf("getting thunks\n");
 			j9object_t thunks = J9VMJAVALANGINVOKEMETHODHANDLE_THUNKS(_currentThread, methodHandle);
+			printf("got thunks\n");
 			bool isUpdated = false;
 			I_32 count = 0;
 			do {
+				printf("getting count of thunk\n");
 				count = J9VMJAVALANGINVOKETHUNKTUPLE_INVOCATIONCOUNT(_currentThread, thunks);
+				printf("got count\nswapping");
 				isUpdated = _objectAccessBarrier.inlineMixedObjectCompareAndSwapU32(
 					_currentThread,
 					thunks,
 					J9VMJAVALANGINVOKETHUNKTUPLE_INVOCATIONCOUNT_OFFSET(_currentThread),
 					count,
 					count + 1);
-			} while(!isUpdated);
+					printf("swapped\n");
+			} while(!isUpdated);\
+			printf("count is %d\n", count);
 
 			if (count == (IDATA)_vm->methodHandleCompileCount) {
 				j9object_t currentType = J9VMJAVALANGINVOKEMETHODHANDLE_TYPE(_currentThread, methodHandle);
