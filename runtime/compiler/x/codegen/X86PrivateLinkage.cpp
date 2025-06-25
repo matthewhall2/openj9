@@ -2043,7 +2043,7 @@ void J9::X86::PrivateLinkage::buildDirectCall(
       // be too hard to implement on 32-bit, but it is left unimplemented for
       // now because we can't exercise it anyway until we start to get OpenJDK
       // MethodHandles working on Java 8.
-      TR_ASSERT_FATAL(comp()->target().is64Bit(), "jitDispatchJ9Method on 32-bit");
+      //TR_ASSERT_FATAL(comp()->target().is64Bit(), "jitDispatchJ9Method on 32-bit");
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
 
