@@ -4473,6 +4473,7 @@ bool
 TR_J9VMBase::needsInvokeExactJ2IThunk(TR::Node *callNode, TR::Compilation *comp)
    {
    TR_ASSERT(callNode->getOpCode().isCall(), "needsInvokeExactJ2IThunk expects call node; found %s", callNode->getOpCode().getName());
+   if (comp->target().cpu.isX86() && comp->target().is32Bit()) return false;
 
    TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
    TR::Method       *method       = methodSymbol->getMethod();
