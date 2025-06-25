@@ -9601,6 +9601,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		printf("in invoke basic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		UDATA mhReceiverIndex = 0;
@@ -9630,10 +9631,14 @@ done:
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+		printf("Found send method\n");
 
 		if (fromJIT) {
+			printf("resotring returhn address");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+			printf("going to interpreter\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
+			printf("done transition\n");
 		}
 
 		return rc;
