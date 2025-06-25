@@ -1795,7 +1795,7 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
             case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
             case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
                {
-               if (comp()->target().cpu.isX86() && comp()->target().is32Bit) break;
+               if (comp()->target().cpu.isX86() && comp()->target().is32Bit()) break;
                // Need a j2i thunk for the method that will ultimately be dispatched by this handle call
                char *j2iSignature = fej9->getJ2IThunkSignatureForDispatchVirtual(methodSymbol->getMethod()->signatureChars(), methodSymbol->getMethod()->signatureLength(), comp());
                int32_t signatureLen = strlen(j2iSignature);
