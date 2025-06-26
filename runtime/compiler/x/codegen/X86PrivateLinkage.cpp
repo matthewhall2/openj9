@@ -2088,7 +2088,7 @@ void J9::X86::PrivateLinkage::buildDirectCall(
          cg());
 
       generateRegImmInstruction(
-         TR::InstOpCode::Mnemonic::SHRRegImm1(), callNode, j9mReg, 16, cg());
+         TR::InstOpCode::SHR4RegImm1, callNode, j9mReg, 16, cg());
 
       generateRegRegInstruction(
          TR::InstOpCode::ADDRegReg(), callNode, scratchReg, j9mReg, cg());
