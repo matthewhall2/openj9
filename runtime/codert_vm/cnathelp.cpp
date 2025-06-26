@@ -3399,6 +3399,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	J9Method *method = *(J9Method**)((UDATA)clazz + interpVTableOffset);
 	UDATA thunk = 0;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+	printf("in old_slow_icallVMprJavaSendPatchupVirtual");
 	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress)) {
 		/* Because invokeBasic() is signature-polymorphic, the signature from the ROM method is irrelevant.
 		 * We need the J2I thunk that corresponds to the signature that the JIT was using at the call site.
@@ -3406,6 +3407,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		 */
 		J9JITInvokeBasicCallSite *site = jitGetInvokeBasicCallSiteFromPC(currentThread, (UDATA)jitReturnAddress);
 		thunk = (UDATA)site->j2iThunk;
+		printf("thunk was set to %p\n", thunk);
 	}
 	else
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
