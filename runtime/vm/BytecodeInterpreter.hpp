@@ -9610,7 +9610,9 @@ done:
 			/* JIT body metadata specifies the number of stack slots for the arguments, and the MH
 			 * receiver is the first argument.
 			 */
+			printf("IB: finding callsite\n");
 			J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
+			printf("callsite is: %p\n", site);
 			mhReceiverIndex = site->numArgSlots - 1;
 		} else {
 			U_16 index = *(U_16 *)(_pc + 1);
