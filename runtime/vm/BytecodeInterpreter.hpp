@@ -10934,7 +10934,7 @@ targetLargeStack: {
 		updateVMStruct(REGISTER_ARGS);
 		if (currentUsed > maxStackSize) {
 throwStackOverflow:
-if (fgetenv("enableRunTrap7")) {
+if (getenv("enableRunTrap7")) {
 			printf("stack overflow\n");
 			asm("int3");
 		}
