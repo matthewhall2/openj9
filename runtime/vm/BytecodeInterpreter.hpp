@@ -9601,6 +9601,9 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		if (getenv(enableIBTrap)) {
+			asm("int3");
+		}
 		printf("in invoke basic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
@@ -9640,7 +9643,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			printf("going to interpreter\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
-			printf("done transition\n");
+			printf("done transition. rc: %d\n", rc);
 		}
 
 		return rc;
