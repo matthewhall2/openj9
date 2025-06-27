@@ -9601,7 +9601,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
-		if (getenv(enableIBTrap)) {
+		if (getenv("enableIBTrap")) {
 			asm("int3");
 		}
 		printf("in invoke basic\n");
