@@ -5384,6 +5384,11 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
             {
             traceMsg(comp(), "  J2I thunk: %p\n", j2iThunk);
             }
+         } else {
+            if (feGetEnv("dontAddIBCallsiteOnX86")) {
+               printf("skipping adding\n");
+               return;
+            }
          }
       }
 
