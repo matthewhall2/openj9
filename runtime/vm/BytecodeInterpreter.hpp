@@ -2382,6 +2382,10 @@ done:
 	VMINLINE VM_BytecodeAction
 	runJNINative(REGISTER_ARGS_LIST)
 	{
+		if (getenv("enableNativeTrap\n")) {
+			printf("native\n");
+			asm("int3");
+		}
 		VM_BytecodeAction rc = GOTO_DONE;
 		void *jniMethodStartAddress = _sendMethod->extra;
 		U_8 returnType = 0;
@@ -10901,6 +10905,10 @@ methodEnter:
 #endif /* DO_HOOKS */
 
 runMethodInterpreted:
+if (getenv("enableRunTrap8")) {
+		printf("target large stack\n");
+			asm("int3");
+		}
 	if (J9_ARE_ANY_BITS_SET(J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->modifiers, J9AccNative)) {
 		goto jni;
 	}
@@ -10926,6 +10934,10 @@ targetLargeStack: {
 		updateVMStruct(REGISTER_ARGS);
 		if (currentUsed > maxStackSize) {
 throwStackOverflow:
+if (fgetenv("enableRunTrap7")) {
+			printf("stack overflow\n");
+			asm("int3");
+		}
 			if (J9_ARE_ANY_BITS_SET(_currentThread->privateFlags, J9_PRIVATE_FLAGS_STACK_OVERFLOW)) {
 				// vmStruct already up-to-date in all paths to here
 				fatalRecursiveStackOverflow(_currentThread);
@@ -10935,6 +10947,7 @@ throwStackOverflow:
 			VMStructHasBeenUpdated(REGISTER_ARGS);
 			goto throwCurrentException;
 		}
+		
 		currentUsed += _vm->stackSizeIncrement;
 		if (currentUsed > maxStackSize) {
 			currentUsed = maxStackSize;
