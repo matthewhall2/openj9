@@ -11944,7 +11944,7 @@ J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::
          {
          case TR::java_lang_Class_isAssignableFrom:
             {
-            callWasInlined = inlineIsAssignableFrom(node, cg);
+            //callWasInlined = inlineIsAssignableFrom(node, cg);
             break;
             }
          default:
