@@ -1795,12 +1795,18 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
             case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
             case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
                {
+               if (!fej9->needsInvokeExactJ2IThunk(callNode, comp())) {
+                  printf("we do not need a thunk\n");
+                  if (getenv("breakOnThunkNotNeeded"))
+                     break;
+               }
                // Need a j2i thunk for the method that will ultimately be dispatched by this handle call
                char *j2iSignature = fej9->getJ2IThunkSignatureForDispatchVirtual(methodSymbol->getMethod()->signatureChars(), methodSymbol->getMethod()->signatureLength(), comp());
                int32_t signatureLen = strlen(j2iSignature);
                virtualThunk = fej9->getJ2IThunk(j2iSignature, signatureLen, comp());
                if (!virtualThunk)
                   {
+                  printf("virtual thunk is null. fetching equilvalent node\n");
                   virtualThunk = fej9->setJ2IThunk(j2iSignature, signatureLen,
                      generateVirtualIndirectThunk(
                         fej9->getEquivalentVirtualCallNodeForDispatchVirtual(callNode, comp())), comp());
