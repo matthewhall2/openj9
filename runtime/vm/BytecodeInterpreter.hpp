@@ -9643,7 +9643,7 @@ done:
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			printf("going to interpreter\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
-			printf("done transition. rc: %d\n", rc);
+			printf("done transition. rc: %d, next action: %d\n", rc, _nextAction);
 		}
 
 		return rc;
@@ -10171,6 +10171,10 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
+		if (getenv("enableRunTrap")) {
+			printf("start of run\n");
+			asm("int3");
+		}
 		void *actionData = (void *)vmThread->returnValue2;
 #if defined(TRACE_TRANSITIONS)
 		char currentMethodName[1024];
@@ -10673,7 +10677,10 @@ public:
 #endif /* JAVA_SPEC_VERSION >= 19 */
 	};
 #endif /* !defined(USE_COMPUTED_GOTO) */
-
+if (getenv("enableRunTrap")) {
+			printf("end of jump table\n");
+			asm("int3");
+		}
 /*
  * Important: To work around an XLC compiler bug, the cases in PERFORM_ACTION below
  * must be in the identical order to their declaration in BytecodeAction.hpp.
@@ -10781,7 +10788,10 @@ public:
 #else
 #define SINGLE_STEP()
 #endif
-
+	if (getenv("enableRunTrap")) {
+		printf("first switch (vm thread ret val)\n");
+			asm("int3");
+		}
 	switch (vmThread->returnValue) {
 	case J9_BCLOOP_RUN_METHOD:
 		_sendMethod = (J9Method *)actionData;
@@ -10894,6 +10904,10 @@ runMethodInterpreted:
 	if (J9_ARE_ANY_BITS_SET(J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->modifiers, J9AccNative)) {
 		goto jni;
 	}
+	if (getenv("enableRunTrap")) {
+		printf("target large stack\n");
+			asm("int3");
+		}
 	/* intentional fall-through to targetLargeStack */
 targetLargeStack: {
 	J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
@@ -10962,7 +10976,10 @@ targetObjectConstructor:
 
 targetZeroing:
 	PERFORM_ACTION(sendTargetSmallZeroing(REGISTER_ARGS));
-
+if (getenv("enableRunTrap")) {
+	printf("before pop frames\n");
+			asm("int3");
+		}
 
 #if defined(DEBUG_VERSION)
 popFrames:
