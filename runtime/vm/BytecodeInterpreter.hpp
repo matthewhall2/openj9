@@ -10171,7 +10171,7 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
-		if (getenv("enableRunTrap")) {
+		if (getenv("enableRunTrap1")) {
 			printf("start of run\n");
 			asm("int3");
 		}
@@ -10677,7 +10677,7 @@ public:
 #endif /* JAVA_SPEC_VERSION >= 19 */
 	};
 #endif /* !defined(USE_COMPUTED_GOTO) */
-if (getenv("enableRunTrap")) {
+if (getenv("enableRunTrap2")) {
 			printf("end of jump table\n");
 			asm("int3");
 		}
@@ -10788,7 +10788,7 @@ if (getenv("enableRunTrap")) {
 #else
 #define SINGLE_STEP()
 #endif
-	if (getenv("enableRunTrap")) {
+	if (getenv("enableRunTrap3")) {
 		printf("first switch (vm thread ret val)\n");
 			asm("int3");
 		}
@@ -10904,7 +10904,7 @@ runMethodInterpreted:
 	if (J9_ARE_ANY_BITS_SET(J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->modifiers, J9AccNative)) {
 		goto jni;
 	}
-	if (getenv("enableRunTrap")) {
+	if (getenv("enableRunTrap4")) {
 		printf("target large stack\n");
 			asm("int3");
 		}
@@ -10976,7 +10976,7 @@ targetObjectConstructor:
 
 targetZeroing:
 	PERFORM_ACTION(sendTargetSmallZeroing(REGISTER_ARGS));
-if (getenv("enableRunTrap")) {
+if (getenv("enableRunTrap5")) {
 	printf("before pop frames\n");
 			asm("int3");
 		}
@@ -10990,12 +10990,16 @@ dlt:
 	PERFORM_ACTION(performDLT(REGISTER_ARGS));
 
 runMethod: {
+if (getenv("enableRunTrap6")) {
+	printf("before pop frames\n");
+			asm("int3");
+		}
 #if defined(USE_COMPUTED_GOTO)
 	EXECUTE_SEND_TARGET(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 #else
 	switch(J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress)) {
 #endif
-
+		printf("decoded: %d\n", J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_STATIC):
 		PERFORM_ACTION(initialStaticMethod(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INITIAL_SPECIAL):
