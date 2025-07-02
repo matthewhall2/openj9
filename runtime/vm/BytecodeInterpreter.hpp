@@ -9617,10 +9617,14 @@ done:
 			/* JIT body metadata specifies the number of stack slots for the arguments, and the MH
 			 * receiver is the first argument.
 			 */
-			printf("IB: finding callsite\n");
-			J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
-			printf("callsite is: %p\n", site);
-			mhReceiverIndex = site->numArgSlots - 1;
+			if (getenv("IBUseOld")) {
+				mhReceiverIndex = _currentThread->tempSlot - 1;
+			} else {
+				printf("IB: finding callsite\n");
+				J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
+				printf("callsite is: %p\n", site);
+				mhReceiverIndex = site->numArgSlots - 1;
+			}
 		} else {
 			U_16 index = *(U_16 *)(_pc + 1);
 			J9ConstantPool *ramConstantPool = J9_CP_FROM_METHOD(_literals);
@@ -9630,6 +9634,7 @@ done:
 		}
 
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		printf("mh receiver: %p\n", mhReceiver);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9638,8 +9643,11 @@ done:
 		}
 
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
+		printf("mh lambdaForm: %p\n", lambdaForm);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
+		printf("mh memberName: %p\n", memberName);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+		printf("mh _sendMethod: %p\n", _sendMethod);
 		printf("Found send method\n");
 
 		if (fromJIT) {
