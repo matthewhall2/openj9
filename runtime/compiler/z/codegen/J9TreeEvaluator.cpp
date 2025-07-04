@@ -11836,6 +11836,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
+   TR::Compilation *comp = cg->comp();
    if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: Inlining isAssignableFrom\n",node->getOpCode().getName());
    // recognizedCallTransformer swaps the args - caller class obj is the second argument after the transformation
@@ -11867,7 +11868,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    cFlowRegionStart->setStartInternalControlFlow();
    TR_Debug * debugObj = cg->getDebug();
 
-   TR::Compilation *comp = cg->comp();
 
    if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: Emitting Class Equality Test\n",node->getOpCode().getName());
