@@ -3432,6 +3432,9 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
       bytesOffset = 2;
       }
 
+   if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: Emitting superclass test\n",node->getOpCode().getName());
+
    TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
             "superclass test::J9Class->classDepthAndFlags is wrong size\n");
 
@@ -11833,6 +11836,8 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
+   if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: Inlining isAssignableFrom\n",node->getOpCode().getName());
    // recognizedCallTransformer swaps the args - caller class obj is the second argument after the transformation
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
@@ -11860,8 +11865,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
+   TR_Debug * debugObj = cg->getDebug();
 
    TR::Compilation *comp = cg->comp();
+
+   if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: Emitting Class Equality Test\n",node->getOpCode().getName());
    // for isAssignableFrom we can always generate the class equality test since both arguments are classes
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest", comp->signature()),1,TR::DebugCounter::Undetermined);
    generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
@@ -11869,20 +11878,30 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
+   if (toClassSymRef && comp->getOption(TR_TraceCG))
+      traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
    if (toClassSymRef && !toClassSymRef->isClassInterface(comp))
       {
       int32_t fromClassDepth = -1;
       TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+      if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
       if (fromClassSymRef && !fromClassSymRef->isClassInterface(comp))
          {
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
-            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+            TR::Instruction *i = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+            if (debugObj)
+               debugObj->addInstructionComment(i, "toclass depth > fromClass depth at compile time - fast fail");
             }
          }
       }
 
    // castClassCache test
+   if (toClassSymRef && comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
    if (toClassSymRef && !toClassSymRef->isClassAbstract(comp))
       {
       if (comp->getOption(TR_TraceCG))
@@ -11944,7 +11963,7 @@ J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node * node, bool indirect, TR::
          {
          case TR::java_lang_Class_isAssignableFrom:
             {
-            //callWasInlined = inlineIsAssignableFrom(node, cg);
+            callWasInlined = inlineIsAssignableFrom(node, cg);
             break;
             }
          default:
