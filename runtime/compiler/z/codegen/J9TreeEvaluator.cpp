@@ -11825,7 +11825,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          }
       
       TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::aloadi, "class node must be aloadi\n");
-      if (classNode->getFirstChild()->getOpCode() == TR::loadaddr)
+      if (classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
          {
          classSymRef = classNode->getFirstChild()->getSymbolReference();
          }
