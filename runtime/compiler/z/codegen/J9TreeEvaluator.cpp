@@ -11813,21 +11813,39 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
    {
    classDepth = -1;
-   // recognizedCallTransformer adds another layer of aloadi
-   while (classNode->getOpCodeValue() == TR::aloadi && classNode->getNumChildren() > 0 && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+   TR::SymbolReference *classSymRef = NULL;
+   bool isClassNodeLoadAddr = classNode->getOpCodeValue() != TR::loadaddr;
+   // getting the symbol ref
+   if (isClassNodeLoadAddr)
       {
-      classNode = classNode->getFirstChild();
+      // recognizedCallTransformer adds another layer of aloadi
+      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getNumChildren() > 0 && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+         {
+         classNode = classNode->getFirstChild();
+         }
+      
+      TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::aloadi, "class node must be aloadi\n");
+      if (classNode->getFirstChild()->getOpCode() == TR::loadaddr)
+         {
+         classSymRef = classNode->getFirstChild()->getSymbolReference();
+         }
+      } else {
+         classSymRef = classNode->getSymbolReference();
+         if (comp->getOption(TR_TraceCG))
+            traceMsg(comp,"%s: have direct loadaddr node\n",node->getOpCode().getName());
       }
 
-   if ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
-         (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
-      return NULL;
+   // try to find class depth
+   if (!isClassNodeLoadAddr && ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
+            (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr)))
+         return classSymRef;
 
-   TR::Node *classRef = classNode->getFirstChild();
-   TR_ASSERT_FATAL(NULL != classRef, "aloadi class node must have child\n");
+   TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
 
-   TR::SymbolReference *classSymRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
-   TR::StaticSymbol *classSym = ((NULL != classSymRef) && !classSymRef->isUnresolved()) ? (classSymRef ? classSymRef->getSymbol()->getStaticSymbol() : NULL) : NULL;
+   TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
+   if (comp->getOption(TR_TraceCG) && !symRef)
+         traceMsg(comp,"%s: Class sym ref is null\n",node->getOpCode().getName());
+   TR::StaticSymbol *classSym = ((NULL != symRef) && !symRef->isUnresolved()) ? (symRef ? symRef->getSymbol()->getStaticSymbol() : NULL) : NULL;
    TR_OpaqueClassBlock * clazz = (NULL != classSym) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
    classDepth = (NULL != clazz) ? (int32_t)TR::Compiler->cls.classDepthOf(clazz) : -1;
 
