@@ -11832,7 +11832,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       } else {
          classSymRef = classNode->getSymbolReference();
          if (comp->getOption(TR_TraceCG))
-            traceMsg(comp,"%s: have direct loadaddr node\n",node->getOpCode().getName());
+            traceMsg(comp,"%s: have direct loadaddr node\n",classNode->getOpCode().getName());
       }
 
    // try to find class depth
@@ -11844,7 +11844,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
    if (comp->getOption(TR_TraceCG) && !symRef)
-         traceMsg(comp,"%s: Class sym ref is null\n",node->getOpCode().getName());
+         traceMsg(comp,"%s: Class sym ref is null\n",classRef->getOpCode().getName());
    TR::StaticSymbol *classSym = ((NULL != symRef) && !symRef->isUnresolved()) ? (symRef ? symRef->getSymbol()->getStaticSymbol() : NULL) : NULL;
    TR_OpaqueClassBlock * clazz = (NULL != classSym) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
    classDepth = (NULL != clazz) ? (int32_t)TR::Compiler->cls.classDepthOf(clazz) : -1;
