@@ -11938,6 +11938,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       srm->reclaimScratchRegister(castClassCacheReg);
       }
 
+   // superclass test
    if(!toClassSymRef || !toClassSymRef->isClassInterface(comp))
       {
       const int32_t flags = (J9AccInterface | J9AccClassArray);
