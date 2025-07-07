@@ -11814,17 +11814,17 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    {
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
-   bool isClassNodeLoadAddr = classNode->getOpCodeValue() != TR::loadaddr;
+   bool isClassNodeLoadAddr = classNode->getOpCodeValue() == TR::loadaddr;
    // getting the symbol ref
-   if (isClassNodeLoadAddr)
+   if (!isClassNodeLoadAddr)
       {
+      TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::aloadi, "class node must be aloadi when not loadaddr\n");
       // recognizedCallTransformer adds another layer of aloadi
-      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getNumChildren() > 0 && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
          {
          classNode = classNode->getFirstChild();
          }
       
-      TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::aloadi, "class node must be aloadi\n");
       if (classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
          {
          classSymRef = classNode->getFirstChild()->getSymbolReference();
@@ -11838,10 +11838,10 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    // try to find class depth
    if (!isClassNodeLoadAddr && ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
             (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr)))
-         return classSymRef;
+      return classSymRef; // cannot find class depth
 
    TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
-
+   TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::loadaddr, "class leaf node must be loadaddr\n");
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
    if (comp->getOption(TR_TraceCG) && !symRef)
          traceMsg(comp,"%s: Class sym ref is null\n",classRef->getOpCode().getName());
@@ -11868,8 +11868,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = doneLabel;
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
-
-   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
    // create OOL section here to have access to the result register to load initial result
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11916,9 +11914,11 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             if (debugObj)
                debugObj->addInstructionComment(i, "toclass depth > fromClass depth at compile time - fast fail");
             }
+            goto fastFail;
          }
       }
 
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    // castClassCache test
    if (toClassSymRef && comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
@@ -11952,6 +11952,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    srm->stopUsingRegisters();
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
+
+fastFail:
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
