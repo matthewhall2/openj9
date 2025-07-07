@@ -11833,6 +11833,8 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          classSymRef = classNode->getSymbolReference();
          if (comp->getOption(TR_TraceCG))
             traceMsg(comp,"%s: have direct loadaddr node\n",classNode->getOpCode().getName());
+         if (comp->getOption(TR_TraceCG) && !classSymRef)
+            traceMsg(comp,"%s: loadaddr has noy symref\n",classNode->getOpCode().getName());
       }
 
    // try to find class depth
@@ -11902,13 +11904,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
    if (toClassSymRef && comp->getOption(TR_TraceCG))
       traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
-   if (!toClassSymRef || !toClassSymRef->isClassInterface(comp))
+   if (toClassSymRef && !toClassSymRef->isClassInterface(comp))
       {
       int32_t fromClassDepth = -1;
       TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
       if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
-      if (!fromClassSymRef || !fromClassSymRef->isClassInterface(comp))
+      if (fromClassSymRef && !fromClassSymRef->isClassInterface(comp))
          {
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
@@ -11923,7 +11925,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // castClassCache test
    if (toClassSymRef && comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
-   if (!toClassSymRef || !toClassSymRef->isClassAbstract(comp))
+   if (toClassSymRef && !toClassSymRef->isClassAbstract(comp))
       {
       if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: Emitting CastClassCacheTest\n",node->getOpCode().getName());
@@ -11939,7 +11941,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       }
 
    // superclass test
-   if(!toClassSymRef || !toClassSymRef->isClassInterface(comp))
+   if(toClassSymRef && !toClassSymRef->isClassInterface(comp))
       {
       const int32_t flags = (J9AccInterface | J9AccClassArray);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
