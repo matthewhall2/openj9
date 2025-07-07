@@ -11841,7 +11841,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       return classSymRef; // cannot find class depth
 
    TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
-   TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::loadaddr, "class leaf node must be loadaddr\n");
+   TR_ASSERT_FATAL(classRef->getOpCodeValue() == TR::loadaddr, "class leaf node must be loadaddr\n");
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
    if (comp->getOption(TR_TraceCG) && !symRef)
          traceMsg(comp,"%s: Class sym ref is null\n",classRef->getOpCode().getName());
