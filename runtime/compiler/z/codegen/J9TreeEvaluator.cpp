@@ -11885,13 +11885,15 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
    cFlowRegionStart->setStartInternalControlFlow();
    TR_Debug * debugObj = cg->getDebug();
-
+   TR::Instruction *cursor = NULL;
 
    if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: Emitting Class Equality Test\n",node->getOpCode().getName());
    // for isAssignableFrom we can always generate the class equality test since both arguments are classes
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest", comp->signature()),1,TR::DebugCounter::Undetermined);
-   generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+   cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+   if (debugObj)
+         debugObj->addInstructionComment(cursor, "class equality test");
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
 
    int32_t toClassDepth = -1;
@@ -11928,7 +11930,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()),1,TR::DebugCounter::Undetermined);
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
          generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
-      generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+       if (debugObj)
+         debugObj->addInstructionComment(cursor, "castclass cache test");
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/CacheFail", comp->signature()),1,TR::DebugCounter::Undetermined);
       srm->reclaimScratchRegister(castClassCacheReg);
       }
