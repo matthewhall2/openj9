@@ -11869,6 +11869,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *successLabel = doneLabel;
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
 
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);;
+
    // create OOL section here to have access to the result register to load initial result
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
    cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
@@ -11918,7 +11920,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          }
       }
 
-   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
    // castClassCache test
    if (toClassSymRef && comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
