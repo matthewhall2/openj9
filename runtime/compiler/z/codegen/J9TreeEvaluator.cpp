@@ -3453,6 +3453,8 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
 
    // add check for eliminate superclassarraysize check
    bool eliminateSuperClassArraySizeCheck = (toClassDepth != -1 && (toClassDepth < comp->getOptions()->_minimumSuperclassArraySize));
+   if (comp->getOption(TR_TraceCG))
+         traceMsg(comp,"%s Emitting SuperClass Array Size Check\n", eliminateSuperClassArraySizeCheck ? "Not" : "");
 
    if (!eliminateSuperClassArraySizeCheck)
       {
@@ -3470,6 +3472,7 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
          {
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
          }
+     
 
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if fromClassDepth <= toClassDepth and jump to fail");
@@ -3487,23 +3490,28 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
       {
       if (comp->target().is64Bit())
          {
-         generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLLG, node, toClassDepthReg, toClassDepthReg, 3);
          }
       else
          {
-         generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2);
+         cursor = generateRSInstruction(cg, TR::InstOpCode::SLL, node, toClassDepthReg, 2);
          }
 
-      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+      if (debugObj)
+         debugObj->addInstructionComment(cursor, "convert toClasDepth to superclass array offset");
+
+      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
                               generateS390MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg));
       srm->reclaimScratchRegister(toClassDepthReg);
       }
    else
       {
       int32_t superClassOffset = toClassDepth * TR::Compiler->om.sizeofReferenceAddress();
-      generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
+      cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
                               generateS390MemoryReference(superclassArrayReg, superClassOffset, cg));
       }
+   if (debugObj)
+      debugObj->addInstructionComment(cursor, "check superclass array");
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
