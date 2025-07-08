@@ -11840,9 +11840,9 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       }
 
    //TR_ASSERT_FATAL(NULL != classSymRef, "classSymRef should never be null\n");
-   if (comp->getOption(TR_TraceCG) && (NULL == toClassSymRef))
+   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef))
          traceMsg(comp,"%s: Class sym ref is null\n",classNode->getFirstChild()->getOpCode().getName());
-   if (comp->getOption(TR_TraceCG) && (NULL != toClassSymRef))
+   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef))
          traceMsg(comp,"%s: class sym ref is not null\n",classNode->getFirstChild()->getOpCode().getName());
    // try to find class depth
    if (!isClassNodeLoadAddr && ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
