@@ -11848,14 +11848,14 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       }
 
    //TR_ASSERT_FATAL(NULL != classSymRef, "classSymRef should never be null\n");
-   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef) && classNode->hasChild()) {
+   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef) && classNode->getNumChildren() > 0) {
          traceMsg(comp,"%s: Class sym ref is null\n",classNode->getFirstChild()->getOpCode().getName());
-    } else if (!classNode->hasChild()) {
+    } else if (classNode->getNumChildren() < 1) {
          traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
    }
-   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef) && classNode->hasChild()) {
+   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef) && classNode->getNumChildren() > 0) {
          traceMsg(comp,"%s: class sym ref is not null\n",classNode->getFirstChild()->getOpCode().getName());
-   } else if (!classNode->hasChild()) {
+   } else if (classNode->getNumChildren() < 1) {
          traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
    }
    // try to find class depth
