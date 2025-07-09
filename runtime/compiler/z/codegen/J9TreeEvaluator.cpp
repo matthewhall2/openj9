@@ -11854,7 +11854,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
    }
    // try to find class depth
-   if (!isClassNodeLoadAddr && ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
+   if (((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
             (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr)))
       return classSymRef; // cannot find class depth
 
