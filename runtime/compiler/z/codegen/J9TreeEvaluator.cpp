@@ -11830,7 +11830,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    // getting the symbol ref
    while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
       {
-         classNode = classNode->getFirstChild();
+      classNode = classNode->getFirstChild();
       }
 
    if (opcode == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
