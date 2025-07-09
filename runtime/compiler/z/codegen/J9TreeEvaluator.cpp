@@ -11833,7 +11833,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       classNode = classNode->getFirstChild();
       }
 
-   if (opcode == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+   if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
       {
       classSymRef = classNode->getFirstChild()->getSymbolReference();
       }
