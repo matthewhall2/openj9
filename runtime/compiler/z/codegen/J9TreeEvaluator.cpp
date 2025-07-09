@@ -11824,27 +11824,22 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          traceMsg(comp,"getting class sym ref\n");
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
-   bool isClassNodeLoadAddr = classNode->getOpCodeValue() == TR::loadaddr;
+   TR::ILOpCodes opcode = classNode->getOpCodeValue();
+   //bool isClassNodeLoadAddr = classNode->getOpCodeValue() == TR::loadaddr;
    traceMsg(comp,"found class node opcode value\n");
    // getting the symbol ref
-   if (!isClassNodeLoadAddr)
+   while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
       {
-      // recognizedCallTransformer adds another layer of aloadi
-      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
-         {
          classNode = classNode->getFirstChild();
-         }
+      }
 
-      if (classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
-         {
-         classSymRef = classNode->getFirstChild()->getSymbolReference();
-         }
-      } else {
-         classSymRef = classNode->getSymbolReference();
-         if (comp->getOption(TR_TraceCG))
-            traceMsg(comp,"%s: have direct loadaddr node\n",classNode->getOpCode().getName());
-         if (comp->getOption(TR_TraceCG) && !classSymRef)
-            traceMsg(comp,"%s: loadaddr has noy symref\n",classNode->getOpCode().getName());
+   if (opcode == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+      {
+      classSymRef = classNode->getFirstChild()->getSymbolReference();
+      }
+   else if (opcode == TR::loadaddr)
+      {
+      classSymRef = classNode->getSymbolReference();
       }
 
    //TR_ASSERT_FATAL(NULL != classSymRef, "classSymRef should never be null\n");
