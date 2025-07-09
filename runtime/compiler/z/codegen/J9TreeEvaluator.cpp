@@ -11825,7 +11825,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
    TR::ILOpCodes opcode = classNode->getOpCodeValue();
-   //bool isClassNodeLoadAddr = classNode->getOpCodeValue() == TR::loadaddr;
+   bool isClassNodeLoadAddr = opcode == TR::loadaddr;
    traceMsg(comp,"found class node opcode value\n");
    // getting the symbol ref
    while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
@@ -11914,6 +11914,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   bool fastFail = false;
    if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
    if (NULL != toClassSymRef && comp->getOption(TR_TraceCG))
@@ -11932,47 +11933,50 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             if (debugObj)
                debugObj->addInstructionComment(cursor, "toclass depth > fromClass depth at compile time - fast fail");
             }
-            srm->stopUsingRegisters();
-            goto fastFail;
+            fastFail = true;
+            //srm->stopUsingRegisters();
+            //goto fastFail;
          }
       }
-
-   // castClassCache test
-   if ((NULL != toClassSymRef) && comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
-   if ((NULL != toClassSymRef) && !toClassSymRef->isClassAbstract(comp))
+   
+   if (!fastFail)
       {
-      if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: Emitting CastClassCacheTest\n",node->getOpCode().getName());
-      TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()),1,TR::DebugCounter::Undetermined);
-      generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
-         generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
-      cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
-       if (debugObj)
-         debugObj->addInstructionComment(cursor, "castclass cache test");
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/CacheFail", comp->signature()),1,TR::DebugCounter::Undetermined);
-      srm->reclaimScratchRegister(castClassCacheReg);
-      }
-
-   // superclass test
-   if((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp))
-      {
-      const int32_t flags = (J9AccInterface | J9AccClassArray);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
-      if (toClassDepth == -1)
+      // castClassCache test
+      if ((NULL != toClassSymRef) && comp->getOption(TR_TraceCG))
+            traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
+      if ((NULL != toClassSymRef) && !toClassSymRef->isClassAbstract(comp))
          {
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+         if (comp->getOption(TR_TraceCG))
+            traceMsg(comp,"%s: Emitting CastClassCacheTest\n",node->getOpCode().getName());
+         TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()),1,TR::DebugCounter::Undetermined);
+         generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
+         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+         if (debugObj)
+            debugObj->addInstructionComment(cursor, "castclass cache test");
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/CacheFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         srm->reclaimScratchRegister(castClassCacheReg);
          }
-      genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+
+      // superclass test
+      if((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp))
+         {
+         const int32_t flags = (J9AccInterface | J9AccClassArray);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
+         if (toClassDepth == -1)
+            {
+            genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+            }
+         genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         }
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
       }
 
+//fastFail:
    srm->stopUsingRegisters();
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
-
-fastFail:
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
