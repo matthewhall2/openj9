@@ -186,6 +186,8 @@ private:
 #endif
 	MM_ObjectAllocationAPI _objectAllocate;
 	MM_ObjectAccessBarrierAPI _objectAccessBarrier;
+	bool startTrapping = false;
+	int IBCount = 0;
 
 protected:
 
@@ -576,6 +578,10 @@ retry:
 	VMINLINE VM_BytecodeAction
 	i2jTransition(REGISTER_ARGS_LIST)
 	{
+		if (getenv("enableRunTrap12")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
+		printf("i2j trap\n");
+			asm("int3");
+		}
 		VM_BytecodeAction rc = RUN_METHOD_INTERPRETED;
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void* const jitStartAddress = _sendMethod->extra;
@@ -2383,7 +2389,7 @@ done:
 	runJNINative(REGISTER_ARGS_LIST)
 	{
 		if (getenv("enableNativeTrap\n")) {
-			printf("native\n");
+			printf("native trap\n");
 			asm("int3");
 		}
 		VM_BytecodeAction rc = GOTO_DONE;
@@ -9605,7 +9611,10 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		IBCount++;
+		printf("invoke basic count: %d\n", IBCount);
 		if (getenv("enableIBTrap")) {
+			printf("IB trap\n");
 			asm("int3");
 		}
 		printf("in invoke basic\n");
@@ -10183,7 +10192,7 @@ public:
 	UDATA
 	run(J9VMThread *vmThread)
 	{
-		if (getenv("enableRunTrap1")) {
+		if (getenv("enableRunTrap1")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 			printf("start of run\n");
 			asm("int3");
 		}
@@ -10689,7 +10698,7 @@ public:
 #endif /* JAVA_SPEC_VERSION >= 19 */
 	};
 #endif /* !defined(USE_COMPUTED_GOTO) */
-if (getenv("enableRunTrap2")) {
+if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 			printf("end of jump table\n");
 			asm("int3");
 		}
@@ -10800,7 +10809,7 @@ if (getenv("enableRunTrap2")) {
 #else
 #define SINGLE_STEP()
 #endif
-	if (getenv("enableRunTrap3")) {
+	if (getenv("enableRunTrap3")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 		printf("first switch (vm thread ret val)\n");
 			asm("int3");
 		}
@@ -10913,19 +10922,24 @@ methodEnter:
 #endif /* DO_HOOKS */
 
 runMethodInterpreted:
-if (getenv("enableRunTrap8")) {
-		printf("target large stack\n");
+if (getenv("enableRunTrap8")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
+		printf("run method interpreted\n");
 			asm("int3");
 		}
 	if (J9_ARE_ANY_BITS_SET(J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod)->modifiers, J9AccNative)) {
+		if (getenv("enableRunTrap9")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
+		printf("going to jni\n");
+			asm("int3");
+		}
 		goto jni;
 	}
-	if (getenv("enableRunTrap4")) {
+	
+	/* intentional fall-through to targetLargeStack */
+targetLargeStack: {
+	if (getenv("enableRunTrap4")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 		printf("target large stack\n");
 			asm("int3");
 		}
-	/* intentional fall-through to targetLargeStack */
-targetLargeStack: {
 	J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 	U_32 modifiers = romMethod->modifiers;
 	UDATA stackUse = VM_VMHelpers::calculateStackUse(romMethod);
@@ -10942,7 +10956,7 @@ targetLargeStack: {
 		updateVMStruct(REGISTER_ARGS);
 		if (currentUsed > maxStackSize) {
 throwStackOverflow:
-if (getenv("enableRunTrap7")) {
+if (getenv("enableRunTrap7")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 			printf("stack overflow\n");
 			asm("int3");
 		}
@@ -10997,7 +11011,7 @@ targetObjectConstructor:
 
 targetZeroing:
 	PERFORM_ACTION(sendTargetSmallZeroing(REGISTER_ARGS));
-if (getenv("enableRunTrap5")) {
+if (getenv("enableRunTrap5")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 	printf("before pop frames\n");
 			asm("int3");
 		}
@@ -11011,7 +11025,7 @@ dlt:
 	PERFORM_ACTION(performDLT(REGISTER_ARGS));
 
 runMethod: {
-if (getenv("enableRunTrap6")) {
+if (getenv("enableRunTrap6")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
 	printf("before pop frames\n");
 			asm("int3");
 		}
@@ -11378,9 +11392,17 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 }
 
 i2j:
+if (getenv("enableRunTrap11")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
+		printf("i2j trap\n");
+			asm("int3");
+		}
 	PERFORM_ACTION(i2jTransition(REGISTER_ARGS));
 
 jni:
+if (getenv("enableRunTrap10")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((char * c = getenv("IBCount")) !=NULL ? c : 1000000)) {
+		printf("jni trap\n");
+			asm("int3");
+		}
 	PERFORM_ACTION(runJNINative(REGISTER_ARGS));
 
 runMethodHandle: {
