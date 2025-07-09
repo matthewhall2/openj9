@@ -11828,7 +11828,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    // getting the symbol ref
    if (!isClassNodeLoadAddr)
       {
-      TR_ASSERT_FATAL(classNode->getOpCodeValue() == TR::aloadi, "class node must be aloadi when not loadaddr\n");
       // recognizedCallTransformer adds another layer of aloadi
       while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
          {
@@ -11858,7 +11857,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       return classSymRef; // cannot find class depth
 
    TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
-   TR_ASSERT_FATAL(classRef->getOpCodeValue() == TR::loadaddr, "class leaf node must be loadaddr\n");
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
    
    TR::StaticSymbol *classSym = ((NULL != symRef) && !symRef->isUnresolved()) ? (symRef ? symRef->getSymbol()->getStaticSymbol() : NULL) : NULL;
