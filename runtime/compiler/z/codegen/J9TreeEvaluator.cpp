@@ -11820,11 +11820,12 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
    {
-   if (comp->getOption(TR_TraceCG))
+   //if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"getting class sym ref\n");
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
    bool isClassNodeLoadAddr = classNode->getOpCodeValue() == TR::loadaddr;
+   traceMsg(comp,"found class node opcode value\n");
    // getting the symbol ref
    if (!isClassNodeLoadAddr)
       {
@@ -11847,10 +11848,16 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       }
 
    //TR_ASSERT_FATAL(NULL != classSymRef, "classSymRef should never be null\n");
-   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef))
+   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef) && classNode->hasChild()) {
          traceMsg(comp,"%s: Class sym ref is null\n",classNode->getFirstChild()->getOpCode().getName());
-   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef))
+    } else if (!classNode->hasChild()) {
+         traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
+   }
+   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef) && classNode->hasChild()) {
          traceMsg(comp,"%s: class sym ref is not null\n",classNode->getFirstChild()->getOpCode().getName());
+   } else if (!classNode->hasChild()) {
+         traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
+   }
    // try to find class depth
    if (!isClassNodeLoadAddr && ((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
             (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr)))
