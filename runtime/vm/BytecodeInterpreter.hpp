@@ -1035,7 +1035,9 @@ obj:
 	VMINLINE VM_BytecodeAction
 	j2iInvokeExact(REGISTER_ARGS_LIST, j9object_t methodHandle)
 	{
+		printf("start j2i invoke exact\n");
 #if defined(J9VM_OPT_METHOD_HANDLE)
+		printf("j2i invoke exact\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHODHANDLE;
 		static U_8 const bcReturnFromJ2I[] = { JBinvokestatic, 0, 0, JBreturnFromJ2I };
@@ -9636,7 +9638,11 @@ done:
 				printf("callsite is: %p\n", site);
 				mhReceiverIndex = site->numArgSlots - 1;
 			}
+			if (getenv("firstArgAtZero")) {
+				mhReceiverIndex = 0;
+			}
 		} else {
+			printf("not from jit\n");
 			U_16 index = *(U_16 *)(_pc + 1);
 			J9ConstantPool *ramConstantPool = J9_CP_FROM_METHOD(_literals);
 			J9RAMMethodRef *ramMethodRef = ((J9RAMMethodRef *)ramConstantPool) + index;
@@ -9662,6 +9668,9 @@ done:
 		printf("Found send method\n");
 
 		if (fromJIT) {
+			if (getenv("removeMH")) {
+				_sp++;
+			}
 			printf("resotring returhn address");
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			printf("going to interpreter\n");
@@ -10816,8 +10825,10 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 		printf("first switch (vm thread ret val)\n");
 			asm("int3");
 		}
+	printf("first switch (vm thread ret val)\n");
 	switch (vmThread->returnValue) {
 	case J9_BCLOOP_RUN_METHOD:
+	//printf("run method\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10825,6 +10836,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		goto runMethod;
 	case J9_BCLOOP_RUN_METHOD_INTERPRETED:
+		printf("gohere\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10840,6 +10852,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		goto runMethodHandle;
 	case J9_BCLOOP_EXECUTE_BYTECODE:
+	printf("execute bytecode\n");
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _literals, _pc, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_EXECUTE_BYTECODE %s\n", vmThread, currentMethodName);
@@ -10905,6 +10918,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif /* DO_HOOKS */
 #if JAVA_SPEC_VERSION >= 16
 	case J9_BCLOOP_N2I_TRANSITION:
+		printf("n2i\n");
 		PERFORM_ACTION(native2InterpreterTransition(REGISTER_ARGS));
 #endif /* JAVA_SPEC_VERSION >= 16 */
 #if JAVA_SPEC_VERSION >= 24
@@ -10925,6 +10939,7 @@ methodEnter:
 #endif /* DO_HOOKS */
 
 runMethodInterpreted:
+printf("run method interpreted\n");
 if (getenv("enableRunTrap8")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
 		printf("run method interpreted\n");
 			asm("int3");
@@ -11028,7 +11043,8 @@ dlt:
 	PERFORM_ACTION(performDLT(REGISTER_ARGS));
 
 runMethod: {
-if (getenv("enableRunTrap6")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
+	printf("run method\n");
+	if (getenv("enableRunTrap6")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
 	printf("before pop frames\n");
 			asm("int3");
 		}
@@ -11396,6 +11412,7 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 }
 
 i2j:
+printf("i2j\n");
 if (getenv("enableRunTrap11")|| getenv("enableAllTraps")|| startTrapping|| IBCount >= atoi((getenv("IBCount")) !=NULL ? getenv("IBCount") : "100000")) {
 		printf("i2j trap\n");
 			asm("int3");
@@ -11411,6 +11428,7 @@ if (getenv("enableRunTrap10")|| getenv("enableAllTraps")|| startTrapping|| IBCou
 
 runMethodHandle: {
 #if defined(J9VM_OPT_METHOD_HANDLE)
+printf("run method handle\n");
 	j9object_t methodHandle = (j9object_t)_currentThread->tempSlot;
 	void *compiledEntryPoint = VM_VMHelpers::methodHandleCompiledEntryPoint(_vm, _currentThread, methodHandle);
 	if (NULL != compiledEntryPoint) {
@@ -11426,6 +11444,7 @@ runMethodHandle: {
 	}
 	PERFORM_ACTION(interpretMethodHandle(REGISTER_ARGS, methodHandle));
 #else
+printf("shold not get here\n");
 	Assert_VM_unreachable();
 #endif /* J9VM_OPT_METHOD_HANDLE */
 }
