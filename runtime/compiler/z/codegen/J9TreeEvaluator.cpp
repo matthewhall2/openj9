@@ -11827,7 +11827,9 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = opcode == TR::loadaddr;
    traceMsg(comp,"found class node opcode value\n");
+
    // getting the symbol ref
+   // recognizedCallTransformer adds another layer of aloadi
    while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
       {
       classNode = classNode->getFirstChild();
@@ -11842,7 +11844,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       classSymRef = classNode->getSymbolReference();
       }
 
-   //TR_ASSERT_FATAL(NULL != classSymRef, "classSymRef should never be null\n");
    if (comp->getOption(TR_TraceCG) && (NULL == classSymRef) && classNode->getNumChildren() > 0) {
          traceMsg(comp,"%s: Class sym ref is null\n",classNode->getFirstChild()->getOpCode().getName());
     } else if (classNode->getNumChildren() < 1) {
@@ -11853,10 +11854,14 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    } else if (classNode->getNumChildren() < 1) {
          traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
    }
-   // try to find class depth
-   if (((classNode->getOpCodeValue() != TR::aloadi) || (classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) ||
-            (classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr)))
+
+
+   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi || 
+      classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
+      classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
+      {
       return classSymRef; // cannot find class depth
+      }
 
    TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
