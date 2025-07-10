@@ -10704,6 +10704,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 			printf("end of jump table\n");
 			asm("int3");
 		}
+	printf("send target table addr: %p\nbytecode table addr: %p\n", sendTargetTable, bytecodeTable);
 /*
  * Important: To work around an XLC compiler bug, the cases in PERFORM_ACTION below
  * must be in the identical order to their declaration in BytecodeAction.hpp.
