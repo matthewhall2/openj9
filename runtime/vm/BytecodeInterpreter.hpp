@@ -6005,7 +6005,8 @@ done:
 	VMINLINE VM_BytecodeAction
 	iconst(REGISTER_ARGS_LIST, I_32 value)
 	{
-		printf("in iconst\n");
+		if (getenv("iconst_trace"))
+			printf("in iconst\n");
 		_pc += 1;
 		_sp -= 1;
 		*(I_32*)_sp = value;
@@ -11635,7 +11636,8 @@ executeBytecodeFromLocal:
 			SINGLE_STEP();
 			PERFORM_ACTION(iconst(REGISTER_ARGS, 0x3F800000));
 		JUMP_TARGET(JBfconst2):
-			printf("in jbfconst2\n");
+			if (getenv("iconst_trace"))
+				printf("in jbfconst2\n");
 			SINGLE_STEP();
 			PERFORM_ACTION(iconst(REGISTER_ARGS, 0x40000000));
 		JUMP_TARGET(JBdconst1):
