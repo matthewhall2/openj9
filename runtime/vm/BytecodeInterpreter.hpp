@@ -9630,17 +9630,22 @@ done:
 			/* JIT body metadata specifies the number of stack slots for the arguments, and the MH
 			 * receiver is the first argument.
 			 */
+			mhReceiverIndex = _currentThread->tempSlot - 1;
+			printf("old way jit: num arg slots: %d\n", _currentThread->tempSlot);
 			if (getenv("IBUseOld")) {
 				mhReceiverIndex = _currentThread->tempSlot - 1;
+				//printf("old way jit: num arg slots: %d\n", site->numArgSlots);
 			} else {
 				printf("IB: finding callsite\n");
 				J9JITInvokeBasicCallSite *site = _vm->jitConfig->jitGetInvokeBasicCallSiteFromPC(_currentThread, (UDATA)_literals);
 				printf("callsite is: %p\n", site);
 				mhReceiverIndex = site->numArgSlots - 1;
+				printf("jit: num arg slots: %d\n", site->numArgSlots);
 			}
 			if (getenv("firstArgAtZero")) {
 				mhReceiverIndex = 0;
 			}
+			
 		} else {
 			printf("not from jit\n");
 			U_16 index = *(U_16 *)(_pc + 1);
@@ -9649,8 +9654,15 @@ done:
 			UDATA volatile methodIndexAndArgCount = ramMethodRef->methodIndexAndArgCount;
 			mhReceiverIndex = (methodIndexAndArgCount & 0xFF);
 		}
-
-		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		
+		printf("receiver index: %d\n", mhReceiverIndex);
+		j9object_t mhReceiver;
+		if (getenv("tryDiff")) {
+			//mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+			mhReceiver = (j9object_t)(_sp[mhReceiverIndex]);
+		} else {
+			mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		}
 		printf("mh receiver: %p\n", mhReceiver);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
@@ -9760,6 +9772,7 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToVirtual(REGISTER_ARGS_LIST)
 	{
+		printf("in link to virtual\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 
