@@ -10839,9 +10839,12 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 			asm("int3");
 		}
 	printf("first switch (vm thread ret val)\n");
+	printf("vm threade ret val: %lu\n", vmThread->returnValue);
 	switch (vmThread->returnValue) {
 	case J9_BCLOOP_RUN_METHOD:
 	//printf("run method\n");
+		printf("action data: %lu\n", actionData);
+		printf("run method\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10849,7 +10852,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		goto runMethod;
 	case J9_BCLOOP_RUN_METHOD_INTERPRETED:
-		printf("gohere\n");
+		printf("run method interpreted\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10857,6 +10860,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		goto runMethodInterpreted;
 	case J9_BCLOOP_RUN_METHOD_HANDLE:
+		printf("run methohandle\n");
 		/* Stash MethodHandle into tempSlot where MHInterpreter expects to find it */
 		vmThread->tempSlot = (UDATA)actionData;
 #if defined(TRACE_TRANSITIONS)
@@ -10873,25 +10877,30 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 		EXECUTE_CURRENT_BYTECODE();
 #if defined(DEBUG_VERSION)
 	case J9_BCLOOP_HANDLE_POP_FRAMES:
+		printf("pop frames\n");
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_HANDLE_POP_FRAMES\n", vmThread);
 #endif
 		goto popFrames;
 #endif
 	case J9_BCLOOP_THROW_CURRENT_EXCEPTION:
+	printf("throw current exception\n");
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_THROW_CURRENT_EXCEPTION exception=%p\n", vmThread, vmThread->currentException);
 #endif
 		goto throwCurrentException;
 	case J9_BCLOOP_CHECK_ASYNC:
+	printf("check async\n");
 		goto asyncCheck;
 	case J9_BCLOOP_J2I_VIRTUAL: {
+		printf("j2i virtual\n");
 		j9object_t receiver = (j9object_t)actionData;
 		UDATA interfaceVTableIndex = vmThread->tempSlot;
 		actionData = (void*)j2iVirtualMethod(REGISTER_ARGS, receiver, interfaceVTableIndex);
 		// intentional fall-through
 	}
 	case J9_BCLOOP_J2I_TRANSITION:
+	printf("j2i transition\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10899,6 +10908,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		PERFORM_ACTION(j2iTransition(REGISTER_ARGS));
 	case J9_BCLOOP_J2I_INVOKE_EXACT: {
+		printf("j2i invoke exact\n");
 		j9object_t methodHandle = (j9object_t)actionData;
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_J2I_INVOKE_EXACT methodHandle=%p\n", vmThread, methodHandle);
@@ -10906,6 +10916,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 		PERFORM_ACTION(j2iInvokeExact(REGISTER_ARGS, methodHandle));
 	}
 	case J9_BCLOOP_I2J_TRANSITION:
+		printf("i2j transition\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
@@ -10913,32 +10924,44 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 #endif
 		goto i2j;
 	case J9_BCLOOP_RETURN_FROM_JIT:
+	printf("return from jit\n");
 		PERFORM_ACTION(returnFromJIT(REGISTER_ARGS, (UDATA)actionData, false));
 	case J9_BCLOOP_RETURN_FROM_JIT_CTOR:
+	printf("return from jit ctor\n");
 		PERFORM_ACTION(returnFromJIT(REGISTER_ARGS, 0, true));
 	case J9_BCLOOP_FILL_OSR_BUFFER:
+	printf("fill osr buffer\n");
 		PERFORM_ACTION(fillOSRBuffer(REGISTER_ARGS, actionData));
 	case J9_BCLOOP_EXIT_INTERPRETER:
+	printf("exit interpreter\n");
 		_nextAction = J9_BCLOOP_EXIT_INTERPRETER;
 		goto done;
 #if defined(DO_HOOKS)
 	case J9_BCLOOP_ENTER_METHOD_MONITOR:
+	printf("enter monitor\n");
+
 		_sendMethod = (J9Method *)actionData;
 		PERFORM_ACTION(enterMethodMonitor(REGISTER_ARGS));
 	case J9_BCLOOP_REPORT_METHOD_ENTER:
+	printf("report method enter\n");
+
 		_sendMethod = (J9Method *)actionData;
 		goto methodEnter;
 #endif /* DO_HOOKS */
 #if JAVA_SPEC_VERSION >= 16
 	case J9_BCLOOP_N2I_TRANSITION:
-		printf("n2i\n");
+		printf("n2i transition\n");
 		PERFORM_ACTION(native2InterpreterTransition(REGISTER_ARGS));
 #endif /* JAVA_SPEC_VERSION >= 16 */
 #if JAVA_SPEC_VERSION >= 24
 	case J9_BCLOOP_YIELD_FOR_JIT_MONENT:
+	printf("yield for jit monent\n");
+
 		PERFORM_ACTION(yieldPinnedContinuation(REGISTER_ARGS, JAVA_LANG_VIRTUALTHREAD_BLOCKING, J9VM_CONTINUATION_RETURN_FROM_JIT_MONITOR_ENTER));
 #endif /* JAVA_SPEC_VERSION >= 24 */
 	default:
+	printf("default case\n");
+
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: UNKNOWN %d\n", vmThread, vmThread->returnValue);
 #endif
@@ -11049,6 +11072,7 @@ if (getenv("enableRunTrap5")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 
 #if defined(DEBUG_VERSION)
 popFrames:
+printf("handle pop frames\n");
 	PERFORM_ACTION(handlePopFramesInterrupt(REGISTER_ARGS));
 #endif
 
