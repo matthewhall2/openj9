@@ -793,17 +793,23 @@ done:
 	VMINLINE J9Method*
 	j2iVirtualMethod(REGISTER_ARGS_LIST, j9object_t receiver, UDATA interfaceVTableIndex)
 	{
+		printf("in j2i for virtual method\n");
 		J9Method *method = NULL;
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
+		printf("jit return address is: %p\n", jitReturnAddress);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
-
+		printf("jit vtable offset is: %lu\n", jitVTableOffset);
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
+			printf("method is %p\n", method);
 		} else {
 			UDATA vTableOffset = sizeof(J9Class) - jitVTableOffset;
+			printf("vtable offet is: %lu\n", vTableOffset);
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
+			printf("class is %p\n", clazz);
 			method = *(J9Method**)((UDATA)clazz + vTableOffset);
+			printf("method is %p\n", method);
 		}
 		return method;
 	}
@@ -10895,8 +10901,11 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 	case J9_BCLOOP_J2I_VIRTUAL: {
 		printf("j2i virtual\n");
 		j9object_t receiver = (j9object_t)actionData;
+		printf("reciever is: %p\n", receiver);
 		UDATA interfaceVTableIndex = vmThread->tempSlot;
+		printf("vtable index is: %p\n", interfaceVTableIndex);
 		actionData = (void*)j2iVirtualMethod(REGISTER_ARGS, receiver, interfaceVTableIndex);
+		printf("action data is: %p", actionData);
 		// intentional fall-through
 	}
 	case J9_BCLOOP_J2I_TRANSITION:
