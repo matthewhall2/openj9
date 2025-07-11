@@ -11820,45 +11820,35 @@ static bool inlineIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
    {
-   //if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"getting class sym ref\n");
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
    TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = opcode == TR::loadaddr;
-   traceMsg(comp,"found class node opcode value\n");
 
    // getting the symbol ref
-   // recognizedCallTransformer adds another layer of aloadi
-   while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
-      {
-      classNode = classNode->getFirstChild();
-      }
-
-   if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
-      {
-      classSymRef = classNode->getFirstChild()->getSymbolReference();
-      }
-   else if (opcode == TR::loadaddr)
+   if (isClassNodeLoadAddr)
       {
       classSymRef = classNode->getSymbolReference();
       }
+   else if (opcode == TR::aloadi)
+      {
+      // recognizedCallTransformer adds another layer of aloadi
+      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+         {
+         classNode = classNode->getFirstChild();
+         }
 
-   if (comp->getOption(TR_TraceCG) && (NULL == classSymRef) && classNode->getNumChildren() > 0) {
-         traceMsg(comp,"%s: Class sym ref is null\n",classNode->getFirstChild()->getOpCode().getName());
-    } else if (classNode->getNumChildren() < 1) {
-         traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
-   }
-   if (comp->getOption(TR_TraceCG) && (NULL != classSymRef) && classNode->getNumChildren() > 0) {
-         traceMsg(comp,"%s: class sym ref is not null\n",classNode->getFirstChild()->getOpCode().getName());
-   } else if (classNode->getNumChildren() < 1) {
-         traceMsg(comp, "node %s has no children\n", classNode->getOpCode().getName());
-   }
+      if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+         {
+         classSymRef = classNode->getFirstChild()->getSymbolReference();
+         }
+      }
 
-
+   // the class node being <aloadaddr> is an edge case - liklely will not happen since we shouldn't see
+   // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
    if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi || 
-      classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
-      classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
+        classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
+        classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
       {
       return classSymRef; // cannot find class depth
       }
