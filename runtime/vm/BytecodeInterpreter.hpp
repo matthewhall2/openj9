@@ -798,7 +798,7 @@ done:
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
 		printf("jit return address is: %p\n", jitReturnAddress);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, *(int*)interfaceVTableIndex);
-		printf("jit vtable offset is: %d (%d)\n", jitVTableOffset, *(void*)jitVTableOffset);
+		printf("jit vtable offset is: %d (%d)\n", jitVTableOffset, *(int*)jitVTableOffset);
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
@@ -10845,11 +10845,11 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 			asm("int3");
 		}
 	printf("first switch (vm thread ret val)\n");
-	printf("vm threade ret val: %lu\n", vmThread->returnValue);
+	printf("vm threade ret val: %u\n", vmThread->returnValue);
 	switch (vmThread->returnValue) {
 	case J9_BCLOOP_RUN_METHOD:
 	//printf("run method\n");
-		printf("action data: %lu\n", actionData);
+		printf("action data: %p\n", actionData);
 		printf("run method\n");
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
