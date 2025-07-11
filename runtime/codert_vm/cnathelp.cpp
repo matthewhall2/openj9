@@ -3409,7 +3409,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		printf("finding callsite and thunk\n");
 		J9JITInvokeBasicCallSite *site = jitGetInvokeBasicCallSiteFromPC(currentThread, (UDATA)jitReturnAddress);
 		thunk = (UDATA)site->j2iThunk;
-		printf("thunk was set to %p\n", thunk);
+		printf("thunk was set to %d\n", thunk);
 	}
 	else
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
