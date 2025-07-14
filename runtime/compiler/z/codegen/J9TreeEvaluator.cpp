@@ -11929,8 +11929,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                debugObj->addInstructionComment(cursor, "toclass depth > fromClass depth at compile time - fast fail");
             }
             fastFail = true;
-            //srm->stopUsingRegisters();
-            //goto fastFail;
          }
       }
    
