@@ -11905,7 +11905,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
    if (debugObj)
          debugObj->addInstructionComment(cursor, "class equality test");
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
@@ -11948,7 +11948,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
          if (debugObj)
             debugObj->addInstructionComment(cursor, "castclass cache test");
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/CacheFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(castClassCacheReg);
          }
 
@@ -11963,7 +11963,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTestFail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
          }
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
       }
