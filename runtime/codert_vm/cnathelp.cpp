@@ -3398,7 +3398,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	UDATA interpVTableOffset = sizeof(J9Class) - jitVTableOffset;
 	J9Method *method = *(J9Method**)((UDATA)clazz + interpVTableOffset);
 	UDATA thunk = 0;
-	printf("in old_slow_icallVMprJavaSendPatchupVirtual");
+	printf("in old_slow_icallVMprJavaSendPatchupVirtual\n");
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	printf("openjdk mh\n");
 	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress) && !getenv("helperUseOld")) {
