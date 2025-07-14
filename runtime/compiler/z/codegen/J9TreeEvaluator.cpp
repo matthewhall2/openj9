@@ -3378,7 +3378,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
    TR::Instruction *cursor = NULL;
    TR_Debug * debugObj = cg->getDebug();
 
-   if (!j9classModifierFlagsReg)
+   if (NULL == j9classModifierFlagsReg)
       {
       generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
                               generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
@@ -3394,7 +3394,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
 
    // when user passes in modiferFlags register, it is going to be reused later
    // so we use an RRF instruction to avoid the flags being overwritten by the AND
-   if (j9classModifierFlagsReg)
+   if (NULL != j9classModifierFlagsReg)
       {
       TR::Register *flagsReg = srm->findOrCreateScratchRegister();
       generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagsReg, flags);
@@ -3407,7 +3407,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
       }
 
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
-   if (!j9classModifierFlagsReg)
+   if (NULL == j9classModifierFlagsReg)
       srm->reclaimScratchRegister(scratchReg);
    }
 
@@ -11844,7 +11844,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          }
       }
 
-   // the class node being <aloadaddr> is an edge case - liklely will not happen since we shouldn't see
+   // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
    if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi || 
         classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
