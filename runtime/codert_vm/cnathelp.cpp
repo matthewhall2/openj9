@@ -3301,6 +3301,7 @@ done:
 void J9FASTCALL
 old_slow_jitTranslateNewInstanceMethod(J9VMThread *currentThread)
 {
+	printf("in old_slow_jitTranslateNewInstanceMethod\n");
 	OLD_SLOW_ONLY_JIT_HELPER_PROLOGUE(2);
 	j9object_t objectClassObject = (j9object_t)JIT_DIRECT_CALL_PARM(1);
 	j9object_t callerClassObject = (j9object_t)JIT_DIRECT_CALL_PARM(2);
@@ -3341,6 +3342,7 @@ redo:
 		address = J9_BUILDER_SYMBOL(jitInterpretNewInstanceMethod);
 	}
 	currentThread->tempSlot = (UDATA)address;
+	printf("new inst... address: %lu\n, currentThread->tempSlot);
 	SLOW_JIT_HELPER_EPILOGUE();
 }
 
@@ -3389,6 +3391,7 @@ void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 {
 	UDATA const interfaceVTableIndex = currentThread->tempSlot;
+	printf("interface v table index: %lu\n", interfaceVTableIndex);
 	j9object_t const receiver = (j9object_t)currentThread->returnValue2;
 	J9JavaVM *vm = currentThread->javaVM;
 	J9JITConfig *jitConfig = vm->jitConfig;
@@ -3422,6 +3425,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		UDATA *jitVTableSlot = (UDATA*)((UDATA)clazz + jitVTableOffset);
 		VM_AtomicSupport::lockCompareExchange(jitVTableSlot, patchup, thunk);
 	}
+	printf("thunk was set to %p\n", (void*)thunk);
 	currentThread->tempSlot = thunk;
 }
 
