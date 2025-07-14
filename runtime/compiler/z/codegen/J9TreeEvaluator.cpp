@@ -3432,9 +3432,6 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
       bytesOffset = 2;
       }
 
-   if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: Emitting superclass test\n",node->getOpCode().getName());
-
    TR_ASSERT(sizeof(((J9Class*)0)->classDepthAndFlags) == sizeof(uintptr_t),
             "superclass test::J9Class->classDepthAndFlags is wrong size\n");
 
@@ -3453,8 +3450,6 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
 
    // add check for eliminate superclassarraysize check
    bool eliminateSuperClassArraySizeCheck = (toClassDepth != -1 && (toClassDepth < comp->getOptions()->_minimumSuperclassArraySize));
-   if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s Emitting SuperClass Array Size Check\n", eliminateSuperClassArraySizeCheck ? "Not" : "");
 
    if (!eliminateSuperClassArraySizeCheck)
       {
@@ -3472,7 +3467,6 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
          {
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, fromClassDepthReg, toClassDepth, TR::InstOpCode::COND_BNH, failLabel, true, false);
          }
-     
 
       if (debugObj)
          debugObj->addInstructionComment(cursor, "Check if fromClassDepth <= toClassDepth and jump to fail");
@@ -11822,7 +11816,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    {
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
-   TR::ILOpCodes opcode = classNode->getOpCodeValue();
+   const TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = opcode == TR::loadaddr;
 
    // getting the symbol ref
@@ -11846,7 +11840,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
-   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi || 
+   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi ||
         classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
         classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
       {
@@ -11855,10 +11849,14 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
    TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
    TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
-   
-   TR::StaticSymbol *classSym = ((NULL != symRef) && !symRef->isUnresolved()) ? (symRef ? symRef->getSymbol()->getStaticSymbol() : NULL) : NULL;
-   TR_OpaqueClassBlock * clazz = (NULL != classSym) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
-   classDepth = (NULL != clazz) ? static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz)) : -1;
+
+   if (symRef != NULL && !symRef->isUnresolved())
+      {
+      TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
+      TR_OpapqClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
+      if (clazz != NULL)
+         classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+      }
 
    return classSymRef;
    }
@@ -11866,8 +11864,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::Compilation *comp = cg->comp();
-   if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: Inlining isAssignableFrom\n",node->getOpCode().getName());
    // recognizedCallTransformer swaps the args - caller class obj is the second argument after the transformation
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
@@ -11880,7 +11876,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::LabelSymbol *successLabel = doneLabel;
    TR::LabelSymbol* cFlowRegionStart = generateLabelSymbol(cg);
 
-   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);;
+   TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
    // create OOL section here to have access to the result register to load initial result
    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
@@ -11899,21 +11895,21 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Instruction *cursor = NULL;
 
    if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: Emitting Class Equality Test\n",node->getOpCode().getName());
+      traceMsg(comp,"%s: Emitting Class Equality Test\n",node->getOpCode().getName());
    // for isAssignableFrom we can always generate the class equality test since both arguments are classes
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest", comp->signature()),1,TR::DebugCounter::Undetermined);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest", comp->signature()), 1, TR::DebugCounter::Undetermined);
    cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg, fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
    if (debugObj)
-         debugObj->addInstructionComment(cursor, "class equality test");
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
+      debugObj->addInstructionComment(cursor, "class equality test");
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
    bool fastFail = false;
    if (comp->getOption(TR_TraceCG))
-         traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
+      traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
    if (NULL != toClassSymRef && comp->getOption(TR_TraceCG))
-      traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
+      traceMsg(comp,"%s: toClass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
    if ((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp))
       {
       int32_t fromClassDepth = -1;
@@ -11926,29 +11922,31 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             {
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
             if (debugObj)
+               {
                debugObj->addInstructionComment(cursor, "toclass depth > fromClass depth at compile time - fast fail");
+               }
             }
             fastFail = true;
          }
       }
-   
+
    if (!fastFail)
       {
       // castClassCache test
       if ((NULL != toClassSymRef) && comp->getOption(TR_TraceCG))
-            traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
+         traceMsg(comp,"%s: toclass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
       if ((NULL == toClassSymRef) || !toClassSymRef->isClassAbstract(comp))
          {
          if (comp->getOption(TR_TraceCG))
             traceMsg(comp,"%s: Emitting CastClassCacheTest\n",node->getOpCode().getName());
          TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()), 1, TR::DebugCounter::Undetermined);
          generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
          cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
          if (debugObj)
             debugObj->addInstructionComment(cursor, "castclass cache test");
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(castClassCacheReg);
          }
 
@@ -11956,19 +11954,18 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       if((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp))
          {
          const int32_t flags = (J9AccInterface | J9AccClassArray);
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()), 1, TR::DebugCounter::Undetermined);
          if (toClassDepth == -1)
             {
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
             }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),1,TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
          }
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
       }
 
-//fastFail:
    srm->stopUsingRegisters();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
