@@ -11920,7 +11920,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
       if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
-      if ((NULL != fromClassSymRef) && fromClassSymRef->isClassInterface(comp))
+      if ((NULL == fromClassSymRef) || !fromClassSymRef->isClassInterface(comp))
          {
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
