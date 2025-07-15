@@ -811,7 +811,7 @@ done:
 		printf("jit return address is: %p\n", jitReturnAddress);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
 		printf("jit vtable offset is: %lu (as int %u)\n", jitVTableOffset, jitVTableOffset);
-		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
+		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG) || getenv("indexIsMethod")) {
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
 			printf("method is %p\n", method);
