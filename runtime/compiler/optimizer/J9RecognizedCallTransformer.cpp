@@ -1685,8 +1685,8 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
    TR::Node *vftOffset =
       TR::Node::createWithSymRef(node, TR::lloadi, 1, memberNameNode, vmIndexSymRef);
 
-  // if (!comp()->target().is64Bit())
-   //   vftOffset = TR::Node::create(node, TR::l2i, 1, vftOffset);
+   if (!comp()->target().is64Bit())
+      vftOffset = TR::Node::create(node, TR::l2i, 1, vftOffset);
 
    makeIntoDispatchVirtualCall(node, vftOffset, vftNode, memberNameNode);
    }
@@ -1744,8 +1744,8 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
       ? TR::Node::lconst(node, sizeof(J9Class))
       : TR::Node::iconst(node, sizeof(J9Class));
 
-   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : TR::lsub;
-   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : TR::aladd;
+   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : TR::isub;
+   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : TR::aiadd;
 
    TR::SymbolReference *genericIntShadow =
       comp()->getSymRefTab()->createGenericIntShadowSymbolReference(0);
@@ -1755,7 +1755,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *jitVftOffset = TR::Node::create(subOp, 2, xconstSizeofJ9Class, vftOffset);
    TR::Node *jitVftSlotPtr = TR::Node::create(axadd, 2, vftNode, jitVftOffset);
 
-   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : TR::lloadi;
+   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : TR::iloadi;
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
 
