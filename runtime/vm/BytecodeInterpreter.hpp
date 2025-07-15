@@ -637,7 +637,7 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
-		printf("int j2i transition\n");
+		printf("in j2i transition\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
@@ -648,7 +648,7 @@ done:
 			_sendMethod == _currentThread->javaVM->initialMethods.invokePrivateMethod) {
 				printf("found initial method in j2i tranasition\n");
 			}
-		printf("send method: %p, throw def con: %d\n", _sendMethod, _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		printf("send method: %p, throw def con: %p\n", _sendMethod, _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		printf("rom method: %p\n", romMethod);
 		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		printf("exit point: %p\n", exitPoint);
