@@ -3184,6 +3184,7 @@ old_slow_jitInduceOSRAtCurrentPC(J9VMThread *currentThread)
 void J9FASTCALL
 old_slow_jitInterpretNewInstanceMethod(J9VMThread *currentThread)
 {
+	printf("in old_slow_jitInterpretNewInstanceMethod\n");
 	/* JIT has passed two parameters, but only the first one matters to this call.
 	 * The parmCount has to be 1 in order for JIT_PARM_IN_MEMORY to function correctly
 	 * in the register case.
@@ -3210,6 +3211,7 @@ old_slow_jitInterpretNewInstanceMethod(J9VMThread *currentThread)
 	JIT_PARM_IN_MEMORY(1) = JIT_DIRECT_CALL_PARM(1);
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 	currentThread->tempSlot = (UDATA)J9_BUILDER_SYMBOL(icallVMprJavaSendStatic1);
+	printf("tempslot: %lu (as int %d)\n", currentThread->tempSlot, currentThread->tempSlot);
 	jitRegisters->JIT_J2I_METHOD_REGISTER = (UDATA)J9VMJAVALANGJ9VMINTERNALS_NEWINSTANCEIMPL_METHOD(vm);
 }
 
@@ -3342,7 +3344,7 @@ redo:
 		address = J9_BUILDER_SYMBOL(jitInterpretNewInstanceMethod);
 	}
 	currentThread->tempSlot = (UDATA)address;
-	printf("new inst... address: %lu\n", currentThread->tempSlot);
+	printf("new inst... address: %lu (as int %d)\n", currentThread->tempSlot, currentThread->tempSlot);
 	SLOW_JIT_HELPER_EPILOGUE();
 }
 
@@ -3391,7 +3393,7 @@ void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 {
 	UDATA const interfaceVTableIndex = currentThread->tempSlot;
-	printf("interface v table index: %lu\n", interfaceVTableIndex);
+	printf("interface v table index: %lu (as int %d)\n", interfaceVTableIndex, interfaceVTableIndex);
 	j9object_t const receiver = (j9object_t)currentThread->returnValue2;
 	J9JavaVM *vm = currentThread->javaVM;
 	J9JITConfig *jitConfig = vm->jitConfig;
