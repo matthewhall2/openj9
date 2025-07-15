@@ -1575,6 +1575,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
 void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop* treetop, TR::Node* node, TR::Node* vmTargetNode, TR::list<TR::SymbolReference *>* argsList, TR::Node* inlCallNode)
    {
+   bool useInt = feGetEnv("useIntForSig") != NULL;
    TR::SymbolReference *extraField = comp()->getSymRefTab()->findOrCreateJ9MethodExtraFieldSymbolRef(offsetof(struct J9Method, extra));
    TR::Node *extra = TR::Node::createWithSymRef(node, comp()->il.opCodeForIndirectLoad(extraField->getSymbol()->getDataType()), 1, vmTargetNode, extraField);
    TR::SymbolReference *extraTempSlotSymRef = comp()->getSymRefTab()->createTemporary(comp()->getMethodSymbol(),extraField->getSymbol()->getDataType());
@@ -1612,7 +1613,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
       TR_OpaqueMethodBlock *dummyInvoke = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
       int signatureLength;
       char * signature = getSignatureForComputedCall(
-         "J",
+         useInt ? "I": "J",
          "",
          comp(),
          node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
