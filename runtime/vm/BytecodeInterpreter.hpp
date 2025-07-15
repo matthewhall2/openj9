@@ -642,6 +642,7 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		printf("send method: %p, throw def con: %d\n", _sendMethod, _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		printf("rom method: %p\n", romMethod);
 		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 		printf("exit point: %p\n", exitPoint);
