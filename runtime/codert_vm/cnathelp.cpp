@@ -3391,7 +3391,7 @@ old_fast_jitVolatileWriteDouble(J9VMThread *currentThread)
 
 #endif /* !J9VM_ENV_DATA64 */
 
-#if (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS)
+#if defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS)
 
 void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
