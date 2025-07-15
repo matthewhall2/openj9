@@ -10903,7 +10903,7 @@ if (getenv("enableRunTrap2")|| getenv("enableAllTraps")|| startTrapping|| IBCoun
 		j9object_t receiver = (j9object_t)actionData;
 		printf("reciever is: %p\n", receiver);
 		UDATA interfaceVTableIndex = vmThread->tempSlot;
-		printf("interface vtable index is: %d\n", interfaceVTableIndex);
+		printf("interface vtable index is: %lu\n", interfaceVTableIndex);
 		actionData = (void*)j2iVirtualMethod(REGISTER_ARGS, receiver, interfaceVTableIndex);
 		printf("action data is: %p", actionData);
 		// intentional fall-through

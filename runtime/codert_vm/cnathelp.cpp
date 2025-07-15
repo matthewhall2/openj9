@@ -3342,7 +3342,7 @@ redo:
 		address = J9_BUILDER_SYMBOL(jitInterpretNewInstanceMethod);
 	}
 	currentThread->tempSlot = (UDATA)address;
-	printf("new inst... address: %lu\n, currentThread->tempSlot);
+	printf("new inst... address: %lu\n", currentThread->tempSlot);
 	SLOW_JIT_HELPER_EPILOGUE();
 }
 
@@ -3385,7 +3385,7 @@ old_fast_jitVolatileWriteDouble(J9VMThread *currentThread)
 
 #endif /* !J9VM_ENV_DATA64 */
 
-#if defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS)
+#if (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS) || !defined(J9VM_ENV_DATA64))
 
 void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
@@ -3401,7 +3401,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	UDATA interpVTableOffset = sizeof(J9Class) - jitVTableOffset;
 	J9Method *method = *(J9Method**)((UDATA)clazz + interpVTableOffset);
 	UDATA thunk = 0;
-	printf("in old_slow_icallVMprJavaSendPatchupVirtual\n);
+	printf("in old_slow_icallVMprJavaSendPatchupVirtual"\n);
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	printf("openjdk mh\n");
 	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress) && !getenv("helperUseOld")) {
@@ -3409,7 +3409,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		 * We need the J2I thunk that corresponds to the signature that the JIT was using at the call site.
 		 * Since this varies depending on the call site, we can't replace the VFT entry with the J2I thunk.
 		 */
-		printf("finding callsite and thunk\n);
+		printf("finding callsite and thunk"\n);
 		J9JITInvokeBasicCallSite *site = jitGetInvokeBasicCallSiteFromPC(currentThread, (UDATA)jitReturnAddress);
 		thunk = (UDATA)site->j2iThunk;
 		printf("thunk was set to %p\n", (void*)thunk);
@@ -3429,7 +3429,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	currentThread->tempSlot = thunk;
 }
 
-#endif /* J9SW_NEEDS_JIT_2_INTERP_THUNKS */
+#endif /* (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS) || !defined(J9VM_ENV_DATA64)) */
 
 /* New-style helpers */
 
