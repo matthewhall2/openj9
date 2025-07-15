@@ -170,6 +170,7 @@ buildBranchJITResolveFrame(J9VMThread *currentThread, void *pc, UDATA flags)
 static VMINLINE void*
 restoreJITResolveFrame(J9VMThread *currentThread, void *oldPC, bool checkAsync = true, bool checkException = true)
 {
+	printf("in restore jit resolve frame\n");
 	void* addr = NULL;
 	J9SFJITResolveFrame *resolveFrame = (J9SFJITResolveFrame*)currentThread->sp;
 	if (checkAsync) {
@@ -190,6 +191,7 @@ restoreJITResolveFrame(J9VMThread *currentThread, void *oldPC, bool checkAsync =
 		void *newPC = resolveFrame->returnAddress;
 		if (!samePCs(oldPC, newPC)) {
 			addr = JIT_RUN_ON_JAVA_STACK(newPC);
+			printf("jit run on java stack\ntempslot is now: %lu (int %u)\nAddr is: %p\n", currentThread->tempSlot, currentThread->tempSlot, addr);
 			goto done;
 		}
 	}
@@ -3144,6 +3146,7 @@ old_slow_jitInduceOSRAtCurrentPCImpl(J9VMThread *currentThread, void *oldPC)
 		newPC = setNativeOutOfMemoryErrorFromJIT(currentThread, 0, 0);
 	} else {
 		newPC = JIT_RUN_ON_JAVA_STACK(newPC);
+		printf("jit run on java stack\ntempslot is now: %lu (int %u)\nnewPC is: %p\n", currentThread->tempSlot, currentThread->tempSlot, newPC);
 	}
 	return newPC;
 }
@@ -3387,7 +3390,7 @@ old_fast_jitVolatileWriteDouble(J9VMThread *currentThread)
 
 #endif /* !J9VM_ENV_DATA64 */
 
-#if (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS) || !defined(J9VM_ENV_DATA64))
+#if (defined(J9SW_NEEDS_JIT_2_INTERP_THUNKS)
 
 void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
