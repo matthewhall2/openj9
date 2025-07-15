@@ -642,6 +642,12 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		if (_sendMethod == _currentThread->javaVM->initialMethods.initialSpecialMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.initialStaticMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.initialVirtualMethod ||
+			_sendMethod == _currentThread->javaVM->initialMethods.invokePrivateMethod) {
+				printf("found initial method in j2i tranasition\n");
+			}
 		printf("send method: %p, throw def con: %d\n", _sendMethod, _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		printf("rom method: %p\n", romMethod);
 		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
