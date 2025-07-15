@@ -3137,6 +3137,7 @@ old_fast_jitObjectHashCode(J9VMThread *currentThread)
 static VMINLINE void*
 old_slow_jitInduceOSRAtCurrentPCImpl(J9VMThread *currentThread, void *oldPC)
 {
+	printf("in old_slow_jitInduceOSRAtCurrentPCImpl\n");
 	induceOSROnCurrentThread(currentThread);
 	/* If the OSR was successful, a decompilation will have been added to the resolve frame */
 	J9SFJITResolveFrame *resolveFrame = (J9SFJITResolveFrame*)currentThread->sp;
@@ -3146,7 +3147,7 @@ old_slow_jitInduceOSRAtCurrentPCImpl(J9VMThread *currentThread, void *oldPC)
 		newPC = setNativeOutOfMemoryErrorFromJIT(currentThread, 0, 0);
 	} else {
 		newPC = JIT_RUN_ON_JAVA_STACK(newPC);
-		printf("jit run on java stack\ntempslot is now: %lu (int %u)\nnewPC is: %p\n", currentThread->tempSlot, currentThread->tempSlot, newPC);
+		printf("tempslot is now: %lu (int %u)\nnewPC is: %p\n", currentThread->tempSlot, currentThread->tempSlot, newPC);
 	}
 	return newPC;
 }
