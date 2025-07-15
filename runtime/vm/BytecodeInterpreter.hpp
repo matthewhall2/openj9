@@ -632,12 +632,12 @@ done:
 
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
-		printf("int j2i transition\n");
 		REGISTER_ARGS_LIST
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		printf("int j2i transition\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
