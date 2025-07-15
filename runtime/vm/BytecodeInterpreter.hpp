@@ -632,6 +632,7 @@ done:
 
 	VMINLINE VM_BytecodeAction
 	j2iTransition(
+		printf("int j2i transition\n");
 		REGISTER_ARGS_LIST
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		, bool immediatelyRunCompiledMethod = false
@@ -641,10 +642,14 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+		printf("rom method: %p\n", romMethod)''
 		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
+		printf("exit point: %p\n", exitPoint);
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			printf("abstract or native\n");
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			printf("pc: %p\n", _pc);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
