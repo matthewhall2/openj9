@@ -231,8 +231,15 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                firstArgumentChild = 0;
             }
             linkageRegChildIndex = firstArgumentChild;
-            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : callNode->getNumChildren() -1;
-            
+            if (feGetEnv("useLastArg")) {
+               receiverChildIndex = callNode->getOpCode().isIndirect() ? callNode->getNumChildren() -1 : -1;
+               if (feGetEnv("useLastArgDirect") && callNode->getOpCode().isCallDirect()) {
+                  receiverChildIndex = callNode->getNumChildren() -1;     
+               }
+            } else {
+               receiverChildIndex = callNode->getOpCode().isIndirect() ? firstArgumentChild + 1 : -1;
+            }
+
          }
    bool trace = comp()->getOption(TR_TraceCG);
    if (trace) {
