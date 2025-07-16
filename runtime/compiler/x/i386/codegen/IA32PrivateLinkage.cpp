@@ -227,11 +227,12 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-            linkageRegChildIndex = firstArgumentChild;
-            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
             if (feGetEnv("firstArgAtZero")) {
                firstArgumentChild = 0;
             }
+            linkageRegChildIndex = firstArgumentChild;
+            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : callNode->getNumChildren() -1;
+            
          }
    bool trace = comp()->getOption(TR_TraceCG);
    if (trace) {
