@@ -227,13 +227,16 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-            if (feGetEnv("firstArgAtZero")) {
+            if (NULL != feGetEnv("firstArgAtZero")) {
                firstArgumentChild = 0;
             }
+            if (NULL != feGetEnv("argChildIs1")) {
+               firstArgumentChild = 1;
+            }
             linkageRegChildIndex = firstArgumentChild;
-            if (feGetEnv("useLastArg")) {
+            if (NULL != feGetEnv("useLastArg")) {
                receiverChildIndex = callNode->getOpCode().isIndirect() ? callNode->getNumChildren() -1 : -1;
-               if (feGetEnv("useLastArgDirect") && callNode->getOpCode().isCallDirect()) {
+               if (NULL != feGetEnv("useLastArgDirect") && callNode->getOpCode().isCallDirect()) {
                   receiverChildIndex = callNode->getNumChildren() -1;     
                }
             } else {
@@ -242,6 +245,23 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
 
          }
    bool trace = comp()->getOption(TR_TraceCG);
+   if (feGetEnv("argOrder0")) {
+      linkageRegChildIndex = 0;
+      firstArgumentChild = 0;
+     }
+   else if (feGetEnv("argOrder1")) {
+      linkageRegChildIndex = 0;
+      firstArgumentChild = 1;
+   } else if (feGetEnv("argOrder2")) {
+      linkageRegChildIndex = 1;
+      firstArgumentChild = 0;
+   } else if (getEnv("argOrder3")) {
+      linkageRegChildIndex = 1;
+      firstArgumentChild = 1;
+   }
+   if (NULL != feGetEnv("useLastArg")) {
+      receiverChildIndex = callNode->getNumChildren() -1;
+   }
    if (trace) {
       traceMsg(comp(), "IA32 BUILD ARGS:\nlinkageRegChild Index: %d\nreceiverChild Index: %d\nfirst arg index: %d\n", linkageRegChildIndex, receiverChildIndex, firstArgumentChild);
    }
