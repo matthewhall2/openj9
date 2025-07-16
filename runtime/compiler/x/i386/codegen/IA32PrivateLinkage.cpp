@@ -281,7 +281,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             if (NULL != reg && !isDefault)
                {
                TR::IA32LinkageUtils::pushIntegerWordArg(child, cg());
-               argSize += 8;
+               argSize += 4;
                }
             break;
             }
