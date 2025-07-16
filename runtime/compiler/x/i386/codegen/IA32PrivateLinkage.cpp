@@ -253,32 +253,35 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             break;
          case TR::Int32:
             {
-            TR::Register *reg = NULL;
-            TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
-            bool isDefault = false;
-            switch (sym->getMandatoryRecognizedMethod())
+            if (i == receiverChildIndex)
                {
-               case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
-               case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-                  reg = cg()->evaluate(child);
-                  dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
-                  cg()->decReferenceCount(child);
-                  break;
-               default:
-                  isDefault = true;
-                  if (i == receiverChildIndex)
-                     {
-                     eaxRegister = pushThis(child);
-                     thisChild   = child;
-                     }
-                  else
-                     {
-                     pushIntegerWordArg(child);
-                     }
-                  argSize += 4;
-                  break;
+               eaxRegister = pushThis(child);
+               thisChild   = child;
+               argSize += 4;
+               break;
                }
-            if (NULL != reg && !isDefault)
+            else if (i != linkageRegChildIndex)
+               {
+               pushIntegerWordArg(child);
+               argSize += 4;
+               break;
+               }
+
+            TR::Register *reg = NULL;
+            if (i == linkageRegChildIndex)
+               {
+               TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
+               switch (sym->getMandatoryRecognizedMethod())
+                  {
+                  case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+                  case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+                     reg = cg()->evaluate(child);
+                     dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
+                     cg()->decReferenceCount(child);
+                     break;
+                  }
+               }
+            if (NULL != reg)
                {
                TR::IA32LinkageUtils::pushIntegerWordArg(child, cg());
                argSize += 4;
