@@ -238,7 +238,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          {
          case TR::Int8:
          case TR::Int16:
-         case TR::Int32:
+         //case TR::Int32:
          case TR::Address:
             if (i == receiverChildIndex)
                {
@@ -251,6 +251,40 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                }
             argSize += 4;
             break;
+         case TR::Int32:
+            {
+            TR::Register *reg = NULL;
+            TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
+            bool isDefault = false;
+            switch (sym->getMandatoryRecognizedMethod())
+               {
+               case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+               case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+                  reg = cg()->evaluate(child);
+                  dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
+                  cg()->decReferenceCount(child);
+                  break;
+               default:
+                  isDefault = true;
+                  if (i == receiverChildIndex)
+                     {
+                     eaxRegister = pushThis(child);
+                     thisChild   = child;
+                     }
+                  else
+                     {
+                     pushIntegerWordArg(child);
+                     }
+                  argSize += 4;
+                  break;
+               }
+            if (NULL != reg && !isDefault)
+               {
+               TR::IA32LinkageUtils::pushIntegerWordArg(child, cg());
+               argSize += 8;
+               }
+            break;
+            }
          case TR::Int64:
             {
             TR::Register *reg = NULL;
