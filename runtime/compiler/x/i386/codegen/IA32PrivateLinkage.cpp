@@ -230,7 +230,10 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             linkageRegChildIndex = firstArgumentChild;
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
          }
-
+   bool trace = comp()->getOption(TR_TraceCG);
+   if (trace) {
+      traceMsg(comp(), "IA32 BUILD ARGS:\nlinkageRegChild Index: %d\nreceiverChild Index: %d\nfirst arg index: %d\n", linkageRegChildIndex, receiverChildIndex, firstArgumentChild);
+   }
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
       {
       TR::Node *child = callNode->getChild(i);
@@ -275,6 +278,8 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                   {
                   case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
                   case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+                     if (trace)
+                        traceMsg(comp(), "building arg for dispatchVirtual 32\n");
                      reg = cg()->evaluate(child);
                      dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
                      cg()->decReferenceCount(child);
@@ -306,6 +311,8 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                      break;
                   case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
                   case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+                     if (trace)
+                        traceMsg(comp(), "building args for dispatchVirtual 64\n");
                      reg = cg()->evaluate(child);
                      if (reg->getRegisterPair())
                         reg = reg->getRegisterPair()->getLowOrder();
