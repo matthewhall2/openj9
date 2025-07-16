@@ -245,17 +245,17 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
 
          }
    bool trace = comp()->getOption(TR_TraceCG);
-   if (feGetEnv("argOrder0")) {
+   if (NULL != feGetEnv("argOrder0")) {
       linkageRegChildIndex = 0;
       firstArgumentChild = 0;
      }
-   else if (feGetEnv("argOrder1")) {
+   else if (NULL != feGetEnv("argOrder1")) {
       linkageRegChildIndex = 0;
       firstArgumentChild = 1;
-   } else if (feGetEnv("argOrder2")) {
+   } else if (NULL != feGetEnv("argOrder2")) {
       linkageRegChildIndex = 1;
       firstArgumentChild = 0;
-   } else if (getEnv("argOrder3")) {
+   } else if (NULL != feGetEnv("argOrder3")) {
       linkageRegChildIndex = 1;
       firstArgumentChild = 1;
    }
