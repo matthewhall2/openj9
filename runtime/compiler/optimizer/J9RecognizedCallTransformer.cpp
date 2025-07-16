@@ -1730,10 +1730,11 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
          dispatchVirtualResolvedMethod,
          TR::MethodSymbol::ComputedStatic);
 
-   TR::ILOpCodes indirectCallOp =
-      node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
+   TR::ILOpCodes callOp = feGetEnv("makeDirectCall") != NULL ?  node->getSymbol()->castToMethodSymbol()->getMethod()->directCallOpCode() :  node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
+  // TR::ILOpCodes indirectCallOp =
+   //   node->getSymbol()->castToMethodSymbol()->getMethod()->indirectCallOpCode();
 
-   TR::Node::recreateWithSymRef(node, indirectCallOp, dispatchVirtualSymRef);
+   TR::Node::recreateWithSymRef(node, callOp, dispatchVirtualSymRef);
 
    // 2 extra args prepended (address in vtable entry and vtable slot index),
    // and last arg (MemberName object) removed, so net 1 extra child.
