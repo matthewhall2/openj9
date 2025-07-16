@@ -1685,8 +1685,8 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
    TR::Node *vftOffset =
       TR::Node::createWithSymRef(node, TR::lloadi, 1, memberNameNode, vmIndexSymRef);
-
-   if (!comp()->target().is64Bit())
+   bool useAllLong =  feGetEnv("useAllLong") != NULL;
+   if (!comp()->target().is64Bit() && !useAllLong)
       vftOffset = TR::Node::create(node, TR::l2i, 1, vftOffset);
 
    makeIntoDispatchVirtualCall(node, vftOffset, vftNode, memberNameNode);
@@ -1695,7 +1695,8 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *node, TR::Node *vftOffset, TR::Node *vftNode, TR::Node *memberNameNode)
    {
-   bool useInt = feGetEnv("useIntForSig") != NULL;
+   bool useAllLong =  feGetEnv("useAllLong") != NULL;
+   bool useInt = feGetEnv("useIntForSig") != NULL || useAllLong;
    // Construct a dummy "resolved method" for JITHelpers.dispatchVirtual()V to
    // dispatch through the VFT.
    TR_J9VMBase *fej9 = comp()->fej9();
@@ -1745,8 +1746,8 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
       ? TR::Node::lconst(node, sizeof(J9Class))
       : TR::Node::iconst(node, sizeof(J9Class));
 
-   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : TR::isub;
-   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : TR::aiadd;
+   TR::ILOpCodes subOp = comp()->target().is64Bit() ? TR::lsub : (useAllLong ? TR::lsub : TR::isub);
+   TR::ILOpCodes axadd = comp()->target().is64Bit() ? TR::aladd : (useAllLong ? TR::aladd : TR::aiadd);
 
    TR::SymbolReference *genericIntShadow =
       comp()->getSymRefTab()->createGenericIntShadowSymbolReference(0);
@@ -1756,7 +1757,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *jitVftOffset = TR::Node::create(subOp, 2, xconstSizeofJ9Class, vftOffset);
    TR::Node *jitVftSlotPtr = TR::Node::create(axadd, 2, vftNode, jitVftOffset);
 
-   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : TR::iloadi;
+   TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : (useAllLong ? TR::lloadi : TR::iloadi);
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
 

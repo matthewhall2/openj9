@@ -229,11 +229,15 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
             linkageRegChildIndex = firstArgumentChild;
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
+            if (feGetEnv("firstArgAtZero")) {
+               firstArgumentChild = 0;
+            }
          }
    bool trace = comp()->getOption(TR_TraceCG);
    if (trace) {
       traceMsg(comp(), "IA32 BUILD ARGS:\nlinkageRegChild Index: %d\nreceiverChild Index: %d\nfirst arg index: %d\n", linkageRegChildIndex, receiverChildIndex, firstArgumentChild);
    }
+   
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
       {
       TR::Node *child = callNode->getChild(i);
@@ -357,7 +361,8 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
       cg()->stopUsingRegister(eaxRegister);
       cg()->decReferenceCount(thisChild);
       }
-
+   if (trace)
+      traceMsg(comp(), "final arg size: %d\n", argSize);
    return argSize;
 
    }
