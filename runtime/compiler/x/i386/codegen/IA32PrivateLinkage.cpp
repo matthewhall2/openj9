@@ -220,29 +220,16 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
    int32_t receiverChildIndex = -1;
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver() && callNode->getOpCode().isIndirect())
       receiverChildIndex = firstArgumentChild;
-
-   if (!callNode->getSymbolReference()->isUnresolved())
+   
+   if (!callNode->getSymbolReference()->isUnresolved()) {
       switch(callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
          {
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
-         case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-            if (NULL != feGetEnv("firstArgAtZero")) {
-               firstArgumentChild = 0;
-            }
-            if (NULL != feGetEnv("argChildIs1")) {
-               firstArgumentChild = 1;
-            }
             linkageRegChildIndex = firstArgumentChild;
-            if (NULL != feGetEnv("useLastArg")) {
-               receiverChildIndex = callNode->getOpCode().isIndirect() ? callNode->getNumChildren() -1 : -1;
-               if (NULL != feGetEnv("useLastArgDirect") && callNode->getOpCode().isCallDirect()) {
-                  receiverChildIndex = callNode->getNumChildren() -1;     
-               }
-            } else {
-               receiverChildIndex = callNode->getOpCode().isIndirect() ? firstArgumentChild + 1 : -1;
-            }
-
+            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
+            break;
+         case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
             if (NULL != feGetEnv("argOrder0")) {
                linkageRegChildIndex = 0;
                firstArgumentChild = 0;
@@ -260,9 +247,8 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             if (NULL != feGetEnv("useLastArg")) {
                receiverChildIndex = callNode->getNumChildren() -1;
             }
-
          }
-   bool trace = comp()->getOption(TR_TraceCG);
+   }
    
    if (trace) {
       traceMsg(comp(), "IA32 BUILD ARGS:\nlinkageRegChild Index: %d\nreceiverChild Index: %d\nfirst arg index: %d\n", linkageRegChildIndex, receiverChildIndex, firstArgumentChild);
