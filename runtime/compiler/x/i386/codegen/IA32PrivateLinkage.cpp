@@ -243,25 +243,27 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                receiverChildIndex = callNode->getOpCode().isIndirect() ? firstArgumentChild + 1 : -1;
             }
 
+            if (NULL != feGetEnv("argOrder0")) {
+               linkageRegChildIndex = 0;
+               firstArgumentChild = 0;
+            }
+            else if (NULL != feGetEnv("argOrder1")) {
+               linkageRegChildIndex = 0;
+               firstArgumentChild = 1;
+            } else if (NULL != feGetEnv("argOrder2")) {
+               linkageRegChildIndex = 1;
+               firstArgumentChild = 0;
+            } else if (NULL != feGetEnv("argOrder3")) {
+               linkageRegChildIndex = 1;
+               firstArgumentChild = 1;
+            }
+            if (NULL != feGetEnv("useLastArg")) {
+               receiverChildIndex = callNode->getNumChildren() -1;
+            }
+
          }
    bool trace = comp()->getOption(TR_TraceCG);
-   if (NULL != feGetEnv("argOrder0")) {
-      linkageRegChildIndex = 0;
-      firstArgumentChild = 0;
-     }
-   else if (NULL != feGetEnv("argOrder1")) {
-      linkageRegChildIndex = 0;
-      firstArgumentChild = 1;
-   } else if (NULL != feGetEnv("argOrder2")) {
-      linkageRegChildIndex = 1;
-      firstArgumentChild = 0;
-   } else if (NULL != feGetEnv("argOrder3")) {
-      linkageRegChildIndex = 1;
-      firstArgumentChild = 1;
-   }
-   if (NULL != feGetEnv("useLastArg")) {
-      receiverChildIndex = callNode->getNumChildren() -1;
-   }
+   
    if (trace) {
       traceMsg(comp(), "IA32 BUILD ARGS:\nlinkageRegChild Index: %d\nreceiverChild Index: %d\nfirst arg index: %d\n", linkageRegChildIndex, receiverChildIndex, firstArgumentChild);
    }
