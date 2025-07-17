@@ -1676,6 +1676,9 @@ static bool indirectDispatchWillBuildVirtualGuard(TR::Compilation *comp, TR::X86
 
 TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    {
+   bool trace = comp()->getOption(TR_TraceCG);
+   if (trace)
+         traceMsg(comp(), "building indirect call\n");
    TR::StackMemoryRegion stackMemoryRegion(*comp()->trMemory());
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
@@ -1697,6 +1700,8 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    bool skipVFTmaskInstruction = false;
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver())
       {
+      if (trace)
+         traceMsg(comp(), "first arg for indirect call is receiver%s\n", cg()->getDebug()->getName(callNode));
       TR::Node *rcvrChild = callNode->getChild(callNode->getFirstArgumentIndex());
       TR::Node  *vftChild = callNode->getFirstChild();
       bool loadVFTForNullCheck = false;

@@ -211,6 +211,10 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
       TR::Node *callNode,
       TR::RegisterDependencyConditions *dependencies)
    {
+   bool trace = comp()->getOption(TR_TraceCG);
+   if (trace) {
+      traceMsg(comp(), "building args for %s call\n", allNode->getOpCode().isIndirect() ? "indirect" : "direct");
+   }
    int32_t      argSize            = 0;
    TR::Register *eaxRegister        = NULL;
    TR::Node     *thisChild          = NULL;
@@ -220,7 +224,6 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
    int32_t receiverChildIndex = -1;
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver() && callNode->getOpCode().isIndirect())
       receiverChildIndex = firstArgumentChild;
-   bool trace = comp()->getOption(TR_TraceCG);
    if (!callNode->getSymbolReference()->isUnresolved()) {
       switch(callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
          {

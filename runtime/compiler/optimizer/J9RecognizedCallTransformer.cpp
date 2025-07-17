@@ -1761,9 +1761,15 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : (useAllLong ? TR::lloadi : TR::iloadi);
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
-
-   node->setAndIncChild(0, jittedMethodEntryPoint);
-   node->setAndIncChild(1, jitVftOffset);
+   
+   
+   if (NULL == feGetEnv("swapArgs")) {
+      node->setAndIncChild(0, jittedMethodEntryPoint);
+      node->setAndIncChild(1, jitVftOffset);
+   } else {
+      node->setAndIncChild(0, jitVftOffset);
+      node->setAndIncChild(1, jittedMethodEntryPoint);
+   }
 
    memberNameNode->decReferenceCount(); // no longer a child of node
    }
