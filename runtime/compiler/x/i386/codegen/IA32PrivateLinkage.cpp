@@ -220,7 +220,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
    int32_t receiverChildIndex = -1;
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver() && callNode->getOpCode().isIndirect())
       receiverChildIndex = firstArgumentChild;
-   
+   bool trace = comp()->getOption(TR_TraceCG);
    if (!callNode->getSymbolReference()->isUnresolved()) {
       switch(callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
          {
