@@ -809,7 +809,7 @@ done:
 		J9Method *method = NULL;
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
 		printf("jit return address is: %p\n", jitReturnAddress);
-		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
+		UDATA jitVTableOffset = NULL != getenv("indexIsMethod") ? interfaceVTableIndex : VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
 		printf("jit vtable offset is: %lu (as int %u)\n", jitVTableOffset, jitVTableOffset);
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG) || getenv("indexIsMethod")) {
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
