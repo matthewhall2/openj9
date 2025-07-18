@@ -213,7 +213,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
    {
    bool trace = comp()->getOption(TR_TraceCG);
    if (trace) {
-      traceMsg(comp(), "building args for %s call\n", allNode->getOpCode().isIndirect() ? "indirect" : "direct");
+      traceMsg(comp(), "building args for %s call\n", callNode->getOpCode().isIndirect() ? "indirect" : "direct");
    }
    int32_t      argSize            = 0;
    TR::Register *eaxRegister        = NULL;
