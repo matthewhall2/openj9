@@ -253,7 +253,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
 
             if (NULL != feGetEnv("doManualDispatch")) {
                eaxRegister = pushThis(callNode->getChild(2));
-               thisChild   = child;
+               thisChild   = callNode->getChild(2);
                argSize += 4;
                
                firstArgumentChild = 3;
@@ -265,7 +265,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                TR::Register *reg = NULL;
                reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
                dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
-               cg()->decReferenceCount(child);
+               cg()->decReferenceCount(callNode->getChild(linkageRegChildIndex));
 
                if (NULL == reg) {
                   TR::IA32LinkageUtils::pushIntegerWordArg(callNode->getChild(linkageRegChildIndex), cg());
