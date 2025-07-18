@@ -247,9 +247,36 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                linkageRegChildIndex = 1;
                firstArgumentChild = 1;
             }
-            if (NULL != feGetEnv("useLastArg")) {
-               receiverChildIndex = callNode->getNumChildren() -1;
+            if (NULL != feGetEnv("useThirdArg")) {
+               receiverChildIndex = 2;
             }
+
+            if (NULL != feGetEnv("doManualDispatch")) {
+               eaxRegister = pushThis(callNode->getChild(2));
+               thisChild   = child;
+               argSize += 4;
+               
+               firstArgumentChild = 3;
+               if (NULL != feGetEnv("linkageIsFirstChild")) {
+                  linkageRegChildIndex = 0;
+               } else {
+                  linkageRegChildIndex = 1;
+               }
+               TR::Register *reg = NULL;
+               reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
+               dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
+               cg()->decReferenceCount(child);
+
+               if (NULL == reg) {
+                  TR::IA32LinkageUtils::pushIntegerWordArg(callNode->getChild(linkageRegChildIndex), cg());
+                  argSize += 4;
+               }
+
+            }
+
+
+
+
          }
    }
    
@@ -309,7 +336,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                      break;
                   }
                }
-            if (NULL != reg)
+            if (NULL == reg)
                {
                TR::IA32LinkageUtils::pushIntegerWordArg(child, cg());
                argSize += 4;
