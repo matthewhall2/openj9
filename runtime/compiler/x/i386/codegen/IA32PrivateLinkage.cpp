@@ -228,7 +228,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
             linkageRegChildIndex = firstArgumentChild;
-            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
+            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
          }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
@@ -239,6 +239,21 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::Int8:
          case TR::Int16:
          case TR::Int32:
+            {
+            TR::Register *reg = NULL;
+            if (i == linkageRegChildIndex)
+               {
+               reg = cg()->evaluate(child);
+               dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
+               cg()->decReferenceCount(child);
+               }
+            if (NULL == reg)
+               {
+               pushIntegerWordArg(child);
+               argSize += 4;
+               }
+            break;
+            }
          case TR::Address:
             if (i == receiverChildIndex)
                {
