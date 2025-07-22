@@ -648,7 +648,8 @@ done:
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
-			_arg0EA = _sp;
+			if (!isMethodDefaultConflictForMethodHandle)
+				_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
