@@ -650,17 +650,18 @@ done:
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
 			if (!isMethodDefaultConflictForMethodHandle && getenv("dontSetEA") != NULL)
 				_arg0EA = _sp;
-#endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
+#endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */ 
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle) {
-				if (getenv("buildFrame") != NULL)
-						buildJITResolveFrame(REGISTER_ARGS);
+				if (getenv("buildJITFrame") != NULL)
+					buildJITResolveFrame(REGISTER_ARGS);
+				else if (getenv("buildMethodFrame") != NULL)
+					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 
 				if (getenv("returnEarly"))
 					return rc;
 			}
-
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
@@ -10020,7 +10021,7 @@ done:
 	{
 		if (getenv("useOld")) {
 			/* Load the conflicting method and error message from this special target */
-			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+			buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, 0));
 			updateVMStruct(REGISTER_ARGS);
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 			VMStructHasBeenUpdated(REGISTER_ARGS);
