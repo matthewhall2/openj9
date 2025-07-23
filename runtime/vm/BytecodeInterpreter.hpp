@@ -648,7 +648,7 @@ done:
 			if (getenv("buildJITFrame") != NULL)
 				buildJITResolveFrame(REGISTER_ARGS);
 			else if (getenv("buildMethodFrame") != NULL)
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
 
 				
 			return rc;
