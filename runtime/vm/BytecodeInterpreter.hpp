@@ -651,6 +651,9 @@ done:
 				buildJITResolveFrame(REGISTER_ARGS);
 			else if (getenv("buildMethodFrame") != NULL)
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
+			
+			if (getenv("restoreJITAddress") != NULL)
+				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 
 				
 			return rc;
@@ -9650,6 +9653,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
+		printf("in invokeBasic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		UDATA mhReceiverIndex = 0;
@@ -9775,6 +9779,7 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToVirtual(REGISTER_ARGS_LIST)
 	{
+		printf("in linktovirtual\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 
@@ -10039,17 +10044,31 @@ done:
 	{
 		if (getenv("useOld") != NULL) {
 			/* Load the conflicting method and error message from this special target */
-			buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
+			if (getenv("buildSpecialFrame") != NULL) {
+				buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
+				printf("generic special frame built\n");
+			} else {
+				buildSpecialStackFrame(REGISTER_ARGS, 0);
+				printf("special frame built\n");
+			}
 			updateVMStruct(REGISTER_ARGS);
+			printf("vm struct updated\n");
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			printf("exception set\n");
 			VMStructHasBeenUpdated(REGISTER_ARGS);
+			printf("stuff restored\n");
 			restoreGenericSpecialStackFrame(REGISTER_ARGS);
+			printf("frame restored\n");
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		} else {
 			updateVMStruct(REGISTER_ARGS);
+			printf("vm struct updated\n");
 			prepareForExceptionThrow(_currentThread);
+			printf("exception prepared\n");
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			printf("exception set\n");
 			VMStructHasBeenUpdated(REGISTER_ARGS);
+			printf("stuff restored\n");
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		}
 	}
