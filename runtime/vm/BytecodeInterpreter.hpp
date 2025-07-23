@@ -642,7 +642,7 @@ done:
 
 		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativeParth") != NULL) {
 			if (getenv("setEA") != NULL)
-				_arg0EA = _sp;
+				_arg0EA = NULL;
 
 			if (getenv("setStackFrameFlags") != NULL)
 				_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
