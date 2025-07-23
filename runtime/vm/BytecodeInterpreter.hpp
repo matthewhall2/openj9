@@ -648,7 +648,7 @@ done:
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
-			if (!isMethodDefaultConflictForMethodHandle && getenv("dontSetEA") != NULL)
+			if ((isMethodDefaultConflictForMethodHandle && (getenv("dontSetEA") == NULL)) || !isMethodDefaultConflictForMethodHandle)
 				_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */ 
 			/* Set the flag indicating that the caller was the JIT */
@@ -10019,7 +10019,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
-		if (getenv("useOld")) {
+		if (getenv("useOld") != NULL) {
 			/* Load the conflicting method and error message from this special target */
 			buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, 0));
 			updateVMStruct(REGISTER_ARGS);
