@@ -639,6 +639,22 @@ done:
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
+
+		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativeParth") != NULL) {
+			if (getenv("setStackFrameFlags") != NULL)
+				_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
+
+			
+			if (getenv("buildJITFrame") != NULL)
+				buildJITResolveFrame(REGISTER_ARGS);
+			else if (getenv("buildMethodFrame") != NULL)
+				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+
+				
+			return rc;
+			
+		}
+
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
