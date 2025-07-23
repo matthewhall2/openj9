@@ -10045,10 +10045,13 @@ done:
 		if (getenv("useOld") != NULL) {
 			/* Load the conflicting method and error message from this special target */
 			if (getenv("buildSpecialFrame") != NULL) {
-				buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
+				bool useZeroFlag = getenv("iseZeroFlag") != NULL;
+				buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, useZeroFlag ? 0 : J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
 				printf("generic special frame built\n");
 			} else {
-				buildSpecialStackFrame(REGISTER_ARGS, 0);
+				bool useZeroFlag = getenv("iseZeroFlag") != NULL;
+
+				buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, jitStackFrameFlags(REGISTER_ARGS, useZeroFlag ? 0 : J9_SSF_METHOD_ENTRY), false);
 				printf("special frame built\n");
 			}
 			updateVMStruct(REGISTER_ARGS);
