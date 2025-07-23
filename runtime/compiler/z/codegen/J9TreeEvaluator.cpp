@@ -11918,8 +11918,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
       if ((NULL != fromClassSymRef) && !fromClassSymRef->isClassInterface(comp))
          {
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/bothKnownAtCompile", comp->signature()), 1, TR::DebugCounter::Undetermined);
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
+            cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/bothKnownAtCompile/fastFail", comp->signature()), 1, TR::DebugCounter::Undetermined);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
             if (debugObj)
                {
