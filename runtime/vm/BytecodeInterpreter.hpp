@@ -641,10 +641,12 @@ done:
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
 		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativeParth") != NULL) {
+			if (getenv("setEA") != NULL)
+				_arg0EA = _sp;
+
 			if (getenv("setStackFrameFlags") != NULL)
 				_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 
-			
 			if (getenv("buildJITFrame") != NULL)
 				buildJITResolveFrame(REGISTER_ARGS);
 			else if (getenv("buildMethodFrame") != NULL)
