@@ -10037,7 +10037,7 @@ done:
 	{
 		if (getenv("useOld") != NULL) {
 			/* Load the conflicting method and error message from this special target */
-			buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, 0));
+			buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
 			updateVMStruct(REGISTER_ARGS);
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 			VMStructHasBeenUpdated(REGISTER_ARGS);
