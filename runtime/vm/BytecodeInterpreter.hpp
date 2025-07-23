@@ -652,8 +652,10 @@ done:
 			else if (getenv("buildMethodFrame") != NULL)
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
 			
+			if (getenv("setLiterals") != NULL)
+				_literals = (J9Method*)jitReturnAddress;
 			if (getenv("restoreJITAddress") != NULL)
-				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, jitReturnAddress);
 
 				
 			return rc;
