@@ -9730,7 +9730,8 @@ done:
 				}
 			}
 		} else {
-			_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
+			if (getenv("changeTarget") != NULL)
+				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 		}
 
 		if (fromJIT) {
