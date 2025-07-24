@@ -9677,7 +9677,7 @@ done:
 	//	J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
 		//printf("mhReceiver class: %p\n", receiverClass);
 		//printf("rom class: %p\n", receiverClass->romClass);
-		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(receiverClass->romClass));
+	//	J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(receiverClass->romClass));
 		//printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
@@ -9689,7 +9689,7 @@ done:
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
-		///printf("sendMethod: %p\n", _sendMethod);
+		printf("sendMethod: %p\n", _sendMethod);
 	//	J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
 		//printf("methodClass: %p\n", methodClass);
 	//	J9UTF8 *classString2 = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(methodClass->romClass));
@@ -9718,7 +9718,7 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-
+		printf("sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
