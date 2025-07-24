@@ -9721,6 +9721,12 @@ done:
 			goto throw_npe;
 		}
 
+		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
+		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
+		printf("sendMethod: %p\n", _sendMethod);
+
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		printf("sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
@@ -9736,6 +9742,7 @@ done:
 		} else {
 			if (getenv("changeTarget") != NULL)
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
+
 		}
 
 		if (fromJIT) {
