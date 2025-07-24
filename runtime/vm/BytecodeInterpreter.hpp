@@ -9723,6 +9723,7 @@ done:
 
 		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+		J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
 		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		printf("sendMethod: %p\n", _sendMethod);
@@ -9742,6 +9743,7 @@ done:
 		} else {
 			if (getenv("changeTarget") != NULL)
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
+				_sendMethod->constantPool = ramConstantPool;
 
 		}
 
