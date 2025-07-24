@@ -631,6 +631,7 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
+		printf("in j2i transition\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
@@ -640,7 +641,7 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
-		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativeParth") != NULL) {
+		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativePath") != NULL) {
 			if (getenv("setEA") != NULL)
 				_arg0EA = NULL;
 
@@ -651,15 +652,13 @@ done:
 				buildJITResolveFrame(REGISTER_ARGS);
 			else if (getenv("buildMethodFrame") != NULL)
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
-			
+
 			if (getenv("setLiterals") != NULL)
 				_literals = (J9Method*)jitReturnAddress;
 			if (getenv("restoreJITAddress") != NULL)
 				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, jitReturnAddress);
 
-				
 			return rc;
-			
 		}
 
 		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
@@ -9675,6 +9674,9 @@ done:
 		}
 
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
+		J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
+		printf("mhReceiver class: %p\n", receiverClass);
+		printf("rom class: %p\n", receiverClass->romClass);
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9685,7 +9687,9 @@ done:
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
-
+		printf("sendMethod: %p\n", _sendMethod);
+		J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
+		printf("methodClass: %p\n", methodClass);
 		if (fromJIT) {
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
@@ -10052,7 +10056,7 @@ done:
 				printf("generic special frame built\n");
 			} else {
 				bool useZeroFlag = getenv("iseZeroFlag") != NULL;
-
+				
 				buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, jitStackFrameFlags(REGISTER_ARGS, useZeroFlag ? 0 : J9_SSF_METHOD_ENTRY), false);
 				printf("special frame built\n");
 			}
