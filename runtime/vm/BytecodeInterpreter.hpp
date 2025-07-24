@@ -9674,11 +9674,11 @@ done:
 		}
 
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
-		J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
-		printf("mhReceiver class: %p\n", receiverClass);
-		printf("rom class: %p\n", receiverClass->romClass);
+	//	J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
+		//printf("mhReceiver class: %p\n", receiverClass);
+		//printf("rom class: %p\n", receiverClass->romClass);
 		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(receiverClass->romClass));
-		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
+		//printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9689,11 +9689,11 @@ done:
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
-		printf("sendMethod: %p\n", _sendMethod);
-		J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
-		printf("methodClass: %p\n", methodClass);
-		J9UTF8 *classString2 = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(methodClass->romClass));
-		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString2), J9UTF8_DATA(classString2));
+		///printf("sendMethod: %p\n", _sendMethod);
+	//	J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
+		//printf("methodClass: %p\n", methodClass);
+	//	J9UTF8 *classString2 = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(methodClass->romClass));
+	//	printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString2), J9UTF8_DATA(classString2));
 		if (fromJIT) {
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
@@ -9705,6 +9705,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	linkToStaticSpecial(REGISTER_ARGS_LIST)
 	{
+		printf("in linktostaticspecial\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
@@ -9728,6 +9729,8 @@ done:
 					goto throw_npe;
 				}
 			}
+		} else {
+			_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 		}
 
 		if (fromJIT) {
@@ -9880,6 +9883,7 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToInterface(REGISTER_ARGS_LIST)
 	{
+		printf("in linktointerface\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
