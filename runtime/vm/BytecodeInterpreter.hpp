@@ -9677,6 +9677,8 @@ done:
 		J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
 		printf("mhReceiver class: %p\n", receiverClass);
 		printf("rom class: %p\n", receiverClass->romClass);
+		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(receiverClass->romClass));
+		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9690,6 +9692,8 @@ done:
 		printf("sendMethod: %p\n", _sendMethod);
 		J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
 		printf("methodClass: %p\n", methodClass);
+		J9UTF8 *classString2 = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(methodClass->romClass));
+		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString2), J9UTF8_DATA(classString2));
 		if (fromJIT) {
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
