@@ -9744,7 +9744,11 @@ done:
 			if (getenv("changeTarget") != NULL)
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 				_sendMethod->constantPool = ramConstantPool;
-
+				if (getenv("returnEarlyLTS") != NULL) {
+					VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+					rc = j2iTransition(REGISTER_ARGS, true);
+					return rc;
+				}
 		}
 
 		if (fromJIT) {
