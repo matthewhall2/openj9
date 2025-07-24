@@ -9688,7 +9688,7 @@ done:
 
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
-		j9object_t clazz = J9VMJAVALANGINVOKEMETHODHANDLE_CLAZZ(_currentThread, memberName);
+		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberName);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
 		printf("sendMethod: %p\n", _sendMethod);
 	//	J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
