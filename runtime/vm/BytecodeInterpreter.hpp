@@ -9739,7 +9739,7 @@ done:
 					U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
 					printf("%lc", unicodeChar1);
 					i += 1;
-					nameLength -= 2;
+					nameLength -= 1;
 				}
 				printf("\n");
 			}
