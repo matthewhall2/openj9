@@ -9724,10 +9724,10 @@ done:
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
 
 			bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
-			printf("name string is %scompressed\n", compressed ? "" : "not ");
+			printf("name string (length %d) is %scompressed\n", compressed ? "" : "not ", nameLength);
 			int i = 0;
 			if (compressed) {
-				while (0 != nameLength) {
+				while (0 < nameLength) {
 					U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
 					printf("%c", unicodeChar1);
 					i++;
@@ -9735,7 +9735,7 @@ done:
 				}
 				printf("\n");
 			} else {
-				while (0 != nameLength) {
+				while (0 < nameLength) {
 					U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
 					printf("%lc", unicodeChar1);
 					i += 1;
