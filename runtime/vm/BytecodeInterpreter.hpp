@@ -9728,7 +9728,7 @@ done:
 			int i = 0;
 			if (compressed) {
 				while (0 != nameLength) {
-					U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, unicodeBytes1, i);
+					U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
 					printf("%c", unicodeChar1);
 					i++;
 					nameLength--;
