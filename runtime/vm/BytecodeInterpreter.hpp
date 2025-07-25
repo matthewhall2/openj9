@@ -631,7 +631,6 @@ done:
 		, bool immediatelyRunCompiledMethod = false
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 	) {
-		printf("in j2i transition\n");
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
@@ -9654,7 +9653,6 @@ done:
 	VMINLINE VM_BytecodeAction
 	invokeBasic(REGISTER_ARGS_LIST)
 	{
-		printf("in invokeBasic\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		UDATA mhReceiverIndex = 0;
@@ -9674,11 +9672,6 @@ done:
 		}
 
 		j9object_t mhReceiver = ((j9object_t *)_sp)[mhReceiverIndex];
-	//	J9Class *receiverClass = (J9Class*)mhReceiver->clazz;
-		//printf("mhReceiver class: %p\n", receiverClass);
-		//printf("rom class: %p\n", receiverClass->romClass);
-	//	J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(receiverClass->romClass));
-		//printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		if (J9_UNEXPECTED(NULL == mhReceiver)) {
 			if (fromJIT) {
 				buildJITResolveFrame(REGISTER_ARGS);
@@ -9688,16 +9681,7 @@ done:
 
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
-		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberName);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
-		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
-		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
-		printf("sendMethod: %p\n", _sendMethod);
-		J9Class *methodClass = J9_CLASS_FROM_METHOD(_sendMethod);
-		//printf("methodClass: %p\n", methodClass);
-	//	J9UTF8 *classString2 = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(methodClass->romClass));
-	//	printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString2), J9UTF8_DATA(classString2));
 		if (fromJIT) {
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
@@ -9721,13 +9705,6 @@ done:
 			goto throw_npe;
 		}
 
-		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
-		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
-		J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
-		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-		printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
-		printf("sendMethod: %p\n", _sendMethod);
-
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		printf("sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
@@ -9741,17 +9718,26 @@ done:
 				}
 			}
 		} else {
-			if (getenv("changeTarget") != NULL)
+			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+			J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
+			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
+			printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
+			printf("sendMethod: %p\n", _sendMethod);
+
+			if (getenv("changeTarget") != NULL) {
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 				_sendMethod->constantPool = ramConstantPool;
-				if (getenv("returnEarlyLTS") != NULL) {
-					char * coffset = getenv("offset");
-					UDATA offset = coffset != NULL ? atoi(coffset) : 0;
-					_sp += offset;
-					VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
-					rc = j2iTransition(REGISTER_ARGS, true);
-					return rc;
-				}
+			}
+
+			if (getenv("returnEarlyLTS") != NULL) {
+				char * coffset = getenv("offset");
+				UDATA offset = coffset != NULL ? atoi(coffset) : 0;
+				_sp += offset;
+				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+				rc = j2iTransition(REGISTER_ARGS, true);
+				return rc;
+			}
 		}
 
 		if (fromJIT) {
