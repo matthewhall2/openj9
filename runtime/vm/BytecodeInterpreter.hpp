@@ -9721,7 +9721,7 @@ done:
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-			j9object_t returnTypeClazz = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, memberNameObject);
+			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, memberNameObject);
 			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
 
@@ -9746,9 +9746,9 @@ done:
 				printf("\n");
 			}
 
-			J9Class* returnTypeClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClazz);
-			J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClass);
-			J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClass->romClass));
+			J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
+			J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
+			J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
 			printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
 
 
