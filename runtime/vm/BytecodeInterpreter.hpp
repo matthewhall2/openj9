@@ -9727,9 +9727,10 @@ done:
 
 			if (getenv("changeTarget") != NULL) {
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
+			}
+			if (getenv("addConstPool") != NULL) {}
 				_sendMethod->constantPool = ramConstantPool;
 			}
-
 			if (getenv("returnEarlyLTS") != NULL) {
 				char * coffset = getenv("offset");
 				UDATA offset = coffset != NULL ? atoi(coffset) : 0;
