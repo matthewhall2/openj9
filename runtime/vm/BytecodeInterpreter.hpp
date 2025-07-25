@@ -9721,7 +9721,7 @@ done:
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, memberNameObject);
+			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
 			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
 
