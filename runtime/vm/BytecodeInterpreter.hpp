@@ -9724,7 +9724,7 @@ done:
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
 
 			bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
-			printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not ",);
+			printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not");
 			int i = 0;
 			if (compressed) {
 				while (0 < nameLength) {
