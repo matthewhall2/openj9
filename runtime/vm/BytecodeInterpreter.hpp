@@ -9719,6 +9719,32 @@ done:
 			}
 		} else {
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
+			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
+			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
+
+			bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
+			printf("name string is %scompressed\n", compressed ? "" : "not ");
+			int i = 0;
+			if (compressed) {
+				while (0 != nameLength) {
+					U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, unicodeBytes1, i);
+					printf("%c", unicodeChar1);
+					i++;
+					nameLength--;
+				}
+				printf("\n");
+			} else {
+				while (0 != nameLength) {
+					U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
+					printf("%lc", unicodeChar1);
+					i += 1;
+					nameLength -= 2;
+				}
+				printf("\n");
+			}
+
+
 			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
 			J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
 			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
