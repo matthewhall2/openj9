@@ -9819,6 +9819,7 @@ done:
 		}
 
 		if (fromJIT) {
+			printf("fromJIT\n");
 			/* Restore SP to before popping memberNameObject. */
 			_sp -= 1;
 			UDATA stackOffset = 1;
@@ -9867,6 +9868,7 @@ done:
 
 throw_npe:
 		if (fromJIT) {
+			printf("linkToStaticSpecial: throwing NPE\n");
 			/* Restore SP to before popping memberNameObject. */
 			_sp -= 1;
 			buildJITResolveFrame(REGISTER_ARGS);
