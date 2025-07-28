@@ -9749,7 +9749,10 @@ done:
 				}
 			}
 		} else {
-			_sp -= 1;
+			char * incSp = getenv("incSP");
+			if (incSp != NULL)
+				_sp += 1;
+
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
@@ -9783,7 +9786,7 @@ done:
 			J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
 			J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
 			J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
-			printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
+			printf("mhReceiver return type clas name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
 
 
 			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
