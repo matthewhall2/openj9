@@ -693,6 +693,7 @@ done:
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle) {
+				printf("j2i; def cont methodhandle\n");
 				if (getenv("buildJITFrame") != NULL)
 					buildJITResolveFrame(REGISTER_ARGS);
 				else if (getenv("buildMethodFrame") != NULL)
@@ -9861,7 +9862,9 @@ done:
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
 
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
+			printf("restored JIT return address\n");
 			rc = j2iTransition(REGISTER_ARGS, true);
+			printf("done j2iTransition\n");
 		}
 
 		return rc;
