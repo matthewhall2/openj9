@@ -1183,7 +1183,7 @@ static U_16 getMethodSigLength(J9VMThread * vmThread, j9object_t memberNameObjec
 		j9object_t paramClass = J9JAVAARRAYOFOBJECT_LOAD(vmThread, paramArray, i);
 		if (paramClass != NULL) {
 			J9Class * clazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, paramClass);
-			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(paramClass->romClass));
+			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
 			printf("param %d has type: %.*s\n", i, J9UTF8_LENGTH(typeString), J9UTF8_DATA(typeString));
 			length += J9UTF8_LENGTH(typeString);
 			char firstChar = J9UTF8_DATA(typeString)[0];
