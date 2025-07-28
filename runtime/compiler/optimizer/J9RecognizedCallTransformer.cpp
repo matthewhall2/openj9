@@ -1628,7 +1628,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
       TR_OpaqueMethodBlock *dummyInvoke = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
       int signatureLength;
       char * signature = getSignatureForComputedCall(
-         "J",
+         comp()->target().is64Bit() ? "J" : "I",
          "",
          comp(),
          node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),

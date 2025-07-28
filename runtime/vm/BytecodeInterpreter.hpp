@@ -842,6 +842,7 @@ done:
 	VMINLINE J9Method*
 	j2iVirtualMethod(REGISTER_ARGS_LIST, j9object_t receiver, UDATA interfaceVTableIndex)
 	{
+		printf("in j2i virtual\n");
 		J9Method *method = NULL;
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
