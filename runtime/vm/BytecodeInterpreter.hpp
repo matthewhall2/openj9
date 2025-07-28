@@ -848,12 +848,17 @@ done:
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
 
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
+			printf("vtable index is direct method\n");
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
+			printf("method is %p\n", method);
 		} else {
 			UDATA vTableOffset = sizeof(J9Class) - jitVTableOffset;
+			printf("vTableOffset is %lu\n", vTableOffset);
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
+			printf("clazz is %p\n", clazz);
 			method = *(J9Method**)((UDATA)clazz + vTableOffset);
+			printf("method is %p\n", method);
 		}
 		return method;
 	}
@@ -11030,6 +11035,7 @@ public:
 		j9object_t receiver = (j9object_t)actionData;
 		UDATA interfaceVTableIndex = vmThread->tempSlot;
 		actionData = (void*)j2iVirtualMethod(REGISTER_ARGS, receiver, interfaceVTableIndex);
+		printf("done j2iVirtualMethod, actionData=%p\n", actionData);
 		// intentional fall-through
 	}
 	case J9_BCLOOP_J2I_TRANSITION:
