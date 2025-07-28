@@ -1174,7 +1174,6 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 void  
 setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, J9Method *method, j9object_t memberName)
 {
-
 	PORT_ACCESS_FROM_VMC(vmThread);
 	j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(vmThread, memberName);
 	J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, clazz);

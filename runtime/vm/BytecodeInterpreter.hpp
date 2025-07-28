@@ -9749,9 +9749,9 @@ done:
 				}
 			}
 		} else {
-			char * incSp = getenv("incSP");
+			char * incSp = getenv("decSP");
 			if (incSp != NULL)
-				_sp += 1;
+				_sp -= 1;
 
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
