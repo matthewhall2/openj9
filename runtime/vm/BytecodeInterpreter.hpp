@@ -1822,7 +1822,7 @@ obj:
 	{
 		/* We need a frame to describe the method arguments (in particular, for the case where we got here directly from the JIT) */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		printf("arg count is %d\n", findMethodArgCountFromMemberName(memberNameObject));
+		printf("arg count is %d\n", findMethodArgCountFromMemberName(REGISTER_ARGS, memberNameObject));
 		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
 		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, _sendMethod, memberNameObject);
