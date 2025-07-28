@@ -1157,6 +1157,11 @@ setThreadForkOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messa
 void
 setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Method *method);
 
+void
+setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, J9Method *method, j9object_t memberName);
+
+
+
 
 /**
 * @brief
