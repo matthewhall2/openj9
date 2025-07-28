@@ -444,6 +444,24 @@ retry:
 		return bp;
 	}
 
+	VMINLINE U_32
+	findMethodArgCountFromMemberName(REGISTER_ARGS_LIST, j9object_t memberNameObject)
+	{
+		j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+		j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+
+		return J9JAVAARRAYOFOBJECT_LENGTH(_currentThread, paramArray);
+	}
+
+	VMINLINE UDATA*
+	buildMethodFrameForMemberName(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
+	{
+		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
+		*--_sp = (UDATA)method;
+		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(method)->argCount;
+		return bp;
+	}
+
 	VMINLINE UDATA
 	jitStackFrameFlags(REGISTER_ARGS_LIST, UDATA constantFlags)
 	{
@@ -1795,6 +1813,19 @@ obj:
 		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
 		setIncompatibleClassChangeErrorForDefaultConflict(_currentThread, _sendMethod);
+		VMStructHasBeenUpdated(REGISTER_ARGS);
+		return  GOTO_THROW_CURRENT_EXCEPTION;
+	}
+
+	VMINLINE VM_BytecodeAction
+	throwForDefaultConflictForMemberName(REGISTER_ARGS_LIST)
+	{
+		/* We need a frame to describe the method arguments (in particular, for the case where we got here directly from the JIT) */
+		j9object_t memberNameObject = *(j9object_t *)_sp++;
+		printf("arg count is %d\n", findMethodArgCountFromMemberName(memberNameObject));
+		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+		updateVMStruct(REGISTER_ARGS);
+		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, _sendMethod);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		return  GOTO_THROW_CURRENT_EXCEPTION;
 	}
@@ -9718,10 +9749,13 @@ done:
 				}
 			}
 		} else {
+			_sp -= 1;
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
+			j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+			//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
 			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
 
@@ -11467,7 +11501,7 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 	PERFORM_ACTION(linkToNative(REGISTER_ARGS));
 #endif /* JAVA_SPEC_VERSION >= 22 */
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT):
-		PERFORM_ACTION(throwDefaultConflictForMemberName(REGISTER_ARGS));
+		PERFORM_ACTION(throwForDefaultConflictForMemberName(REGISTER_ARGS));
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 #if JAVA_SPEC_VERSION >= 16
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INL_INTERNALDOWNCALLHANDLER_INVOKENATIVE):
