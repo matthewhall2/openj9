@@ -1821,7 +1821,7 @@ obj:
 	throwForDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* We need a frame to describe the method arguments (in particular, for the case where we got here directly from the JIT) */
-		j9object_t memberNameObject = *(j9object_t *)_sp++;
+		j9object_t memberNameObject = *(j9object_t *)_sp[1];
 		printf("arg count is %d\n", findMethodArgCountFromMemberName(REGISTER_ARGS, memberNameObject));
 		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
@@ -9749,19 +9749,26 @@ done:
 				}
 			}
 		} else {
+			printf("def con method\n");
 			char * incSp = getenv("decSP");
 			if (incSp != NULL)
 				_sp -= 1;
 
 			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+			printf("found clazz: %p\n", clazz);
 			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
+			printf("found nameString: %p\n", nameString);
 			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+			printf("found methodType: %p\n", methodType);
 			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
+			printf("found returnTypeClass: %p\n", returnTypeClass);
 			j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+			printf("found paramArray: %p\n", paramArray);
 			//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
 			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
+			printf("found bytes: %p\n", bytes);
 			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
-
+			printf("name length: %d\n", nameLength);
 			bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
 			printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not");
 			int i = 0;
