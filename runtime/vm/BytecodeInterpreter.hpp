@@ -450,7 +450,7 @@ retry:
 		j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 		j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
 
-		return J9JAVAARRAYOFOBJECT_LENGTH(_currentThread, paramArray);
+		return J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
 	}
 
 	VMINLINE UDATA*
