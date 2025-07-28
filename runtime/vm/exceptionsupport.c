@@ -1172,7 +1172,7 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 }
 
 void  
-setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, j9object_t memberName)
+setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, J9Method *method, j9object_t memberName)
 {
 
 	PORT_ACCESS_FROM_VMC(vmThread);
