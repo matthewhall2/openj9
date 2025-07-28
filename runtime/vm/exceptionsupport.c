@@ -1176,8 +1176,8 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 {
 
 	PORT_ACCESS_FROM_VMC(vmThread);
-	j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberName);
-	J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+	j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(vmThread, memberName);
+	J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, clazz);
 	J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
 	J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 	printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
