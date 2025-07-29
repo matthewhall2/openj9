@@ -9857,12 +9857,14 @@ done:
 				stackOffset = 2;
 			}
 
+			char * coffset = getenv("offset2");
+			int offset = coffset != NULL ? atoi(coffset) : 0;
 			/* On x86-32 we do not want to preserve the MemberName object since this would cause it to
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
 			 */
 #if (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64))
-			_sp += stackOffset;
+			_sp += stackOffset + offset;
 #else /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
 			/* Shift arguments by stackOffset and place memberNameObject before the first argument. */
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
