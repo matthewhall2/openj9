@@ -2356,6 +2356,8 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
          }
       else
          {
+         if (resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+            TR_ASSERRT_FATAL(false, "buildVFTCall: JITHelpers.dispatchVirtual should not be used with CALLReg");
          callInstr = generateRegInstruction(dispatchOp.getOpCodeValue(), callNode, targetAddressReg, cg());
          }
       }
