@@ -456,6 +456,7 @@ retry:
 	VMINLINE UDATA*
 	buildMethodFrameForMemberName(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
 	{
+		printf("in buildMethodFrameForMemberName, method=%p\n", method);
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
 		_arg0EA = bp + J9_ROM_METHOD_FROM_RAM_METHOD(method)->argCount;
@@ -1827,6 +1828,7 @@ obj:
 	VMINLINE VM_BytecodeAction
 	throwForDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
+		printf("in throwForDefaultConflictForMemberName\n");
 		/* We need a frame to describe the method arguments (in particular, for the case where we got here directly from the JIT) */
 		j9object_t memberNameObject = *(j9object_t *)_sp[1];
 		printf("arg count is %d\n", findMethodArgCountFromMemberName(REGISTER_ARGS, memberNameObject));
@@ -10152,6 +10154,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
+		printf("in throwDefaultConflictForMemberName\n");
 		if (getenv("useOld") != NULL) {
 			/* Load the conflicting method and error message from this special target */
 			if (getenv("buildSpecialFrame") != NULL) {
