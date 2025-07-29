@@ -1628,7 +1628,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
       TR_OpaqueMethodBlock *dummyInvoke = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
       int signatureLength;
       char * signature = getSignatureForComputedCall(
-         comp()->target().is64Bit() ? "J" : "I",
+         feGetEnv("useIntForArgs") == NULL ? "J" : "I",
          "",
          comp(),
          node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
@@ -1717,7 +1717,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
 
    int signatureLength;
    char *signature = getSignatureForComputedCall(
-      comp()->target().is64Bit() ? "JJ" : "II",
+      feGetEnv("useIntForArgs") == NULL ? "JJ" : "II",
       "",
       comp(),
       node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
@@ -1931,10 +1931,14 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop* treetop)
          case TR::java_lang_invoke_MethodHandle_linkToSpecial:
          // linkToStatic calls are also used for unresolved invokedynamic/invokehandle, which we can not
          // bypass as we may push null appendix object that we can not check at compile time
-            if (_processedINLCalls->get(node->getGlobalIndex()) || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
-               return false;
-            else
+            if (feGetEnv("alwaysInlioneLTS") == NULL) {
+               if (_processedINLCalls->get(node->getGlobalIndex()) || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
+                  return false;
+               else
+                  return true;
+            } else {
                return true;
+            }
          case TR::java_lang_invoke_MethodHandle_linkToVirtual:
          case TR::java_lang_invoke_MethodHandle_linkToInterface:
             return true;

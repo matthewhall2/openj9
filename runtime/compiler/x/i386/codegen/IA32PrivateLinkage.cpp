@@ -708,6 +708,9 @@ void J9::X86::I386::PrivateLinkage::buildVirtualOrComputedCall(
       TR::LabelSymbol *doneLabel,
       uint8_t *thunk)
    {
+   bool trace = comp()->getOption(TR_TraceCG);
+   if (trace)
+      traceMsg(comp(), "buildVirtualOrComputedCall\n");
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
    bool resolvedSite = !site.getSymbolReference()->isUnresolved()
       && fej9->isResolvedVirtualDispatchGuaranteed(comp());

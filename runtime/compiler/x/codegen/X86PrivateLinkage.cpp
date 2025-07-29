@@ -2297,7 +2297,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       if ((resolvedMethodSymbol &&
             (resolvedMethodSymbol->getRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchDirect ||
             resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall)) ||
-            !comp()->target().is64Bit()) 
+            (feGetEnv("noThunkFor32") != NULL && !comp()->target().is64Bit())) 
          {
          if (trace)
             traceMsg(comp(), "will not reach j2i thunk\n");
