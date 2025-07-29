@@ -2296,7 +2296,8 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       bool mayReachJ2IThunk = true;
       if ((resolvedMethodSymbol &&
             (resolvedMethodSymbol->getRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchDirect ||
-            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall)) ||
+            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall) ||
+            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual) ||
             (feGetEnv("noThunkFor32") != NULL && !comp()->target().is64Bit())) 
          {
          if (trace)
