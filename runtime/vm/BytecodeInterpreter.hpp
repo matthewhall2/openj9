@@ -595,6 +595,7 @@ retry:
 	VMINLINE VM_BytecodeAction
 	i2jTransition(REGISTER_ARGS_LIST)
 	{
+		printf("back to jit\n");
 		VM_BytecodeAction rc = RUN_METHOD_INTERPRETED;
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void* const jitStartAddress = _sendMethod->extra;
@@ -619,6 +620,7 @@ retry:
 			rc = jitTransition(REGISTER_ARGS, romMethod->argCount, jitStartAddress);
 		}
 done:
+		printf("done back to jit setup\n");
 		return rc;
 	}
 
@@ -679,7 +681,8 @@ done:
 			return rc;
 		}
 
-		if ((getenv("followNative") != NULL && isMethodDefaultConflictForMethodHandle) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+		if (((getenv("followNative") != NULL) && isMethodDefaultConflictForMethodHandle) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
+			printf("native or abstract\n");
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 
@@ -713,7 +716,9 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
+			printf("not native or abstract\n");
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
+			printf("exitPoint=%p\n", exitPoint);
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
