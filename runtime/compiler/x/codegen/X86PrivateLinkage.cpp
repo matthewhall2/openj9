@@ -2278,7 +2278,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
    TR::Instruction *callInstr;
    if (dispatchOp.sourceIsMemRef())
       {
-      TR_ASSERT(targetAddressMemref, "Call via memory requires memref");
+      TR_ASSERT_FATAL(targetAddressMemref, "Call via memory requires memref");
       if (trace)
             traceMsg(comp(), "call via mem\n");
       // Fix the displacement at 4 bytes so j2iVirtual can decode it if necessary
@@ -2288,7 +2288,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       }
    else
       {
-      TR_ASSERT(targetAddressReg, "Call via register requires register");
+      TR_ASSERT_FATAL(targetAddressReg, "Call via register requires register");
       if (trace)
             traceMsg(comp(), "call via register\n");
       TR::Node *callNode = site.getCallNode();
