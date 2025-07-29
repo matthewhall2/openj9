@@ -230,10 +230,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild+1 : -1;
             break;
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-            TR::Node *receiverChild = callNode->getChild(2);
-            eaxRegister = pushThis(receiverChild);
-            thisChild   = receiverChild;
-            argSize += 4;
+            
 
             // always at least 3 args - first argument of target is 4th child if present
             firstArgumentChild = 3;
@@ -248,6 +245,11 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
                TR::IA32LinkageUtils::pushIntegerWordArg(callNode->getChild(linkageRegChildIndex), cg());
                argSize += 4;
             }
+
+            TR::Node *receiverChild = callNode->getChild(2);
+            eaxRegister = pushThis(receiverChild);
+            thisChild   = receiverChild;
+            argSize += 4;
             break;
          }
 

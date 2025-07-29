@@ -2264,6 +2264,9 @@ bool J9::X86::PrivateLinkage::buildVirtualGuard(TR::X86CallSite &site, TR::Label
 
 TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR::InstOpCode dispatchOp, TR::Register *targetAddressReg, TR::MemoryReference *targetAddressMemref)
    {
+   bool trace = comp()->getOption(TR_TraceCG);
+   if (trace)
+      traceMsg(comp(), "buildVFTCall\n");
    TR::Node *callNode = site.getCallNode();
    if (cg()->enableSinglePrecisionMethods() &&
        comp()->getJittedMethodSymbol()->usesSinglePrecisionMode())
@@ -2276,6 +2279,8 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
    if (dispatchOp.sourceIsMemRef())
       {
       TR_ASSERT(targetAddressMemref, "Call via memory requires memref");
+      if (trace)
+            traceMsg(comp(), "call via mem\n");
       // Fix the displacement at 4 bytes so j2iVirtual can decode it if necessary
       if (targetAddressMemref)
          targetAddressMemref->setForceWideDisplacement();
@@ -2284,13 +2289,20 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
    else
       {
       TR_ASSERT(targetAddressReg, "Call via register requires register");
+      if (trace)
+            traceMsg(comp(), "call via register\n");
       TR::Node *callNode = site.getCallNode();
       TR::ResolvedMethodSymbol *resolvedMethodSymbol = callNode->getSymbol()->getResolvedMethodSymbol();
       bool mayReachJ2IThunk = true;
-      if (resolvedMethodSymbol &&
+      if ((resolvedMethodSymbol &&
             (resolvedMethodSymbol->getRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchDirect ||
-            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall))
+            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall)) ||
+            !comp()->target().is64Bit()) 
+         {
+         if (trace)
+            traceMsg(comp(), "will not reach j2i thunk\n");
          mayReachJ2IThunk = false;
+         }
       if (mayReachJ2IThunk && dispatchOp.isCallOp())
          {
          // Bad news.
