@@ -1697,8 +1697,24 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    bool skipVFTmaskInstruction = false;
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver())
       {
-      TR::Node *rcvrChild = callNode->getChild(callNode->getFirstArgumentIndex());
+      int32_t firstArgIndex = callNode->getFirstArgumentIndex();
+      TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
+      TR::Method       *method       = methodSymbol->getMethod();
+      if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+         {
+         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatch"))
+            TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtual: check functionality\n");
+         firstArgIndex = 2; // skip the J9Method argument
+         }
+      
+      TR::Node *rcvrChild = callNode->getChild(firstArgIndex);
       TR::Node  *vftChild = callNode->getFirstChild();
+       if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+         {
+         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatchVFT"))
+            TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtualVFT: check functionality\n");
+         vftChild = callNode->getChild(1);
+         }
       bool loadVFTForNullCheck = false;
 
       if (cg()->getCurrentEvaluationTreeTop()->getNode()->getOpCodeValue() == TR::NULLCHK
@@ -2356,8 +2372,8 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
          }
       else
          {
-         if (resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
-            TR_ASSERT_FATAL(false, "buildVFTCall: JITHelpers.dispatchVirtual should not be used with CALLReg");
+         if ((feGetEnv("fatalAssertOnDispatchVirtualBuildVFT") != NULL) && resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+            TR_ASSERT_FATAL(false, "buildVFTCall: JITHelpers.dispatchVirtual - check functionality\n");
          callInstr = generateRegInstruction(dispatchOp.getOpCodeValue(), callNode, targetAddressReg, cg());
          }
       }
