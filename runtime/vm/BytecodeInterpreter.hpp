@@ -658,6 +658,7 @@ done:
 		bool isMethodDefaultConflictForMethodHandle = false;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		printf("def con method is: %d\n", _currentThread->javaVM->initialMethods.throwDefaultConflict);
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
