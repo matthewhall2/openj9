@@ -1702,7 +1702,7 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
       TR::Method       *method       = methodSymbol->getMethod();
       if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
          {
-         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatch"))
+         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatch") != NULL)
             TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtual: check functionality\n");
          firstArgIndex = 2; // skip the J9Method argument
          }
@@ -2313,7 +2313,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       if ((resolvedMethodSymbol &&
             (resolvedMethodSymbol->getRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchDirect ||
             resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall ||
-            resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)) ||
+            ((feGetEnv("checkForDV") != NULL) & resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual))) ||
             (feGetEnv("noThunkFor32") != NULL && !comp()->target().is64Bit())) 
          {
          if (trace)
