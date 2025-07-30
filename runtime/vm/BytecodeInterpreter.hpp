@@ -595,7 +595,7 @@ retry:
 	VMINLINE VM_BytecodeAction
 	i2jTransition(REGISTER_ARGS_LIST)
 	{
-		printf("back to jit\n");
+		//printf("back to jit\n");
 		VM_BytecodeAction rc = RUN_METHOD_INTERPRETED;
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		void* const jitStartAddress = _sendMethod->extra;
@@ -620,7 +620,7 @@ retry:
 			rc = jitTransition(REGISTER_ARGS, romMethod->argCount, jitStartAddress);
 		}
 done:
-		printf("done back to jit setup\n");
+		//printf("done back to jit setup\n");
 		return rc;
 	}
 
