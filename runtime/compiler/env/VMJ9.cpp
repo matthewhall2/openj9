@@ -7596,10 +7596,13 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
          }
       case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
          {
+         if (feGetEnv("makeDVCompVirt")) {
          TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
          methodSymbol->setMethodKind(TR::MethodSymbol::ComputedVirtual);
          TR::Node::recreate(callNode, methodSymbol->getMethod()->indirectCallOpCode());
-         return callNode;  
+         return callNode;
+         } 
+         return NULL;  
          }
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          {
