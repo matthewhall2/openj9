@@ -5317,6 +5317,7 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
    TR::Node *j2iCallNode = callNode;
    TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
    TR::RecognizedMethod rm = methodSymbol->getMandatoryRecognizedMethod();
+   int32_t testArgIndex = 0;
    switch (rm)
       {
       case TR::java_lang_invoke_MethodHandle_invokeBasic:
@@ -5325,6 +5326,7 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
       case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
          j2iCallNode =
             fej9->getEquivalentVirtualCallNodeForDispatchVirtual(callNode, comp());
+         testArgIndex = 0; // skip the receiver
          break;
 
       default:
@@ -5337,6 +5339,10 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
 
    int32_t numChildren = j2iCallNode->getNumChildren();
    int32_t firstArgIndex = j2iCallNode->getFirstArgumentIndex();
+   if (rm == TR::com_ibm_jit_JITHelpers_dispatchVirtual && feGetEnv("useZeroArgForFirstIndex") != NULL)
+      {
+      firstArgIndex = testArgIndex;
+      }
    uint32_t numArgSlots32 = 0;
    for (int32_t i = firstArgIndex; i < numChildren; i++)
       {
