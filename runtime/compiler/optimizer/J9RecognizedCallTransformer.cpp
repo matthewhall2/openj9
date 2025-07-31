@@ -1929,19 +1929,22 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop* treetop)
                return true;
          case TR::java_lang_invoke_MethodHandle_linkToStatic:
          case TR::java_lang_invoke_MethodHandle_linkToSpecial:
+            bool res = false;
          // linkToStatic calls are also used for unresolved invokedynamic/invokehandle, which we can not
          // bypass as we may push null appendix object that we can not check at compile time
             if (feGetEnv("alwaysInlioneLTS") == NULL) {
                if (_processedINLCalls->get(node->getGlobalIndex()) || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
-                  return false;
+                  res = false;
                else
-                  return true;
+                  res = true;
             } else {
-               return true;
+               res = true;
             }
+            return res && getenv("disableInlineMethodHandleLinkToStaticSpecial") == NULL; 
          case TR::java_lang_invoke_MethodHandle_linkToVirtual:
+            return getenv("disableInlineMethodHandleLinkToVirtual") == NULL;
          case TR::java_lang_invoke_MethodHandle_linkToInterface:
-            return true;
+            return getenv("disableInlineMethodHandleLinkToInterface") == NULL;
          default:
             return false;
          }
