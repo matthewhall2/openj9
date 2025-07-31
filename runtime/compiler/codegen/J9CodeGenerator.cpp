@@ -803,7 +803,8 @@ J9::CodeGenerator::lowerTreeIfNeeded(
       // There's no need to set tempSlot for invokeBasic(). The number of stack
       // slots for the arguments will be available from the JIT body metadata.
 
-      if(rm == TR::java_lang_invoke_MethodHandle_linkToStatic ||
+      if(rm == TR::java_lang_invoke_MethodHandle_invokeBasic ||
+         rm == TR::java_lang_invoke_MethodHandle_linkToStatic ||
         rm == TR::java_lang_invoke_MethodHandle_linkToSpecial ||
         rm == TR::java_lang_invoke_MethodHandle_linkToVirtual ||
         rm == TR::java_lang_invoke_MethodHandle_linkToInterface)

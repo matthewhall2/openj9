@@ -2372,9 +2372,9 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
          }
       else
          {
-         if ((feGetEnv("fatalAssertOnDispatchVirtualBuildVFT") != NULL) && resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
-            TR_ASSERT_FATAL(false, "buildVFTCall: JITHelpers.dispatchVirtual - check functionality\n");
          callInstr = generateRegInstruction(dispatchOp.getOpCodeValue(), callNode, targetAddressReg, cg());
+         if ((feGetEnv("addCallSiteVFT") != NULL) && resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+            cg()->addInvokeBasicCallSite(callNode, callInstr);
          }
       }
 
