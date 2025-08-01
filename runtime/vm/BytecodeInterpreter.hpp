@@ -658,7 +658,6 @@ done:
 		bool isMethodDefaultConflictForMethodHandle = false;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
-		printf("def con method is: %d\n", _currentThread->javaVM->initialMethods.throwDefaultConflict);
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
@@ -698,7 +697,7 @@ done:
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
 			if (isMethodDefaultConflictForMethodHandle) {
-				printf("j2i; def cont methodhandle\n");
+				printf("j2i; def con methodhandle\n");
 				if (getenv("buildJITFrame") != NULL)
 					buildJITResolveFrame(REGISTER_ARGS);
 				else if (getenv("buildMethodFrame") != NULL)
@@ -709,6 +708,7 @@ done:
 			}
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
+				printf("exception pending\n");
 				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 				_currentThread->currentException = _currentThread->stopThrowable;
 				_currentThread->stopThrowable = NULL;
@@ -717,9 +717,8 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
-			printf("not native or abstract\n");
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
-			printf("exitPoint=%p\n", exitPoint);
+			printf("j2i: exitPoint=%p\n", exitPoint);
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
