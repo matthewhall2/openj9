@@ -855,10 +855,12 @@ done:
 
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
 			printf("vtable index is direct method\n");
+			printf("jitVTableOffset is %lu\n", jitVTableOffset);
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
 			printf("method is %p\n", method);
 		} else {
+			printf("jitVTableOffset is %lu\n", jitVTableOffset);
 			UDATA vTableOffset = sizeof(J9Class) - jitVTableOffset;
 			printf("vTableOffset is %lu\n", vTableOffset);
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
@@ -9759,17 +9761,22 @@ done:
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		printf("sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
+
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
+				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+				printf("lts non static vmindex: %d\n", vmindex);
 				if (J9_UNEXPECTED(NULL == mhReceiver)) {
 					goto throw_npe;
 				}
 			}
 		} else {
 			printf("def con method\n");
+			UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+			printf("lts: vmindex: %d\n", vmindex);
 			char * incSp = getenv("decSP");
 			if (incSp != NULL)
 				_sp -= 1;
@@ -9954,6 +9961,7 @@ throw_npe:
 		 * C and stored it in vmindex. The receiver is always an instance of C (or a subclass).
 		 */
 		UDATA vTableOffset = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+		printf("ltv: vTableOffset: %lu\n", vTableOffset);
 		J9Class *receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
 
@@ -10042,6 +10050,7 @@ throw_npe:
 		 * of Object, it will go through linkToVirtual() instead.
 		 */
 		iTableIndex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+		printf("lti: itableoffset: %lu\n", iTableIndex);
 		interfaceClass = J9_CLASS_FROM_METHOD(method);
 		vTableOffset = 0;
 		iTable = receiverClass->lastITable;
