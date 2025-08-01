@@ -2464,6 +2464,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	runJNINative(REGISTER_ARGS_LIST)
 	{
+		printf("running jni native\n");
 		VM_BytecodeAction rc = GOTO_DONE;
 		void *jniMethodStartAddress = _sendMethod->extra;
 		U_8 returnType = 0;
@@ -2659,6 +2660,7 @@ done:
 			rc = reenterInterpreter(J9_BCLOOP_EXECUTE_BYTECODE);
 		}
 done:
+		printf("runJNINative returning %d\n", rc);
 		return rc;
 	}
 
