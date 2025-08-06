@@ -1197,68 +1197,68 @@ static U_16 getMethodSigLength(J9VMThread * vmThread, j9object_t memberNameObjec
 	return length;
 }
 
-char *
-getSignatureForMethodHandleMethod(J9VMThread * vmThread, j9object_t memberName)
-{
-	j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(vmThread, memberName);
-	j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(vmThread, methodType);
-	j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(vmThread, methodType);
-	U_32 paramArrayLength = J9INDEXABLEOBJECT_SIZE(vmThread, paramArray);
+// char *
+// getSignatureForMethodHandleMethod(J9VMThread * vmThread, j9object_t memberName)
+// {
+// 	j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(vmThread, memberName);
+// 	j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(vmThread, methodType);
+// 	j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(vmThread, methodType);
+// 	U_32 paramArrayLength = J9INDEXABLEOBJECT_SIZE(vmThread, paramArray);
 
 
-	for (U_32 i = 0; i < paramArrayLength; i++) {
-		j9object_t paramClass = J9JAVAARRAYOFOBJECT_LOAD(vmThread, paramArray, i);
-		if (paramClass != NULL) {
-			J9Class * clazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, paramClass);
-			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
-			printf("param %d has type: %.*s\n", i, J9UTF8_LENGTH(typeString), J9UTF8_DATA(typeString));
-			length += J9UTF8_LENGTH(typeString);
-			char firstChar = J9UTF8_DATA(typeString)[0];
-			if (firstChar == 'L' || firstChar == '[') {
-				/* If the type is a class or array, add 1 for the trailing semicolon */
-				length++;
-			}
-		}
-	}
+// 	for (U_32 i = 0; i < paramArrayLength; i++) {
+// 		j9object_t paramClass = J9JAVAARRAYOFOBJECT_LOAD(vmThread, paramArray, i);
+// 		if (paramClass != NULL) {
+// 			J9Class * clazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, paramClass);
+// 			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
+// 			printf("param %d has type: %.*s\n", i, J9UTF8_LENGTH(typeString), J9UTF8_DATA(typeString));
+// 			length += J9UTF8_LENGTH(typeString);
+// 			char firstChar = J9UTF8_DATA(typeString)[0];
+// 			if (firstChar == 'L' || firstChar == '[') {
+// 				/* If the type is a class or array, add 1 for the trailing semicolon */
+// 				length++;
+// 			}
+// 		}
+// 	}
 
-	J9Class * rTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, parareturnTypeClassmClass);
-	J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
-	length += 
+// 	J9Class * rTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, parareturnTypeClassmClass);
+// 	J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
+// 	length += 1;
 
 
-	/* Calculate the length of the signature */
-	U_16 sigLength = getMethodSigLength(vmThread, memberName);
+// 	/* Calculate the length of the signature */
+// 	U_16 sigLength = getMethodSigLength(vmThread, memberName);
 
-	/* Allocate memory for the signature string */
-	char *signature = j9mem_allocate_memory(sigLength + 3, OMRMEM_CATEGORY_VM); // +3 for return type and parentheses
-	if (signature == NULL) {
-		return NULL; // Out of memory
-	}
+// 	/* Allocate memory for the signature string */
+// 	char *signature = j9mem_allocate_memory(sigLength + 3, OMRMEM_CATEGORY_VM); // +3 for return type and parentheses
+// 	if (signature == NULL) {
+// 		return NULL; // Out of memory
+// 	}
 
-	/* Start building the signature */
-	char *ptr = signature;
-	*ptr++ = '(';
+// 	/* Start building the signature */
+// 	char *ptr = signature;
+// 	*ptr++ = '(';
 
-	for (U_32 i = 0; i < paramArrayLength; i++) {
-		j9object_t paramClass = J9JAVAARRAYOFOBJECT_LOAD(vmThread, paramArray, i);
-		if (paramClass != NULL) {
-			J9Class *clazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, paramClass);
-			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
-			memcpy(ptr, J9UTF8_DATA(typeString), J9UTF8_LENGTH(typeString));
-			ptr += J9UTF8_LENGTH(typeString);
-			char firstChar = J9UTF8_DATA(typeString)[0];
-			if (firstChar == 'L' || firstChar == '[') {
-				/* If the type is a class or array, add a semicolon */
-				*ptr++ = ';';
-			}
-		}
-	}
+// 	for (U_32 i = 0; i < paramArrayLength; i++) {
+// 		j9object_t paramClass = J9JAVAARRAYOFOBJECT_LOAD(vmThread, paramArray, i);
+// 		if (paramClass != NULL) {
+// 			J9Class *clazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, paramClass);
+// 			J9UTF8 *typeString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
+// 			memcpy(ptr, J9UTF8_DATA(typeString), J9UTF8_LENGTH(typeString));
+// 			ptr += J9UTF8_LENGTH(typeString);
+// 			char firstChar = J9UTF8_DATA(typeString)[0];
+// 			if (firstChar == 'L' || firstChar == '[') {
+// 				/* If the type is a class or array, add a semicolon */
+// 				*ptr++ = ';';
+// 			}
+// 		}
+// 	}
 
-	*ptr++ = ')';
+// 	*ptr++ = ')';
 
-	J9Class *returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, returnTypeClass);
-	J9UTF8 *
-}
+// 	J9Class *returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, returnTypeClass);
+// 	J9UTF8 *
+// }
 
 
 void  
