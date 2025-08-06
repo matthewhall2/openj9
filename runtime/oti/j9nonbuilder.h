@@ -504,19 +504,6 @@ typedef struct J9JFRSystemGC {
 	I_64 duration;
 } J9JFRSystemGC;
 
-typedef struct J9JFRModuleRequire {
-	J9JFR_EVENT_COMMON_FIELDS
-	struct J9Module *source;
-	struct J9Module *requiredModule;
-} J9JFRModuleRequire;
-
-typedef struct J9JFRModuleExport {
-	J9JFR_EVENT_COMMON_FIELDS
-	struct J9Module *fromModule;
-	struct J9Package *exportedPackage;
-	struct J9Module *targetModule;
-} J9JFRModuleExport;
-
 #define J9JFRSYSTEMGC_STACKTRACE(jfrEvent) ((UDATA *)(((J9JFRSystemGC *)(jfrEvent)) + 1))
 
 #endif /* defined(J9VM_OPT_JFR) */
@@ -5562,6 +5549,7 @@ typedef uintptr_t ContinuationState;
 #define J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD   3
 #define J9VM_CONTINUATION_RETURN_FROM_JIT_MONITOR_ENTER 4
 #define J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD_JNI 5
+#define J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD_J2I 6
 
 #define J9VM_CONTINUATION_RUNTIMEFLAG_JVMTI_CONTENDED_MONITOR_ENTER_RECORDED 0x1
 #endif /* JAVA_SPEC_VERSION >= 24 */
@@ -6517,6 +6505,7 @@ typedef struct J9JavaVM {
 #if defined(J9VM_OPT_SNAPSHOTS)
 	VMSnapshotImplPortLibrary *vmSnapshotImplPortLibrary;
 	const char *vmSnapshotFilePath;
+	omrthread_monitor_t rcpCacheMutex;
 #endif /* defined(J9VM_OPT_SNAPSHOTS) */
 #if defined(J9VM_OPT_JFR)
 	UDATA loadedClassCount;

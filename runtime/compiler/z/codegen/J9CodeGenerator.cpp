@@ -290,6 +290,12 @@ J9::Z::CodeGenerator::initialize()
       }
 
    cg->setIgnoreDecimalOverflowException(false);
+
+   // Disable last iTable cache by default.
+   static bool enableLastITableCache = feGetEnv("TR_EnableLastITableCache") != NULL;
+   if (!enableLastITableCache)
+      comp->setOption(TR_DisableLastITableCache);
+
    }
 
 bool
@@ -4308,4 +4314,11 @@ bool
 J9::Z::CodeGenerator::supportsTrapsInTMRegion()
    {
    return self()->comp()->target().isZOS();
+   }
+
+bool
+J9::Z::CodeGenerator::supportsInliningOfIsAssignableFrom()
+   {
+   static const bool disableInliningOfIsAssignableFrom = feGetEnv("TR_disableInlineIsAssignableFrom") != NULL;
+   return !disableInliningOfIsAssignableFrom;
    }
