@@ -9791,6 +9791,7 @@ done:
 			}
 		} else {
 			printf("def con method\n");
+			J9ConstantPool *ramConstantPool = NULL;
 			if (getenv("doNew") != NULL) {
 				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
 				printf("lts: vmindex: %d\n", vmindex);
