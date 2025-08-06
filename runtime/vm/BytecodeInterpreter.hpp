@@ -9791,59 +9791,61 @@ done:
 			}
 		} else {
 			printf("def con method\n");
-			UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-			printf("lts: vmindex: %d\n", vmindex);
-			char * incSp = getenv("decSP");
-			if (incSp != NULL)
-				_sp -= 1;
+			if (getenv("doNew") != NULL) {
+				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+				printf("lts: vmindex: %d\n", vmindex);
+				char * incSp = getenv("decSP");
+				if (incSp != NULL)
+					_sp -= 1;
 
-			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
-			printf("found clazz: %p\n", clazz);
-			j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
-			printf("found nameString: %p\n", nameString);
-			j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-			printf("found methodType: %p\n", methodType);
-			j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
-			printf("found returnTypeClass: %p\n", returnTypeClass);
-			j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
-			printf("found paramArray: %p\n", paramArray);
-			//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
-			j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
-			printf("found bytes: %p\n", bytes);
-			UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
-			printf("name length: %d\n", nameLength);
-			bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
-			printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not");
-			int i = 0;
-			if (compressed) {
-				while (0 < nameLength) {
-					U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
-					printf("%c", unicodeChar1);
-					i++;
-					nameLength--;
+				j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+				printf("found clazz: %p\n", clazz);
+				j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
+				printf("found nameString: %p\n", nameString);
+				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+				printf("found methodType: %p\n", methodType);
+				j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
+				printf("found returnTypeClass: %p\n", returnTypeClass);
+				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+				printf("found paramArray: %p\n", paramArray);
+				//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
+				j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
+				printf("found bytes: %p\n", bytes);
+				UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
+				printf("name length: %d\n", nameLength);
+				bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
+				printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not");
+				int i = 0;
+				if (compressed) {
+					while (0 < nameLength) {
+						U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
+						printf("%c", unicodeChar1);
+						i++;
+						nameLength--;
+					}
+					printf("\n");
+				} else {
+					while (0 < nameLength) {
+						U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
+						printf("%lc", unicodeChar1);
+						i += 1;
+						nameLength -= 1;
+					}
+					printf("\n");
 				}
-				printf("\n");
-			} else {
-				while (0 < nameLength) {
-					U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
-					printf("%lc", unicodeChar1);
-					i += 1;
-					nameLength -= 1;
-				}
-				printf("\n");
+
+				J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
+				J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
+				J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
+				printf("mhReceiver return type clas name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
+
+
+				J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+				J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
+				J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
+				printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
+				printf("sendMethod: %p\n", _sendMethod);
 			}
-
-			J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
-			J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
-			J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
-			printf("mhReceiver return type clas name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
-
-
-			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
-			J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
-			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-			printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
-			printf("sendMethod: %p\n", _sendMethod);
 
 			if (getenv("changeTarget") != NULL) {
 				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
