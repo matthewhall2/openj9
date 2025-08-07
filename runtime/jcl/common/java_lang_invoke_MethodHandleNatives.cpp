@@ -1184,7 +1184,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							/* Load special sendTarget to throw the exception during invocation */
 							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 							J9Method *throwDefaultConflictMethod = (J9Method*)target;
-							throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(new_clazz);
+							throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
 						} else {
 							goto done;
 						}
