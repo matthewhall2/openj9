@@ -658,6 +658,9 @@ done:
 		bool isMethodDefaultConflictForMethodHandle = false;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		if (isMethodDefaultConflictForMethodHandle) {
+			printf("found default conflict for method handle\n");
+		}
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
@@ -9992,6 +9995,12 @@ throw_npe:
 			_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
 		}
 
+		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
+ 
+		} else {
+			printf("ltv: default conflict method\n");
+		}
+
 		if (fromJIT) {
 			/* On x86-32 we do not want to preserve the MemberName object since this would cause it to
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
@@ -10093,6 +10102,12 @@ foundITable:
 		Assert_VM_false(0 == vTableOffset);
 
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
+
+		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
+ 
+		} else {
+			printf("lti: default conflict method\n");
+		}
 
 		romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccPublic | J9AccPrivate)) {
