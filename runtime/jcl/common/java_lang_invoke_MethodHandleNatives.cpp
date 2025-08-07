@@ -1177,7 +1177,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							vmindex = (jlong)J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW;
 							new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 							new_flags = flags;
-
+							printf("method handle natives resolve found default method conflict for %s.%s%s\n",
+								J9UTF8_DATA(J9ROMCLASS_NAME(resolvedClass->romClass)),	
+								J9UTF8_DATA(name), J9UTF8_DATA(signature));
 							/* Load special sendTarget to throw the exception during invocation */
 							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 						} else {
