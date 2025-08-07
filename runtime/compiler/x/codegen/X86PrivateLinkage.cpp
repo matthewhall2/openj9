@@ -1698,23 +1698,23 @@ TR::Register *J9::X86::PrivateLinkage::buildIndirectDispatch(TR::Node *callNode)
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver())
       {
       int32_t firstArgIndex = callNode->getFirstArgumentIndex();
-      TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
-      TR::Method       *method       = methodSymbol->getMethod();
-      if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
-         {
-         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatch") != NULL)
-            TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtual: check functionality\n");
-         firstArgIndex = 2; // skip the J9Method argument
-         }
+      // TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
+      // TR::Method       *method       = methodSymbol->getMethod();
+      // if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+      //    {
+      //    if (getenv("fatalAssertDispatchVirtualIndirectDispatch") != NULL)
+      //       TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtual: check functionality\n");
+      //    firstArgIndex = 2; // skip the J9Method argument
+      //    }
       
       TR::Node *rcvrChild = callNode->getChild(firstArgIndex);
       TR::Node  *vftChild = callNode->getFirstChild();
-       if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
-         {
-         if (feGetEnv("fatalAssertDispatchVirtualIndirectDispatchVFT"))
-            TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtualVFT: check functionality\n");
-         vftChild = callNode->getChild(1);
-         }
+      //  if (methodSymbol->isComputed() && method->getMandatoryRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+      //    {
+      //    if (getenv("fatalAssertDispatchVirtualIndirectDispatchVFT"))
+      //       TR_ASSERT_FATAL(false, "Indirect dispatch for JITHelpers_dispatchVirtualVFT: check functionality\n");
+      //    vftChild = callNode->getChild(1);
+      //    }
       bool loadVFTForNullCheck = false;
 
       if (cg()->getCurrentEvaluationTreeTop()->getNode()->getOpCodeValue() == TR::NULLCHK
@@ -2294,7 +2294,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
    TR::Instruction *callInstr;
    if (dispatchOp.sourceIsMemRef())
       {
-      TR_ASSERT_FATAL(targetAddressMemref, "Call via memory requires memref");
+      TR_ASSERT(targetAddressMemref, "Call via memory requires memref");
       if (trace)
             traceMsg(comp(), "call via mem\n");
       // Fix the displacement at 4 bytes so j2iVirtual can decode it if necessary
@@ -2304,7 +2304,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       }
    else
       {
-      TR_ASSERT_FATAL(targetAddressReg, "Call via register requires register");
+      TR_ASSERT(targetAddressReg, "Call via register requires register");
       if (trace)
             traceMsg(comp(), "call via register\n");
       TR::Node *callNode = site.getCallNode();
@@ -2313,8 +2313,8 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       if ((resolvedMethodSymbol &&
             (resolvedMethodSymbol->getRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchDirect ||
             resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchComputedStaticCall ||
-            ((feGetEnv("checkForDV") != NULL) & resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual))) ||
-            (feGetEnv("noThunkFor32") != NULL && !comp()->target().is64Bit())) 
+            ((getenv("checkForDV") != NULL) & resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual))) ||
+            (getenv("noThunkFor32") != NULL && !comp()->target().is64Bit())) 
          {
          if (trace)
             traceMsg(comp(), "will not reach j2i thunk\n");
@@ -2373,7 +2373,7 @@ TR::Instruction *J9::X86::PrivateLinkage::buildVFTCall(TR::X86CallSite &site, TR
       else
          {
          callInstr = generateRegInstruction(dispatchOp.getOpCodeValue(), callNode, targetAddressReg, cg());
-         if ((feGetEnv("addCallSiteVFT") != NULL) && resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
+         if ((getenv("addCallSiteVFT") != NULL) && resolvedMethodSymbol && resolvedMethodSymbol->getRecognizedMethod() == TR::com_ibm_jit_JITHelpers_dispatchVirtual)
             cg()->addInvokeBasicCallSite(callNode, callInstr);
          }
       }

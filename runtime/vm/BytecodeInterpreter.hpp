@@ -718,7 +718,6 @@ done:
 			}
 		} else {
 			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
-			printf("j2i: exitPoint=%p\n", exitPoint);
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
@@ -2467,7 +2466,6 @@ done:
 	VMINLINE VM_BytecodeAction
 	runJNINative(REGISTER_ARGS_LIST)
 	{
-		printf("running jni native\n");
 		VM_BytecodeAction rc = GOTO_DONE;
 		void *jniMethodStartAddress = _sendMethod->extra;
 		U_8 returnType = 0;
@@ -2663,7 +2661,6 @@ done:
 			rc = reenterInterpreter(J9_BCLOOP_EXECUTE_BYTECODE);
 		}
 done:
-		printf("runJNINative returning %d\n", rc);
 		return rc;
 	}
 
@@ -9762,7 +9759,6 @@ done:
 	VMINLINE VM_BytecodeAction
 	linkToStaticSpecial(REGISTER_ARGS_LIST)
 	{
-		printf("in linktostaticspecial\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
@@ -9775,7 +9771,7 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		printf("sendMethod: %p\n", _sendMethod);
+		printf("lts: sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
@@ -9929,7 +9925,6 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToVirtual(REGISTER_ARGS_LIST)
 	{
-		printf("in linktovirtual\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 
@@ -10021,7 +10016,6 @@ throw_npe:
 	VMINLINE VM_BytecodeAction
 	linkToInterface(REGISTER_ARGS_LIST)
 	{
-		printf("in linktointerface\n");
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
@@ -11571,7 +11565,6 @@ JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 			PERFORM_ACTION(throwForDefaultConflictForMemberName(REGISTER_ARGS));
 		} else {
 			PERFORM_ACTION(throwDefaultConflictForMemberName(REGISTER_ARGS));
-
 		}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 #if JAVA_SPEC_VERSION >= 16

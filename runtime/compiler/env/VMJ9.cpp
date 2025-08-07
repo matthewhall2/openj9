@@ -7596,7 +7596,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
          }
       case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
          {
-         if (feGetEnv("makeDVCompVirt") != NULL) {
+         if (getenv("makeDVCompVirt") != NULL) {
          TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
          methodSymbol->setMethodKind(TR::MethodSymbol::ComputedVirtual);
          TR::Node::recreate(callNode, methodSymbol->getMethod()->indirectCallOpCode());
@@ -9712,18 +9712,6 @@ TR_J9VMBase::isJ9VMThreadCurrentThreadImmutable()
    return true;
 #endif /* JAVA_SPEC_VERSION >= 19 */
    }
-
-bool
-TR_J9VMBase::isLiveMonitorMapCorrectnessRequired()
-   {
-#if JAVA_SPEC_VERSION >= 24
-   J9JavaVM *javaVM = getJ9JITConfig()->javaVM;
-   return J9_ARE_ANY_BITS_SET(javaVM->extendedRuntimeFlags3, J9_EXTENDED_RUNTIME3_YIELD_PINNED_CONTINUATION);
-#else
-   return false;
-#endif /* JAVA_SPEC_VERSION >= 24 */
-   }
-
 
 // Native method bodies
 //
