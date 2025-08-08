@@ -57,7 +57,7 @@ extern "C" {
 #endif /* JAVA_SPEC_VERSION >= 16 */
 
 /* PlaceHolder value used for MN.vmindex that has default method conflict */
-#define J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW 1
+#define J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW 100
 
 J9_DECLARE_CONSTANT_UTF8(mutableCallSite, "java/lang/invoke/MutableCallSite");
 
