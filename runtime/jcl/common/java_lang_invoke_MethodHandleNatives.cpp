@@ -1033,8 +1033,10 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 		Trc_JCL_java_lang_invoke_MethodHandleNatives_resolve_Data(env, membernameObject, caller, flags, vmindex, target);
 		/* Check if MemberName is already resolved */
 		if (0 != target) {
+			printf("target (MN) already resolved");
 			result = self;
 		} else {
+			printf("target (MN) not resolved yet");
 			/* Initialize nameObject after creating typeString which could trigger GC */
 			j9object_t nameObject = NULL;
 			j9object_t typeObject = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(currentThread, membernameObject);
