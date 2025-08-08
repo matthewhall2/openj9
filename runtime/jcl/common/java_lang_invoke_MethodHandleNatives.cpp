@@ -1144,6 +1144,10 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 				{
 					case MH_REF_INVOKEINTERFACE:
 						lookupOptions |= J9_LOOK_INTERFACE;
+						if (getenv("setDefConInResolveInterface") != NULL) {
+							/* If setDefConInResolve is set, then allow default method conflict resolution. */
+							lookupOptions |= J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS;
+						}
 						break;
 					case MH_REF_INVOKESPECIAL:
 						lookupOptions |= (J9_LOOK_VIRTUAL | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
@@ -1153,7 +1157,17 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						if (J9_ARE_ANY_BITS_SET(resolvedClass->romClass->modifiers, J9AccInterface)) {
 							lookupOptions |= J9_LOOK_INTERFACE;
 						}
+						if (getenv("setDefConInResolveStatic") != NULL) {
+							/* If setDefConInResolve is set, then allow default method conflict resolution. */
+							lookupOptions |= J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS;
+						}
 						break;
+					case MH_REF_INVOKEVIRTUAL:
+						lookupOptions |= J9_LOOK_VIRTUAL;
+						if (getenv("setDefConInResolveVirtual") != NULL) {
+							/* If setDefConInResolve is set, then allow default method conflict resolution. */
+							lookupOptions |= J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS;
+						}
 					default:
 						lookupOptions |= J9_LOOK_VIRTUAL;
 						break;
@@ -1164,8 +1178,10 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 
 				/* Check for resolution exception */
 				if (VM_VMHelpers::exceptionPending(currentThread)) {
+					printf("exception pending after lookup\n");
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
 					if ((ref_kind == MH_REF_INVOKESPECIAL) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
+						printf("pending: IncompatibleClassChangeError\n");
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
 						/* Attempt to lookup method without checking for conflict.
