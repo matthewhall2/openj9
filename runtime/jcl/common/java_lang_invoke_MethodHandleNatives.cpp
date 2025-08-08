@@ -1175,7 +1175,6 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						method = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
-
 						if (!VM_VMHelpers::exceptionPending(currentThread)) {
 							printf("Defer default method conflict exception throw for %s.%s%s\n",
 							 J9UTF8_DATA(name), J9UTF8_DATA(signature), J9_ARE_ANY_BITS_SET(flags, MN_IS_CONSTRUCTOR) ? "()" : "");
@@ -1186,8 +1185,10 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 
 							/* Load special sendTarget to throw the exception during invocation */
 							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
-							J9Method *throwDefaultConflictMethod = (J9Method*)target;
-							throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
+							if (getenv("setDefConInResolve") != NULL) {
+								J9Method *throwDefaultConflictMethod = (J9Method*)target;
+								throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
+							}
 						} else {
 							goto done;
 						}

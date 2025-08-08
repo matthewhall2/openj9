@@ -650,6 +650,8 @@ done:
 			if (!isMethodDefaultConflictForMethodHandle) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			} else {
+				_literals = _sendMethod;
 			}
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
