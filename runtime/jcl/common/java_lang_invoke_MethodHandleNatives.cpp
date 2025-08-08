@@ -1175,7 +1175,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 
 				/* Check if signature polymorphic native calls */
 				J9Method *method = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions);
-
+				printf("lookupMethod returned %p\n", method);
 				/* Check for resolution exception */
 				if (VM_VMHelpers::exceptionPending(currentThread)) {
 					printf("exception pending after lookup\n");
