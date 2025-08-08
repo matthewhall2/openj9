@@ -1064,7 +1064,7 @@ public:
    void setAppSleepNano(int32_t t) { _appSleepNano = t; }
    int32_t computeAppSleepNano() const;
    TR_YesNoMaybe detectCompThreadStarvation();
-   bool getStarvationDetected() const { return _starvationDetected; }
+   bool getStarvationDetected() const { return _starvationDetected; } // This refers to compilation threads starvation
    void setStarvationDetected(bool b) { _starvationDetected = b; }
    int32_t getTotalCompThreadCpuUtilWhenStarvationComputed() const { return _totalCompThreadCpuUtilWhenStarvationComputed; }
    int32_t getNumActiveCompThreadsWhenStarvationComputed() const { return _numActiveCompThreadsWhenStarvationComputed; }
@@ -1073,6 +1073,9 @@ public:
    void setSuspendThreadDueToLowPhysicalMemory(bool b) { _suspendThreadDueToLowPhysicalMemory = b; }
 
    void initCPUEntitlement();
+
+   bool isJVMStarved() const { return _jvmIsStarved; }
+   void setIsJVMStarved(bool val) { _jvmIsStarved = val; }
 
    bool getLowCompDensityMode() const { return _lowCompDensityMode; }
    void enterLowCompDensityMode() { _lowCompDensityMode = true; _hasEnteredLowCompDensityModeInThePast = true;}
@@ -1340,7 +1343,7 @@ private:
    //----------------
    int32_t                _appSleepNano; // make app threads sleep when sampling
 
-   bool                   _starvationDetected;
+   bool                   _starvationDetected; // This refers to compilation threads starvation
    int32_t                _totalCompThreadCpuUtilWhenStarvationComputed;   // for RAS purposes
    int32_t                _numActiveCompThreadsWhenStarvationComputed; // for RAS purposes
    //--------------
@@ -1367,6 +1370,7 @@ private:
    bool _lowCompDensityMode; // set to true when compilations occur infrequently and are unlikely to contribute to JVM performance
    bool _hasEnteredLowCompDensityModeInThePast; // set to true when _lowCompDensityMode is set to true at least once
    bool _compileFromLPQRegardlessOfCPU;
+   bool _jvmIsStarved; // set to true if the JVM uses very little CPU because of external factors
 
 #if defined(J9VM_OPT_JITSERVER)
    ClientSessionHT               *_clientSessionHT; // JITServer hashtable that holds session information about JITClients

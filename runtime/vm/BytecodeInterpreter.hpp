@@ -1598,6 +1598,8 @@ obj:
 				VM_ContinuationHelpers::sendUnblockerThreadSignal(_vm);
 			}
 			omrthread_monitor_exit(_vm->blockedVirtualThreadsMutex);
+		} else if ((JAVA_LANG_VIRTUALTHREAD_WAITING == newThreadState) || (JAVA_LANG_VIRTUALTHREAD_TIMED_WAITING == newThreadState)) {
+			VM_ContinuationHelpers::sendUnblockerThreadSignal(_vm);
 		}
 
 		/* Enter critical transition after the prepare stage is complete and hooks dispatched. */
@@ -1978,8 +1980,14 @@ done:
 		VM_BytecodeAction rc = EXECUTE_BYTECODE;
 		J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_literals);
 		UDATA relativeBP = 0;
+#if JAVA_SPEC_VERSION >= 24
+		bool j2i = false;
+#endif /* JAVA_SPEC_VERSION >= 24 */
 		if (*_sp & J9_STACK_FLAGS_J2_IFRAME) {
 			relativeBP = (((UDATA*)(((J9SFJ2IFrame*)_sp) + 1)) - 1) - _arg0EA;
+#if JAVA_SPEC_VERSION >= 24
+			j2i = true;
+#endif /* JAVA_SPEC_VERSION >= 24 */
 		} else {
 			relativeBP = (((UDATA*)(((J9SFStackFrame*)_sp) + 1)) - 1) - _arg0EA;
 		}
@@ -2086,7 +2094,7 @@ throwStackOverflow:
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 #if JAVA_SPEC_VERSION >= 24
 					case J9_OBJECT_MONITOR_YIELD_VIRTUAL: {
-						rc = yieldPinnedContinuation(REGISTER_ARGS, JAVA_LANG_VIRTUALTHREAD_BLOCKING, J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD);
+						rc = yieldPinnedContinuation(REGISTER_ARGS, JAVA_LANG_VIRTUALTHREAD_BLOCKING, j2i ? J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD_J2I : J9VM_CONTINUATION_RETURN_FROM_SYNC_METHOD);
 						break;
 					}
 #endif /* JAVA_SPEC_VERSION >= 24 */
@@ -3461,6 +3469,7 @@ done:
 				UDATA continuationWalkRC = J9_STACKWALK_RC_NONE;
 				J9StackWalkState continuationWalkState= {0};
 				if (J9_ARE_ALL_BITS_SET(_vm->extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_SHOW_CARRIER_FRAMES)
+					&& (NULL != _currentThread->threadObject)
 					&& IS_JAVA_LANG_VIRTUALTHREAD(_currentThread, _currentThread->threadObject)
 				) {
 					continuationWalkState.flags = walkFlags;
