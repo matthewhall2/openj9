@@ -815,6 +815,7 @@ done:
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
 			method = *(J9Method**)((UDATA)clazz + vTableOffset);
 		}
+		printf("j2iVirtualMethod: method=%p\n", method);
 		return method;
 	}
 
