@@ -1019,6 +1019,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 #endif /* JAVA_SPEC_VERSION >= 11 */
 
 	if (NULL == self) {
+		printf("self is null\n");
 		vmFuncs->setCurrentExceptionUTF(currentThread, J9VMCONSTANTPOOL_JAVALANGINTERNALERROR, NULL);
 	} else {
 		j9object_t membernameObject = J9_JNI_UNWRAP_REFERENCE(self);
