@@ -847,6 +847,7 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildArgs(TR::Node                      
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+      case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
          passArgsOnStack = true;
          break;
       default:
