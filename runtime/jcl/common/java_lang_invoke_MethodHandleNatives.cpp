@@ -1180,7 +1180,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 				if (VM_VMHelpers::exceptionPending(currentThread)) {
 					printf("exception pending after lookup\n");
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
-					if ((ref_kind == MH_REF_INVOKESPECIAL) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
+					if (((ref_kind == MH_REF_INVOKESPECIAL) || ((getenv("deferforVirtual") != NULL) && (ref_kind == MH_REF_INVOKEVIRTUAL))) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
 						printf("pending: IncompatibleClassChangeError\n");
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
