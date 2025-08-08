@@ -1182,7 +1182,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
 					bool isSpecial = ref_kind == MH_REF_INVOKESPECIAL;
 					bool isVirtual = ref_kind == MH_REF_INVOKEVIRTUAL;
-					bool defer = getenv("deferforVirtual") != NULL;
+					bool defer = getenv("deferForVirtual") != NULL;
 					if ((isSpecial || (defer && isVirtual)) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
 						printf("pending: IncompatibleClassChangeError\n");
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
@@ -1409,6 +1409,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 			if ((NULL != new_clazz)
 				&& ((0 != vmindex) || J9_ARE_ANY_BITS_SET(flags, MN_IS_METHOD | MN_IS_CONSTRUCTOR))
 			) {
+				printf("ending of resolver\n");
 				/* Refetch reference after GC point */
 				membernameObject = J9_JNI_UNWRAP_REFERENCE(self);
 				if (addMemberNameToClass(currentThread, membernameObject, new_clazz)) {
