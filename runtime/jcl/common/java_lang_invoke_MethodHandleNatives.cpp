@@ -1206,6 +1206,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
 								throwDefaultConflictMethod->bytecodes = method->bytecodes;
 							}
+							if (getenv("setMethodOnDefCon" != NULL)) {
+								method = (J9Method*)target;
+							}
 						} else {
 							goto done;
 						}
