@@ -57,7 +57,7 @@ extern "C" {
 #endif /* JAVA_SPEC_VERSION >= 16 */
 
 /* PlaceHolder value used for MN.vmindex that has default method conflict */
-#define J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW 100
+#define J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW (getenv("defaultIndex") != NULL ? atoi(getenv("defaultIndex")) : 1)
 
 J9_DECLARE_CONSTANT_UTF8(mutableCallSite, "java/lang/invoke/MutableCallSite");
 
@@ -1317,6 +1317,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 
 					J9Class *newJ9Clazz = J9VM_J9CLASS_FROM_HEAPCLASS(currentThread, new_clazz);
 					vmindex = vmindexValueForMethodMemberName(methodID, newJ9Clazz, new_flags);
+					if (isDefCon && getenv("setForVirtual3") != NULL) {
+						vmindex = (jlong)J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW;
+					}
 				}
 			} else if (J9_ARE_ANY_BITS_SET(flags, MN_IS_FIELD)) {
 				J9Class *declaringClass;
