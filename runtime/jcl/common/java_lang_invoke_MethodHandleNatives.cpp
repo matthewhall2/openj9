@@ -1446,7 +1446,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9VMJAVALANGINVOKEMEMBERNAME_SET_CLAZZ(currentThread, membernameObject, new_clazz);
 					J9OBJECT_U64_STORE(currentThread, membernameObject, vm->vmindexOffset, (U_64)vmindex);
 					J9OBJECT_U64_STORE(currentThread, membernameObject, vm->vmtargetOffset, (U_64)target);
-					printf("added to class - index: %d\n", vmindex);
+					printf("added to class - index: %ls\n", vmindex);
 					Trc_JCL_java_lang_invoke_MethodHandleNatives_resolve_resolved(env, vmindex, target, new_clazz, new_flags);
 					result = vmFuncs->j9jni_createLocalRef(env, membernameObject);
 				}
