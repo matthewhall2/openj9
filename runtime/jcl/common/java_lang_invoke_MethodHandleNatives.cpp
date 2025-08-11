@@ -1226,14 +1226,31 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						goto done;
 					}
 				} else if (NULL != method) {
+					// todo: try lookup again in here with flags set for default method conflict resolution
 					J9JNIMethodID *methodID = vmFuncs->getJNIMethodID(currentThread, method);
 					target = JLONG_FROM_POINTER(method);
+					J9Method *tempMethod = NULL;
+					if (getenv("lookUpMethod")) {
+						tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
+						if (VM_VMHelpers::exceptionPending(currentThread)) {
+							VM_VMHelpers::clearException(currentThread);
+							lookupMethod(currentThread, resolvedClass, name, signature, callerClass, (lookupOptions));
+							if (!VM_VMHelpers::exceptionPending(currentThread)) {
+								target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+							}
+						}
+					}
+
 
 					J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(methodID->method);
 					J9UTF8 *methodName = J9ROMMETHOD_NAME(romMethod);
 					U_32 methodModifiers = romMethod->modifiers;
 					new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 					new_flags = methodModifiers & CFR_METHOD_ACCESS_MASK;
+
+					if (getenv("lookUpMethod") != NULL && getenv("setForVirtual") != NULL) {
+						method = tempMethod;
+					}
 
 					if (J9_ARE_ANY_BITS_SET(methodModifiers, J9AccMethodCallerSensitive)) {
 						new_flags |= MN_CALLER_SENSITIVE;
