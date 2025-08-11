@@ -1215,6 +1215,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								if (getenv("setBytecdes") != NULL) {
 									throwDefaultConflictMethod->bytecodes = method->bytecodes;
 								}
+								if (getenv("setRunAddress")) {
+									throwDefaultConflictMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT)
+								}
 							}
 							if (getenv("setMethodOnDefCon") != NULL) {
 								method = (J9Method*)target;
@@ -1230,13 +1233,18 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9JNIMethodID *methodID = vmFuncs->getJNIMethodID(currentThread, method);
 					target = JLONG_FROM_POINTER(method);
 					J9Method *tempMethod = NULL;
+					bool isDefCon = false;
 					if (getenv("lookUpMethod")) {
 						tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
 						if (VM_VMHelpers::exceptionPending(currentThread)) {
 							VM_VMHelpers::clearException(currentThread);
 							lookupMethod(currentThread, resolvedClass, name, signature, callerClass, (lookupOptions));
 							if (!VM_VMHelpers::exceptionPending(currentThread)) {
+								isDefCon = true;
 								target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+							}
+							if (getenv("setRunAddress")) {
+								throwDefaultConflictMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT)
 							}
 						}
 					}
@@ -1248,8 +1256,12 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 					new_flags = methodModifiers & CFR_METHOD_ACCESS_MASK;
 
-					if (getenv("lookUpMethod") != NULL && getenv("setForVirtual") != NULL) {
+					if (isDefCon && getenv("setForVirtual") != NULL) {
 						method = tempMethod;
+					}
+
+					if (isDefCon && getenv("setForVirtual2") != NULL) {
+						method->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT)
 					}
 
 					if (J9_ARE_ANY_BITS_SET(methodModifiers, J9AccMethodCallerSensitive)) {
@@ -1434,9 +1446,8 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9VMJAVALANGINVOKEMEMBERNAME_SET_CLAZZ(currentThread, membernameObject, new_clazz);
 					J9OBJECT_U64_STORE(currentThread, membernameObject, vm->vmindexOffset, (U_64)vmindex);
 					J9OBJECT_U64_STORE(currentThread, membernameObject, vm->vmtargetOffset, (U_64)target);
-
+					printf("added to class - index: %d\n", vmindex);
 					Trc_JCL_java_lang_invoke_MethodHandleNatives_resolve_resolved(env, vmindex, target, new_clazz, new_flags);
-
 					result = vmFuncs->j9jni_createLocalRef(env, membernameObject);
 				}
 			}
