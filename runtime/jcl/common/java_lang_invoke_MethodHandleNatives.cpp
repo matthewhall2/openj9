@@ -1243,9 +1243,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								isDefCon = true;
 								target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 							}
-							if (getenv("setRunAddress")) {
-								throwDefaultConflictMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
-							}
+							
 						}
 					}
 
