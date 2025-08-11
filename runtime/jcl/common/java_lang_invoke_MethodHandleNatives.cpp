@@ -1236,12 +1236,12 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					target = JLONG_FROM_POINTER(method);
 					J9Method *tempMethod = NULL;
 					if (getenv("lookUpMethod")) {
-						tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
 						if (VM_VMHelpers::exceptionPending(currentThread)) {
 							VM_VMHelpers::clearException(currentThread);
 							lookupMethod(currentThread, resolvedClass, name, signature, callerClass, (lookupOptions));
 							if (!VM_VMHelpers::exceptionPending(currentThread)) {
 								isDefCon = true;
+								tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
 								target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 							}
 							
