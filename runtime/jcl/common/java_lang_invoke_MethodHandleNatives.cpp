@@ -1174,6 +1174,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 				}
 
 				/* Check if signature polymorphic native calls */
+				bool isDefCon = false;
 				J9Method *method = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions);
 				printf("lookupMethod returned %p\n", method);
 				/* Check for resolution exception */
@@ -1196,6 +1197,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
 						printf("2nd lookupMethod returned %p\n", method);
 						if (!VM_VMHelpers::exceptionPending(currentThread)) {
+							isDefCon = true;
 							printf("Defer default method conflict exception throw for %s.%s%s\n",
 							 J9UTF8_DATA(name), J9UTF8_DATA(signature), J9_ARE_ANY_BITS_SET(flags, MN_IS_CONSTRUCTOR) ? "()" : "");
 							/* Set placeholder values for MemberName fields. */
@@ -1233,7 +1235,6 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9JNIMethodID *methodID = vmFuncs->getJNIMethodID(currentThread, method);
 					target = JLONG_FROM_POINTER(method);
 					J9Method *tempMethod = NULL;
-					bool isDefCon = false;
 					if (getenv("lookUpMethod")) {
 						tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
 						if (VM_VMHelpers::exceptionPending(currentThread)) {
@@ -1436,7 +1437,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 			if ((NULL != new_clazz)
 				&& ((0 != vmindex) || J9_ARE_ANY_BITS_SET(flags, MN_IS_METHOD | MN_IS_CONSTRUCTOR))
 			) {
-				printf("ending of resolver\n");
+				printf("ending of resolver: def con: %d\n", isDefCon);
 				/* Refetch reference after GC point */
 				membernameObject = J9_JNI_UNWRAP_REFERENCE(self);
 				if (addMemberNameToClass(currentThread, membernameObject, new_clazz)) {
