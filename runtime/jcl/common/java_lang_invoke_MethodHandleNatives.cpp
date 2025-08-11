@@ -1192,10 +1192,10 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						 * If this failed with error, then throw that error.
 						 * Otherwise exception throw will be defered to the MH.invoke call.
 						 */
-						method = lookupMethod(
+						J9Method *method2 = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
-						printf("2nd lookupMethod returned %p\n", method);
+						printf("2nd lookupMethod returned %p\n", method2);
 						if (!VM_VMHelpers::exceptionPending(currentThread)) {
 							isDefCon = true;
 							printf("Defer default method conflict exception throw for %s.%s%s\n",
