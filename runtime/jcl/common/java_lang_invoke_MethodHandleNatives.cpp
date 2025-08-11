@@ -1261,7 +1261,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					}
 
 					if (isDefCon && getenv("setForVirtual2") != NULL) {
-						method->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT)
+						method->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
 					}
 
 					if (J9_ARE_ANY_BITS_SET(methodModifiers, J9AccMethodCallerSensitive)) {
