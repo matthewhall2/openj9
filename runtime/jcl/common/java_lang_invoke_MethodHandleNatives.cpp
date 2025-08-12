@@ -1217,7 +1217,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								if (getenv("setBytecdes") != NULL) {
 									throwDefaultConflictMethod->bytecodes = method->bytecodes;
 								}
-								if (getenv("setRunAddress") != nullptr {
+								if (getenv("setRunAddress") != NULL) {
 									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
 								}
 								if (getenv("setExtra") != NULL) {
