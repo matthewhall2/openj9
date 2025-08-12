@@ -1221,9 +1221,11 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
 								}
 								if (getenv("setExtra") != NULL) {
-									throwDefaultConflictMethod->extra = method->extra | J9_STARTPC_NOT_TRANSLATED;
+									auto v = reinterpret_cast<std::uintptr_t>(method->extra) | static_cast<std::uintptr_t>(J9_STARTPC_NOT_TRANSLATED);
+									throwDefaultConflictMethod->extra = reinterpret_cast<void*>(v);
 									if (getenv("setExtraToMethod") != NULL) {
-										throwDefaultConflictMethod->extra = (void*)(method | J9_STARTPC_NOT_TRANSLATED);
+										auto v2 = reinterpret_cast<std::uintptr_t>(method) | static_cast<std::uintptr_t>(J9_STARTPC_NOT_TRANSLATED);
+										throwDefaultConflictMethod->extra = reinterpret_cast<void*>(v2);
 									}
 								}
 							}
@@ -1260,9 +1262,11 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
 								}
 								if (getenv("setExtra") != NULL) {
-									throwDefaultConflictMethod->extra = method->extra | J9_STARTPC_NOT_TRANSLATED;
+									auto v = reinterpret_cast<std::uintptr_t>(method->extra) | static_cast<std::uintptr_t>(J9_STARTPC_NOT_TRANSLATED);
+									throwDefaultConflictMethod->extra = reinterpret_cast<void*>(v);
 									if (getenv("setExtraToMethod") != NULL) {
-										throwDefaultConflictMethod->extra = (void*)(method | J9_STARTPC_NOT_TRANSLATED);
+										auto v2 = reinterpret_cast<std::uintptr_t>(method) | static_cast<std::uintptr_t>(J9_STARTPC_NOT_TRANSLATED);
+										throwDefaultConflictMethod->extra = reinterpret_cast<void*>(v2);
 									}
 								}
 
