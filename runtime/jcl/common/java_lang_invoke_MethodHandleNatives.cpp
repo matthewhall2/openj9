@@ -1192,7 +1192,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						 * If this failed with error, then throw that error.
 						 * Otherwise exception throw will be defered to the MH.invoke call.
 						 */
-						J9Method *method2 = lookupMethod(
+						method = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
 						printf("2nd lookupMethod returned %p\n", method2);
@@ -1215,7 +1215,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								J9Method *throwDefaultConflictMethod = (J9Method*)JLONG_TO_POINTER(target);
 								throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
 								if (getenv("setBytecdes") != NULL) {
-									throwDefaultConflictMethod->bytecodes = method2->bytecodes;
+									throwDefaultConflictMethod->bytecodes = method->bytecodes;
 								}
 								if (getenv("setRunAddress")) {
 									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
