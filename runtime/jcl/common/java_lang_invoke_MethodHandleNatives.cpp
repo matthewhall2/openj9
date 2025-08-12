@@ -1186,7 +1186,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					bool isInter = ref_kind == MH_REF_INVOKEINTERFACE;
 					bool defer = getenv("deferForVirtual") != NULL;
 					if ((isSpecial || (defer && isVirtual) || (defer && isInter)) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
-						printf("pending: IncompatibleClassChangeError\n");
+						printf("pending: IncompatibleClassChangeError: Interface? %d, Virtual? %d\n", isInter, isVirtual);
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
 						/* Attempt to lookup method without checking for conflict.
