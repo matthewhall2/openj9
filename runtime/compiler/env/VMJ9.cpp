@@ -7578,6 +7578,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
       {
       case TR::java_lang_invoke_ComputedCalls_dispatchDirect:
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+      case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
          {
          // The first argument to these calls is actually the target address masquerading as a long argument
          TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
