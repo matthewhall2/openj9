@@ -1195,7 +1195,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						method = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
-						printf("2nd lookupMethod returned %p\n", method2);
+						printf("2nd lookupMethod returned %p\n", method);
 						if (!VM_VMHelpers::exceptionPending(currentThread)) {
 							isDefCon = true;
 							printf("Defer default method conflict exception throw for %s.%s%s\n",
