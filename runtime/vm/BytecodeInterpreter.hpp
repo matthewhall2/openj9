@@ -639,6 +639,7 @@ done:
 		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 		if (isMethodDefaultConflictForMethodHandle) {
 			printf("defafault conflict found in j2i transition\n");
+			asm("int3"); /* Breakpoint for debugging */
 			// /* If the method is a default method conflict, we need to run the special method to throw the exception */
 			// _sendMethod = _currentThread->javaVM->initialMethods.throwDefaultConflict;
 			// /* The JIT will not have compiled this method, so we need to run it interpreted */
