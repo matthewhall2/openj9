@@ -1183,8 +1183,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
 					bool isSpecial = ref_kind == MH_REF_INVOKESPECIAL;
 					bool isVirtual = ref_kind == MH_REF_INVOKEVIRTUAL;
+					bool isInter = ref_kind == MH_REF_INVOKEINTERFACE;
 					bool defer = getenv("deferForVirtual") != NULL;
-					if ((isSpecial || (defer && isVirtual)) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
+					if ((isSpecial || (defer && isVirtual) || (defer && isInter)) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
 						printf("pending: IncompatibleClassChangeError\n");
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
@@ -1202,7 +1203,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							 J9UTF8_DATA(name), J9UTF8_DATA(signature), J9_ARE_ANY_BITS_SET(flags, MN_IS_CONSTRUCTOR) ? "()" : "");
 							/* Set placeholder values for MemberName fields. */
 							vmindex = (jlong)J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW;
-							if (isVirtual) {
+							if (isVirtual | isInter) {
 								new_clazz = clazzObject;
 							} else {
 								new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
@@ -1239,7 +1240,6 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						goto done;
 					}
 				} else if (NULL != method) {
-					// todo: try lookup again in here with flags set for default method conflict resolution
 					J9JNIMethodID *methodID = vmFuncs->getJNIMethodID(currentThread, method);
 					target = JLONG_FROM_POINTER(method);
 					J9Method *tempMethod = NULL;
