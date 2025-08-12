@@ -1220,6 +1220,12 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								if (getenv("setRunAddress")) {
 									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
 								}
+								if (getenv("setExtra") != NULL) {
+									throwDefaultConflictMethod->extra = method->extra | J9_STARTPC_NOT_TRANSLATED;
+									if (getenv("setExtraToMethod") != NULL) {
+										throwDefaultConflictMethod->extra = (void*)(method | J9_STARTPC_NOT_TRANSLATED);
+									}
+								}
 							}
 							if (getenv("setMethodOnDefCon") != NULL) {
 								method = (J9Method*)target;
@@ -1245,6 +1251,21 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 								printf("exception cleared with no def con flag, setting default method conflict, method: %p\n", tempMethod2);
 								isDefCon = true;
 								target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+								J9Method *throwDefaultConflictMethod = (J9Method*)JLONG_TO_POINTER(target);
+								throwDefaultConflictMethod->constantPool = J9_CP_FROM_CLASS(resolvedClass);
+								if (getenv("setBytecdes") != NULL) {
+									throwDefaultConflictMethod->bytecodes = method->bytecodes;
+								}
+								if (getenv("setRunAddress")) {
+									throwDefaultConflictMethod->methodRunAddress = (getenv("useJ2I") != NULL) ? J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_I2J_TRANSITION):  J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
+								}
+								if (getenv("setExtra") != NULL) {
+									throwDefaultConflictMethod->extra = method->extra | J9_STARTPC_NOT_TRANSLATED;
+									if (getenv("setExtraToMethod") != NULL) {
+										throwDefaultConflictMethod->extra = (void*)(method | J9_STARTPC_NOT_TRANSLATED);
+									}
+								}
+
 							}
 						}
 					}
