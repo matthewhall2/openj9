@@ -1235,7 +1235,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					J9JNIMethodID *methodID = vmFuncs->getJNIMethodID(currentThread, method);
 					target = JLONG_FROM_POINTER(method);
 					J9Method *tempMethod = NULL;
-					if (getenv("lookUpMethod")) {
+					if (getenv("lookUpMethod") != NULL) {
 						tempMethod = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions | J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS);
 						if (VM_VMHelpers::exceptionPending(currentThread)) {
 							printf("exception in lookup virtual, method: %p\n", tempMethod);
