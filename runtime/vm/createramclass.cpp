@@ -1071,6 +1071,7 @@ found:
 #endif
 		} else if (DEFAULT_CONFLICT_METHOD_ID_TAG == (temp & VTABLE_SLOT_TAG_MASK)) {
 			/* Default Method conflict */
+			printf("copy vtable: default method conflict - vtable size: %llu\n", count);
 			J9Method *defaultMethod = (J9Method*)(temp & ~DEFAULT_CONFLICT_METHOD_ID_TAG);
 			conflictMethodPtr->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + 1);
 			conflictMethodPtr->constantPool = ramClass->ramConstantPool;
@@ -1123,6 +1124,10 @@ found:
 						*vTableWriteCursor = *superVTableWriteCursor;
 					} else {
 						fillJITVTableSlot(vmStruct, vTableWriteCursor, currentMethod);
+					}
+					if (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(currentMethod->methodRunAddress)) {
+						/* Default method conflict - use the conflict method */
+						printf("fill jit vtable: found default method conflict - vtable size: %llu\n", vTableAddress->size);
 					}
 
 					/* Always consume an entry from the super vTable.  Note that once the size hits zero and superclass becomes NULL,
