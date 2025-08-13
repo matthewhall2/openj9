@@ -1073,7 +1073,11 @@ found:
 			/* Default Method conflict */
 			printf("copy vtable: default method conflict - vtable size: %lu\n", count);
 			J9Method *defaultMethod = (J9Method*)(temp & ~DEFAULT_CONFLICT_METHOD_ID_TAG);
-			conflictMethodPtr->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + 1);
+			int adder = 1;
+			if (getenv("addToBytesCodes") != NULL) {
+				adder = atoi(getenv("addToBytesCodes"));
+			}
+			conflictMethodPtr->bytecodes = (getenv("tryBytecodes") != NULL) ? defaultMethod->bytecodes : (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + adder);
 			conflictMethodPtr->constantPool = ramClass->ramConstantPool;
 			conflictMethodPtr->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 			conflictMethodPtr->extra = (void *)((UDATA)defaultMethod | J9_STARTPC_NOT_TRANSLATED);
@@ -1123,11 +1127,11 @@ found:
 					if (superclass != NULL && currentMethod == *superVTableReadCursor) {
 						*vTableWriteCursor = *superVTableWriteCursor;
 					} else {
+						if (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(currentMethod->methodRunAddress)) {
+							/* Default method conflict - use the conflict method */
+							printf("fill jit vtable: found default method conflict - vtable size: %lu\n", vTableAddress->size);
+						}
 						fillJITVTableSlot(vmStruct, vTableWriteCursor, currentMethod);
-					}
-					if (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(currentMethod->methodRunAddress)) {
-						/* Default method conflict - use the conflict method */
-						printf("fill jit vtable: found default method conflict - vtable size: %lu\n", vTableAddress->size);
 					}
 
 					/* Always consume an entry from the super vTable.  Note that once the size hits zero and superclass becomes NULL,
