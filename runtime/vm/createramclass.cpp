@@ -599,6 +599,7 @@ addInterfaceMethods(J9VMThread *vmStruct, J9ClassLoader *classLoader, J9Class *i
 										goto add_existing;
 									} else {
 										/* Conflict detected */
+										printf("conflict detected\n");
 										vTableMethods[tempIndex] = (J9Method *)((UDATA)vTableMethods[tempIndex] | DEFAULT_CONFLICT_METHOD_ID_TAG);
 										*defaultConflictCount += 1;
 									}
