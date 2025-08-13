@@ -1078,6 +1078,9 @@ found:
 				adder = atoi(getenv("addToBytesCodes"));
 			}
 			conflictMethodPtr->bytecodes = (getenv("tryBytecodes") != NULL) ? defaultMethod->bytecodes : (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + adder);
+			if (getenv("testAgain") != NULL) {
+				conflictMethodPtr->bytecodes = J9_BYTECODE_START_FROM_ROM_METHOD(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod));
+			}
 			conflictMethodPtr->constantPool = ramClass->ramConstantPool;
 			conflictMethodPtr->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 			conflictMethodPtr->extra = (void *)((UDATA)defaultMethod | J9_STARTPC_NOT_TRANSLATED);
