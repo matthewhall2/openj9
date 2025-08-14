@@ -9756,49 +9756,47 @@ done:
 		} else {
 			printf("def con method\n");
 			J9ConstantPool *ramConstantPool = NULL;
-			if (getenv("doNew") != NULL) {
-				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-				char * incSp = getenv("decSP");
-				if (incSp != NULL)
-					_sp -= 1;
+			// if (getenv("doNew") != NULL) {
+			// 	UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
+				
 
-				j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
-				j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
-				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-				j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
-				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
-				//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
-				j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
-				UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
-				bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
-				int i = 0;
-				if (compressed) {
-					while (0 < nameLength) {
-						U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
-						printf("%c", unicodeChar1);
-						i++;
-						nameLength--;
-					}
-					printf("\n");
-				} else {
-					while (0 < nameLength) {
-						U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
-						printf("%lc", unicodeChar1);
-						i += 1;
-						nameLength -= 1;
-					}
-					printf("\n");
-				}
+			// 	j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
+			// 	j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
+			// 	j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+			// 	j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
+			// 	j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+			// 	//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
+			// 	j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
+			// 	UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
+			// 	bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
+			// 	int i = 0;
+			// 	if (compressed) {
+			// 		while (0 < nameLength) {
+			// 			U_8 unicodeChar1 = (U_8)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
+			// 			printf("%c", unicodeChar1);
+			// 			i++;
+			// 			nameLength--;
+			// 		}
+			// 		printf("\n");
+			// 	} else {
+			// 		while (0 < nameLength) {
+			// 			U_16 unicodeChar1 = (U_16)J9JAVAARRAYOFBYTE_LOAD(_currentThread, bytes, i);
+			// 			printf("%lc", unicodeChar1);
+			// 			i += 1;
+			// 			nameLength -= 1;
+			// 		}
+			// 		printf("\n");
+			// 	}
 
-				J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
-				J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
-				J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
+			// 	J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
+			// 	J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
+			// 	J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
 
 
-				J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
-				J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
-				J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-			}
+			// 	J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
+			// 	J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
+			// 	J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
+			// }
 
 			
 		}
