@@ -818,25 +818,17 @@ done:
 	VMINLINE J9Method*
 	j2iVirtualMethod(REGISTER_ARGS_LIST, j9object_t receiver, UDATA interfaceVTableIndex)
 	{
-		printf("in j2i virtual: interfaceVaTableIndex: %lu\n", interfaceVTableIndex);
 		J9Method *method = NULL;
 		void* const jitReturnAddress = VM_JITInterface::peekJITReturnAddress(_currentThread, _sp);
 		UDATA jitVTableOffset = VM_JITInterface::jitVTableIndex(jitReturnAddress, interfaceVTableIndex);
 
 		if (J9_ARE_ANY_BITS_SET(jitVTableOffset, J9_VTABLE_INDEX_DIRECT_METHOD_FLAG)) {
-			printf("vtable index is direct method\n");
-			printf("jitVTableOffset is %lu\n", jitVTableOffset);
 			/* Nestmates: vtable index is really a J9Method to directly invoke */
 			method = (J9Method*)(jitVTableOffset & ~J9_VTABLE_INDEX_DIRECT_METHOD_FLAG);
-			printf("method is %p\n", method);
 		} else {
-			printf("jitVTableOffset is %lu\n", jitVTableOffset);
 			UDATA vTableOffset = sizeof(J9Class) - jitVTableOffset;
-			printf("vTableOffset is %lu\n", vTableOffset);
 			J9Class *clazz = J9OBJECT_CLAZZ(_currentThread, receiver);
-			printf("clazz is %p\n", clazz);
 			method = *(J9Method**)((UDATA)clazz + vTableOffset);
-			printf("method is %p\n", method);
 		}
 		return method;
 	}
@@ -9749,7 +9741,6 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		printf("lts: sendMethod: %p\n", _sendMethod);
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
@@ -9758,7 +9749,6 @@ done:
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
 				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-				printf("lts non static vmindex: %d\n", vmindex);
 				if (J9_UNEXPECTED(NULL == mhReceiver)) {
 					goto throw_npe;
 				}
@@ -9768,28 +9758,19 @@ done:
 			J9ConstantPool *ramConstantPool = NULL;
 			if (getenv("doNew") != NULL) {
 				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-				printf("lts: vmindex: %d\n", vmindex);
 				char * incSp = getenv("decSP");
 				if (incSp != NULL)
 					_sp -= 1;
 
 				j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberNameObject);
-				printf("found clazz: %p\n", clazz);
 				j9object_t nameString = J9VMJAVALANGINVOKEMEMBERNAME_NAME(_currentThread, memberNameObject);
-				printf("found nameString: %p\n", nameString);
 				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-				printf("found methodType: %p\n", methodType);
 				j9object_t returnTypeClass = J9VMJAVALANGINVOKEMETHODTYPE_RTYPE(_currentThread, methodType);
-				printf("found returnTypeClass: %p\n", returnTypeClass);
 				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
-				printf("found paramArray: %p\n", paramArray);
 				//j9object_t paramArray = J9JAVAARRAYOFOBJECT_LOAD(_currentThread, srcArray, i + src_pos);
 				j9object_t bytes = J9VMJAVALANGSTRING_VALUE(_currentThread, nameString);
-				printf("found bytes: %p\n", bytes);
 				UDATA nameLength = J9VMJAVALANGSTRING_LENGTH(_currentThread, nameString);
-				printf("name length: %d\n", nameLength);
 				bool compressed = IS_STRING_COMPRESSED(_currentThread, nameString);
-				printf("name string (length %d) is %scompressed\n",  nameLength, compressed ? "" : "not");
 				int i = 0;
 				if (compressed) {
 					while (0 < nameLength) {
@@ -9812,30 +9793,14 @@ done:
 				J9Class* returnTypeClazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, returnTypeClass);
 				J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(returnTypeClazz);
 				J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(returnTypeClazz->romClass));
-				printf("mhReceiver return type clas name: %.*s\n", J9UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
 
 
 				J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
 				J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
 				J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-				printf("mhReceiver class name: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
-				printf("sendMethod: %p\n", _sendMethod);
 			}
 
-			if (getenv("changeTarget") != NULL) {
-				_sendMethod->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
-			}
-			if (getenv("addConstPool") != NULL) {
-				_sendMethod->constantPool = ramConstantPool;
-			}
-			if (getenv("returnEarlyLTS") != NULL) {
-				char * coffset = getenv("offset");
-				UDATA offset = coffset != NULL ? atoi(coffset) : 0;
-				_sp += offset;
-				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
-				rc = j2iTransition(REGISTER_ARGS, true);
-				return rc;
-			}
+			
 		}
 
 		if (fromJIT) {
@@ -9868,8 +9833,6 @@ done:
 				stackOffset = 2;
 			}
 
-			char * coffset = getenv("offset2");
-			int offset = coffset != NULL ? atoi(coffset) : 0;
 			/* On x86-32 we do not want to preserve the MemberName object since this would cause it to
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
@@ -9953,7 +9916,6 @@ throw_npe:
 		 * C and stored it in vmindex. The receiver is always an instance of C (or a subclass).
 		 */
 		UDATA vTableOffset = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-		printf("ltv: vTableOffset: %lu\n", vTableOffset);
 		J9Class *receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
 
@@ -9973,7 +9935,6 @@ throw_npe:
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
  
 		} else {
-			printf("ltv: default conflict method\n");
 		}
 
 		if (fromJIT) {
@@ -10047,7 +10008,6 @@ throw_npe:
 		 * of Object, it will go through linkToVirtual() instead.
 		 */
 		iTableIndex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
-		printf("lti: itableoffset: %lu\n", iTableIndex);
 		interfaceClass = J9_CLASS_FROM_METHOD(method);
 		vTableOffset = 0;
 		iTable = receiverClass->lastITable;
