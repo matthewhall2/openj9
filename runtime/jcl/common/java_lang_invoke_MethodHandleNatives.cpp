@@ -1184,7 +1184,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							 */
 							vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + 1);
 							vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
-							vm->initialMethods.throwDefaultConflict->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
+							vm->initialMethods.throwDefaultConflict->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 							vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)defaultMethod | J9_STARTPC_NOT_TRANSLATED);
 							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 						} else {
