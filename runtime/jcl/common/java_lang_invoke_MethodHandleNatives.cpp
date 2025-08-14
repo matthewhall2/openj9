@@ -1154,14 +1154,14 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						lookupOptions |= J9_LOOK_VIRTUAL;
 						break;
 				}
-
+				lookupOptions |= J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS;
 				/* Check if signature polymorphic native calls */
 				J9Method *method = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions);
 
 				/* Check for resolution exception */
 				if (VM_VMHelpers::exceptionPending(currentThread)) {
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
-					if ((ref_kind == MH_REF_INVOKESPECIAL) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
+					if ((exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
 						/* Attempt to lookup method without checking for conflict.
@@ -1178,7 +1178,14 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 							new_flags = flags;
 
-							/* Load special sendTarget to throw the exception during invocation */
+							J9Method *defaultMethod = (J9Method*)(method & ~DEFAULT_CONFLICT_METHOD_ID_TAG);
+							/* Load special sendTarget to throw the exception during invocation
+							 * Change fields to match whats done in createramclass copyvtable to throw error properly
+							 */
+							vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(defaultMethod) + 1);
+							vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
+							vm->initialMethods.throwDefaultConflict->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT);
+							vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)defaultMethod | J9_STARTPC_NOT_TRANSLATED);
 							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
 						} else {
 							goto done;

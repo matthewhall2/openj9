@@ -664,28 +664,7 @@ done:
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
-		if (isMethodDefaultConflictForMethodHandle && getenv("dontUseNativePath") != NULL) {
-			if (getenv("setEA") != NULL)
-				_arg0EA = NULL;
-
-			if (getenv("setStackFrameFlags") != NULL)
-				_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
-
-			if (getenv("buildJITFrame") != NULL)
-				buildJITResolveFrame(REGISTER_ARGS);
-			else if (getenv("buildMethodFrame") != NULL)
-				buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
-
-			if (getenv("setLiterals") != NULL)
-				_literals = (J9Method*)jitReturnAddress;
-			if (getenv("restoreJITAddress") != NULL)
-				VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, jitReturnAddress);
-
-			return rc;
-		}
-
-		if (((getenv("followNative") != NULL) && isMethodDefaultConflictForMethodHandle) || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
-			printf("native or abstract\n");
+		if (isMethodDefaultConflictForMethodHandle || J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)) {
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 
@@ -694,21 +673,10 @@ done:
 			_arg0EA = NULL;
 #else /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */
 			/* Fixed frame - remember the SP so it can be reset upon return from the native */
-			if ((isMethodDefaultConflictForMethodHandle && (getenv("dontSetEA") == NULL)) || !isMethodDefaultConflictForMethodHandle)
-				_arg0EA = _sp;
+			_arg0EA = _sp;
 #endif /* J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP */ 
 			/* Set the flag indicating that the caller was the JIT */
 			_currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME;
-			if (isMethodDefaultConflictForMethodHandle) {
-				printf("j2i; def con methodhandle\n");
-				if (getenv("buildJITFrame") != NULL)
-					buildJITResolveFrame(REGISTER_ARGS);
-				else if (getenv("buildMethodFrame") != NULL)
-					buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
-
-				if (getenv("returnEarly"))
-					return rc;
-			}
 			/* If a stop request has been posted, handle it instead of running the native */
 			if (J9_ARE_ANY_BITS_SET(_currentThread->publicFlags, J9_PUBLIC_FLAGS_STOP)) {
 				printf("exception pending\n");
