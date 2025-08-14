@@ -1178,7 +1178,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 							new_flags = flags;
 
-							J9Method *defaultMethod = (J9Method*)(method & ~DEFAULT_CONFLICT_METHOD_ID_TAG);
+							J9Method *defaultMethod = method;
 							/* Load special sendTarget to throw the exception during invocation
 							 * Change fields to match whats done in createramclass copyvtable to throw error properly
 							 */
