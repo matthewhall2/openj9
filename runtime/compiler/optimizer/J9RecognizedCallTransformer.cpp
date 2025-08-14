@@ -1561,7 +1561,9 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
       int32_t lastChildIndex = node->getNumChildren() - 1;
       TR::Node *memberName = node->getChild(lastChildIndex);
-
+      /* todo: keep memberName as child 0 and shift other children right
+       * will be removed in tree lowering after writing MN pointer to floatTemp 0
+       */
       for (int32_t i = lastChildIndex; i > 0; i--)
          node->setChild(i, node->getChild(i - 1));
 

@@ -444,6 +444,16 @@ retry:
 		return bp;
 	}
 
+	VMINLINE UDATA*
+	buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
+	{
+		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
+		*--_sp = (UDATA)method;
+		// default conflict method has no args
+		_arg0EA = bp;
+		return bp;
+	}
+
 	VMINLINE UDATA
 	jitStackFrameFlags(REGISTER_ARGS_LIST, UDATA constantFlags)
 	{
@@ -635,13 +645,19 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
-
-		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
-			|| (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress))
+		bool isMethodHandleDefaultCondflict = false;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+		isMethodHandleDefaultCondflict = _sendMethod == _vm->initialMethods.throwDefaultConflict;
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+		if ((J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress))
+			|| isMethodHandleDefaultCondflict
+			|| J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
 		) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			// only MethhodHandle default conflicts are a potential issue
+			// it is fine to set the pc for non-MethodHandle default conflicts
+			if (!isMethodHandleDefaultCondflict)
+				_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -661,6 +677,7 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
+			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
@@ -9691,13 +9708,14 @@ done:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
+		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
+		bool defaultConflict = _currentThread->javaVM->initialMethods.throwDefaultConflict == _sendMethod;
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
 			goto throw_npe;
 		}
 
-		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-
-		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
+		
+		if (!defaultConflict) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
 
@@ -9707,11 +9725,17 @@ done:
 					goto throw_npe;
 				}
 			}
+		} else {
+			printf("def con found\n");
+			// we want the MemberName object on the stack for error throwing
+			_sp--;
 		}
 
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
-			_sp -= 1;
+			if (!defaultConflict) {
+				_sp -= 1;
+			}
 			UDATA stackOffset = 1;
 
 			/* The JIT stores the parameter slot count of the call in floatTemp1 for the unresolved case.
@@ -9735,6 +9759,7 @@ done:
 			 *		_sp[1] = Argument ...
 			 */
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
+				printf("float temp: %ld (def con: %d)\n", (IDATA)_currentThread->floatTemp1, defaultConflict);
 				stackOffset = 2;
 			}
 
@@ -9742,6 +9767,7 @@ done:
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
 			 */
+			if (!defaultConflict) {
 #if (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64))
 			_sp += stackOffset;
 #else /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
@@ -9749,7 +9775,20 @@ done:
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
+			}
+			if (defaultConflict) {
+				// remove appendix but keep MN at sp
+				if (stackOffset == 2) {
+					memmove(_sp + 1, _sp + 2, methodArgCount * sizeof(UDATA));
+				}
+				printf("float temp is: %lu\n", (IDATA)_currentThread->floatTemp1);
+				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
 
+				UDATA count =  J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
+				printf("arg count in lts: %lu\n", count);
+				_currentThread->floatTemp1 = (void*)count;
+			}
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
@@ -10027,17 +10066,16 @@ done:
 	}
 #endif /* JAVA_SPEC_VERSION >= 22 */
 
-	VMINLINE VM_BytecodeAction
+VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
-		/* Load the conflicting method and error message from this special target */
-		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
-		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-		return GOTO_THROW_CURRENT_EXCEPTION;
+		return  GOTO_THROW_CURRENT_EXCEPTION;
 	}
+
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
 	VMINLINE j9object_t
@@ -11374,7 +11412,7 @@ runMethod: {
 JUMP_TARGET(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE):
 	PERFORM_ACTION(linkToNative(REGISTER_ARGS));
 #endif /* JAVA_SPEC_VERSION >= 22 */
-	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT):
+JUMP_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT):
 		PERFORM_ACTION(throwDefaultConflictForMemberName(REGISTER_ARGS));
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 #if JAVA_SPEC_VERSION >= 16
