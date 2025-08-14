@@ -9748,7 +9748,6 @@ done:
 
 			if (J9_ARE_NO_BITS_SET(romMethod->modifiers, J9AccStatic)) {
 				j9object_t mhReceiver = ((j9object_t *)_sp)[methodArgCount - 1];
-				UDATA vmindex = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
 				if (J9_UNEXPECTED(NULL == mhReceiver)) {
 					goto throw_npe;
 				}
