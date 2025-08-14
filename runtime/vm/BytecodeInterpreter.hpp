@@ -1813,7 +1813,7 @@ obj:
 		printf("arg count is %d\n", findMethodArgCountFromMemberName(REGISTER_ARGS, memberNameObject));
 		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
-		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, _sendMethod, memberNameObject);
+		//setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, _sendMethod, memberNameObject);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		return  GOTO_THROW_CURRENT_EXCEPTION;
 	}
@@ -10179,27 +10179,13 @@ done:
 	VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
-		printf("in throwDefaultConflictForMemberName\n");
-		if (getenv("useOld") != NULL) {
+		if (getenv("useNew") == NULL) {
 			/* Load the conflicting method and error message from this special target */
-			if (getenv("buildSpecialFrame") != NULL) {
-				bool useZeroFlag = getenv("iseZeroFlag") != NULL;
-				buildGenericSpecialStackFrame(REGISTER_ARGS, jitStackFrameFlags(REGISTER_ARGS, useZeroFlag ? 0 : J9_SSF_JIT_NATIVE_TRANSITION_FRAME));
-				printf("generic special frame built\n");
-			} else {
-				bool useZeroFlag = getenv("iseZeroFlag") != NULL;
-				
-				buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, jitStackFrameFlags(REGISTER_ARGS, useZeroFlag ? 0 : J9_SSF_METHOD_ENTRY), false);
-				printf("special frame built\n");
-			}
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 			updateVMStruct(REGISTER_ARGS);
-			printf("vm struct updated\n");
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-			printf("exception set\n");
 			VMStructHasBeenUpdated(REGISTER_ARGS);
-			printf("stuff restored\n");
 			restoreGenericSpecialStackFrame(REGISTER_ARGS);
-			printf("frame restored\n");
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		} else {
 			updateVMStruct(REGISTER_ARGS);
