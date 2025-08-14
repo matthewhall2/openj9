@@ -658,7 +658,7 @@ done:
 		bool isMethodDefaultConflictForMethodHandle = false;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		isMethodDefaultConflictForMethodHandle = J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress);
-		
+		isMethodDefaultConflictForMethodHandle ||= J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress);
 		if (isMethodDefaultConflictForMethodHandle) {
 			printf("found default conflict for method handle\n");
 		}
