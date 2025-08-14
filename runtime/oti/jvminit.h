@@ -476,6 +476,9 @@ enum INIT_STAGE {
 /* Option to toggle on/off the feature to yield pinned virtual threads. */
 #define VMOPT_XXYIELDPINNEDVIRTUALTHREADS "-XX:+YieldPinnedVirtualThreads"
 #define VMOPT_XXNOYIELDPINNEDVIRTUALTHREADS "-XX:-YieldPinnedVirtualThreads"
+
+/* Option to set timed wait on unblocker thread. */
+#define VMOPT_XXUNBLOCKERTHREADWAITTIME_EQUALS "-XX:UnblockerThreadWaitTime="
 #endif /* JAVA_SPEC_VERSION >= 24 */
 
 /* Option to turn on exception on synchronization on instances of value-based classes */
@@ -595,6 +598,9 @@ enum INIT_STAGE {
 #define VMOPT_XXNOFLIGHTRECORDER "-XX:-FlightRecorder"
 
 #define VMOPT_XXSTARTFLIGHTRECORDING "-XX:StartFlightRecording"
+#define VMOPT_XXSTARTOPENJ9EXPERIMENTALFLIGHTRECORDING "-XX:StartOpenJ9ExperimentalFlightRecording"
+#define VMOPT_XXSTARTOPENJ9EXPERIMENTALFLIGHTRECORDING_COLON "-XX:StartOpenJ9ExperimentalFlightRecording:"
+#define VMOPT_XXSTARTOPENJ9EXPERIMENTALFLIGHTRECORDING_EQUALS "-XX:StartOpenJ9ExperimentalFlightRecording="
 
 #define VMOPT_XXCONTINUATIONCACHE "-XX:ContinuationCache:"
 
