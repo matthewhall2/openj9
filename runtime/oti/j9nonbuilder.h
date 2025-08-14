@@ -6487,6 +6487,8 @@ typedef struct J9JavaVM {
 	omrthread_monitor_t memberNameListsMutex;
 	/* Pool for allocating J9MemberNameListNode. */
 	struct J9Pool *memberNameListNodePool;
+	/* Protects access globally to initialMethods.defaultConflict */
+	omrthread_monitor_t defaultConflictMutex;
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 #if defined(J9VM_OPT_JFR)
 	JFRState jfrState;

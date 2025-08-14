@@ -1028,6 +1028,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 		jint new_flags = 0;
 		j9object_t new_clazz = NULL;
 
+		// may need lock if resolved method is a default conflict method
+		bool needsLock = false;
+
 		Trc_JCL_java_lang_invoke_MethodHandleNatives_resolve_Data(env, membernameObject, caller, flags, vmindex, target);
 		/* Check if MemberName is already resolved */
 		if (0 != target) {
@@ -1168,18 +1171,26 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						 * If this failed with error, then throw that error.
 						 * Otherwise exception throw will be defered to the MH.invoke call.
 						 */
-						method = lookupMethod(
+						J9Method *method2 = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
 
 						if (!VM_VMHelpers::exceptionPending(currentThread)) {
+							needsLock = true;
 							/* Set placeholder values for MemberName fields. */
 							vmindex = (jlong)J9VM_RESOLVED_VMINDEX_FOR_DEFAULT_THROW;
 							new_clazz = J9VM_J9CLASS_TO_HEAPCLASS(J9_CLASS_FROM_METHOD(method));
 							new_flags = flags;
 
-							/* Load special sendTarget to throw the exception during invocation */
-							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+							/* Load special sendTarget to throw the exception during invocation
+							 * Change fields to match whats done in createramclass copyvtable to throw error properly
+							 */
+							omrthread_monitor_enter(vm->defaultMethodConflictMonitor);
+							// vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(method) + 1);
+							// vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
+							// vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)method | J9_STARTPC_NOT_TRANSLATED);
+							// target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+							target = JLONG_FROM_POINTER(method);
 						} else {
 							goto done;
 						}
@@ -1383,6 +1394,8 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 					result = vmFuncs->j9jni_createLocalRef(env, membernameObject);
 				}
 			}
+			if (needsLock)
+				omrthread_monitor_exit(vm->defaultMethodConflictMonitor);
 
 			if ((NULL == result)
 #if JAVA_SPEC_VERSION >= 11

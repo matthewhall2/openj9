@@ -979,6 +979,11 @@ freeJavaVM(J9JavaVM * vm)
 		pool_kill(vm->memberNameListNodePool);
 		vm->memberNameListNodePool = NULL;
 	}
+
+	if (NULL != vm->defaultConflictMutex) {
+		omrthread_monitor_destroy(vm->defaultConflictMutex);
+		vm->defaultConflictMutex = NULL;
+	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
 #if defined(J9VM_OPT_CRIU_SUPPORT)
@@ -7435,6 +7440,9 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 
 	if (0 != omrthread_monitor_init_with_name(&vm->memberNameListsMutex, 0, "MemberName lists mutex")) {
+		goto error;
+	}
+	if (0 != omrthread_monitor_init_with_name(&vm->defaultConflictMutex, 0, "MN Default Conflict mutex")) {
 		goto error;
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
