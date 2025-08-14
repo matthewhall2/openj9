@@ -657,10 +657,12 @@ done:
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		bool isMethodDefaultConflictForMethodHandle = false;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
-		isMethodDefaultConflictForMethodHandle = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
+		isMethodDefaultConflictForMethodHandle = J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress);
+		
 		if (isMethodDefaultConflictForMethodHandle) {
 			printf("found default conflict for method handle\n");
 		}
+
 #endif /* J9VM_OPT_OPENJDK_METHODHANDLE */
 		J9ROMMethod *const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 
