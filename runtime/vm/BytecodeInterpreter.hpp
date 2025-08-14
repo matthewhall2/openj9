@@ -1807,6 +1807,7 @@ obj:
 		printf("arg count is %d\n", findMethodArgCountFromMemberName(REGISTER_ARGS, memberNameObject));
 		buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
+		setIncompatibleClassChangeErrorForDefaultConflict(_currentThread, _sendMethod);
 		//setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, _sendMethod, memberNameObject);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		return  GOTO_THROW_CURRENT_EXCEPTION;
