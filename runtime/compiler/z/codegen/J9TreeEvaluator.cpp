@@ -11946,7 +11946,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // interface testing
    // load class flags
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
    generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
                                     generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
    // load test flag
@@ -11959,7 +11959,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
    generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagReg, J9AccClassArray);
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
    generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
                                     generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flagReg);
@@ -11970,10 +11970,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/runtime/interfaceArray", comp->signature()), 1, TR::DebugCounter::Undetermined);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
 
-   int32_t flags = J9AccClassArray;
+   flags = J9AccClassArray;
    // interface testing
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
    generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
                                     generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
    generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
