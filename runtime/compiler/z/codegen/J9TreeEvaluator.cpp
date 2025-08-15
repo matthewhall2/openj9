@@ -11918,8 +11918,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
       if ((NULL != fromClassSymRef) && !fromClassSymRef->isClassInterface(comp))
          {
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/BothAtCompile", comp->signature()), 1, TR::DebugCounter::Undetermined);
          if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth)
             {
+            cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/BothAtCompile/FastFail", comp->signature()), 1, TR::DebugCounter::Undetermined);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
             if (debugObj)
                {
@@ -11929,6 +11931,60 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             }
          }
       }
+   
+   TR::Register *scratchReg = srm->findOrCreateScratchRegister();
+   TR::Register *flagReg = srm->findOrCreateScratchRegister();
+
+   TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notInterfaceLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notArrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *interfaceArrayLabel = generateLabelSymbol(cg);
+
+
+   int32_t flags = J9AccInterface;
+   // interface testing
+   // load class flags
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
+   // load test flag
+   generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flagReg);
+   // not bits set
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notInterfaceLabel);
+   // interface
+   // load again
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+   generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagReg, J9AccClassArray);
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flagReg);
+   // 
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, interfaceArrayLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/runtime/interface", comp->signature()), 1, TR::DebugCounter::Undetermined);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceArrayLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/runtime/interfaceArray", comp->signature()), 1, TR::DebugCounter::Undetermined);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
+
+   int32_t flags = J9AccClassArray;
+   // interface testing
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
+   generateRILInstruction(cg, TR::InstOpCode::IILF, node, flagReg, flags);
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flagReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notArrayLabel);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, arrayLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/runtime/array", comp->signature()), 1, TR::DebugCounter::Undetermined);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notArrayLabel);
+
+   srm->reclaimScratchRegister(scratchReg);      
+   srm->reclaimScratchRegister(flagReg);
 
    if (!fastFail)
       {
@@ -11949,7 +12005,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(castClassCacheReg);
          }
-
+      
       // superclass test
       if((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp))
          {
