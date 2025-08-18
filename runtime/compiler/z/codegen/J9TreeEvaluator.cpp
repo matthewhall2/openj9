@@ -11861,6 +11861,70 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
+static void genTypeCounters(TR::CodeGenerator *cg, TR::Node *node, const char *counterName, TR_S390ScratchRegisterManager *srm, TR::Register *classReg)
+   {
+   TR::Compilation *comp = cg->comp();
+   TR::Register *scratchReg = srm->findOrCreateScratchRegister();
+   TR::Register *tempReg = srm->findOrCreateScratchRegister();
+
+   TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notInterfaceLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notArrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *interfaceArrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *doneCountingLabel = generateLabelSymbol(cg);
+
+   // toClass
+   int32_t flags = J9AccInterface;
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
+   // interface testing
+   // load class flags
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
+   // load test flag
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
+   // not bits set
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notInterfaceLabel);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
+
+
+   flags = J9AccClassArray | J9AccClassRAMArray;
+   // interface testing
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
+                              generateS390MemoryReference(classReg, offsetof(J9Class, romClass), cg));
+   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
+                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
+   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notArrayLabel);
+
+   // check if interface
+   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, interfaceArrayLabel);
+   // only array
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/%s/array", counterName), 1, TR::DebugCounter::Undetermined);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneCountingLabel);
+   // interface array
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceArrayLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/%s/interfaceArray", counterName), 1, TR::DebugCounter::Undetermined);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneCountingLabel);
+
+   // not array
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notArrayLabel);
+   // check if interface
+   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
+   // done if not interace
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, doneCountingLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/%s/interface", counterName), 1, TR::DebugCounter::Undetermined);
+
+   srm->reclaimScratchRegister(scratchReg);      
+   srm->reclaimScratchRegister(tempReg);
+
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneCountingLabel);
+   }
+
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::Compilation *comp = cg->comp();
@@ -11932,66 +11996,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          }
       }
    
-   TR::Register *scratchReg = srm->findOrCreateScratchRegister();
-   TR::Register *tempReg = srm->findOrCreateScratchRegister();
-
-   TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notInterfaceLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *notArrayLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *interfaceArrayLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *doneCountingLabel = generateLabelSymbol(cg);
-
-
-   int32_t flags = J9AccInterface;
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
-   // interface testing
-   // load class flags
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
-   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
-                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
-   // load test flag
-   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
-   // not bits set
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notInterfaceLabel);
-   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
-
-
-   flags = J9AccClassArray | J9AccClassRAMArray;
-   // interface testing
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
-                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
-   generateRXInstruction(cg, TR::InstOpCode::L, node, scratchReg,
-                                    generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
-   generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notArrayLabel);
-
-   // check if interface
-   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, interfaceArrayLabel);
-   // only array
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/runtime/array"), 1, TR::DebugCounter::Undetermined);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneCountingLabel);
-   // interface array
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceArrayLabel);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/runtime/interfaceArray"), 1, TR::DebugCounter::Undetermined);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneCountingLabel);
-
-   // not array
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notArrayLabel);
-   // check if interface
-   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
-   // done if not interace
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, doneCountingLabel);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/runtime/interface"), 1, TR::DebugCounter::Undetermined);
-
-   srm->reclaimScratchRegister(scratchReg);      
-   srm->reclaimScratchRegister(tempReg);
-
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneCountingLabel);
-
+   genTypeCounters(cg, node, "toClass", srm, toClassReg);
+   genTypeCounters(cg, node, "fromClass", srm, fromClassReg);
 
    if (!fastFail)
       {
