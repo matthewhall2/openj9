@@ -11955,7 +11955,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
    // not bits set
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notInterfaceLabel);
-   generateRILInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 1);
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
 
 
