@@ -11899,7 +11899,7 @@ static void genTypeCounters(TR::CodeGenerator *cg, TR::Node *node, const char *c
                                     generateS390MemoryReference(scratchReg, offsetof(J9ROMClass, modifiers), cg));
    generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notArrayLabel);
-
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/%s/sanityArray", counterName), 1, TR::DebugCounter::Undetermined);
    // check if interface
    generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, interfaceArrayLabel);
