@@ -11969,7 +11969,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, notArrayLabel);
 
    // check if interface
-   generateRRInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
+   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, interfaceArrayLabel);
    // only array
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/runtime/array"), 1, TR::DebugCounter::Undetermined);
@@ -11982,7 +11982,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    // not array
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notArrayLabel);
    // check if interface
-   generateRRInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
+   generateRIInstruction(cg, TR::InstOpCode::CHI, node, tempReg, 1);
    // done if not interace
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, doneCountingLabel);
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/runtime/interface"), 1, TR::DebugCounter::Undetermined);
