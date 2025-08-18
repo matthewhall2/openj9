@@ -11944,7 +11944,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
 
    int32_t flags = J9AccInterface;
-   generateRILInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
+   generateRIInstruction(cg, TR::InstOpCode::LHI, node, tempReg, 0);
    // interface testing
    // load class flags
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
