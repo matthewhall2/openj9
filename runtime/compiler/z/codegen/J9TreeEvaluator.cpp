@@ -11959,7 +11959,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceLabel);
 
 
-   flags = J9AccClassArray;
+   flags = J9AccClassArray | J9AccClassRAMArray;
    // interface testing
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, scratchReg,
                               generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
