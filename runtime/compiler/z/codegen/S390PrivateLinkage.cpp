@@ -2621,11 +2621,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg);
-      cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+      cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interpreterCallLabel);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
       cg()->addSnippet(snippet);
