@@ -11863,6 +11863,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
    {
+   TR::Compilation *comp = cg->comp();
    TR_Debug * debugObj = cg->getDebug();
    bool traceCG = comp->getOption(TR_TraceCG)
    TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
