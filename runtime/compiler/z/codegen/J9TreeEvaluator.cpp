@@ -11865,7 +11865,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    {
    TR::Compilation *comp = cg->comp();
    TR_Debug * debugObj = cg->getDebug();
-   bool traceCG = comp->getOption(TR_TraceCG)
+   bool traceCG = comp->getOption(TR_TraceCG);
    TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
 
    TR::LabelSymbol *lastITableSuccessLabel = NULL;
