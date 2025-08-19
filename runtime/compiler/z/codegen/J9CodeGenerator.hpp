@@ -114,6 +114,7 @@ public:
 
    bool supportsTrapsInTMRegion();
    bool supportsInliningOfIsAssignableFrom();
+   bool upportsNonHelper(TR::SymbolReferenceTable::CommonNonhelperSymbol symbol);
 
    using J9::CodeGenerator::addAllocatedRegister;
    void addAllocatedRegister(TR_PseudoRegister * temp);
