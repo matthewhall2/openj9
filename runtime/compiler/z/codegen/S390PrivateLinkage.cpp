@@ -2618,20 +2618,17 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, getReturnAddressRegister(), j9MethodReg, scratchReg);
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
-      TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
-         comp()->getSymRefTab(), snippetLabel);
+      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg);
       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interpreterCallLabel);
-      TR::Register *resultReg = TR::TreeEvaluator::performCall(callNode, false, cg);
+      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
       cg()->addSnippet(snippet);
-      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       cg()->stopUsingRegister(scratchReg);
       }
