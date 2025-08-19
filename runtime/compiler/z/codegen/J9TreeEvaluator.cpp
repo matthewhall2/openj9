@@ -11864,6 +11864,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
    {
    TR_Debug * debugObj = cg->getDebug();
+   bool traceCG = comp->getOption(TR_TraceCG)
    TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
 
    TR::LabelSymbol *lastITableSuccessLabel = NULL;
@@ -11897,7 +11898,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
 
    TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
-   if (debugObj)
+   if (debugObj && traceCG)
          debugObj->addInstructionComment(cursor, "--> Start of iTable walk");
 
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
@@ -11908,9 +11909,9 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
-   if (debugObj)
+   if (debugObj && traceCG)
       debugObj->addInstructionComment(cursor, "to start of loop");
-   
+
    if (debugObj)
       {
       cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, lastITableSuccessLabel);
@@ -12032,14 +12033,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/SuperclassTest/Fail"), 1, TR::DebugCounter::Undetermined);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
-      else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp))
+      // we don't generate ITable test if we know we don't have an interface
+      if ((classDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
          {
-         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, ITableTestLabel);
+         generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
+         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
          }
-
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
-      genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
-   }
+      }
 
    srm->stopUsingRegisters();
    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
