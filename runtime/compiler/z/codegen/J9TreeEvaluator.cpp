@@ -11894,7 +11894,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    }
 
    // Itable Test
-   *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
 
    TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
