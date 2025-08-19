@@ -12035,7 +12035,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
       // we don't generate ITable test if we know we don't have an interface
-      if ((classDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
+      if ((toClassDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
          {
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
          genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
