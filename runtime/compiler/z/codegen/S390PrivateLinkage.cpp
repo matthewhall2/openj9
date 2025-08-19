@@ -2615,8 +2615,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
-      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, getRealRegister(getReturnAddressRegister()), j9MethodReg, scratchReg);
-      
+      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, getRealRegister(getReturnAddressRegister()), scratchReg);
+
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
 
