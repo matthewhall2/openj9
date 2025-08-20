@@ -11867,6 +11867,8 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    TR_Debug * debugObj = cg->getDebug();
    bool traceCG = comp->getOption(TR_TraceCG);
    TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startWalkLabel = generateLabelSymbol(cg);
+
 
    TR::LabelSymbol *lastITableSuccessLabel = NULL;
    TR::LabelSymbol *ITableSuccessLabel = NULL;
@@ -11884,7 +11886,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
    generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, failLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, startWalkLabel);
     generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
    if (debugObj) {
@@ -11894,6 +11896,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    }
 
    // Itable Test
+   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startWalkLabel);
    cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
 
@@ -12039,7 +12042,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       if ((toClassDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
          {
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
-         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
+         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, helperCallLabel);
          }
       }
 
