@@ -226,9 +226,20 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          {
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
-         case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
             linkageRegChildIndex = firstArgumentChild;
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
+         case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+            linkageRegChildIndex = 1;
+            firstArgumentChild = 3;
+            receiverChildIndex = 2;
+
+            TR::Regsiter reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
+            dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+
+            eaxRegister = pushThis(callNode->getChild(receiverChildIndex));
+            thisChild   = callNode->getChild(receiverChildIndex);
+            argSize += 4;
+            cg()->decReferenceCount(allNode->getChild(linkageRegChildIndex));
          }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
