@@ -1187,11 +1187,11 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							 * Change fields to match whats done in createramclass copyvtable to throw error properly
 							 */
 							omrthread_monitor_enter(vm->defaultConflictMutex);
-							// vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(method) + 1);
-							// vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
-							// vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)method | J9_STARTPC_NOT_TRANSLATED);
-							// target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
-							target = JLONG_FROM_POINTER(method);
+							vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(method) + 1);
+							vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
+							vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)method | J9_STARTPC_NOT_TRANSLATED);
+							target = JLONG_FROM_POINTER(vm->initialMethods.throwDefaultConflict);
+							//target = JLONG_FROM_POINTER(method);
 						} else {
 							goto done;
 						}
