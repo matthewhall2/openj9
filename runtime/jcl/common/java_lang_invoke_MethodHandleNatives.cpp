@@ -1157,6 +1157,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 						lookupOptions |= J9_LOOK_VIRTUAL;
 						break;
 				}
+				if (getenv("noFindVirtual") != NULL) {
+					lookupOptions &= ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS;
+				}
 
 				/* Check if signature polymorphic native calls */
 				J9Method *method = lookupMethod(currentThread, resolvedClass, name, signature, callerClass, lookupOptions);
