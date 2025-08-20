@@ -1165,13 +1165,14 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 				if (VM_VMHelpers::exceptionPending(currentThread)) {
 					J9Class *exceptionClass = J9OBJECT_CLAZZ(currentThread, currentThread->currentException);
 					if ((ref_kind == MH_REF_INVOKESPECIAL) && (exceptionClass == J9VMJAVALANGINCOMPATIBLECLASSCHANGEERROR(vm))) {
+						printf("method when we have conflixt: %p\n", method);
 						/* Special handling for default method conflict, defer the exception throw until invocation. */
 						VM_VMHelpers::clearException(currentThread);
 						/* Attempt to lookup method without checking for conflict.
 						 * If this failed with error, then throw that error.
 						 * Otherwise exception throw will be defered to the MH.invoke call.
 						 */
-						J9Method *method2 = lookupMethod(
+						method = lookupMethod(
 							currentThread, resolvedClass, name, signature, callerClass,
 							(lookupOptions & ~J9_LOOK_HANDLE_DEFAULT_METHOD_CONFLICTS));
 
