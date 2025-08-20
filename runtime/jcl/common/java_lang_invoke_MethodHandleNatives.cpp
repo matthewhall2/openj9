@@ -1185,7 +1185,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							/* Load special sendTarget to throw the exception during invocation
 							 * Change fields to match whats done in createramclass copyvtable to throw error properly
 							 */
-							omrthread_monitor_enter(vm->defaultMethodConflictMonitor);
+							omrthread_monitor_enter(vm->defaultConflictMutex);
 							// vm->initialMethods.throwDefaultConflict->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(method) + 1);
 							// vm->initialMethods.throwDefaultConflict->constantPool = callerClass->ramConstantPool;
 							// vm->initialMethods.throwDefaultConflict->extra = (void *)((UDATA)method | J9_STARTPC_NOT_TRANSLATED);
@@ -1395,7 +1395,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 				}
 			}
 			if (needsLock)
-				omrthread_monitor_exit(vm->defaultMethodConflictMonitor);
+				omrthread_monitor_exit(vm->defaultConflictMutex);
 
 			if ((NULL == result)
 #if JAVA_SPEC_VERSION >= 11
