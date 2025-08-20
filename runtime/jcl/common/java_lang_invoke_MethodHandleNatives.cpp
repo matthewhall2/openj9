@@ -1190,6 +1190,7 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 							method->bytecodes = (U_8*)(J9_ROM_METHOD_FROM_RAM_METHOD(method) + 1);
 							method->constantPool = callerClass->ramConstantPool;
 							method->extra = (void *)((UDATA)method | J9_STARTPC_NOT_TRANSLATED);
+							method->methodRunAddress = J9_BCLOOP_ENCODE_SEND_TARGET(J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT);
 							target = JLONG_FROM_POINTER(method);
 							//target = JLONG_FROM_POINTER(method);
 						} else {
