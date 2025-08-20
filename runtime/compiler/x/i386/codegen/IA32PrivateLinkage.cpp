@@ -239,7 +239,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             eaxRegister = pushThis(callNode->getChild(receiverChildIndex));
             thisChild   = callNode->getChild(receiverChildIndex);
             argSize += 4;
-            cg()->decReferenceCount(allNode->getChild(linkageRegChildIndex));
+            cg()->decReferenceCount(callNode->getChild(linkageRegChildIndex));
          }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
