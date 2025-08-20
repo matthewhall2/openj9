@@ -229,17 +229,22 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             linkageRegChildIndex = firstArgumentChild;
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
          case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+            if (getenv("outOfLoop") != NULL) {
             linkageRegChildIndex = 1;
             firstArgumentChild = 3;
             receiverChildIndex = 2;
 
             TR::Register *reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
-            dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+            dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
 
             eaxRegister = pushThis(callNode->getChild(receiverChildIndex));
             thisChild   = callNode->getChild(receiverChildIndex);
             argSize += 4;
             cg()->decReferenceCount(callNode->getChild(linkageRegChildIndex));
+            } else {
+               linkageRegChildIndex = firstArgumentChild;
+               receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
+            }
          }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
