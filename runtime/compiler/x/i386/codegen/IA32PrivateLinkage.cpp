@@ -233,7 +233,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             firstArgumentChild = 3;
             receiverChildIndex = 2;
 
-            TR::Regsiter reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
+            TR::Register reg = cg()->evaluate(callNode->getChild(linkageRegChildIndex));
             dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
 
             eaxRegister = pushThis(callNode->getChild(receiverChildIndex));
