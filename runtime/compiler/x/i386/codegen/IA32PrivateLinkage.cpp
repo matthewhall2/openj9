@@ -255,7 +255,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             if (i == linkageRegChildIndex)
                {
                reg = cg()->evaluate(child);
-               dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+               dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
                cg()->decReferenceCount(child);
                }
             if (NULL == reg)
