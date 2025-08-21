@@ -9744,6 +9744,7 @@ done:
 			 *		_sp[1] = Argument ...
 			 */
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
+				printf("float temp: %d (def con: %d)\n", (IDATA)_currentThread->floatTemp1, !notDefaultConflict);
 				stackOffset = 2;
 			}
 
@@ -9751,7 +9752,7 @@ done:
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
 			 */
-			if (!notDefaultConflict) {
+			
 #if (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64))
 			_sp += stackOffset;
 #else /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
@@ -9759,6 +9760,12 @@ done:
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
+			if (!notDefaultConflict) {
+				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
+				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
+
+				methodArgCount =  J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
+				_currentThread->floatTemp1 = (void*)methodArgCount;
 			}
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
