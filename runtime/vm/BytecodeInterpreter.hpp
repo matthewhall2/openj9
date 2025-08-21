@@ -9744,7 +9744,7 @@ done:
 			 *		_sp[1] = Argument ...
 			 */
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
-				printf("float temp: %d (def con: %d)\n", (IDATA)_currentThread->floatTemp1, !notDefaultConflict);
+				printf("float temp: %ld (def con: %d)\n", (IDATA)_currentThread->floatTemp1, !notDefaultConflict);
 				stackOffset = 2;
 			}
 
