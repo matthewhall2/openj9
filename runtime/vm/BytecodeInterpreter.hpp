@@ -9712,6 +9712,7 @@ done:
 				}
 			}
 		} else {
+			printf("def con found\n");
 			// we want the MemberName object on the stack for error throwing
 			_sp--;
 		}
