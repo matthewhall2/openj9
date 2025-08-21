@@ -9710,7 +9710,7 @@ done:
 			}
 		} else {
 			// we want the MemberName object on the stack for error throwing
-			//_sp--;
+			_sp--;
 		}
 
 		if (fromJIT) {
@@ -10030,6 +10030,18 @@ done:
 		return rc;
 	}
 #endif /* JAVA_SPEC_VERSION >= 22 */
+
+VMINLINE VM_BytecodeAction
+	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
+	{
+		/* Load the conflicting method and error message from this special target */
+		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		updateVMStruct(REGISTER_ARGS);
+		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		VMStructHasBeenUpdated(REGISTER_ARGS);
+		restoreGenericSpecialStackFrame(REGISTER_ARGS);
+		return GOTO_THROW_CURRENT_EXCEPTION;
+	}
 
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
@@ -10713,6 +10725,8 @@ public:
 #if JAVA_SPEC_VERSION >= 22
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_METHODHANDLE_LINKTONATIVE),
 #endif /* JAVA_SPEC_VERSION >= 22 */
+JUMP_TARGET(J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT):
+		PERFORM_ACTION(throwDefaultConflictForMemberName(REGISTER_ARGS));
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 #if JAVA_SPEC_VERSION >= 16
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_INL_INTERNALDOWNCALLHANDLER_INVOKENATIVE),
