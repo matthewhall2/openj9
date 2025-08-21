@@ -10036,6 +10036,7 @@ VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
+		printf("stack: sp: %p, sp + 1: %p\n", _sp, _sp + 1);
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
 		J9Class *clazz = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, memberNameObject);
 		J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(clazz->romClass));
