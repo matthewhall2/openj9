@@ -10036,6 +10036,12 @@ VMINLINE VM_BytecodeAction
 	throwDefaultConflictForMemberName(REGISTER_ARGS_LIST)
 	{
 		/* Load the conflicting method and error message from this special target */
+		j9object_t memberNameObject = *(j9object_t *)_sp++;
+		J9Class *obj = J9VMJAVALANGOBJECT(memberNameObject);
+		J9ConstantPool *RTypeRamConstantPool = J9_CP_FROM_CLASS(obj);
+		J9UTF8 *rTypeClassString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(obj->romClass));
+		printf("IncompatibleClassChangeError: default method conflict: %.*s\n", J9_UTF8_LENGTH(rTypeClassString), J9UTF8_DATA(rTypeClassString));
+
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
