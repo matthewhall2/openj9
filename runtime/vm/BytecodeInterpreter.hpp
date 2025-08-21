@@ -9696,8 +9696,8 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-
-		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
+		bool notDefaultConflict = J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod);
+		if (notDefaultConflict) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
 
@@ -9707,6 +9707,9 @@ done:
 					goto throw_npe;
 				}
 			}
+		} else {
+			// we want the MemberName object on the stack for error throwing
+			//_sp--;
 		}
 
 		if (fromJIT) {
