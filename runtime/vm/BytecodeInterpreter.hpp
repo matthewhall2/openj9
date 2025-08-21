@@ -9713,7 +9713,6 @@ done:
 			}
 		} else {
 			printf("def con found\n");
-			asm("int3");
 			// we want the MemberName object on the stack for error throwing
 			_sp--;
 		}
