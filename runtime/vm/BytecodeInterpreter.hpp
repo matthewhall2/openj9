@@ -9749,6 +9749,7 @@ done:
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
 			 */
+			if (!notDefaultConflict) {
 #if (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64))
 			_sp += stackOffset;
 #else /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
@@ -9756,7 +9757,7 @@ done:
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
-
+			}
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}
