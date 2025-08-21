@@ -9695,13 +9695,13 @@ done:
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		bool notDefaultConflict = J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod);
+		bool defaultConflict = _currentThread->javaVM->initialMethods.throwDefaultConflict == _sendMethod;
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
 			goto throw_npe;
 		}
 
 		
-		if (notDefaultConflict) {
+		if (!defaultConflict) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
 
@@ -9719,7 +9719,7 @@ done:
 
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
-			if (notDefaultConflict) {
+			if (!defaultConflict) {
 				_sp -= 1;
 			}
 			UDATA stackOffset = 1;
@@ -9761,7 +9761,7 @@ done:
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
-			if (!notDefaultConflict) {
+			if (defaultConflict) {
 				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
 
