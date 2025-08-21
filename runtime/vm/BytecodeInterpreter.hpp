@@ -9764,8 +9764,8 @@ done:
 				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
 
-				U_32 count =  J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
-				print("arg count in lts: %u\n", count);
+				UDATA count =  J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
+				print("arg count in lts: %lu\n", count);
 				_currentThread->floatTemp1 = (void*)count;
 			}
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
