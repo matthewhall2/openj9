@@ -1599,7 +1599,7 @@ VM_MHInterpreter::permuteForPermuteHandle(j9object_t methodHandle)
 		UDATA typeSize = 1;
 		U_32 sourceArgument = (U_32)J9JAVAARRAYOFINT_LOAD(_currentThread, permuteArray, i);
 		/* Determine the size of the argument */
-		J9ECT_LOAD(_currentThread, currentTypeArguments, sourceArgument));
+		J9Class *sourceClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, J9JAVAARRAYOFOBJECT_LOAD(_currentThread, currentTypeArguments, sourceArgument));
 
 		/* Long and doubles always use two stack slots */
 		if ((sourceClass == doubleReflectClass) || (sourceClass == longReflectClass)) {
