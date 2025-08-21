@@ -640,8 +640,10 @@ done:
 			|| _sendMethod == _vm->initialMethods.throwDefaultConflict
 			|| J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
 		) {
+			
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			if (_sendMethod != _vm->initialMethods.throwDefaultConflict)
+				_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
