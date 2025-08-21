@@ -9719,7 +9719,7 @@ done:
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
 			if (notDefaultConflict) {
-				_sp += 1;
+				_sp -= 1;
 			}
 			UDATA stackOffset = 1;
 
