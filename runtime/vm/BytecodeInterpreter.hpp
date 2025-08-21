@@ -10050,7 +10050,7 @@ VMINLINE VM_BytecodeAction
 		/* Load the conflicting method and error message from this special target */
 		printf("stack: sp: %p, sp + 1: %p\n", _sp, _sp + 1);
 		IDATA argCount = (IDATA)_currentThread->floatTemp1;
-		printf("argCount: %u\n", argCount);
+		printf("argCount: %lu\n", argCount);
 		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, *(j9object_t *)_sp[(U_32)argCount-1]);
 
 		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
