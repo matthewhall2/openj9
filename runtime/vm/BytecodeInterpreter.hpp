@@ -10060,7 +10060,7 @@ VMINLINE VM_BytecodeAction
 			printf("def con from jiit\n");
 			IDATA argCount = (IDATA)_currentThread->floatTemp1;
 			printf("argCount: %lu\n", argCount);
-			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, *(j9object_t *)_sp[(U_32)argCount-1]);
+			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, *(j9object_t *)_sp[(U_32)0]);
 
 			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
 			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
