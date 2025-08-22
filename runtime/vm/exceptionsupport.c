@@ -1172,6 +1172,44 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 }
 
 void  
+setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, j9object_t memberName)
+{
+	PORT_ACCESS_FROM_VMC(vmThread);
+	char * msg = NULL;
+	
+	/* J9NLS_VM_DEFAULT_METHOD_CONFLICT=class %2$.*1$s has conflicting defaults for method %4$.*3$s%6$.*5$s */
+	const char * nlsMessage = j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_VM_DEFAULT_METHOD_CONFLICT, NULL);
+	if (nlsMessage != NULL) {
+		/* Fetch defining class using constantPool*/
+		J9Class * currentClass = J9_CLASS_FROM_METHOD(method);
+		/* Fetch ROMMethod as bytecodes at one of default methods */
+		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
+		J9UTF8 * methodNameUTF = J9ROMMETHOD_NAME(romMethod);
+		J9UTF8 * methodSignatureUTF = J9ROMMETHOD_SIGNATURE( romMethod);
+		J9UTF8 * classNameUTF = J9ROMCLASS_CLASSNAME(currentClass->romClass);
+		U_16 classNameLength = J9UTF8_LENGTH(classNameUTF);
+		U_8 * className = J9UTF8_DATA(classNameUTF);
+		U_16 methodNameLength = J9UTF8_LENGTH(methodNameUTF);
+		U_8 * methodName = J9UTF8_DATA(methodNameUTF);
+		U_16 methodSignatureLength = J9UTF8_LENGTH(methodSignatureUTF);
+		U_8 * methodSignature = J9UTF8_DATA(methodSignatureUTF);
+		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
+				classNameLength, className,
+				methodNameLength, methodName,
+				methodSignatureLength, methodSignature);
+		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
+		/* msg NULL check omitted since str_printf accepts NULL (as above) */
+		j9str_printf(msg, msgLen, nlsMessage,
+				classNameLength, className,
+				methodNameLength, methodName,
+				methodSignatureLength, methodSignature);
+	}
+
+	setCurrentExceptionUTF(vmThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, msg);
+	j9mem_free_memory(msg);
+}
+
+void  
 setIllegalAccessErrorNonPublicInvokeInterface(J9VMThread *vmThread, J9Method *method)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);

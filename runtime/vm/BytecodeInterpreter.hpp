@@ -9776,6 +9776,10 @@ done:
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
 			}
 			if (defaultConflict) {
+				// remove appendix but keep MN at sp
+				if (stackOffset == 2) {
+					memmove(_sp + 1, _sp + 2, methodArgCount * sizeof(UDATA));
+				}
 				printf("float temp is: %lu\n", (IDATA)_currentThread->floatTemp1);
 				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
@@ -10066,11 +10070,13 @@ VMINLINE VM_BytecodeAction
 	{
 		/* Load the conflicting method and error message from this special target */
 		printf("stack: sp: %p, sp + 1: %p\n", _sp, _sp + 1);
+		// now we can
+		j9object_t memberName = *(j9object_t *)_sp++;
 		if (_currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME) {
 			printf("def con from jiit\n");
 			IDATA argCount = (IDATA)_currentThread->floatTemp1;
 			printf("argCount: %lu\n", argCount);
-			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, *(j9object_t *)_sp);
+			j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(_currentThread, memberName);
 
 			J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(_currentThread, clazz);
 			printf("j9class: %p, romClass: %p\n", sendMethodClass, sendMethodClass->romClass);
@@ -10079,13 +10085,12 @@ VMINLINE VM_BytecodeAction
 		} else {
 			printf("def con for membername form interp\n");
 		}
-
-		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
-		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
-		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-		return GOTO_THROW_CURRENT_EXCEPTION;
+		return  GOTO_THROW_CURRENT_EXCEPTION;
+		//restoreGenericSpecialStackFrame(REGISTER_ARGS);
 	}
 
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */

@@ -1157,6 +1157,14 @@ setThreadForkOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messa
 void
 setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Method *method);
 
+/**
+* @brief
+* @param vmThread - current J9VMThread
+* @param method - J9Method representing the conflict method.  (See Jazz 62438)
+*/
+void
+setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, j9object_t memberName);
+
 
 /**
 * @brief
