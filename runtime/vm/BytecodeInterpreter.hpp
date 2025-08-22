@@ -449,7 +449,7 @@ retry:
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
-		_arg0EA = bp + (UDATA)_currentThread->floatTemp1;
+		_arg0EA = bp + (getenv("noArgs") != NULL) ? (UDATA)_currentThread->floatTemp1 : 0;
 		return bp;
 	}
 
@@ -10085,11 +10085,11 @@ VMINLINE VM_BytecodeAction
 		} else {
 			printf("def con for membername form interp\n");
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-		updateVMStruct(REGISTER_ARGS);
-		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-		VMStructHasBeenUpdated(REGISTER_ARGS);
-		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-		return GOTO_THROW_CURRENT_EXCEPTION;
+			updateVMStruct(REGISTER_ARGS);
+			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			VMStructHasBeenUpdated(REGISTER_ARGS);
+			restoreGenericSpecialStackFrame(REGISTER_ARGS);
+			return GOTO_THROW_CURRENT_EXCEPTION;
 		}
 // buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 // 		updateVMStruct(REGISTER_ARGS);
