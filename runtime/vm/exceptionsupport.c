@@ -1184,7 +1184,7 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 		//printf("tototal sig length is: %d\n", getMethodSigLength(vmThread, memberName));
 		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, clazz);
 		//J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
-		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
+		//J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 		/* Fetch defining class using constantPool*/
 		/* Fetch ROMMethod as bytecodes at one of default methods */
 		J9UTF8 * classNameUTF = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
