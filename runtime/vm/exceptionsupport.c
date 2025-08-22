@@ -1191,9 +1191,9 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 		U_16 classNameLength = J9UTF8_LENGTH(classNameUTF);
 		U_8 * className = J9UTF8_DATA(classNameUTF);
 		U_16 methodNameLength = 0;
-		U_8 * methodName = "";
-		U_16 methodSignatureLength = "";
-		U_8 * methodSignature = "";
+		U_8 * methodName = (U_8*)"";
+		U_16 methodSignatureLength = 0;
+		U_8 * methodSignature = (U_8*)"";
 		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
 				classNameLength, className,
 				methodNameLength, methodName,
