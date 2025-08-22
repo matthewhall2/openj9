@@ -9767,6 +9767,7 @@ done:
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
 			}
 			if (defaultConflict) {
+				printf("float temp is: %lu\n", (IDATA)_currentThread->floatTemp1);
 				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
 				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
 
@@ -10069,13 +10070,7 @@ VMINLINE VM_BytecodeAction
 		} else {
 			printf("def con for membername form interp\n");
 		}
-		if (_currentThread->jitStackFrameFlags != J9_SSF_JIT_NATIVE_TRANSITION_FRAME && (getenv("useNormalThrow") != NULL)) {
-			buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
-		updateVMStruct(REGISTER_ARGS);
-		setIncompatibleClassChangeErrorForDefaultConflict(_currentThread, _sendMethod);
-		VMStructHasBeenUpdated(REGISTER_ARGS);
-		return  GOTO_THROW_CURRENT_EXCEPTION;
-		}
+
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
