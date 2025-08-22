@@ -743,9 +743,7 @@ walkMethodFrame(J9StackWalkState * walkState)
 			walkObjectPushes(walkState);
 		}
 	}
-	if (walkState->method 
-		&& (walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)
-		) {
+	if (walkState->method) {
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
 		walkState->argCount = J9_ARG_COUNT_FROM_ROM_METHOD(romMethod);
@@ -776,9 +774,7 @@ walkMethodFrame(J9StackWalkState * walkState)
 			}
 		}
 	} else {
-		if (((walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) && (walkState->arg0EA != walkState->bp))
-			&& (walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)
-		) {
+		if ((walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) && (walkState->arg0EA != walkState->bp)) {
 			walkJNIRefs(walkState, walkState->bp + 1, walkState->arg0EA - walkState->bp);
 		}
 		walkState->constantPool = NULL;
