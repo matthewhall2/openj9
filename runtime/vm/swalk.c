@@ -746,7 +746,7 @@ walkMethodFrame(J9StackWalkState * walkState)
 	if ((walkState->currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME)
 		|| (walkState->method && walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)) {
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
-		if (walkState->currentThread->jitStackFrameFlags = J9_SSF_JIT_NATIVE_TRANSITION_FRAME
+		if (walkState->currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME
 			&& walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)
 			{
 				printf("def con from interp\n");
