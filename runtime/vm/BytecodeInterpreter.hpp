@@ -10069,7 +10069,13 @@ VMINLINE VM_BytecodeAction
 		} else {
 			printf("def con for membername form interp\n");
 		}
-
+		if (_currentThread->jitStackFrameFlags != J9_SSF_JIT_NATIVE_TRANSITION_FRAME && (getenv("useNormalThrow") != NULL)) {
+			buildMethodFrame(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+		updateVMStruct(REGISTER_ARGS);
+		setIncompatibleClassChangeErrorForDefaultConflict(_currentThread, _sendMethod);
+		VMStructHasBeenUpdated(REGISTER_ARGS);
+		return  GOTO_THROW_CURRENT_EXCEPTION;
+		}
 		buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		updateVMStruct(REGISTER_ARGS);
 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
