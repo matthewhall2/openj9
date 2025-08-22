@@ -1176,23 +1176,24 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
 	char * msg = NULL;
-	
+
 	/* J9NLS_VM_DEFAULT_METHOD_CONFLICT=class %2$.*1$s has conflicting defaults for method %4$.*3$s%6$.*5$s */
 	const char * nlsMessage = j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_VM_DEFAULT_METHOD_CONFLICT, NULL);
 	if (nlsMessage != NULL) {
+		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(vmThread, memberName);
+		//printf("tototal sig length is: %d\n", getMethodSigLength(vmThread, memberName));
+		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, clazz);
+		//J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
+		J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 		/* Fetch defining class using constantPool*/
-		J9Class * currentClass = J9_CLASS_FROM_METHOD(method);
 		/* Fetch ROMMethod as bytecodes at one of default methods */
-		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
-		J9UTF8 * methodNameUTF = J9ROMMETHOD_NAME(romMethod);
-		J9UTF8 * methodSignatureUTF = J9ROMMETHOD_SIGNATURE( romMethod);
-		J9UTF8 * classNameUTF = J9ROMCLASS_CLASSNAME(currentClass->romClass);
+		J9UTF8 * classNameUTF = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 		U_16 classNameLength = J9UTF8_LENGTH(classNameUTF);
 		U_8 * className = J9UTF8_DATA(classNameUTF);
-		U_16 methodNameLength = J9UTF8_LENGTH(methodNameUTF);
-		U_8 * methodName = J9UTF8_DATA(methodNameUTF);
-		U_16 methodSignatureLength = J9UTF8_LENGTH(methodSignatureUTF);
-		U_8 * methodSignature = J9UTF8_DATA(methodSignatureUTF);
+		U_16 methodNameLength = 0;
+		U_8 * methodName = "";
+		U_16 methodSignatureLength = "";
+		U_8 * methodSignature = "";
 		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
 				classNameLength, className,
 				methodNameLength, methodName,
