@@ -444,6 +444,15 @@ retry:
 		return bp;
 	}
 
+	VMINLINE UDATA*
+	buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
+	{
+		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
+		*--_sp = (UDATA)method;
+		_arg0EA = bp + _currentThread->floatTemp1;
+		return bp;
+	}
+
 	VMINLINE UDATA
 	jitStackFrameFlags(REGISTER_ARGS_LIST, UDATA constantFlags)
 	{
