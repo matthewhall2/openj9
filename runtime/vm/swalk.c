@@ -744,7 +744,7 @@ walkMethodFrame(J9StackWalkState * walkState)
 		}
 	}
 	if (walkState->method 
-		//&& walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)
+		&& (walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict))
 		) {
 		J9ROMMethod * romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(walkState->method);
 		walkState->constantPool = UNTAGGED_METHOD_CP(walkState->method);
