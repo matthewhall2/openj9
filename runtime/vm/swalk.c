@@ -776,7 +776,7 @@ walkMethodFrame(J9StackWalkState * walkState)
 		}
 	} else {
 		if (((walkState->flags & J9_STACKWALK_ITERATE_O_SLOTS) && (walkState->arg0EA != walkState->bp))
-			|| (walkState->method == walkState->javaVM->initialMethods.throwDefaultConflict)
+			&& (walkState->method != walkState->javaVM->initialMethods.throwDefaultConflict)
 		) {
 			walkJNIRefs(walkState, walkState->bp + 1, walkState->arg0EA - walkState->bp);
 		}
