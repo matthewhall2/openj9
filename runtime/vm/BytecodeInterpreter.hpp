@@ -10084,6 +10084,12 @@ VMINLINE VM_BytecodeAction
 			printf("IncompatibleClassChangeError: default method conflict: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		} else {
 			printf("def con for membername form interp\n");
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		updateVMStruct(REGISTER_ARGS);
+		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		VMStructHasBeenUpdated(REGISTER_ARGS);
+		restoreGenericSpecialStackFrame(REGISTER_ARGS);
+		return GOTO_THROW_CURRENT_EXCEPTION;
 		}
 		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
