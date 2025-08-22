@@ -635,7 +635,11 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-
+		// is MN the first arg when here from jit? do we even get here is dipatchJ9Method is enabled?
+		if (_sendMethod == _vm->initialMethods.throwDefaultConflict) {
+			printf("JIT called throwDefaultConflict\n");
+			printf("sp: %p, sp + 1: %p", _sp, _sp + 1);
+		}
 		if ((J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress))
 			|| _sendMethod == _vm->initialMethods.throwDefaultConflict
 			|| J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
