@@ -449,7 +449,7 @@ retry:
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
-		_arg0EA = bp + (getenv("noArgs") != NULL) ? (UDATA)_currentThread->floatTemp1 : 0;
+		_arg0EA = bp + (getenv("noArgs") != NULL) ? (UDATA)_currentThread->floatTemp1 : (UDATA)0;
 		return bp;
 	}
 
