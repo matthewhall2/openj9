@@ -3408,6 +3408,8 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 		 */
 		J9JITInvokeBasicCallSite *site = jitGetInvokeBasicCallSiteFromPC(currentThread, (UDATA)jitReturnAddress);
 		thunk = (UDATA)site->j2iThunk;
+	} else if (J9_BCLOOP_SEND_TARGET_MEMBERNAME_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress)) {
+		printf("mh def con send target\n");
 	}
 	else
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
