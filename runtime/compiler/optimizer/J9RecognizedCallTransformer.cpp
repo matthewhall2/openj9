@@ -1530,6 +1530,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
 
 void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkToStaticSpecial(TR::TreeTop* treetop, TR::Node* node)
    {
+   printf("processing linkToStaticSpecial\n");
    TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
 
    TR::SymbolReference *vmTargetSymRef =
