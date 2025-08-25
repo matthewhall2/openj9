@@ -449,7 +449,6 @@ retry:
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
-		UDATA argCount = getenv("argCount") != NULL ? atoi(getenv("argCount")) : 0xffffffff;
 		printf("argCount=%lu"  "\n", (UDATA)_currentThread->floatTemp1);
 		_arg0EA = bp;
 		return bp;
