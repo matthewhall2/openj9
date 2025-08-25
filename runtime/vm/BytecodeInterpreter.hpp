@@ -9714,7 +9714,6 @@ done:
 			goto throw_npe;
 		}
 
-		
 		if (!defaultConflict) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
@@ -10101,7 +10100,7 @@ VMINLINE VM_BytecodeAction
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		}
 
-		if (getenv("TR_disableJitDispatchJ9Method") != NULL) {
+		if (getenv("oldForDV") != NULL) {
 			printf("old for dispatchJ9Method\n");
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 			updateVMStruct(REGISTER_ARGS);
@@ -10111,9 +10110,8 @@ VMINLINE VM_BytecodeAction
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		}
 
-		if (getenv("TR_disableJitDispatchJ9Method") != NULL) {
-			printf("new for dispatch virtual\n");
-		}
+		printf("new for dispatch virtual\n");
+		
 
 		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
