@@ -1176,6 +1176,7 @@ static const char * setExceptionForDefaultConflict(J9VMThread * vmThread, UDATA 
 	PORT_ACCESS_FROM_VMC(vmThread);
 	const char * msg;
 	msg = OMRPORT_FROM_J9PORT(PORTLIB)->nls_lookup_message(OMRPORT_FROM_J9PORT(PORTLIB), J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, moduleName, messageNumber, NULL);
+	return msg;
 }
 
 void  
