@@ -1217,9 +1217,9 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
 		/* msg NULL check omitted since str_printf accepts NULL (as above) */
 		j9str_printf(msg, msgLen, nlsMessage,
-				classNameLength, className,
-				methodNameLength, methodName,
-				methodSignatureLength, methodSignature);
+				0, "",
+				0, "",
+				0, "");
 	}
 
 	setCurrentExceptionUTF(vmThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, msg);
