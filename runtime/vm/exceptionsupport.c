@@ -1212,7 +1212,7 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 		nlsMessage = "Method has default conflicts";
 		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
 				0, "",
-				0 "",
+				0, "",
 				0, "");
 		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
 		/* msg NULL check omitted since str_printf accepts NULL (as above) */
