@@ -10115,7 +10115,7 @@ VMINLINE VM_BytecodeAction
 
 		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);
-		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
+		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, getenv("TR_disableJitDispatchJ9Method") != NULL ? memberName : NULL);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		return  GOTO_THROW_CURRENT_EXCEPTION;
 		//restoreGenericSpecialStackFrame(REGISTER_ARGS);
