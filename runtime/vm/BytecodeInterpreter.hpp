@@ -10073,7 +10073,7 @@ VMINLINE VM_BytecodeAction
 		printf("stack: sp: %p, sp + 1: %p\n", _sp, _sp + 1);
 		// now we can
 		j9object_t memberName = *(j9object_t *)_sp++;
-		if (_currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME && getenv("TR_disableJitDispatchJ9Method") == NULL) {
+		if (_currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME && getenv("TR_disableJitDispatchJ9Method") != NULL) {
 			printf("def con from jiit\n");
 			IDATA argCount = (IDATA)_currentThread->floatTemp1;
 			printf("argCount: %lu\n", argCount);
@@ -10083,7 +10083,7 @@ VMINLINE VM_BytecodeAction
 			printf("j9class: %p, romClass: %p\n", sendMethodClass, sendMethodClass->romClass);
 			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 			printf("IncompatibleClassChangeError: default method conflict: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
-		} else {
+		} else if (_currentThread->jitStackFrameFlags != J9_SSF_JIT_NATIVE_TRANSITION_FRAME) {
 			if (getenv("usNewForInterp") != NULL) {
 				printf("new for interp\n");
 				buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
