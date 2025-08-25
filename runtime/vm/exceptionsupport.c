@@ -1179,6 +1179,10 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 
 	/* J9NLS_VM_DEFAULT_METHOD_CONFLICT=class %2$.*1$s has conflicting defaults for method %4$.*3$s%6$.*5$s */
 	const char * nlsMessage = j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_VM_DEFAULT_METHOD_CONFLICT, NULL);
+	if (NULL == memberName) {
+		/* Defensive check - should never happen */
+		nlsMessage = NULL;
+	}
 	if (nlsMessage != NULL) {
 		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(vmThread, memberName);
 		//printf("tototal sig length is: %d\n", getMethodSigLength(vmThread, memberName));
@@ -1198,6 +1202,18 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 				classNameLength, className,
 				methodNameLength, methodName,
 				methodSignatureLength, methodSignature);
+		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
+		/* msg NULL check omitted since str_printf accepts NULL (as above) */
+		j9str_printf(msg, msgLen, nlsMessage,
+				classNameLength, className,
+				methodNameLength, methodName,
+				methodSignatureLength, methodSignature);
+	} else {
+		nlsMessage = "Method has default conflicts";
+		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
+				0, "",
+				0 "",
+				0, "");
 		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
 		/* msg NULL check omitted since str_printf accepts NULL (as above) */
 		j9str_printf(msg, msgLen, nlsMessage,
