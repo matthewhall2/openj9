@@ -10116,8 +10116,11 @@ VMINLINE VM_BytecodeAction
 
 		printf("new for dispatch virtual\n");
 		
-
+		if (getenv("buildSpecialFranme") != NULL) {
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+		} else {
 		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+		}
 		updateVMStruct(REGISTER_ARGS);
 		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, getenv("TR_disableJitDispatchJ9Method") != NULL ? memberName : NULL);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
