@@ -10073,7 +10073,7 @@ VMINLINE VM_BytecodeAction
 		printf("stack: sp: %p, sp + 1: %p\n", _sp, _sp + 1);
 		// now we can
 		j9object_t memberName = *(j9object_t *)_sp++;
-		if (_currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME) {
+		if (_currentThread->jitStackFrameFlags == J9_SSF_JIT_NATIVE_TRANSITION_FRAME && getenv("TR_disableJitDispatchJ9Method") == NULL) {
 			printf("def con from jiit\n");
 			IDATA argCount = (IDATA)_currentThread->floatTemp1;
 			printf("argCount: %lu\n", argCount);
