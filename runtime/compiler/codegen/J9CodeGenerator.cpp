@@ -849,6 +849,8 @@ J9::CodeGenerator::lowerTreeIfNeeded(
          if (rm == TR::java_lang_invoke_MethodHandle_linkToStatic || rm ==  TR::java_lang_invoke_MethodHandle_linkToSpecial)
             {
             printf("tree lowering for linkToStatic or linkToSpecial\n");
+            if (self()->comp()->getOption(TR_TraceCG))
+               traceMsg(self()->comp(), "tree lowering for linkToStatic or linkToSpecial\n");
             int32_t numArgs;
             if (node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
                numArgs = numParameterStackSlots - 1 ;
