@@ -10084,7 +10084,15 @@ VMINLINE VM_BytecodeAction
 			J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
 			printf("IncompatibleClassChangeError: default method conflict: %.*s\n", J9UTF8_LENGTH(classString), J9UTF8_DATA(classString));
 		} else {
-			printf("def con for membername form interp\n");
+			if (getenv("usNewForInterp") != NULL) {
+				printf("new for interp\n");
+				buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				updateVMStruct(REGISTER_ARGS);
+				setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
+				VMStructHasBeenUpdated(REGISTER_ARGS);
+				return  GOTO_THROW_CURRENT_EXCEPTION;
+			}
+			printf("old for interp\n");
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 			updateVMStruct(REGISTER_ARGS);
 			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
@@ -10092,13 +10100,20 @@ VMINLINE VM_BytecodeAction
 			restoreGenericSpecialStackFrame(REGISTER_ARGS);
 			return GOTO_THROW_CURRENT_EXCEPTION;
 		}
-// buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
-// 		updateVMStruct(REGISTER_ARGS);
-// 		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
-// 		VMStructHasBeenUpdated(REGISTER_ARGS);
-// 		restoreGenericSpecialStackFrame(REGISTER_ARGS);
-// 		return GOTO_THROW_CURRENT_EXCEPTION;
 
+		if (getenv("TR_disableJitDispatchJ9Method") != NULL) {
+			printf("old for dispatchJ9Method\n");
+			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
+			updateVMStruct(REGISTER_ARGS);
+			setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+			VMStructHasBeenUpdated(REGISTER_ARGS);
+			restoreGenericSpecialStackFrame(REGISTER_ARGS);
+			return GOTO_THROW_CURRENT_EXCEPTION;
+		}
+
+		if (getenv("TR_disableJitDispatchJ9Method") != NULL) {
+			printf("new for dispatch virtual\n");
+		}
 
 		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		updateVMStruct(REGISTER_ARGS);

@@ -1564,12 +1564,12 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
       for (int32_t i = lastChildIndex; i > 0; i--)
          node->setChild(i, node->getChild(i - 1));
-
+      // todo: add child to membername at the end
+      //or, add write to floattemp1
       TR::Node *target =
          TR::Node::createWithSymRef(node, TR::aloadi, 1, memberName, vmTargetSymRef);
 
       node->setAndIncChild(0, target);
-      memberName->decReferenceCount();
       return;
       }
 

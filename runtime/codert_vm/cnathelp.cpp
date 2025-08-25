@@ -3388,6 +3388,7 @@ old_fast_jitVolatileWriteDouble(J9VMThread *currentThread)
 void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 {
+	printf("in old slow_icallVMprJavaSendPatchupVirtual\n");
 	UDATA const interfaceVTableIndex = currentThread->tempSlot;
 	j9object_t const receiver = (j9object_t)currentThread->returnValue2;
 	J9JavaVM *vm = currentThread->javaVM;
@@ -3400,6 +3401,7 @@ old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 	UDATA thunk = 0;
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	if (J9_BCLOOP_SEND_TARGET_METHODHANDLE_INVOKEBASIC == J9_BCLOOP_DECODE_SEND_TARGET(method->methodRunAddress)) {
+		printf("adding invokeBasic callsite\n");
 		/* Because invokeBasic() is signature-polymorphic, the signature from the ROM method is irrelevant.
 		 * We need the J2I thunk that corresponds to the signature that the JIT was using at the call site.
 		 * Since this varies depending on the call site, we can't replace the VFT entry with the J2I thunk.
