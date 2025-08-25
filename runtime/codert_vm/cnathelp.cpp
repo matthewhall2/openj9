@@ -3388,7 +3388,6 @@ old_fast_jitVolatileWriteDouble(J9VMThread *currentThread)
 void J9FASTCALL
 old_slow_icallVMprJavaSendPatchupVirtual(J9VMThread *currentThread)
 {
-	printf("in old slow_icallVMprJavaSendPatchupVirtual\n");
 	UDATA const interfaceVTableIndex = currentThread->tempSlot;
 	j9object_t const receiver = (j9object_t)currentThread->returnValue2;
 	J9JavaVM *vm = currentThread->javaVM;
