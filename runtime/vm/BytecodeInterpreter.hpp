@@ -451,6 +451,9 @@ retry:
 		*--_sp = (UDATA)method;
 		UDATA argCount = getenv("argCount") != NULL ? atoi(getenv("argCount")) : 0xffffffff;
 		printf("argCount=%lu"  "\n", (UDATA)_currentThread->floatTemp1);
+		if (getenv("breakInBDF") != NULL) {
+			asm("int3");
+		}
 		_arg0EA = bp + (UDATA)(argCount != 0xffffffff ? argCount : (UDATA)_currentThread->floatTemp1);
 		return bp;
 	}
