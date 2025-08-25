@@ -806,7 +806,8 @@ J9::CodeGenerator::lowerTreeIfNeeded(
       if(rm == TR::java_lang_invoke_MethodHandle_linkToStatic ||
         rm == TR::java_lang_invoke_MethodHandle_linkToSpecial ||
         rm == TR::java_lang_invoke_MethodHandle_linkToVirtual ||
-        rm == TR::java_lang_invoke_MethodHandle_linkToInterface)
+        rm == TR::java_lang_invoke_MethodHandle_linkToInterface ||
+        rm == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method)
          {
          // linkTo* is signature-polymorphic, so the VM needs to know the number of argument slots for the INL call in order to
          // locate the start of the arguments on the stack. The arg slot count is stored in vmThread.tempSlot.
@@ -865,6 +866,10 @@ J9::CodeGenerator::lowerTreeIfNeeded(
                                                       storeOpCode);
             floatTemp1StoreNode->setByteCodeIndex(node->getByteCodeIndex());
             TR::TreeTop::create(self()->comp(), tt->getPrevTreeTop(), floatTemp1StoreNode);
+            } else if (rm == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method) {
+               printf("tree lowering for dispatchJ9Method\n");
+            if (self()->comp()->getOption(TR_TraceCG))
+               traceMsg(self()->comp(), "tree lowering for dispatchJ9Method\n");
             }
          }
       else if (rm == TR::java_lang_invoke_MethodHandle_linkToNative)
