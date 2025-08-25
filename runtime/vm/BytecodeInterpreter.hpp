@@ -445,16 +445,13 @@ retry:
 	}
 
 	VMINLINE UDATA*
-	buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
+	buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS_LIST, J9Method *method, UDATA flags)
 	{
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
 		UDATA argCount = getenv("argCount") != NULL ? atoi(getenv("argCount")) : 0xffffffff;
 		printf("argCount=%lu"  "\n", (UDATA)_currentThread->floatTemp1);
-		if (getenv("breakInBDF") != NULL) {
-			asm("int3");
-		}
-		_arg0EA = bp + (UDATA)(argCount != 0xffffffff ? argCount : (UDATA)_currentThread->floatTemp1);
+		_arg0EA = bp;
 		return bp;
 	}
 
@@ -10089,7 +10086,7 @@ VMINLINE VM_BytecodeAction
 		} else if (_currentThread->jitStackFrameFlags != J9_SSF_JIT_NATIVE_TRANSITION_FRAME) {
 			if (getenv("usNewForInterp") != NULL) {
 				printf("new for interp\n");
-				buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+				buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 				updateVMStruct(REGISTER_ARGS);
 				setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
 				VMStructHasBeenUpdated(REGISTER_ARGS);
@@ -10119,7 +10116,7 @@ VMINLINE VM_BytecodeAction
 		if (getenv("buildSpecialFranme") != NULL) {
 			buildGenericSpecialStackFrame(REGISTER_ARGS, 0);
 		} else {
-		buildMethodFrameForDefaultConflictForMemberName(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
+		buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		}
 		updateVMStruct(REGISTER_ARGS);
 		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, getenv("TR_disableJitDispatchJ9Method") != NULL ? memberName : NULL);
