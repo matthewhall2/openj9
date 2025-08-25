@@ -1171,6 +1171,13 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 	j9mem_free_memory(msg);
 }
 
+static const char * setExceptionForDefaultConflict(J9VMThread * vmThread, UDATA exceptionNumber, U_32 moduleName, U_32 messageNumber)
+{
+	PORT_ACCESS_FROM_VMC(vmThread);
+	const char * msg;
+	msg = OMRPORT_FROM_J9PORT(PORTLIB)->nls_lookup_message(OMRPORT_FROM_J9PORT(PORTLIB), J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, moduleName, messageNumber, NULL);
+}
+
 void  
 setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, j9object_t memberName)
 {
@@ -1209,7 +1216,7 @@ setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmTh
 				methodNameLength, methodName,
 				methodSignatureLength, methodSignature);
 	} else {
-		nlsMessage = "Method has default conflicts";
+		nlsMessage = setExceptionForDefaultConflict(vmThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
 		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
 				0, "",
 				0, "",
