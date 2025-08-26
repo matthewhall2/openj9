@@ -9727,9 +9727,6 @@ done:
 
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
-			if (!defaultConflict) {
-				_sp -= 1;
-			}
 			UDATA stackOffset = 1;
 
 			/* The JIT stores the parameter slot count of the call in floatTemp1 for the unresolved case.
@@ -9753,7 +9750,6 @@ done:
 			 *		_sp[1] = Argument ...
 			 */
 			if ((jitResolvedCall != (IDATA)_currentThread->floatTemp1) && (NULL == ((j9object_t *)_sp)[1])) {
-				printf("float temp: %ld (def con: %d)\n", (IDATA)_currentThread->floatTemp1, defaultConflict);
 				stackOffset = 2;
 			}
 
