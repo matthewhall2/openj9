@@ -1779,9 +1779,10 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
 
-    if (!comp()->target().is64Bit())
+    if (!comp()->target().is64Bit()) {
       jittedMethodEntryPoint = TR::Node::create(node, TR::i2l, 1, jittedMethodEntryPoint);
       jitVftOffset = TR::Node::create(node, TR::i2l, 1, jitVftOffset);
+    }
 
    node->setAndIncChild(0, jittedMethodEntryPoint);
    node->setAndIncChild(1, jitVftOffset);
