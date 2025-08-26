@@ -887,7 +887,7 @@ J9::CodeGenerator::lowerTreeIfNeeded(
          TR::Node *dummyNull = TR::Node::aconst(node, 0);
          node->addChildren(&dummyNull, 1);
          }
-      else if (rm  == rm == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method)
+      else if (rm == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method)
          {
             printf("tree lowering for dispatchJ9Method\n");
 if (self()->comp()->getOption(TR_TraceCG))
