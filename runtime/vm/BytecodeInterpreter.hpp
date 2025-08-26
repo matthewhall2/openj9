@@ -10087,7 +10087,9 @@ VMINLINE VM_BytecodeAction
 				printf("new for interp\n");
 				buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 				updateVMStruct(REGISTER_ARGS);
-				setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
+						setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+
+				//setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, memberName);
 				VMStructHasBeenUpdated(REGISTER_ARGS);
 				return  GOTO_THROW_CURRENT_EXCEPTION;
 			}
