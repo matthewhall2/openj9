@@ -9709,13 +9709,12 @@ done:
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		bool defaultConflict = _currentThread->javaVM->initialMethods.throwDefaultConflict == _sendMethod;
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
 			goto throw_npe;
 		}
 
 		
-		if (!defaultConflict) {
+		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
 
@@ -9725,10 +9724,6 @@ done:
 					goto throw_npe;
 				}
 			}
-		} else {
-			printf("def con found\n");
-			// we want the MemberName object on the stack for error throwing
-			_sp--;
 		}
 
 		if (fromJIT) {
@@ -9767,7 +9762,6 @@ done:
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
 			 */
-			if (!defaultConflict) {
 #if (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64))
 			_sp += stackOffset;
 #else /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
@@ -9775,20 +9769,7 @@ done:
 			memmove(_sp, _sp + stackOffset, methodArgCount * sizeof(UDATA));
 			_sp[methodArgCount] = (UDATA)memberNameObject;
 #endif /* (defined(J9VM_ARCH_X86) && !defined(J9VM_ENV_DATA64)) */
-			}
-			if (defaultConflict) {
-				// remove appendix but keep MN at sp
-				if (stackOffset == 2) {
-					memmove(_sp + 1, _sp + 2, methodArgCount * sizeof(UDATA));
-				}
-				printf("float temp is: %lu\n", (IDATA)_currentThread->floatTemp1);
-				j9object_t methodType = J9VMJAVALANGINVOKEMEMBERNAME_TYPE(_currentThread, memberNameObject);
-				j9object_t paramArray = J9VMJAVALANGINVOKEMETHODTYPE_PTYPES(_currentThread, methodType);
-
-				UDATA count =  J9INDEXABLEOBJECT_SIZE(_currentThread, paramArray);
-				printf("arg count in lts: %lu\n", count);
-				_currentThread->floatTemp1 = (void*)count;
-			}
+			
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
 		}

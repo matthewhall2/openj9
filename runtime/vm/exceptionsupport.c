@@ -1172,45 +1172,6 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 }
 
 void  
-setIncompatibleClassChangeErrorForDefaultConflictForMemberName(J9VMThread * vmThread, j9object_t memberName)
-{
-	PORT_ACCESS_FROM_VMC(vmThread);
-	char * msg = NULL;
-
-	/* J9NLS_VM_DEFAULT_METHOD_CONFLICT=class %2$.*1$s has conflicting defaults for method %4$.*3$s%6$.*5$s */
-	const char * nlsMessage = j9nls_lookup_message(J9NLS_DO_NOT_PRINT_MESSAGE_TAG | J9NLS_DO_NOT_APPEND_NEWLINE, J9NLS_VM_DEFAULT_METHOD_CONFLICT, NULL);
-	if (nlsMessage != NULL) {
-		j9object_t clazz = J9VMJAVALANGINVOKEMEMBERNAME_CLAZZ(vmThread, memberName);
-		//printf("tototal sig length is: %d\n", getMethodSigLength(vmThread, memberName));
-		J9Class* sendMethodClass = J9VM_J9CLASS_FROM_HEAPCLASS(vmThread, clazz);
-		//J9ConstantPool *ramConstantPool = J9_CP_FROM_CLASS(sendMethodClass);
-		//J9UTF8 *classString = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-		/* Fetch defining class using constantPool*/
-		/* Fetch ROMMethod as bytecodes at one of default methods */
-		J9UTF8 * classNameUTF = ((J9UTF8 *) J9ROMCLASS_CLASSNAME(sendMethodClass->romClass));
-		U_16 classNameLength = J9UTF8_LENGTH(classNameUTF);
-		U_8 * className = J9UTF8_DATA(classNameUTF);
-		U_16 methodNameLength = 0;
-		U_8 * methodName = (U_8*)"";
-		U_16 methodSignatureLength = 0;
-		U_8 * methodSignature = (U_8*)"";
-		UDATA msgLen = j9str_printf(NULL, 0, nlsMessage,
-				classNameLength, className,
-				methodNameLength, methodName,
-				methodSignatureLength, methodSignature);
-		msg = j9mem_allocate_memory(msgLen, OMRMEM_CATEGORY_VM);
-		/* msg NULL check omitted since str_printf accepts NULL (as above) */
-		j9str_printf(msg, msgLen, nlsMessage,
-				classNameLength, className,
-				methodNameLength, methodName,
-				methodSignatureLength, methodSignature);
-	}
-
-	setCurrentExceptionUTF(vmThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, msg);
-	j9mem_free_memory(msg);
-}
-
-void  
 setIllegalAccessErrorNonPublicInvokeInterface(J9VMThread *vmThread, J9Method *method)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
