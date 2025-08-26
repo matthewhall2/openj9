@@ -450,6 +450,7 @@ retry:
 		UDATA *bp = buildSpecialStackFrame(REGISTER_ARGS, J9SF_FRAME_TYPE_METHOD, flags, false);
 		*--_sp = (UDATA)method;
 		printf("argCount=%lu"  "\n", (UDATA)_currentThread->floatTemp1);
+		// default conflixt method has no args
 		_arg0EA = bp;
 		return bp;
 	}
