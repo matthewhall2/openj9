@@ -239,21 +239,6 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          case TR::Int8:
          case TR::Int16:
          case TR::Int32:
-            {
-            TR::Register *reg = NULL;
-            if (i == linkageRegChildIndex)
-               {
-               reg = cg()->evaluate(child);
-               dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
-               cg()->decReferenceCount(child);
-               }
-            if (NULL == reg)
-               {
-               pushIntegerWordArg(child);
-               argSize += 4;
-               }
-            break;
-            }
          case TR::Address:
             if (i == receiverChildIndex)
                {

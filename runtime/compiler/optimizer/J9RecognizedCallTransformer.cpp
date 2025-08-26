@@ -1723,7 +1723,7 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
 
    int signatureLength;
    char *signature = getSignatureForComputedCall(
-      comp()->target().is64Bit() ? "JJ" : "II",
+      "JJ",
       "",
       comp(),
       node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
@@ -1778,6 +1778,10 @@ void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(
    TR::ILOpCodes vftEntryLoadOp = comp()->target().is64Bit() ? TR::lloadi : TR::iloadi;
    TR::Node *jittedMethodEntryPoint =
       TR::Node::createWithSymRef(vftEntryLoadOp, 1, 1, jitVftSlotPtr, genericIntShadow);
+
+    if (!comp()->target().is64Bit())
+      jittedMethodEntryPoint = TR::Node::create(node, TR::i2l, 1, jittedMethodEntryPoint);
+      jitVftOffset = TR::Node::create(node, TR::i2l, 1, jitVftOffset);
 
    node->setAndIncChild(0, jittedMethodEntryPoint);
    node->setAndIncChild(1, jitVftOffset);
