@@ -1573,6 +1573,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
          TR::Node::createWithSymRef(node, TR::aloadi, 1, memberName, vmTargetSymRef);
 
       node->setAndIncChild(0, target);
+      memberName->decReferenceCount();
       return;
       }
 
