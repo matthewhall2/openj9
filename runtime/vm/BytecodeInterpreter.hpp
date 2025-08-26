@@ -9727,6 +9727,7 @@ done:
 
 		if (fromJIT) {
 			/* Restore SP to before popping memberNameObject. */
+			_sp -= 1;
 			UDATA stackOffset = 1;
 
 			/* The JIT stores the parameter slot count of the call in floatTemp1 for the unresolved case.
