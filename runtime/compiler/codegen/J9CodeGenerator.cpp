@@ -893,7 +893,15 @@ J9::CodeGenerator::lowerTreeIfNeeded(
 if (self()->comp()->getOption(TR_TraceCG))
                traceMsg(self()->comp(), "tree lowering for dispatchJ9Method\n");
          }
-      }
+      } else
+         {
+            TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
+            if (rm == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method) {
+            printf("tree lowering for dispatchJ9Method\n");
+if (self()->comp()->getOption(TR_TraceCG))
+               traceMsg(self()->comp(), "tree lowering for dispatchJ9Method\n");
+            }
+         }
 
    if (node->getOpCode().isCall() &&
          node->getSymbol()->getMethodSymbol()->isNative() &&
