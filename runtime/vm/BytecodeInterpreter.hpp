@@ -10118,7 +10118,8 @@ VMINLINE VM_BytecodeAction
 		buildMethodFrameForDefaultConflictForMethodHandle(REGISTER_ARGS, _sendMethod, jitStackFrameFlags(REGISTER_ARGS, 0));
 		}
 		updateVMStruct(REGISTER_ARGS);
-		setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, getenv("TR_disableJitDispatchJ9Method") != NULL ? memberName : NULL);
+		setCurrentExceptionNLS(_currentThread, J9VMCONSTANTPOOL_JAVALANGINCOMPATIBLECLASSCHANGEERROR, J9NLS_VM_DEFAULT_METHOD_CONFLICT_GENERIC);
+		//setIncompatibleClassChangeErrorForDefaultConflictForMemberName(_currentThread, getenv("TR_disableJitDispatchJ9Method") != NULL ? memberName : NULL);
 		VMStructHasBeenUpdated(REGISTER_ARGS);
 		return  GOTO_THROW_CURRENT_EXCEPTION;
 		//restoreGenericSpecialStackFrame(REGISTER_ARGS);
