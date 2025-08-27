@@ -2549,7 +2549,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (comp()->getOption(TR_EnableRMODE64))
 #endif
       {
-      if (callSymRef->getReferenceNumber() >= TR_S390numRuntimeHelpers)
+      if (callSymRef->getReferenceNumber() >= TR_S390numRuntimeHelpers && !isJitDispatchJ9Method)
          {
          fej9->reserveTrampolineIfNecessary(comp(), callSymRef, false);
          }
