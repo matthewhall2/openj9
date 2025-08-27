@@ -2635,7 +2635,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       cg()->stopUsingRegister(scratchReg);
-      prinntf("jitdistpatchJ9MethodGeneration done\n");
+      printf("jitdistpatchJ9MethodGeneration done\n");
       }
    else
       {
