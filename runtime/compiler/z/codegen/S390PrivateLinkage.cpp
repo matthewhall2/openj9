@@ -2616,7 +2616,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, getRealRegister(getReturnAddressRegister()), scratchReg);
-
+      printf("call to jit instr generated\n");
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
       cg()->addSnippet(snippet);
@@ -2628,12 +2628,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       outlinedSlowPath->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, labelSymRef);
+      printf("snippet generated\n");
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
       
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       cg()->stopUsingRegister(scratchReg);
+      prinntf("jitdistpatchJ9MethodGeneration done\n");
       }
    else
       {
