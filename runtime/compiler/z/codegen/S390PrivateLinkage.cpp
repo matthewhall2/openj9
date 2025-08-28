@@ -2603,6 +2603,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
+      //TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+
 
 
       // fetch J9Method::extra field
@@ -2610,7 +2612,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       generateRIInstruction(cg(), TR::InstOpCode::NILF, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_BNE;
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
       printf("interpreter call check done\n");
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
@@ -2627,12 +2629,19 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       printf("call to jit instr generated\n");
 
-      TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, interpreterCallLabel, callSymRef, argSize);
       cg()->addSnippet(snippet);
       gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
       //    comp()->getSymRefTab(), snippetLabel);
+
+      // TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+      // cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+      // outlinedSlowPath->swapInstructionListsWithCompilation();
+      // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+      // TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+      // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
+      // outlinedSlowPath->swapInstructionListsWithCompilation();
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       cg()->stopUsingRegister(scratchReg);
