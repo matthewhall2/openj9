@@ -635,13 +635,15 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
-		void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
+		bool isMHThrowDefCon = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
 
 		if (J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
 			|| (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress))
+			|| isMHThrowDefCon
 		) {
 			_literals = (J9Method*)jitReturnAddress;
-			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
+			if (!isMHThrowDefCon)
+				_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
 #if defined(J9SW_NEEDS_JIT_2_INTERP_CALLEE_ARG_POP)
 			/* Variable frame */
 			_arg0EA = NULL;
@@ -661,6 +663,7 @@ done:
 				rc = GOTO_THROW_CURRENT_EXCEPTION;
 			}
 		} else {
+			void* const exitPoint = j2iReturnPoint(J9ROMMETHOD_SIGNATURE(romMethod));
 			bool decompileOccurred = false;
 			_pc = (U_8*)jitReturnAddress;
 			UDATA preCount = 0;
