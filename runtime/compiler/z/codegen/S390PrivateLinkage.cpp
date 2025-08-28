@@ -2616,7 +2616,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
-      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, getRealRegister(getReturnAddressRegister()), scratchReg);
+      TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
+      TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+      TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
+      TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+      generateRRInstruction(cg(), TR::InstOpCode::LR, callNode, regEP, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       printf("call to jit instr generated\n");
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
