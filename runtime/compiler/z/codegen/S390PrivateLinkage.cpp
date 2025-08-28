@@ -2620,7 +2620,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
-      generateRRInstruction(cg(), TR::InstOpCode::LR, callNode, regEP, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       printf("call to jit instr generated\n");
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
