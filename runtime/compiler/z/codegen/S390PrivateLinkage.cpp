@@ -2629,8 +2629,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
-      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       cg()->addSnippet(snippet);
+      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
       //    comp()->getSymRefTab(), snippetLabel);
 
