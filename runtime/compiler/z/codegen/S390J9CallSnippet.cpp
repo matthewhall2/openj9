@@ -270,7 +270,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    // Flush in-register arguments back to the stack for interpreter
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
 
-   TR_RuntimeHelper runtimeHelper = callNode->isJitDispatchJ9MethodCall(comp) ? TR_j2iTransition : (methodSymRef, callNode->getDataType());
+   TR_RuntimeHelper runtimeHelper = callNode->isJitDispatchJ9MethodCall(comp) ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
    TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
 
    // Generate RIOFF if RI is supported.
@@ -374,7 +374,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                getNode());
             }
          }
-      else
+      else if (!callNode->isJitDispatchJ9MethodCall(comp))
          {
          uintptr_t ramMethod = (uintptr_t)methodSymRef->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier();
          *(uintptr_t *) cursor = ramMethod;
