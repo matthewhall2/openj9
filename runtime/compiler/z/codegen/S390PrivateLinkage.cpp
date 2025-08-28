@@ -2597,6 +2597,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       }
    else if (isJitDispatchJ9Method)
       {
+      printf("generating j9 dispatch j9method call\n");
       TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
       TR::Register *scratchReg = cg()->allocateRegister();
 
@@ -2609,7 +2610,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRIInstruction(cg(), TR::InstOpCode::NILF, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_BNE;
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
-
+      printf("interpreter call check done\n");
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
