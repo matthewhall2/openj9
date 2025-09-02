@@ -2641,9 +2641,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
       // outlinedSlowPath->swapInstructionListsWithCompilation();
 
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       cg()->stopUsingRegister(scratchReg);
-      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       }
    else
