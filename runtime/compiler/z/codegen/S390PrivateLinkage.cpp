@@ -2629,7 +2629,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       printf("call to jit instr generated\n");
       cg()->stopUsingRegister(scratchReg);
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, interpreterCallLabel, argSize);
+      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, interpreterCallLabel, callSymRef, argSize);
       cg()->addSnippet(snippet);
       // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
       //    comp()->getSymRefTab(), snippetLabel);
