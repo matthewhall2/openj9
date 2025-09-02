@@ -2600,6 +2600,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       printf("generating j9 dispatch j9method call\n");
       TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
       TR::Register *scratchReg = cg()->allocateRegister();
+      dependencies.addPostCondition(
+         scratchReg, getProperties().getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2627,7 +2629,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       printf("call to jit instr generated\n");
-      cg()->stopUsingRegister(scratchReg);
+      
 
       TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, interpreterCallLabel, callSymRef, argSize);
       cg()->addSnippet(snippet);
@@ -2656,6 +2658,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
+      cg()->stopUsingRegister(scratchReg);
       }
    else
       {
