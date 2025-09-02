@@ -2650,8 +2650,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
 
     //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      auto *doneInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      cg()->insertPad(callNode, doneInstruction, 2, false);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+
       //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       }
