@@ -413,6 +413,22 @@ TR::S390J9CallSnippet::emitSnippetBody()
                callNode);
             }
          }
+         else if (callNode->isJitDispatchJ9MethodCall(comp))
+            {
+            int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
+            *(int32_t *)(++cursor) = disp32;
+
+            cg()->addExternalRelocation(
+               TR::ExternalRelocation::create(
+               cursor,
+               (uint8_t *)glueRef,
+               TR_HelperAddress,
+               cg()),
+               __FILE__,
+               __LINE__,
+               getNode());
+            cursor += 4;
+            }
       }
 
    return cursor + sizeof(uintptr_t);
