@@ -2600,7 +2600,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       printf("generating j9 dispatch j9method call\n");
       TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
       TR::Register *scratchReg = cg()->allocateRegister();
-      dependencies.addPostCondition(
+      dependencies->addPostCondition(
          scratchReg, getProperties().getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
