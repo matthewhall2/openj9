@@ -374,7 +374,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                getNode());
             }
          }
-      else //if (!callNode->isJitDispatchJ9MethodCall(comp))
+      else if (!callNode->isJitDispatchJ9MethodCall(comp))
          {
          uintptr_t ramMethod = (uintptr_t)methodSymRef->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier();
          *(uintptr_t *) cursor = ramMethod;
@@ -413,22 +413,22 @@ TR::S390J9CallSnippet::emitSnippetBody()
                callNode);
             }
          }
-         // else if (callNode->isJitDispatchJ9MethodCall(comp))
-         //    {
-         //    // int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
-         //    // *(int32_t *)(++cursor) = disp32;
+         else if (callNode->isJitDispatchJ9MethodCall(comp))
+            {
+            // int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
+            // *(int32_t *)(++cursor) = disp32;
 
-         //    cg()->addExternalRelocation(
-         //       TR::ExternalRelocation::create(
-         //       cursor,
-         //       (uint8_t *)glueRef,
-         //       TR_HelperAddress,
-         //       cg()),
-         //       __FILE__,
-         //       __LINE__,
-         //       getNode());
-         //   // cursor += 4;
-         //    }
+            cg()->addExternalRelocation(
+               TR::ExternalRelocation::create(
+               cursor,
+               (uint8_t *)glueRef,
+               TR_HelperAddress,
+               cg()),
+               __FILE__,
+               __LINE__,
+               getNode());
+           // cursor += 4;
+            }
       }
 
    return cursor + sizeof(uintptr_t);
