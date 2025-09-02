@@ -2601,7 +2601,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
-         scratchReg, getProperties().getVTableIndexArgumentRegister());
+         scratchReg, getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
