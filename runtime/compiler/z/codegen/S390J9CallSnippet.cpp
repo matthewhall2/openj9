@@ -415,8 +415,8 @@ TR::S390J9CallSnippet::emitSnippetBody()
          }
          else if (callNode->isJitDispatchJ9MethodCall(comp))
             {
-            int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
-            *(int32_t *)(++cursor) = disp32;
+            // int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
+            // *(int32_t *)(++cursor) = disp32;
 
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
@@ -427,7 +427,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                __FILE__,
                __LINE__,
                getNode());
-            cursor += 4;
+           // cursor += 4;
             }
       }
 
