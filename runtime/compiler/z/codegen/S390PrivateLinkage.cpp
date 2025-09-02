@@ -2650,7 +2650,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
 
      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
-     // auto *doneInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+     generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       //cg()->insertPad(callNode, doneInstruction, 2, false);
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
