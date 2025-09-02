@@ -2628,8 +2628,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       printf("call to jit instr generated\n");
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, interpreterCallLabel, argSize);
-      cg()->addSnippet(snippet);
+      //TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, interpreterCallLabel, argSize);
+      //cg()->addSnippet(snippet);
       // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
       //    comp()->getSymRefTab(), snippetLabel);
 
@@ -2640,10 +2640,18 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
       // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
       // outlinedSlowPath->swapInstructionListsWithCompilation();
-
+      
       cg()->stopUsingRegister(scratchReg);
-      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+     // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, interpreterCallLabel, dependencies);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel,
+                                                          callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
+      cg()->addSnippet(snippet);
+
+      //auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
+
+    //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       }
