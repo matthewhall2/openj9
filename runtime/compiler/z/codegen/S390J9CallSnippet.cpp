@@ -420,13 +420,13 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
-               cursor,
-               (uint8_t *)glueRef,
-               TR_HelperAddress,
-               cg()),
+                  cursor,
+                  (uint8_t *)glueRef,
+                  TR_HelperAddress,
+                  cg()),
                __FILE__,
                __LINE__,
-               getNode());
+               callNode);
            // cursor += 4;
             }
       }
