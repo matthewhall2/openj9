@@ -2634,7 +2634,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       printf("call to jit instr generated\n");
       
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+    //  TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
+                                                          callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
       cg()->addSnippet(snippet);
       // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
       //    comp()->getSymRefTab(), snippetLabel);
@@ -2646,7 +2649,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
-      
+
      // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, interpreterCallLabel, dependencies);
       // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel,
       //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
