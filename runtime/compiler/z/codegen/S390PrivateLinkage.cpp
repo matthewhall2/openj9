@@ -2611,6 +2611,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
+      throw std::bad_alloc(); 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
