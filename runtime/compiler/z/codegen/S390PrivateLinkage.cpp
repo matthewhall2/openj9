@@ -2629,52 +2629,36 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
-      //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       printf("call to jit instr generated\n");
 
-     // TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
-      //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
-     // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
-     //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
+    
       
-     TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
-        comp()->getSymRefTab(), snippetLabel);
-         TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
-      cg()->addSnippet(snippet);
+   //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
+   //      comp()->getSymRefTab(), snippetLabel);
+   //       TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
+   //    cg()->addSnippet(snippet);
 
-      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-      cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-      outlinedSlowPath->swapInstructionListsWithCompilation();
-       TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      //cg()->generateVMCallHelperPrePrologue(cursor);
-      //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
-    //  TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
-    TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
-      interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
-      outlinedSlowPath->swapInstructionListsWithCompilation();
+   //    TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+   //    cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+   //    outlinedSlowPath->swapInstructionListsWithCompilation();
+   //     TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+   //    //cg()->generateVMCallHelperPrePrologue(cursor);
+   //    //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+   //  //  TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
+   //  TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
+   //    interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
+   //    generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+   //    outlinedSlowPath->swapInstructionListsWithCompilation();
 
      
 
-      // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
-      //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), reStartLabel, argSize);
-     // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, interpreterCallLabel, dependencies);
-      // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel,
-      //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
-      // cg()->addSnippet(snippet);
-
-      //auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
-
-   //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+    
      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
-      //cg()->insertPad(callNode, doneInstruction, 2, false);
-     // gcPoint->setNeedsGCMadfgdfgp(getPreservedRegisterMapForGC());
+   
 
-      //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       cg()->stopUsingRegister(scratchReg);
-     // callInstruction->setNeedsGCMap(getPreservedRegisterMapForGC());
       }
    else
       {
