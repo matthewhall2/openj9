@@ -2672,7 +2672,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       cg()->stopUsingRegister(scratchReg);
-      callInstruction->setNeedsGCMap(getPreservedRegisterMapForGC());
+     // callInstruction->setNeedsGCMap(getPreservedRegisterMapForGC());
       }
    else
       {
