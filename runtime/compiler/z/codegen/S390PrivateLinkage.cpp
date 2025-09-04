@@ -2639,7 +2639,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
         comp()->getSymRefTab(), snippetLabel);
        //  TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
        TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
-                                                          callSymRef?callSymRef:callNode->getSymbolReference(), doneSnippetLabel, argSize);
+                                                          callNode->getSymbolReference(), doneSnippetLabel, argSize);
       cg()->addSnippet(snippet);
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
@@ -2649,15 +2649,15 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //cg()->generateVMCallHelperPrePrologue(cursor);
       //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
     //  TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
-      TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
-      interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
+    //  TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneSnippetLabel);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
      
 
-    
      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
    
 
