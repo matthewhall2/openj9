@@ -2651,7 +2651,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, label, argSize);
+      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
       cg()->addSnippet(snippet);
 
      // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, interpreterCallLabel, dependencies);
