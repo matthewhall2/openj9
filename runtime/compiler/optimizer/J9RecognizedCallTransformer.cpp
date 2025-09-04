@@ -1535,7 +1535,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
    TR::SymbolReference *vmTargetSymRef =
       comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
-   if (comp()->cg()->enableJitDispatchJ9Method() && && feGetEnv("jitDJ9LTS") != NULL)
+   if (comp()->cg()->enableJitDispatchJ9Method() && feGetEnv("jitDJ9LTS") != NULL)
       {
       TR::RecognizedMethod rm =
          node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
