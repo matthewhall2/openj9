@@ -2638,19 +2638,21 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
      // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
      //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), doneLabel, argSize);
       
-      // TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
-      //    comp()->getSymRefTab(), snippetLabel);
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
-      cg()->addSnippet(snippet);
+     TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
+        comp()->getSymRefTab(), snippetLabel);
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
       TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       //cg()->generateVMCallHelperPrePrologue(cursor);
-      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+      //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+      generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
+
+      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      cg()->addSnippet(snippet);
 
      // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, interpreterCallLabel, dependencies);
       // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel,
