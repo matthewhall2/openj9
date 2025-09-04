@@ -2640,6 +2640,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       
      TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
         comp()->getSymRefTab(), snippetLabel);
+         TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
+      cg()->addSnippet(snippet);
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
@@ -2647,13 +2649,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
        TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       //cg()->generateVMCallHelperPrePrologue(cursor);
       //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
-      TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
+    //  TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
+    TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
       interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
-      cg()->addSnippet(snippet);
+     
 
       // TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
       //                                                     callSymRef?callSymRef:callNode->getSymbolReference(), reStartLabel, argSize);
@@ -2667,7 +2669,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
       //cg()->insertPad(callNode, doneInstruction, 2, false);
-     // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+     // gcPoint->setNeedsGCMadfgdfgp(getPreservedRegisterMapForGC());
 
       //gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
