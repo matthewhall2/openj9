@@ -2630,14 +2630,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       printf("call to jit instr generated\n");
 
-    
-      
-     TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
-        comp()->getSymRefTab(), snippetLabel);
-         TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, snippetSyRref, argSize);
+   //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
+   //      comp()->getSymRefTab(), snippetLabel);
+         TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
       //  TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
       //                                                     callNode->getSymbolReference(), doneSnippetLabel, argSize);
       cg()->addSnippet(snippet);
@@ -2649,7 +2648,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //cg()->generateVMCallHelperPrePrologue(cursor);
       //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
   //    TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
-      TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSyRref);
+      TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef, cursor);
     //  gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneSnippetLabel);
