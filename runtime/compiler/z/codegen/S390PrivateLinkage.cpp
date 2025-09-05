@@ -2597,7 +2597,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       }
    else if (isJitDispatchJ9Method)
       {
-      printf("generating j9 dispatch j9method call\n");
+      //printf("generating j9 dispatch j9method call\n");
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
          scratchReg, getVTableIndexArgumentRegister());
@@ -2618,7 +2618,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
    
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
-      printf("interpreter call check done\n");
+     // printf("interpreter call check done\n");
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
@@ -2632,7 +2632,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
-      printf("call to jit instr generated\n");
+     // printf("call to jit instr generated\n");
 
    //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
    //      comp()->getSymRefTab(), snippetLabel);
