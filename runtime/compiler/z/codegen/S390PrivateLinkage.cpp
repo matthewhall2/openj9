@@ -2598,10 +2598,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    else if (isJitDispatchJ9Method)
       {
       printf("generating j9 dispatch j9method call\n");
-      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
          scratchReg, getVTableIndexArgumentRegister());
+         TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
        TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
        TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
