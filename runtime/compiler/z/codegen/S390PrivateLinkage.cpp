@@ -2637,7 +2637,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       
      TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
         comp()->getSymRefTab(), snippetLabel);
-         TR::Snippet *snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
+         TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
       //  TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
       //                                                     callNode->getSymbolReference(), doneSnippetLabel, argSize);
       cg()->addSnippet(snippet);
