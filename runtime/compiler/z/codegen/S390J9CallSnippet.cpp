@@ -421,9 +421,18 @@ TR::S390J9CallSnippet::emitSnippetBody()
             {
             // int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
             // *(int32_t *)(++cursor) = disp32;
-
-             cg()->addProjectSpecializedRelocation(cursor, (uint8_t *)glueRef, NULL, TR_HelperAddress, __FILE__, __LINE__,
-        callNode);
+            cg()->addExternalRelocation(
+         TR::ExternalRelocation::create(
+            cursor,
+            (uint8_t *)glueRef,
+            TR_HelperAddress,
+            cg()),
+         __FILE__,
+         __LINE__,
+         getNode());
+    //  cursor += 4;
+           //  cg()->addProjectSpecializedRelocation(cursor, (uint8_t *)glueRef, NULL, TR_HelperAddress, __FILE__, __LINE__,
+      //  callNode);
             }
       }
 
