@@ -430,7 +430,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
          __FILE__,
          __LINE__,
          getNode());
-    //  cursor += 4;
+      cursor += 4;
            //  cg()->addProjectSpecializedRelocation(cursor, (uint8_t *)glueRef, NULL, TR_HelperAddress, __FILE__, __LINE__,
       //  callNode);
             }
