@@ -259,6 +259,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    uint8_t * cursor = cg()->getBinaryBufferCursor();
    TR::Node * callNode = getNode();
    TR::SymbolReference * methodSymRef =  getRealMethodSymbolReference();
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp);
 
    if (!methodSymRef)
       methodSymRef = callNode->getSymbolReference();
@@ -270,7 +271,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    // Flush in-register arguments back to the stack for interpreter
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
 
-   TR_RuntimeHelper runtimeHelper = callNode->isJitDispatchJ9MethodCall(comp) ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
+   TR_RuntimeHelper runtimeHelper = isJitDispatchJ9Method ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
    TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
 
    // Generate RIOFF if RI is supported.
@@ -322,6 +323,8 @@ TR::S390J9CallSnippet::emitSnippetBody()
    pad_bytes = (((uintptr_t) cursor + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - (uintptr_t) cursor);
    TR_ASSERT( pad_bytes == 0, "Method address field must be aligned for patching");
 
+   if (!isJitDispatchJ9Method)
+      {
    // Method address
    *(uintptr_t *) cursor = (uintptr_t) glueRef->getMethodAddress();
    cg()->addExternalRelocation(
@@ -347,10 +350,11 @@ TR::S390J9CallSnippet::emitSnippetBody()
       __LINE__,
       callNode);
    cursor += sizeof(uintptr_t);
+      }
 
    //induceOSRAtCurrentPC is implemented in the VM, and it knows, by looking at the current PC, what method it needs to
    //continue execution in interpreted mode. Therefore, it doesn't need the method pointer.
-   if (!glueRef->isOSRInductionHelper() && !callNode->isJitDispatchJ9MethodCall(comp))
+   if (!glueRef->isOSRInductionHelper() && !isJitDispatchJ9Method)
       {
       // Store the method pointer: it is NULL for unresolved
       // This field must be doubleword aligned for 64-bit and word aligned for 32-bit
@@ -374,7 +378,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                getNode());
             }
          }
-      else if (!callNode->isJitDispatchJ9MethodCall(comp))
+      else if (!isJitDispatchJ9Method)
          {
          uintptr_t ramMethod = (uintptr_t)methodSymRef->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier();
          *(uintptr_t *) cursor = ramMethod;
@@ -413,7 +417,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                callNode);
             }
          }
-         else if (callNode->isJitDispatchJ9MethodCall(comp))
+         else if (isJitDispatchJ9Method)
             {
             // int32_t disp32 = cg()->branchDisplacementToHelperOrTrampoline(cursor, glueRef);
             // *(int32_t *)(++cursor) = disp32;
