@@ -323,10 +323,10 @@ TR::S390J9CallSnippet::emitSnippetBody()
    pad_bytes = (((uintptr_t) cursor + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - (uintptr_t) cursor);
    TR_ASSERT( pad_bytes == 0, "Method address field must be aligned for patching");
 
+   *(uintptr_t *) cursor = (uintptr_t) glueRef->getMethodAddress();
    if (!isJitDispatchJ9Method)
       {
    // Method address
-   *(uintptr_t *) cursor = (uintptr_t) glueRef->getMethodAddress();
    cg()->addExternalRelocation(
       TR::ExternalRelocation::create(
          cursor,
