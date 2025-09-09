@@ -2589,7 +2589,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    if (isJitDispatchJ9Method)
       {
-            //printf("generating j9 dispatch j9method call\n");
+      //printf("generating j9 dispatch j9method call\n");
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
          scratchReg, getVTableIndexArgumentRegister());
