@@ -2605,8 +2605,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
-
+       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
+      TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+      TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
+      TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
+
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
    
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
@@ -2616,10 +2621,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
-      TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
-      TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-      TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
-      TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+     
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
@@ -3542,6 +3544,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    {
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
+   //bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       // Note: special long args are still only passed in one GPR
