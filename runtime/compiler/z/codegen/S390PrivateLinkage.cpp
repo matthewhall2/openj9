@@ -2610,7 +2610,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
+      //generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
 
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
    
