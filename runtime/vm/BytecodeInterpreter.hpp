@@ -636,7 +636,7 @@ done:
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		int printArgs = getenv("J2I_PRINT_ARGS") != NULL ? atoi(getenv("J2I_PRINT_ARGS")) : 0;
 		for (int i = 0; i < printArgs; i++) {
-			printf("arg%d=%lu\n", i, *(void*)_sp[i]);
+			printf("arg%d=%lu\n", i, _sp[i]);
 		}
 		J9ROMMethod* const romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 		bool isMHThrowDefCon = (_sendMethod == _currentThread->javaVM->initialMethods.throwDefaultConflict);
