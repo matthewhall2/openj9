@@ -2587,17 +2587,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       return gcPoint;
       }
 
-   if (!isJitDispatchJ9Method && (!callSymRef->isUnresolved() && !callSymbol->isInterpreted() && ((comp()->compileRelocatableCode() && callSymbol->isHelper()) || !comp()->compileRelocatableCode())))
+   if (isJitDispatchJ9Method)
       {
-      // direct call for resolved method
-
-      gcPoint = generateDirectCall(cg(), callNode, myself ? true : false, callSymRef, dependencies);
-      gcPoint->setDependencyConditions(dependencies);
-
-      }
-   else if (isJitDispatchJ9Method)
-      {
-      //printf("generating j9 dispatch j9method call\n");
+            //printf("generating j9 dispatch j9method call\n");
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
          scratchReg, getVTableIndexArgumentRegister());
@@ -2617,7 +2609,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
    
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
      // printf("interpreter call check done\n");
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
@@ -2636,33 +2628,124 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
    //      comp()->getSymRefTab(), snippetLabel);
-         TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
-      //  TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
-      //                                                     callNode->getSymbolReference(), doneSnippetLabel, argSize);
+      //   TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      TR_RuntimeHelper runtimeHelper = TR_j2iTransition;
+      TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
+                                                          glueRef, doneLabel, argSize);
       cg()->addSnippet(snippet);
 
     //  TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
      // cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
    //   outlinedSlowPath->swapInstructionListsWithCompilation();
-       TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+     //  TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       //cg()->generateVMCallHelperPrePrologue(cursor);
       //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
   //    TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
-      TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef, cursor);
+//      TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef, cursor);
     //  gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
-      interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneSnippetLabel);
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+   //   interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
+  //    generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneSnippetLabel);
+    //  generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
    //   outlinedSlowPath->swapInstructionListsWithCompilation();
 
      
 
-     generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
-   
+      auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
 
+      // NOP is necessary due to confusion when resolving shared slots at a transition. The OSR infrastructure needs
+      // to locate the GC map metadata for this transition point by examining the return address. The algorithm used
+      // attempts to find the last instruction PC that is smaller than or equal to the return address. The reason we
+      // do this is because under involuntary OSR we may generate the GC map on the return instruction itself. Several
+      // of our snippets do this. As such we need to handle both cases, i.e. locating the GC map if its on the yield
+      // point or if its on the return address. Hence a less than or equal to comparison is used. We insert this NOP
+      // to avoid confusion as the instruction following this yield could also have a GC map registered and we must
+      // ensure we pick up the correct metadata.
+      cg()->insertPad(callNode, reStartInstruction, 2, false);
+
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
       cg()->stopUsingRegister(scratchReg);
+
+      return gcPoint;
       }
+
+   if (!isJitDispatchJ9Method && (!callSymRef->isUnresolved() && !callSymbol->isInterpreted() && ((comp()->compileRelocatableCode() && callSymbol->isHelper()) || !comp()->compileRelocatableCode())))
+      {
+      // direct call for resolved method
+
+      gcPoint = generateDirectCall(cg(), callNode, myself ? true : false, callSymRef, dependencies);
+      gcPoint->setDependencyConditions(dependencies);
+
+      }
+//    else if (isJitDispatchJ9Method)
+//       {
+//       //printf("generating j9 dispatch j9method call\n");
+//       TR::Register *scratchReg = cg()->allocateRegister();
+//       dependencies->addPostCondition(
+//          scratchReg, getVTableIndexArgumentRegister());
+//          TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+
+//        TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+//        TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+//       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
+//       TR::LabelSymbol *doneSnippetLabel = generateLabelSymbol(cg());
+//      // TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+
+//       // fetch J9Method::extra field
+//       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
+//             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
+//       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
+
+//       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
+//       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
+   
+//       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+//      // printf("interpreter call check done\n");
+//       // find target address
+//       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
+//             generateS390MemoryReference(scratchReg, -4, cg()));
+//       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
+//       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+//       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
+//       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+//       TR_ASSERT_FATAL(NULL != regEP, "Expected to find entry point register in post conditions");
+//       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+//       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+//       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+//       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
+
+//      // printf("call to jit instr generated\n");
+
+//    //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
+//    //      comp()->getSymRefTab(), snippetLabel);
+//          TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+//       //  TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
+//       //                                                     callNode->getSymbolReference(), doneSnippetLabel, argSize);
+//       cg()->addSnippet(snippet);
+
+//     //  TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+//      // cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+//    //   outlinedSlowPath->swapInstructionListsWithCompilation();
+//        TR::Instruction* cursor = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+//       //cg()->generateVMCallHelperPrePrologue(cursor);
+//       //gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+//   //    TR::Instruction* interpreterCall = generateDirectCall(cg(), callNode, false, snippetSyRref, dependencies, cursor);
+//       TR::Instruction* interpreterCall = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef, cursor);
+//     //  gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+//       interpreterCall->setNeedsGCMap(getPreservedRegisterMapForGC());
+//       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneSnippetLabel);
+//       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+//    //   outlinedSlowPath->swapInstructionListsWithCompilation();
+
+     
+
+//      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+   
+
+//       printf("jitdistpatchJ9MethodGeneration done\n");
+//       cg()->stopUsingRegister(scratchReg);
+//       }
    else
       {
       if (cg()->getSupportsRuntimeInstrumentation())
