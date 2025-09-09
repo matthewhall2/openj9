@@ -2630,14 +2630,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    //   TR::SymbolReference *snippetSyRref = new (trHeapMemory()) TR::SymbolReference(
    //      comp()->getSymRefTab(), snippetLabel);
-      TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
-      //TR_RuntimeHelper runtimeHelper = TR_j2iTransition;
-      ///TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
-      //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
-                                                         // glueRef, doneLabel, argSize);
+   //   TR::Snippet *snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      TR_RuntimeHelper runtimeHelper = TR_j2iTransition;
+      TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
+                                                          glueRef, doneLabel, argSize);
       cg()->addSnippet(snippet);
 
-      gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
+    //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, callSymRef);
 
     //  TR_S390OutOfLineCodeSection *outlinedSlowPath = new (trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
      // cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
@@ -2655,7 +2655,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
      
 
-      //auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
 
       // NOP is necessary due to confusion when resolving shared slots at a transition. The OSR infrastructure needs
       // to locate the GC map metadata for this transition point by examining the return address. The algorithm used
@@ -2665,7 +2665,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // point or if its on the return address. Hence a less than or equal to comparison is used. We insert this NOP
       // to avoid confusion as the instruction following this yield could also have a GC map registered and we must
       // ensure we pick up the correct metadata.
-     // cg()->insertPad(callNode, reStartInstruction, 2, false);
+      cg()->insertPad(callNode, reStartInstruction, 2, false);
 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       printf("jitdistpatchJ9MethodGeneration done\n");
