@@ -980,8 +980,8 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node        
                switch (sym->getMandatoryRecognizedMethod())
                   {
                   case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-                     rregIndex = getProperties().getJ9MethodArgumentRegister();
-                     numSpecialArgs++;
+                     // rregIndex = getProperties().getJ9MethodArgumentRegister();
+                     // numSpecialArgs++;
                      break;
                   case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
                   case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
