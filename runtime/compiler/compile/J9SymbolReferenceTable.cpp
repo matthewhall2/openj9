@@ -323,6 +323,7 @@ J9::SymbolReferenceTable::findOrCreateDispatchJ9MethodSymbolRef()
    if (symRef == NULL)
       {
       TR::MethodSymbol *sym = TR::MethodSymbol::create(trHeapMemory(), TR_None);
+      sym->setHelper();
       sym->setIsInlinedByCG();
       sym->setLinkage(TR_Private);
       TR::SymbolReference *symRef = new (trHeapMemory()) TR::SymbolReference(
