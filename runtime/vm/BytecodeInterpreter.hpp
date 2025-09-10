@@ -635,6 +635,9 @@ done:
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		void* const jitReturnAddress = VM_JITInterface::fetchJITReturnAddress(_currentThread, _sp);
 		int printArgs = getenv("J2I_PRINT_ARGS") != NULL ? atoi(getenv("J2I_PRINT_ARGS")) : 0;
+		if (printArgs > 0) {
+			printf("j2i - sendMethod: %lu\n", _sendMethod)
+		}
 		for (int i = 0; i < printArgs; i++) {
 			printf("arg%d=%lu\n", i, _sp[i]);
 		}
