@@ -3561,6 +3561,18 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       default:
          break;
       }
+   
+   if (isJitDispatchJ9Method) {
+      printf("isJitDispatchJ9Method is true\n");
+      switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod()) {
+         case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+            printf("found jit dispatch computed call\n");
+            break;
+         default:
+            printf("ERROR: isJitDispatchJ9Method is true but not a recognized method\n");
+            break;
+      }
+   }
 
    if (specialArgReg != TR::RealRegister::NoReg)
       {
