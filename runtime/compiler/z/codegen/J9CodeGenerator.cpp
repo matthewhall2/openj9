@@ -295,8 +295,8 @@ J9::Z::CodeGenerator::initialize()
 bool
 J9::Z::CodeGenerator::callUsesHelperImplementation(TR::Symbol *sym)
    {
-   return sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives) &&
-                        sym->castToMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
+   return false; //sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives))// &&
+                      //  sym->castToMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
    }
 
 TR::Linkage *
@@ -3666,6 +3666,7 @@ TR::Instruction* J9::Z::CodeGenerator::generateVMCallHelperSnippet(TR::Instructi
 
    if (comp->target().is64Bit())
       {
+
       cursor = generateDataConstantInstruction(self(), TR::InstOpCode::dd, node, UPPER_4_BYTES(j9MethodAddress), cursor);
       cursor->setEncodingRelocation(encodingRelocation);
 
@@ -3721,7 +3722,6 @@ TR::Instruction* J9::Z::CodeGenerator::generateVMCallHelperPrePrologue(TR::Instr
    // branch (BRC) to some location. Before patching in the branch we must save the 4 bytes at the JIT entry point
    // to this location so that we can later reverse the patching at JIT entry point if needed.
    cursor = generateDataConstantInstruction(self(), TR::InstOpCode::dd, node, 0xdeafbeef, cursor);
-
    // Generated a pad for the body info address to keep offsets in PreprologueConst.hpp constant for simplicity
    if (comp->target().is64Bit())
       {
