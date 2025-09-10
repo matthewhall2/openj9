@@ -995,9 +995,9 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node        
 
             if (rregIndex == noReg && isJitDispatchJ9Method && i == firstArgument)
                {
-               rregIndex = getProperties().getJ9MethodArgumentRegister();
-               numSpecialArgs++;
-               reserveStackSlotForArg = false;
+               // rregIndex = getProperties().getJ9MethodArgumentRegister();
+               // numSpecialArgs++;
+               // reserveStackSlotForArg = false;
                }
 
             if (rregIndex == noReg)
