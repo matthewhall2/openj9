@@ -3546,11 +3546,12 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    {
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
-   //bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       // Note: special long args are still only passed in one GPR
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+         printf("JIT dispatch J9Method: computed call - isJITDispatch: %d\n", isJitDispatchJ9Method);
          specialArgReg = getJ9MethodArgumentRegister();
          break;
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
@@ -3567,7 +3568,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       TR::Register *specialArg = copyArgRegister(callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-      dependencies->addPreCondition(specialArg, specialArgReg );
+      dependencies->addPreCondition(specialArg, specialArgReg, cg() );
       cg()->decReferenceCount(child);
 
       if (comp()->getOption(TR_TraceCG))
