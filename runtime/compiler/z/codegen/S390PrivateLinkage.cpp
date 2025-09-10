@@ -2593,7 +2593,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *scratchReg = cg()->allocateRegister();
       dependencies->addPostCondition(
          scratchReg, getVTableIndexArgumentRegister());
-      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0)); //callNode->getChild(0)->getRegister();
+      //   cg()->evaluate(callNode->getChild(0)); 
+      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
        TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
        TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
@@ -3564,6 +3565,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    
    if (isJitDispatchJ9Method) {
       printf("isJitDispatchJ9Method is true\n");
+      TR_ASSERT_FATAL(from == 0, "JIT dispatch J9Method: special arg should be 0\n");
       specialArgReg = getJ9MethodArgumentRegister();
       switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod()) {
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
