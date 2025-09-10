@@ -3564,6 +3564,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    
    if (isJitDispatchJ9Method) {
       printf("isJitDispatchJ9Method is true\n");
+      specialArgReg = getJ9MethodArgumentRegister();
       switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod()) {
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
             printf("found jit dispatch computed call\n");
