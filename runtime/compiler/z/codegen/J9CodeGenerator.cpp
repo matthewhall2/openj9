@@ -3664,7 +3664,7 @@ TR::Instruction* J9::Z::CodeGenerator::generateVMCallHelperSnippet(TR::Instructi
 
    const intptr_t j9MethodAddress = reinterpret_cast<intptr_t>(methodSymbol->getResolvedMethod()->resolvedMethodAddress());
 
-   if (comp->target().is64Bit())ƒ
+   if (comp->target().is64Bit())
       {
 
       cursor = generateDataConstantInstruction(self(), TR::InstOpCode::dd, node, UPPER_4_BYTES(j9MethodAddress), cursor);
