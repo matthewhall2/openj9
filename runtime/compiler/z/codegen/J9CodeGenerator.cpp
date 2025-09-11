@@ -295,7 +295,7 @@ J9::Z::CodeGenerator::initialize()
 bool
 J9::Z::CodeGenerator::callUsesHelperImplementation(TR::Symbol *sym)
    {
-   return sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives)) &&
+   return sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives) &&
                      sym->castToMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
    }
 
