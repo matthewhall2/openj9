@@ -3535,7 +3535,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
          break;
       }
 
-   if (callNode->isJitDispatchJ9MethodCall(comp());) {
+   if (callNode->isJitDispatchJ9MethodCall(comp())) {
       specialArgReg = getJ9MethodArgumentRegister();
    }
 
