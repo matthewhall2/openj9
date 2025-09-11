@@ -295,8 +295,8 @@ J9::Z::CodeGenerator::initialize()
 bool
 J9::Z::CodeGenerator::callUsesHelperImplementation(TR::Symbol *sym)
    {
-   return false; //sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives))// &&
-                      //  sym->castToMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
+   return sym && (!self()->comp()->getOption(TR_DisableInliningOfNatives)) &&
+                     sym->castToMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
    }
 
 TR::Linkage *
@@ -3664,7 +3664,7 @@ TR::Instruction* J9::Z::CodeGenerator::generateVMCallHelperSnippet(TR::Instructi
 
    const intptr_t j9MethodAddress = reinterpret_cast<intptr_t>(methodSymbol->getResolvedMethod()->resolvedMethodAddress());
 
-   if (comp->target().is64Bit())
+   if (comp->target().is64Bit())ƒ
       {
 
       cursor = generateDataConstantInstruction(self(), TR::InstOpCode::dd, node, UPPER_4_BYTES(j9MethodAddress), cursor);

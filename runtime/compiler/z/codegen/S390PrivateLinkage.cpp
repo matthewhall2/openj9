@@ -2589,18 +2589,20 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    if (isJitDispatchJ9Method)
       {
-      //printf("generating j9 dispatch j9method call\n");
       TR::Register *scratchReg = cg()->allocateRegister();
-      dependencies->addPostCondition(
-         scratchReg, getVTableIndexArgumentRegister());
-      //   cg()->evaluate(callNode->getChild(0)); 
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
-       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
-       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
-      TR::LabelSymbol *doneSnippetLabel = generateLabelSymbol(cg());
-     // TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+
+     TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+      postDeps->setAddCursorForPre(0);        
+      postDeps->setNumPreConditions(0, trMemory());
+      postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister())
 
       // fetch J9Method::extra field
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
@@ -2614,7 +2616,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
    
-      TR::Instruction* interpCall = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel, dependencies);
+      TR::Instruction* interpCall = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel, preDeps);
      // printf("interpreter call check done\n");
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
@@ -3546,12 +3548,10 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    {
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
-   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       // Note: special long args are still only passed in one GPR
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-         printf("JIT dispatch J9Method: computed call - isJITDispatch: %d\n", isJitDispatchJ9Method);
          specialArgReg = getJ9MethodArgumentRegister();
          break;
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
@@ -3561,19 +3561,9 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       default:
          break;
       }
-   
-   if (isJitDispatchJ9Method) {
-      printf("isJitDispatchJ9Method is true\n");
-      TR_ASSERT_FATAL(from == 0, "JIT dispatch J9Method: special arg should be 0\n");
+
+   if (callNode->isJitDispatchJ9MethodCall(comp());) {
       specialArgReg = getJ9MethodArgumentRegister();
-      switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod()) {
-         case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-            printf("found jit dispatch computed call\n");
-            break;
-         default:
-            printf("ERROR: isJitDispatchJ9Method is true but not a recognized method\n");
-            break;
-      }
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
@@ -3667,7 +3657,7 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
                                                            getNumberOfDependencyGPRegisters(), cg());
 
    // setup arguments
-   argSize = buildArgs(callNode, dependencies, false, -1, vftReg);
+   argSize = buildArgs(callNode, dependencies, false, -1, vftReg, isJItDis);
 
    buildDirectCall(callNode, callSymRef,  dependencies, argSize);
 
