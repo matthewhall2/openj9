@@ -4003,7 +4003,7 @@ TR::Register *J9::X86::TreeEvaluator::longNumberOfTrailingZeros(TR::Node *node, 
    return resultReg;
    }
 
-inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, TR::Regsiter *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* successLabel, TR::LabelSymbol* failLabel)
+inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* successLabel, TR::LabelSymbol* failLabel)
    {
    TR::LabelSymbol *iTableLoopLabel = generateLabelSymbol(cg);
    // Obtain I-Table
