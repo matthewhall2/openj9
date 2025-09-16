@@ -4050,7 +4050,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
        generateX86MemoryReference(superclassArrayReg, toClassDepthReg, comp->target().is64Bit()?3:2, cg), cg);
    generateLabelInstruction(cmpClassOpcode, node, gotoLabel, cg);
-   srm->stopUsingRegisters();
+   srm->stopUsingRegisters(cg);
    }
 
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
@@ -4147,7 +4147,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    if (isCheckCastAndNullCheck)
       generateLoadJ9Class(node, objClassReg, ObjReg, cg);
 
-   TR::Register* castClassRomClassReg = srm->findOrCreateSratchRegister();
+   TR::Register* castClassRomClassReg = srm->findOrCreateScratchRegister();
    // get romClass of cast class, for testing array, interface class type
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, castClassRomClassReg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
 
