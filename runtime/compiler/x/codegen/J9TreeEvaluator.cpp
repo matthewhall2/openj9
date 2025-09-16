@@ -4078,6 +4078,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
 
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
+   TR_Debug * debugObj = cg->getDebug();
    TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
    TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
@@ -4112,13 +4113,21 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
    // If toClass is array, call out of line helper
-   generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+   TR::Instruction* cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
        generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->Test if array class");
+      }
    generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
    // test if toClass is an interface
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
        generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->Test if interface class");
+      }
    // skip inlined interface test if not an interface
    generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
    srm->reclaimScratchRegister(toClassROMClassReg);
