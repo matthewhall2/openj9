@@ -4019,7 +4019,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateMemRegInstruction(TR::InstOpCode::CMPMemReg(), node, interfaceMR, toClassReg, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
-   srm->stopUsingRegister(iTableReg);
+   srm->reclaimScratchRegister(iTableReg);
    // Found from I-Table
    generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
    }
@@ -4050,7 +4050,8 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
        generateX86MemoryReference(superclassArrayReg, toClassDepthReg, comp->target().is64Bit()?3:2, cg), cg);
    generateLabelInstruction(cmpClassOpcode, node, gotoLabel, cg);
-   srm->stopUsingRegisters(cg);
+   srm->reclaimScratchRegister(toClassDepthReg);
+   srm->reclaimScratchRegister(superclassArrayReg);
    }
 
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
@@ -4091,7 +4092,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
        generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
    // skip inlined interface test if not an interface
    generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
-   srm->stopUsingRegister(castClassRomClassReg);
+   srm->reclaimScratchRegister(castClassRomClassReg);
 
    generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
 
@@ -4102,12 +4103,13 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateLabelInstruction(TR::InstOpCode::label, node, failLabel, cg);
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
 
+   srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
    deps->addPostCondition(resultReg, TR::RealRegister::eax);
    deps->addPostCondition(fromClassReg, TR::RealRegister::BestFreeReg);
    if (toClassReg != fromClassReg)
-      {   
+      {
       deps->addPostCondition(toClassReg, TR::RealRegister::BestFreeReg);
       }
 
@@ -4172,7 +4174,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
        generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
-   srm->stopUsingRegister(castClassRomClassReg);
+   srm->reclaimScratchRegister(castClassRomClassReg);
 
    generateInlineInterfaceTest(node, cg, castClassReg, objClassReg, srm, fallThruLabel, throwLabel);
 
@@ -4198,6 +4200,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 8, cg);
 
+   srm->stopUsingRegisters();
    deps->addPostCondition(ObjReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(castClassReg, TR::RealRegister::NoReg, cg);
    srm->addScratchRegistersToDependencyList(deps);
