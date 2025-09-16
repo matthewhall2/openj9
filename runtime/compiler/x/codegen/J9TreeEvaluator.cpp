@@ -4031,7 +4031,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    static_assert(J9AccClassDepthMask == 0xffff, "J9_JAVA_CLASS_DEPTH_MASK must be 0xffff");
    TR::Register* toClassDepthReg = srm->findOrCreateScratchRegister();
    TR::Register* superclassArrayReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(comp->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
+   generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
             toClassDepthReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
 
    // cast class depth >= obj class depth, throw
@@ -4048,7 +4048,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    // Since 64-bit is more prevalent, we opt to optimize for 64bit in this case
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
-       generateX86MemoryReference(superclassArrayReg, toClassDepthReg, comp->target().is64Bit()?3:2, cg), cg);
+       generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->comp->target().is64Bit()?3:2, cg), cg);
    generateLabelInstruction(cmpClassOpcode, node, gotoLabel, cg);
    srm->reclaimScratchRegister(toClassDepthReg);
    srm->reclaimScratchRegister(superclassArrayReg);
