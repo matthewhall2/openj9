@@ -4138,7 +4138,11 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, TR::InstOpCode::JE4, use64BitClasses);
    // fall through to fail label
 
-   generateLabelInstruction(TR::InstOpCode::label, node, failLabel, cg);
+   cursor = generateLabelInstruction(TR::InstOpCode::label, node, failLabel, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->Test failed");
+      }
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
 
    srm->stopUsingRegisters();
