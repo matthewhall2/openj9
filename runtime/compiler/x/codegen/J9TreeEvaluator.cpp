@@ -4064,6 +4064,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    doneLabel->setEndInternalControlFlow();
+
+   TR::Compilation *comp = cg->comp();
    auto use64BitClasses = comp->target().is64Bit() &&
                (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
