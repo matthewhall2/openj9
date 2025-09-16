@@ -4079,7 +4079,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
 
    // testing if toClass is an array class
-   TR::Register* castClassRomClassReg = srm->findOrCreateSratchRegister();
+   TR::Register* castClassRomClassReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, castClassRomClassReg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
    // If toClass is array, call out of line helper
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
