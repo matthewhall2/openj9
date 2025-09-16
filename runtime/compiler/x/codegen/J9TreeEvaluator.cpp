@@ -4048,7 +4048,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    // Since 64-bit is more prevalent, we opt to optimize for 64bit in this case
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
-       generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->comp->target().is64Bit()?3:2, cg), cg);
+       generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->target().is64Bit()?3:2, cg), cg);
    generateLabelInstruction(cmpClassOpcode, node, gotoLabel, cg);
    srm->reclaimScratchRegister(toClassDepthReg);
    srm->reclaimScratchRegister(superclassArrayReg);
@@ -4060,6 +4060,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
