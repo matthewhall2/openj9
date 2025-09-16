@@ -4064,6 +4064,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    doneLabel->setEndInternalControlFlow();
+   auto use64BitClasses = comp->target().is64Bit() &&
+               (!TR::Compiler->om.generateCompressedObjectHeaders() ||
+               (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
