@@ -4024,7 +4024,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
    }
 
-inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, TR::Regsiter *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* gotoLabel, TR::InstOpCode::Mnemonic cmpClassOpcode)
+inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* gotoLabel, TR::InstOpCode::Mnemonic cmpClassOpcode)
    {
    // temp2 holds cast class depth
    // class depth mask must be low 16 bits to safely load without the mask.
@@ -4180,7 +4180,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    generateLabelInstruction(TR::InstOpCode::JE4, node, fallThruLabel, cg);
 
    // class not equal
-   generateInlineSuperclassTest(node, cg, castClassReg, objClassReg, srm, throwLabel);
+   generateInlineSuperclassTest(node, cg, castClassReg, objClassReg, srm, throwLabel, TR::InstOpCode::JNE4);
 
    // throw classCastException
    {
