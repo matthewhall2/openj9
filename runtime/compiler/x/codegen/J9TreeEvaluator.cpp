@@ -4104,9 +4104,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
-   deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
-   deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
+   deps->addPostCondition(resultReg, TR::RealRegister::eax);
+   deps->addPostCondition(fromClassReg, TR::RealRegister::BestFreeReg);
+   deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::BestFreeReg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
 
