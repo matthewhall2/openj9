@@ -4074,6 +4074,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
    TR::Register* resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
    og.endOutlinedInstructionSequence();
 
    // initial result is true
