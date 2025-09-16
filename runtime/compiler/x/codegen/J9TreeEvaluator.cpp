@@ -4122,7 +4122,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
    // test if toClass is an interface
-   generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+   cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
        generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
    if (debugObj)
       {
