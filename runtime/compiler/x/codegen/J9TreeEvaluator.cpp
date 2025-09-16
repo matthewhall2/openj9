@@ -4103,7 +4103,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    // initial result is true
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
-   // no need for null checks. They are inserted prior to isAssignableFrom call from transformation in RecognizedCallTransformer
+   // no need for null checks. They are inserted prior to isAssignableFrom call in RecognizedCallTransformer
 
    // equality test
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
