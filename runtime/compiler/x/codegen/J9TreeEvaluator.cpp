@@ -4080,19 +4080,19 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
 
    // testing if toClass is an array class
-   TR::Register* castClassRomClassReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, castClassRomClassReg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
+   TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
    // If toClass is array, call out of line helper
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+       generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
    // test if toClass is an interface
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+       generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
    // skip inlined interface test if not an interface
    generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
-   srm->reclaimScratchRegister(castClassRomClassReg);
+   srm->reclaimScratchRegister(toClassROMClassReg);
 
    generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
 
