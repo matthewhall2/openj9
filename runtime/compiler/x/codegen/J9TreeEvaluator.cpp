@@ -4005,6 +4005,7 @@ TR::Register *J9::X86::TreeEvaluator::longNumberOfTrailingZeros(TR::Node *node, 
 
 inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* successLabel, TR::LabelSymbol* failLabel)
    {
+   TR_Debug * debugObj = cg->getDebug();
    TR::LabelSymbol *iTableLoopLabel = generateLabelSymbol(cg);
    // Obtain I-Table
    // iTableReg holds head of J9Class->iTable of obj class
@@ -4012,7 +4013,11 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg), cg);
    // Loop through I-Table
    // iTableReg holds iTable list element through the loop
-   generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
+   TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->Start of ITable walk");
+      }
    generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    auto interfaceMR = generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg);
@@ -4021,22 +4026,35 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
    srm->reclaimScratchRegister(iTableReg);
    // Found from I-Table
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
+   cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->ITable walk succeeded");
+      }
    }
 
 inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* gotoLabel, TR::InstOpCode::Mnemonic cmpClassOpcode, bool use64BitClasses)
    {
+   TR_Debug * debugObj = cg->getDebug();
    // temp2 holds cast class depth
    // class depth mask must be low 16 bits to safely load without the mask.
    static_assert(J9AccClassDepthMask == 0xffff, "J9_JAVA_CLASS_DEPTH_MASK must be 0xffff");
    TR::Register* toClassDepthReg = srm->findOrCreateScratchRegister();
    TR::Register* superclassArrayReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
+   TR::Instruction* cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
             toClassDepthReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->load depth of toClass");
+      }
 
    // cast class depth >= obj class depth, throw
    generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, toClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
-   generateLabelInstruction(TR::InstOpCode::JAE4, node, gotoLabel, cg);
+   cursor = generateLabelInstruction(TR::InstOpCode::JAE4, node, gotoLabel, cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->toClass Depth > fromClassDepth - fast fail");
+      }
 
    // check obj class's super class array entry
    // An alternative sequences requiring one less register may be:
@@ -4046,7 +4064,11 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    // On 64 bit, the extra reg isn't likely to cause significant register pressure.
    // On 32 bit, it could put more register pressure due to limited number of regs.
    // Since 64-bit is more prevalent, we opt to optimize for 64bit in this case
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
+   cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
+   if (debugObj)
+      {
+      debugObj->addInstructionComment(cursor, "-->load superclass array");
+      }
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
        generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->target().is64Bit()?3:2, cg), cg);
    generateLabelInstruction(cmpClassOpcode, node, gotoLabel, cg);
