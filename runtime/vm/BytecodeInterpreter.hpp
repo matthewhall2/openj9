@@ -191,6 +191,10 @@ protected:
 
 public:
 
+
+static int j2i_i2j_lts_count = 0;
+static bool fromLTS = false;
+
 /*
  * Function members
  */
@@ -679,6 +683,9 @@ done:
 			do {
 				preCount = (UDATA)_sendMethod->extra;
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
+					if (fromLTS) {
+						j2i_i2j_lts_count++;
+					}
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
 						if (methodCanBeRunCompiled(_sendMethod)) {
@@ -9711,6 +9718,9 @@ done:
 	VMINLINE VM_BytecodeAction
 	linkToStaticSpecial(REGISTER_ARGS_LIST)
 	{
+		if (getenv("testLTS") != NUL) {
+			printf("in lts\n");
+		}
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
 		bool fromJIT = J9_ARE_ANY_BITS_SET(jitStackFrameFlags(REGISTER_ARGS, 0), J9_SSF_JIT_NATIVE_TRANSITION_FRAME);
 		J9ROMMethod *romMethod = NULL;
@@ -9718,11 +9728,18 @@ done:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
+		if (getenv("testLTS") != NUL) {
+			printf("mn is: %p\n", memberNameObject);
+		}
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
 			goto throw_npe;
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
+		if (getenv("testLTS") != NUL) {
+			printf("target method is is: %p\n", _sendMethod);
+		}
+
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
 			romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(_sendMethod);
 			methodArgCount = romMethod->argCount;
@@ -9736,6 +9753,7 @@ done:
 		}
 
 		if (fromJIT) {
+			fromLTS = true;
 			/* Restore SP to before popping memberNameObject. */
 			_sp -= 1;
 			UDATA stackOffset = 1;
@@ -9778,6 +9796,7 @@ done:
 
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
+			fromLTS = false;
 		}
 
 		return rc;
