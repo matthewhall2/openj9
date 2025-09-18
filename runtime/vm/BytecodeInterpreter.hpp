@@ -688,7 +688,17 @@ done:
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
 					if (fromLTS || fromIB || fromLTV || fromLTI) {
 						j2i_i2j_lts_count++;
-						printf("found j2i -> i2j (LTS)\n");
+						char* ending = "";
+						if (fromLTS){
+							ending = "LTS";
+						} else if (fromIB) {
+							ending = "IB";
+						} else if (fromLTV) {
+							ending = "ITV";
+						} else {
+							ending = "LTI";
+						}
+						printf("found j2i -> i2j (%s)\n", ending);
 					}
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
