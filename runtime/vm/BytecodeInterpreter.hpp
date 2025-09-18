@@ -194,6 +194,9 @@ public:
 
 static int j2i_i2j_lts_count;
 static bool fromLTS;
+static bool fromLTV;
+static bool fromLTI;
+static bool fromIB;
 
 /*
  * Function members
@@ -683,7 +686,7 @@ done:
 			do {
 				preCount = (UDATA)_sendMethod->extra;
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
-					if (fromLTS) {
+					if (fromLTS || fromIB || fromLTV || fromLTI) {
 						j2i_i2j_lts_count++;
 						printf("found j2i -> i2j (LTS)\n");
 					}
@@ -9709,8 +9712,10 @@ done:
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
 
 		if (fromJIT) {
+			fromIB = true;
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
+			fromIB = false;
 		}
 
 		return rc;
@@ -9881,6 +9886,7 @@ throw_npe:
 		}
 
 		if (fromJIT) {
+			fromLTV = true;
 			/* On x86-32 we do not want to preserve the MemberName object since this would cause it to
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
@@ -9896,6 +9902,7 @@ throw_npe:
 
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
+			fromLTV = false;
 		}
 
 		return rc;
@@ -9996,6 +10003,7 @@ foundITable:
 		}
 
 		if (fromJIT) {
+			fromLTI = true;
 			/* On x86-32 we do not want to preserve the MemberName object since this would cause it to
 			 * end up in the EIP register when the caller of the MH's target returns, since the target will only
 			 * pop off its own arguments in the call cleanup.
@@ -10011,6 +10019,7 @@ foundITable:
 
 			VM_JITInterface::restoreJITReturnAddress(_currentThread, _sp, (void *)_literals);
 			rc = j2iTransition(REGISTER_ARGS, true);
+			fromLTI = false;
 		}
 
 done:
@@ -12382,4 +12391,7 @@ noUpdate:
 };
 int INTERPRETER_CLASS::j2i_i2j_lts_count = 0;
 bool INTERPRETER_CLASS::fromLTS = false;
+bool INTERPRETER_CLASS::fromLTV = false;
+bool INTERPRETER_CLASS::fromLTI = false;
+bool INTERPRETER_CLASS::fromIB = false;
 #endif /* BYTECODEINTERPRETER_HPP_ */
