@@ -685,6 +685,7 @@ done:
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
 					if (fromLTS) {
 						j2i_i2j_lts_count++;
+						printf("found j2i -> i2j (LTS)\n");
 					}
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
