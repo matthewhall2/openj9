@@ -648,18 +648,15 @@ done:
 			|| (J9_BCLOOP_SEND_TARGET_DEFAULT_CONFLICT == J9_BCLOOP_DECODE_SEND_TARGET(_sendMethod->methodRunAddress))
 		) {
 			if (fromLTS || fromIB || fromLTV || fromLTI) {
-						j2i_i2j_lts_count++;
-						char* ending = "";
 						if (fromLTS){
-							ending = "LTS";
+							printf("native found j2i -> i2j (LTS)\n");
 						} else if (fromIB) {
-							ending = "IB";
+							printf("native found j2i -> i2j (IB)\n");
 						} else if (fromLTV) {
-							ending = "ITV";
+							printf("native found j2i -> i2j (LTV)\n");
 						} else {
-							ending = "LTI";
+							printf("native found j2i -> i2j (LTI)\n");
 						}
-						printf("native found j2i -> i2j (%s)\n", ending);
 					}
 			_literals = (J9Method*)jitReturnAddress;
 			_pc = nativeReturnBytecodePC(REGISTER_ARGS, romMethod);
@@ -692,17 +689,15 @@ done:
 				if (J9_ARE_NO_BITS_SET(preCount, J9_STARTPC_NOT_TRANSLATED)) {
 					if (fromLTS || fromIB || fromLTV || fromLTI) {
 						j2i_i2j_lts_count++;
-						char* ending = "";
 						if (fromLTS){
-							ending = "LTS";
+							printf("found j2i -> i2j (LTS)\n");
 						} else if (fromIB) {
-							ending = "IB";
+							printf("found j2i -> i2j (IB)\n");
 						} else if (fromLTV) {
-							ending = "ITV";
+							printf("found j2i -> i2j (LTV)\n");
 						} else {
-							ending = "LTI";
+							printf("found j2i -> i2j (LTI)\n");
 						}
-						printf("found j2i -> i2j (%s)\n", ending);
 					}
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 					if (immediatelyRunCompiledMethod) {
