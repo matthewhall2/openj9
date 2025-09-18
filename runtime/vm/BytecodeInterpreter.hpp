@@ -192,8 +192,8 @@ protected:
 public:
 
 
-static int j2i_i2j_lts_count = 0;
-static bool fromLTS = false;
+static int j2i_i2j_lts_count;
+static bool fromLTS;
 
 /*
  * Function members
@@ -12333,5 +12333,6 @@ noUpdate:
 	{
 	}
 };
-
+INTERPRETER_CLASS::j2i_i2j_lts_count = 0;
+INTERPRETER_CLASS::fromLTS = false;
 #endif /* BYTECODEINTERPRETER_HPP_ */
