@@ -12379,6 +12379,6 @@ noUpdate:
 	{
 	}
 };
-INTERPRETER_CLASS::j2i_i2j_lts_count = 0;
-INTERPRETER_CLASS::fromLTS = false;
+int INTERPRETER_CLASS::j2i_i2j_lts_count = 0;
+bool INTERPRETER_CLASS::fromLTS = false;
 #endif /* BYTECODEINTERPRETER_HPP_ */
