@@ -9728,7 +9728,7 @@ done:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		if (getenv("testLTS") != NLUL) {
+		if (getenv("testLTS") != NULL) {
 			printf("mn is: %p\n", memberNameObject);
 		}
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
