@@ -9718,7 +9718,7 @@ done:
 	VMINLINE VM_BytecodeAction
 	linkToStaticSpecial(REGISTER_ARGS_LIST)
 	{
-		if (getenv("testLTS") != NUL) {
+		if (getenv("testLTS") != NULL) {
 			printf("in lts\n");
 		}
 		VM_BytecodeAction rc = GOTO_RUN_METHOD;
@@ -9728,7 +9728,7 @@ done:
 
 		/* Pop memberNameObject from the stack. */
 		j9object_t memberNameObject = *(j9object_t *)_sp++;
-		if (getenv("testLTS") != NUL) {
+		if (getenv("testLTS") != NLUL) {
 			printf("mn is: %p\n", memberNameObject);
 		}
 		if (J9_UNEXPECTED(NULL == memberNameObject)) {
@@ -9736,7 +9736,7 @@ done:
 		}
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
-		if (getenv("testLTS") != NUL) {
+		if (getenv("testLTS") != NULL) {
 			printf("target method is is: %p\n", _sendMethod);
 		}
 
