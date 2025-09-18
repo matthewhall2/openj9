@@ -651,6 +651,20 @@ done:
 		|| isDefaultConflictMethodhandle
 		|| J9_ARE_ANY_BITS_SET(romMethod->modifiers, J9AccNative | J9AccAbstract)
 		) {
+			if (fromLTS || fromIB || fromLTV || fromLTI) {
+						j2i_i2j_lts_count++;
+						char* ending = "";
+						if (fromLTS){
+							ending = "LTS";
+						} else if (fromIB) {
+							ending = "IB";
+						} else if (fromLTV) {
+							ending = "ITV";
+						} else {
+							ending = "LTI";
+						}
+						printf("native found j2i -> i2j (%s)\n", ending);
+					}
 			_literals = (J9Method*)jitReturnAddress;
 
 			// only MethodHandle default conflicts are a potential issue since they have no bytecodes for invokeSpecial
