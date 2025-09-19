@@ -724,7 +724,13 @@ done:
 					break;
 				}
 				postCount = preCount - _currentThread->jitCountDelta;
+				if (fromLTS || fromIB || fromLTV || fromLTI) {
+				printf("not compiled yet - pre count: %lu post couunt: %lu\n", preCount, postCount);
+				}
 				if ((IDATA)postCount < 0) {
+					if (fromLTS || fromIB || fromLTV || fromLTI) {
+						printf("attempting to compile\n");
+					}
 					/* Attempt to compile the method */
 					_arg0EA = _sp;
 					_literals = (J9Method*)_pc;
