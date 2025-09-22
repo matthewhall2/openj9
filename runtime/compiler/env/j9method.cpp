@@ -7427,6 +7427,9 @@ TR_ResolvedJ9Method::getResolvedDynamicMethod(TR::Compilation * comp, I_32 callS
       // linkToStatic, which is a VM internal native method that will prepare the call frame for
       // the actual method to be invoked using the last argument we push to stack (memberName object)
       TR_OpaqueMethodBlock *dummyInvoke = _fe->getMethodFromName("java/lang/invoke/MethodHandle", "linkToStatic", "([Ljava/lang/Object;)Ljava/lang/Object;");
+      if (comp->getOption(TR_TraceILGen))
+         traceMsg(comp, "generating dummy link to static for invokedynamic\n");
+      }
       int32_t signatureLength;
       char * linkToStaticSignature = _fe->getSignatureForLinkToStaticForInvokeDynamic(comp, signature, signatureLength);
       result = _fe->createResolvedMethodWithSignature(comp->trMemory(), dummyInvoke, NULL, linkToStaticSignature, signatureLength, this);
@@ -7501,6 +7504,9 @@ TR_ResolvedJ9Method::getResolvedHandleMethod(TR::Compilation * comp, I_32 cpInde
       // the method type table entry to be resolved instead. The resolved method we construct is
       // linkToStatic, which is a VM internal native method that will prepare the call frame for
       // the actual method to be invoked using the last argument we push to stack (memberName object)
+      if (comp->getOption(TR_TraceILGen))
+         traceMsg(comp, "generating dummy link to static for invokehandle\n");
+      }
       TR_OpaqueMethodBlock *dummyInvoke = _fe->getMethodFromName("java/lang/invoke/MethodHandle", "linkToStatic", "([Ljava/lang/Object;)Ljava/lang/Object;");
       int32_t signatureLength;
       char * linkToStaticSignature = _fe->getSignatureForLinkToStaticForInvokeHandle(comp, signature, signatureLength);
