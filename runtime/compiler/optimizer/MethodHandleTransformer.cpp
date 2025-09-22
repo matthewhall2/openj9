@@ -563,8 +563,15 @@ void TR_MethodHandleTransformer::visitCall(TR::TreeTop* tt, TR::Node* node)
          process_java_lang_invoke_MethodHandle_invokeBasic(tt, node);
          break;
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
+         traceMsg(comp(), "attempting to process mh linkToSpecial %s\n", comp()->signature());
+         process_java_lang_invoke_MethodHandle_linkTo(tt, node);
+         break;
       case TR::java_lang_invoke_MethodHandle_linkToVirtual:
+         traceMsg(comp(), "attempting to process mh linkToVirtual %s\n", comp()->signature());
+         process_java_lang_invoke_MethodHandle_linkTo(tt, node);
+         break;
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
+         traceMsg(comp(), "attempting to process mh linkToStatic %s\n", comp()->signature());
          process_java_lang_invoke_MethodHandle_linkTo(tt, node);
          break;
       case TR::java_lang_invoke_Invokers_checkCustomized:
@@ -697,6 +704,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_linkTo(TR::Tre
 
    if (!transformed)
       {
+      traceMsg(comp(), "coud not be processsed\n");
       TR::DebugCounter::prependDebugCounter(comp(),
                                             TR::DebugCounter::debugCounterName(comp(),
                                                                                "MHUnknownObj/linkTo/(%s %s)",
