@@ -9735,6 +9735,9 @@ done:
 		j9object_t lambdaForm = J9VMJAVALANGINVOKEMETHODHANDLE_FORM(_currentThread, mhReceiver);
 		j9object_t memberName = J9VMJAVALANGINVOKELAMBDAFORM_VMENTRY(_currentThread, lambdaForm);
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberName, _vm->vmtargetOffset);
+		if (getenv("testLTS") != NULL) {
+			printf(" (IB) target method is is: %p\n", _sendMethod);
+		}
 
 		if (fromJIT) {
 			fromIB = true;
@@ -9768,7 +9771,7 @@ done:
 
 		_sendMethod = (J9Method *)(UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmtargetOffset);
 		if (getenv("testLTS") != NULL) {
-			printf("target method is is: %p\n", _sendMethod);
+			printf(" (LTS) target method is is: %p\n", _sendMethod);
 		}
 
 		if (J9_EXPECTED(_currentThread->javaVM->initialMethods.throwDefaultConflict != _sendMethod)) {
@@ -9896,6 +9899,9 @@ throw_npe:
 		UDATA vTableOffset = (UDATA)J9OBJECT_U64_LOAD(_currentThread, memberNameObject, _vm->vmindexOffset);
 		J9Class *receiverClass = J9OBJECT_CLAZZ(_currentThread, receiverObject);
 		_sendMethod = *(J9Method **)(((UDATA)receiverClass) + vTableOffset);
+		if (getenv("testLTS") != NULL) {
+			printf(" (LTV) target method is is: %p\n", _sendMethod);
+		}
 
 		/* The invokeBasic INL uses the methodArgCount from ramCP to locate the receiver object,
 		 * so when dispatched using linkToVirtual, it will still access the ramCP of the linkToVirtual call
