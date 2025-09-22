@@ -485,12 +485,12 @@ J9::SymbolReferenceTable::findOrCreateHandleMethodSymbol(TR::ResolvedMethodSymbo
    TR_ResolvedMethod  * method = owningMethodSymbol->getResolvedMethod()->getResolvedHandleMethod(comp(), cpIndex, unresolvedInCP, isInvokeCacheAppendixNull);
    TR::SymbolReference * symRef = findOrCreateMethodSymbol(owningMethodSymbol->getResolvedMethodIndex(), cpIndex, method, TR::MethodSymbol::Static);
    if (comp()->getOption(TR_TraceILGen)) {
-         traceMsg(comp, "finding method handle symbol\n");
+         traceMsg(comp(), "finding method handle symbol\n");
       }
    if (*unresolvedInCP) {
       symRef->getSymbol()->setDummyResolvedMethod(); // linkToStatic is a dummy TR_ResolvedMethod
       if (comp()->getOption(TR_TraceILGen)) {
-         traceMsg(comp, "symbol is unresolved in cp\n");
+         traceMsg(comp(), "symbol is unresolved in cp\n");
       }
    }
 #else
