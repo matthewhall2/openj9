@@ -12022,7 +12022,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       if ((toClassDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
          {
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
-         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, helperCallLabel);
+         // no need for helper if we fail interface test - we known the cast class is an interface
+         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
          }
       }
 
