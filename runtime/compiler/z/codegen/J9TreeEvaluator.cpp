@@ -4358,6 +4358,51 @@ genInstanceOfOrCheckCastNullTest(TR::Node* node, TR::CodeGenerator* cg, TR::Regi
       }
    }
 
+static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
+   {
+   TR::Compilation *comp = cg->comp();
+   TR_Debug * debugObj = cg->getDebug();
+   bool traceCG = comp->getOption(TR_TraceCG);
+   TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *startWalkLabel = generateLabelSymbol(cg);
+
+   TR::Register *iTableReg = srm->findOrCreateScratchRegister();
+   // lastITable Test
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable"), 1, TR::DebugCounter::Undetermined);
+   TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
+   // last itable is never null
+   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable/fail"), 1, TR::DebugCounter::Undetermined);
+   // Itable Test
+   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startWalkLabel);
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
+
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/ITableWalk"), 1, TR::DebugCounter::Undetermined);
+
+   TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
+   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
+   if (debugObj && traceCG)
+         debugObj->addInstructionComment(cursor, "--> Start of iTable walk");
+
+   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, failLabel);
+   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/ITableWalk/fail"), 1, TR::DebugCounter::Undetermined);
+   if (debugObj && traceCG)
+      debugObj->addInstructionComment(cursor, "to start of loop");
+
+   srm->reclaimScratchRegister(iTableReg);
+   }
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //  checkcastEvaluator - checkcast
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -11871,50 +11916,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
-static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
-   {
-   TR::Compilation *comp = cg->comp();
-   TR_Debug * debugObj = cg->getDebug();
-   bool traceCG = comp->getOption(TR_TraceCG);
-   TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *startWalkLabel = generateLabelSymbol(cg);
-
-   TR::Register *iTableReg = srm->findOrCreateScratchRegister();
-   // lastITable Test
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable"), 1, TR::DebugCounter::Undetermined);
-   TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   // last itable is never null
-   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable/fail"), 1, TR::DebugCounter::Undetermined);
-   // Itable Test
-   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startWalkLabel);
-   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
-
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/ITableWalk"), 1, TR::DebugCounter::Undetermined);
-
-   TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
-   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
-   if (debugObj && traceCG)
-         debugObj->addInstructionComment(cursor, "--> Start of iTable walk");
-
-   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, failLabel);
-   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-   generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
-            generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/ITableWalk/fail"), 1, TR::DebugCounter::Undetermined);
-   if (debugObj && traceCG)
-      debugObj->addInstructionComment(cursor, "to start of loop");
-
-   srm->reclaimScratchRegister(iTableReg);
-   }
 
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
