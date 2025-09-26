@@ -9111,8 +9111,10 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             // For dynamic cast class to next 2 calls will generate branch to either helper call or dynamicCacheTest depending on the next generated test.
             TR::LabelSymbol *callHelperLabel = (*(iter+1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
-            if (castClassDepth == -1)
-               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, flags);
+            if (castClassDepth == -1) {
+               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, J9AccInterface);
+               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, J9AccClassArray);
+            }
 
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
@@ -9215,6 +9217,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                traceMsg(comp,"Emitting Dynamic Cache for CastClass and ObjectClass\n",node->getOpCode().getName());
             break;
             }
+         case ITableTest:
+            genITableTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
          case HelperCall:
             TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
             break;
@@ -12022,7 +12026,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       if ((toClassDepth == -1) || (NULL == toClassSymRef || toClassSymRef->isClassInterface(comp)))
          {
          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, ITableTestLabel);
-         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, helperCallLabel);
+         genITableTest(node, cg, srm, fromClassReg, toClassReg, doneLabel, failLabel);
          }
       }
 
