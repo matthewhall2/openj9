@@ -11869,17 +11869,6 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    TR::LabelSymbol *cacheCastClassLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *startWalkLabel = generateLabelSymbol(cg);
 
-
-   TR::LabelSymbol *lastITableSuccessLabel = NULL;
-   TR::LabelSymbol *ITableSuccessLabel = NULL;
-   if (debugObj) {
-      lastITableSuccessLabel = generateLabelSymbol(cg);
-      ITableSuccessLabel = generateLabelSymbol(cg);
-   } else {
-      lastITableSuccessLabel = successLabel;
-      ITableSuccessLabel = successLabel;
-   }
-
    TR::Register *iTableReg = srm->findOrCreateScratchRegister();
    // lastITable Test
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable"), 1, TR::DebugCounter::Undetermined);
