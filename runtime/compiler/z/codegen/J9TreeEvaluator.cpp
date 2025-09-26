@@ -9145,7 +9145,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                */
             int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
             dynamicCacheTestLabel = generateLabelSymbol(cg);
-            TR::LabelSymbol interfaceTestLabel = generateLabelSymbol(cg);
+            TR::LabelSymbol *interfaceTestLabel = generateLabelSymbol(cg);
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth = %d\n", node->getOpCode().getName(),castClassDepth);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "instanceOfStats/(%s)/SuperClassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
