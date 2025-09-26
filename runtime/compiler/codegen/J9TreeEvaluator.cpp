@@ -1337,8 +1337,9 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
       // There is a possibility of attempt to cast object to another class and having cache on that object updated by helper.
       // Before going to helper checking the cache.
       sequences[i++] = CastClassCacheTest;
-      if (createDynamicCacheTests)
-         sequences[i++] = DynamicCacheObjectClassTest;
+      sequebces[i++] = SuperClassTest;
+      // if (createDynamicCacheTests)
+      //    sequences[i++] = DynamicCacheObjectClassTest;
       sequences[i++] = HelperCall;
       }
    // Cast class is a runtime variable, still not a lot of room to be fancy.

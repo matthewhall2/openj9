@@ -9100,6 +9100,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
                */
             int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
             dynamicCacheTestLabel = generateLabelSymbol(cg);
+            TR::LabelSymbol interfaceTestLabel = generateLabelSymbol(cg);
             if (comp->getOption(TR_TraceCG))
                traceMsg(comp, "%s: Emitting Super Class Test, Cast Class Depth = %d\n", node->getOpCode().getName(),castClassDepth);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "instanceOfStats/(%s)/SuperClassTest", comp->signature()),1,TR::DebugCounter::Undetermined);
@@ -9112,12 +9113,17 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             TR::LabelSymbol *callHelperLabel = (*(iter+1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
             if (castClassDepth == -1) {
-               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, J9AccInterface);
+               genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceTestLabel, srm, J9AccInterface);
                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, J9AccClassArray);
             }
 
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
+
+            if (castClassDepth == -1) {
+               generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceTestLabel);
+               genITableTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+            }
             // If next test is dynamicCacheTest then generate a Branch to Skip it.
             if (*(iter+1) == DynamicCacheDynamicCastClassTest)
                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BC, node, jmpLabel);
