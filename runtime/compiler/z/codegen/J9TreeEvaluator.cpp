@@ -12026,11 +12026,15 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/SuperclassTest"), 1, TR::DebugCounter::Undetermined);
          if (toClassDepth == -1)
             {
+            if (feGetEnv("enableInlineItableWalkForIsAssignableFrom")) {
             TR::Register *modifierReg = srm->findOrCreateScratchRegister();
             generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifierReg,
                generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg));
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, ITableTestLabel, srm, J9AccInterface, modifierReg);
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
+            } else {
+               genTestModifierFlags(cg, node, toClassReg, toClassDepth, ITableTestLabel, srm, J9AccInterface | J9AccClassArray);
+            }
             srm->reclaimScratchRegister(modifierReg);
             }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
