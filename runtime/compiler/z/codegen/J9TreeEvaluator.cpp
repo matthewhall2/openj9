@@ -12034,7 +12034,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
             srm->reclaimScratchRegister(modifierReg);
             } else {
-               genTestModifierFlags(cg, node, toClassReg, toClassDepth, ITableTestLabel, srm, J9AccInterface | J9AccClassArray);
+               genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccInterface | J9AccClassArray);
             }
             }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
