@@ -675,8 +675,11 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBasic(TR
 
    auto knot = comp()->getKnownObjectTable();
    bool transformed = false;
-   if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex))
+   if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex)) {
+      if (trace())
+         traceMsg(comp(), "(MHT) Attempting to transform invokeBasic%d\n", objIndex);
       transformed = TR::TransformUtil::refineMethodHandleInvokeBasic(comp(), tt, node, objIndex, trace());
+   }
 
    if (!transformed)
       {
