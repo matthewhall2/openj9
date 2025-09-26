@@ -11885,15 +11885,10 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable"), 1, TR::DebugCounter::Undetermined);
    TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
-   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, startWalkLabel);
-    generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+   // last itable is never null
+   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
             generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
-   if (debugObj) {
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, lastITableSuccessLabel);
-   } else {
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-   }
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/interfaceTest/lastITable/fail"), 1, TR::DebugCounter::Undetermined);
    // Itable Test
    cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startWalkLabel);
