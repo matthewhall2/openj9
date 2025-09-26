@@ -12032,10 +12032,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                generateS390MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg));
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, ITableTestLabel, srm, J9AccInterface, modifierReg);
             genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
+            srm->reclaimScratchRegister(modifierReg);
             } else {
                genTestModifierFlags(cg, node, toClassReg, toClassDepth, ITableTestLabel, srm, J9AccInterface | J9AccClassArray);
             }
-            srm->reclaimScratchRegister(modifierReg);
             }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
