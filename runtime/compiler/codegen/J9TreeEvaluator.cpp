@@ -1354,8 +1354,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
       if ( (cg->supportsInliningOfIsInstance() || instanceOfOrCheckCastNode->getOpCodeValue() == TR::checkcast) &&
          instanceOfOrCheckCastNode->getSecondChild()->getOpCodeValue() != TR::loadaddr)
          sequences[i++] = SuperClassTest;
-      if (createDynamicCacheTests)
-         sequences[i++] = DynamicCacheDynamicCastClassTest;
+      // if (createDynamicCacheTests)
+      //    sequences[i++] = DynamicCacheDynamicCastClassTest;
       sequences[i++] = HelperCall;
       }
 
@@ -1524,7 +1524,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                sequences[i++] = CastClassCacheTest;
                }
             if (createDynamicCacheTests)
-               sequences[i++] = DynamicCacheObjectClassTest;
+               sequences[i++] = ITableTest; //DynamicCacheObjectClassTest;
             sequences[i++] = HelperCall;
             }
          // Cast class is an abstract class, we can skip the class equality test, a superclass test is enough.

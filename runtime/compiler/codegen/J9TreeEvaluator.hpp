@@ -57,6 +57,7 @@ class OMR_EXTENSIBLE TreeEvaluator: public OMR::TreeEvaluatorConnector
       CastClassCacheTest,               // Needs object class: y, needs cast class: y
       DynamicCacheObjectClassTest,      // Needs object class: y, needs cast class: n
       DynamicCacheDynamicCastClassTest, // Needs object class: y, needs cast class: y
+      ITableTest,
       HelperCall,                       // Needs object class: n, needs cast class: y
 
       InstanceOfOrCheckCastMaxSequences
