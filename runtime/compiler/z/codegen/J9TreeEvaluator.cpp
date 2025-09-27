@@ -4608,6 +4608,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             srm->reclaimScratchRegister(castClassCacheReg);
             break;
             }
+         case ITableTest:
+            genITableTest(node, cg, srm, objClassReg, castClassReg, doneLabel, callLabel);
          case HelperCall:
             TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
             break;
