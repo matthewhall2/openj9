@@ -4090,6 +4090,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    doneLabel->setEndInternalControlFlow();
 
    TR::Compilation *comp = cg->comp();
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromPath/(%s)", comp->signature()), 1, TR::DebugCounter::Undetermined);
    auto use64BitClasses = comp->target().is64Bit() &&
                (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
@@ -4147,6 +4148,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
 
+
+   srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
    deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
@@ -4155,10 +4158,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       {
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
       }
+   deps->stopAddingConditions();
 
-   srm->stopUsingRegisters();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
-
    node->setRegister(resultReg);
    return resultReg;
    }
@@ -4877,7 +4879,6 @@ inline void generateInlinedCheckCastOrInstanceOfForClass(TR::Node* node, TR_Opaq
 TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::Compilation *comp = cg->comp();
-
    bool isCheckCast = false;
    switch (node->getOpCodeValue())
       {
