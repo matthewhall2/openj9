@@ -461,24 +461,24 @@ TR_MethodHandleTransformer::getObjectInfoOfNode(TR::Node *node)
    if (node->hasKnownObjectIndex())
       {
       if (trace()) {
-      traceMsg("node has koi\n");
+      traceMsg(comp(), "node has koi\n");
    }
       return node->getKnownObjectIndex();
       }
 
    if (trace()) {
-      traceMsg("node has no koi\n");
+      traceMsg(comp(), "node has no koi\n");
    }
 
    if (!node->getOpCode().hasSymbolReference())
       {
          if (trace()) {
-      traceMsg("node has no sym ref\n");
+      traceMsg(comp(), "node has no sym ref\n");
    }
       return TR::KnownObjectTable::UNKNOWN;
       }
    if (trace()) {
-      traceMsg("node has sym ref\n");
+      traceMsg(comp(), "node has sym ref\n");
    }
 
    return node->getSymbolReference()->getKnownObjectIndex(); // possibly UNKNOWN
@@ -683,7 +683,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBasic(TR
    {
    auto mhNode = node->getFirstArgument();
    if (trace()) {
-      traceMsg("first arg index is: %d\n", node->getFirstArgumentIndex());
+      traceMsg(comp(), "first arg index is: %d\n", node->getFirstArgumentIndex());
    }
    TR::KnownObjectTable::Index objIndex = getObjectInfoOfNode(mhNode);
    TR::KnownObjectTable::Index objIndex2 = mhNode->getKnownObjectIndex();
