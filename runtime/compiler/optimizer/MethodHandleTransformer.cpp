@@ -460,13 +460,26 @@ TR_MethodHandleTransformer::getObjectInfoOfNode(TR::Node *node)
 
    if (node->hasKnownObjectIndex())
       {
+      if (trace()) {
+      traceMsg("node has koi\n");
+   }
       return node->getKnownObjectIndex();
       }
 
+   if (trace()) {
+      traceMsg("node has no koi\n");
+   }
+
    if (!node->getOpCode().hasSymbolReference())
       {
+         if (trace()) {
+      traceMsg("node has no sym ref\n");
+   }
       return TR::KnownObjectTable::UNKNOWN;
       }
+   if (trace()) {
+      traceMsg("node has sym ref\n");
+   }
 
    return node->getSymbolReference()->getKnownObjectIndex(); // possibly UNKNOWN
    }
@@ -669,9 +682,15 @@ void
 TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBasic(TR::TreeTop* tt, TR::Node* node)
    {
    auto mhNode = node->getFirstArgument();
+   if (trace()) {
+      traceMsg("first arg index is: %d\n", node->getFirstArgumentIndex());
+   }
    TR::KnownObjectTable::Index objIndex = getObjectInfoOfNode(mhNode);
-   if (trace())
+   TR::KnownObjectTable::Index objIndex2 = mhNode->getKnownObjectIndex();
+   if (trace()) {
       traceMsg(comp(), "MethodHandle is obj%d\n", objIndex);
+      traceMsg(comp(), "(2) MethodHandle is obj%d\n", objIndex2);
+   }
 
    auto knot = comp()->getKnownObjectTable();
    bool transformed = false;
