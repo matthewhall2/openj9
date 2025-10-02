@@ -4872,6 +4872,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
    {
    TR::Compilation *comp = cg->comp();
    bool isCheckCast = false;
+   bool isIsAssignableFrom = false;
    switch (node->getOpCodeValue())
       {
       case TR::checkcast:
@@ -4881,6 +4882,9 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       case TR::instanceof:
          break;
       case TR::icall: // TR_checkAssignable
+      isIsAssignableFrom = true;
+      TR::DebugCounter::incStaticDebugCounter(self()->comp(),
+            TR::DebugCounter::debugCounterName(self()->comp(), "checkCastPath/isAssignableFrom/(%s)", self()->comp()->signature()));
          if (cg->supportsNonHelperIsAssignableFrom()) {
             return generateInlinedIsAssignableFrom(node, cg);
          } else {
@@ -4901,13 +4905,22 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
        !comp->getOption(TR_DisableInlineCheckCast)  &&
        !comp->getOption(TR_DisableInlineInstanceOf))
       {
+      if (isIsAssignableFrom)
+      TR::DebugCounter::incStaticDebugCounter(self()->comp(),
+            TR::DebugCounter::debugCounterName(self()->comp(), "isAssignableFrom/elseif/(%s)", self()->comp()->signature()));
       cg->evaluate(node->getChild(0));
       if (TR::Compiler->cls.isInterfaceClass(comp, clazz))
          {
+         if (isIsAssignableFrom)
+         TR::DebugCounter::incStaticDebugCounter(self()->comp(),
+            TR::DebugCounter::debugCounterName(self()->comp(), "isAssignableFrom/compileTimeKnown/(%s)", self()->comp()->signature()));
          generateInlinedCheckCastOrInstanceOfForInterface(node, clazz, cg, isCheckCast);
          }
       else
          {
+         if (isIsAssignableFrom)
+         TR::DebugCounter::incStaticDebugCounter(self()->comp(),
+            TR::DebugCounter::debugCounterName(self()->comp(), "isAssignableFrom/compileTimeKnown/(%s)", self()->comp()->signature()));
          generateInlinedCheckCastOrInstanceOfForClass(node, clazz, cg, isCheckCast);
          }
       if (!isCheckCast)
@@ -13073,11 +13086,15 @@ J9::X86::TreeEvaluator::directCallEvaluator(TR::Node *node, TR::CodeGenerator *c
       switch (symRef->getReferenceNumber())
          {
          case TR_checkAssignable:
+         TR::DebugCounter::incStaticDebugCounter(self()->comp(),
+            TR::DebugCounter::debugCounterName(self()->comp(), "directCall/isAssignableFrom/(%s)", self()->comp()->signature()));
             return TR::TreeEvaluator::checkcastinstanceofEvaluator(node, cg);
          default:
             break;
          }
       }
+   
+   
 
    switch (symbol->getMandatoryRecognizedMethod())
       {
