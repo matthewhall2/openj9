@@ -4896,6 +4896,8 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          if (cg->supportsNonHelperIsAssignableFrom()) {
             return generateInlinedIsAssignableFrom(node, cg);
          } else {
+            if (feGetEnv("useNewCall") != NULL)
+               return TR::TreeEvaluator::performCall(node, false, false, cg);
             break;
          }
       default:
