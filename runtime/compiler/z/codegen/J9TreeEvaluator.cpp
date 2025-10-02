@@ -11909,6 +11909,7 @@ static void genITableTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchR
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::Compilation *comp = cg->comp();
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromPath/(%s)", comp->signature()), 1, TR::DebugCounter::Undetermined);
    // recognizedCallTransformer swaps the args - caller class obj is the second argument after the transformation
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
