@@ -1457,8 +1457,10 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
 
     TR::SymbolReference *vmTargetSymRef = comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
-    if (comp()->cg()->enableJitDispatchJ9Method()) {
-        node->setSymbolReference(comp()->getSymRefTab()->findOrCreateDispatchJ9MethodSymbolRef());
+   if (comp()->cg()->enableJitDispatchJ9Method())
+      {
+      node->setSymbolReference(
+         comp()->getSymRefTab()->findOrCreateDispatchJ9MethodSymbolRef());
 
         TR::Node *mh = node->getChild(0);
         TR::Node *lf = TR::Node::createWithSymRef(node, TR::aloadi, 1, mh, lambdaFormSymRef);
@@ -1513,11 +1515,14 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
     TR::SymbolReference *vmTargetSymRef = comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
-    if (comp()->cg()->enableJitDispatchJ9Method()) {
-        if (isLinkToSpecial) {
-            // Null check the receiver
-            TR::SymbolReference *nullCheckSymRef
-                = comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(comp()->getMethodSymbol());
+   if (comp()->cg()->enableJitDispatchJ9Method())
+      {
+      if (isLinkToSpecial)
+         {
+         // Null check the receiver
+         TR::SymbolReference *nullCheckSymRef =
+            comp()->getSymRefTab()->findOrCreateNullCheckSymbolRef(
+               comp()->getMethodSymbol());
 
             TR::Node *passThrough = TR::Node::create(node, TR::PassThrough, 1, node->getChild(0));
 
@@ -1586,27 +1591,31 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop 
     isCompiledNode->copyByteCodeInfo(node);
     TR::TreeTop *cmpCheckTreeTop = TR::TreeTop::create(self()->comp(), isCompiledNode);
 
-    TR::Node *jitAddress;
-    if (comp()->target().cpu.isI386()) {
-        jitAddress = TR::Node::create(TR::i2l, 1, TR::Node::createLoad(node, extraTempSlotSymRef));
-    } else {
-        TR::SymbolReference *linkageInfoSymRef = comp()->getSymRefTab()->findOrCreateStartPCLinkageInfoSymbolRef(-4);
-        TR::ILOpCodes x2a = comp()->target().is64Bit() ? TR::l2a : TR::i2a;
-        TR::Node *linkageInfo = TR::Node::createWithSymRef(TR::iloadi, 1, 1,
-            TR::Node::create(x2a, 1, TR::Node::createLoad(node, extraTempSlotSymRef)), linkageInfoSymRef);
-        TR::Node *jitEntryOffset = TR::Node::create(TR::ishr, 2, linkageInfo, TR::Node::iconst(node, 16));
-        if (comp()->target().is64Bit())
-            jitAddress = TR::Node::create(TR::ladd, 2, TR::Node::createLoad(node, extraTempSlotSymRef),
-                TR::Node::create(TR::i2l, 1, jitEntryOffset));
-        else
-            jitAddress = TR::Node::create(TR::iadd, 2, TR::Node::createLoad(node, extraTempSlotSymRef), jitEntryOffset);
-    }
-    TR_J9VMBase *fej9 = static_cast<TR_J9VMBase *>(comp()->fe());
-    TR_OpaqueMethodBlock *dummyInvoke
-        = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
-    int signatureLength;
-    char *signature = getSignatureForComputedCall("J", "", comp(),
-        node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(), signatureLength);
+   TR::Node *jitAddress;
+   if (comp()->target().cpu.isI386())
+      {
+      jitAddress = TR::Node::create(TR::i2l, 1, TR::Node::createLoad(node, extraTempSlotSymRef));
+      }
+   else
+      {
+      TR::SymbolReference *linkageInfoSymRef = comp()->getSymRefTab()->findOrCreateStartPCLinkageInfoSymbolRef(-4);
+      TR::ILOpCodes x2a = comp()->target().is64Bit()? TR::l2a : TR::i2a;
+      TR::Node *linkageInfo    = TR::Node::createWithSymRef(TR::iloadi, 1, 1, TR::Node::create(x2a, 1, TR::Node::createLoad(node, extraTempSlotSymRef)), linkageInfoSymRef);
+      TR::Node *jitEntryOffset = TR::Node::create(TR::ishr,   2, linkageInfo, TR::Node::iconst(node, 16));
+      if (comp()->target().is64Bit())
+         jitAddress = TR::Node::create(TR::ladd, 2, TR::Node::createLoad(node, extraTempSlotSymRef), TR::Node::create(TR::i2l, 1, jitEntryOffset));
+      else
+         jitAddress = TR::Node::create(TR::iadd, 2, TR::Node::createLoad(node, extraTempSlotSymRef), jitEntryOffset);
+      }
+      TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
+      TR_OpaqueMethodBlock *dummyInvoke = fej9->getMethodFromName("com/ibm/jit/JITHelpers", "dispatchComputedStaticCall", "()V");
+      int signatureLength;
+      char * signature = getSignatureForComputedCall(
+         "J",
+         "",
+         comp(),
+         node->getSymbol()->castToMethodSymbol()->getMethod()->signatureChars(),
+         signatureLength);
 
     // construct a dummy resolved method
     TR::ResolvedMethodSymbol *owningMethodSymbol = node->getSymbolReference()->getOwningMethodSymbol(comp());

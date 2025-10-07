@@ -198,58 +198,83 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(TR::Node *callNode, TR::Registe
     if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver() && callNode->getOpCode().isIndirect())
         receiverChildIndex = firstArgumentChild;
 
-    if (!callNode->getSymbolReference()->isUnresolved())
-        switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod()) {
-            case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-            case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
-            case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-                linkageRegChildIndex = firstArgumentChild;
-                receiverChildIndex = callNode->getOpCode().isIndirect() ? firstArgumentChild + 1 : -1;
-        }
+   if (!callNode->getSymbolReference()->isUnresolved())
+      {
+      switch(callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
+         {
+         case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+         case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+         case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+            linkageRegChildIndex = firstArgumentChild;
+            receiverChildIndex = callNode->getOpCode().isIndirect() ? firstArgumentChild + 1 : -1;
+         }
+      }
 
-    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++) {
-        TR::Node *child = callNode->getChild(i);
-        switch (child->getDataType()) {
-            case TR::Int8:
-            case TR::Int16:
-            case TR::Int32:
-            case TR::Address:
-                if (i == receiverChildIndex) {
-                    eaxRegister = pushThis(child);
-                    thisChild = child;
-                } else {
-                    pushIntegerWordArg(child);
-                }
-                argSize += 4;
-                break;
-            case TR::Int64: {
-                TR::Register *reg = NULL;
-                if (i == linkageRegChildIndex) {
-                    // TODO:JSR292: This should really be in the front-end
-                    TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
-                    switch (sym->getMandatoryRecognizedMethod()) {
-                        case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-                            reg = cg()->evaluate(child);
-                            if (reg->getRegisterPair())
-                                reg = reg->getRegisterPair()->getLowOrder();
-                            dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
-                            cg()->decReferenceCount(child);
-                            break;
-                        case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
-                        case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
-                            reg = cg()->evaluate(child);
-                            if (reg->getRegisterPair())
-                                reg = reg->getRegisterPair()->getLowOrder();
-                            dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
-                            cg()->decReferenceCount(child);
-                            break;
-                    }
-                }
-                if (!reg) {
-                    TR::IA32LinkageUtils::pushLongArg(child, cg());
-                    argSize += 8;
-                }
-                break;
+   if (callNode->isJitDispatchJ9MethodCall(comp()))
+      {
+      firstArgumentChild = 1;
+      TR::Node *target = callNode->getChild(0);
+      TR::Register *reg = cg()->evaluate(target);
+      if (reg->getRegisterPair())
+         {
+         reg = reg->getRegisterPair()->getLowOrder();
+         }
+      dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+      cg()->decReferenceCount(target);
+      }
+
+   for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
+      {
+      TR::Node *child = callNode->getChild(i);
+      switch (child->getDataType())
+         {
+         case TR::Int8:
+         case TR::Int16:
+         case TR::Int32:
+         case TR::Address:
+            if (i == receiverChildIndex)
+               {
+               eaxRegister = pushThis(child);
+               thisChild   = child;
+               }
+            else
+               {
+               pushIntegerWordArg(child);
+               }
+            argSize += 4;
+            break;
+         case TR::Int64:
+            {
+            TR::Register *reg = NULL;
+            if (i == linkageRegChildIndex)
+               {
+               // TODO:JSR292: This should really be in the front-end
+               TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
+               switch (sym->getMandatoryRecognizedMethod())
+                  {
+                  case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+                     reg = cg()->evaluate(child);
+                     if (reg->getRegisterPair())
+                        reg = reg->getRegisterPair()->getLowOrder();
+                     dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+                     cg()->decReferenceCount(child);
+                     break;
+                  case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+                  case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
+                     reg = cg()->evaluate(child);
+                     if (reg->getRegisterPair())
+                        reg = reg->getRegisterPair()->getLowOrder();
+                     dependencies->addPreCondition(reg, getProperties().getVTableIndexArgumentRegister(), cg());
+                     cg()->decReferenceCount(child);
+                     break;
+                  }
+               }
+            if (!reg)
+               {
+               TR::IA32LinkageUtils::pushLongArg(child, cg());
+               argSize += 8;
+               }
+            break;
             }
             case TR::Float:
                 TR::IA32LinkageUtils::pushFloatArg(child, cg());

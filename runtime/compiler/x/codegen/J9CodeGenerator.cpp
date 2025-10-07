@@ -524,11 +524,13 @@ void J9::X86::CodeGenerator::reserveNTrampolines(int32_t numTrampolines)
     TR_ASSERT(newCache->isReserved(), "New CodeCache is not reserved");
 }
 
-bool J9::X86::CodeGenerator::supportsNonHelper(TR::SymbolReferenceTable::CommonNonhelperSymbol symbol)
-{
-    if (symbol == TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol && self()->comp()->target().is64Bit()) {
-        return true;
-    }
+bool
+J9::X86::CodeGenerator::supportsNonHelper(TR::SymbolReferenceTable::CommonNonhelperSymbol symbol)
+   {
+   if (symbol == TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol)
+      {
+      return true;
+      }
 
     return J9::CodeGenerator::supportsNonHelper(symbol);
 }

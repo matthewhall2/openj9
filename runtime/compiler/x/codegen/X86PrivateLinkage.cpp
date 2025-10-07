@@ -1766,25 +1766,31 @@ void J9::X86::PrivateLinkage::buildDirectCall(TR::SymbolReference *methodSymRef,
         generateBoundaryAvoidanceInstruction(TR::X86BoundaryAvoidanceInstruction::unresolvedAtomicRegions, 8, 8,
             callInstr, cg());
 
-        // Nop is necessary due to confusion when resolving shared slots at a transition
-        if (methodSymRef->isOSRInductionHelper())
-            generatePaddingInstruction(1, callNode, cg());
-    } else if (isJitDispatchJ9Method) {
-        // This should occur only on 64-bit because it's generated only for
-        // OpenJDK MethodHandles, which are not yet in use in Java 8, with Java 8
-        // being the last version to support 32-bit. This shouldn't necessarily
-        // be too hard to implement on 32-bit, but it is left unimplemented for
-        // now because we can't exercise it anyway until we start to get OpenJDK
-        // MethodHandles working on Java 8.
-        TR_ASSERT_FATAL(comp()->target().is64Bit(), "jitDispatchJ9Method on 32-bit");
+      // Nop is necessary due to confusion when resolving shared slots at a transition
+      if (methodSymRef->isOSRInductionHelper())
+         generatePaddingInstruction(1, callNode, cg());
+      }
+   else if (isJitDispatchJ9Method)
+      {
+      // This should occur only on 64-bit because it's generated only for
+      // OpenJDK MethodHandles, which are not yet in use in Java 8, with Java 8
+      // being the last version to support 32-bit. This shouldn't necessarily
+      // be too hard to implement on 32-bit, but it is left unimplemented for
+      // now because we can't exercise it anyway until we start to get OpenJDK
+      // MethodHandles working on Java 8.
+
+      if (feGetEnv("testBitAssert") != NULL) {
+      TR_ASSERT_FATAL(comp()->target().is64Bit(), "jitDispatchJ9Method on 32-bit");
+      }
 
         TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
 
         TR::Register *scratchReg = cg()->allocateRegister();
         site.addPostCondition(scratchReg, getProperties().getVTableIndexArgumentRegister());
 
-        // This will be assigned to getJ9MethodArgumentRegister().
-        TR::Register *j9mReg = callNode->getChild(0)->getRegister();
+      // This will be assigned to getJ9MethodArgumentRegister().
+
+      TR::Register *j9mReg = callNode->getChild(0)->getRegister();
 
         int32_t extraOffset = (int32_t)offsetof(J9Method, extra);
         generateRegMemInstruction(TR::InstOpCode::LRegMem(), callNode, scratchReg,
@@ -1805,14 +1811,22 @@ void J9::X86::PrivateLinkage::buildDirectCall(TR::SymbolReference *methodSymRef,
 
         generateLabelInstruction(oolBranchOp, callNode, interpreterCallLabel, cg());
 
-        // The method is compiled - call through register to JIT entry point
-        generateRegMemInstruction(TR::InstOpCode::L4RegMem, callNode,
+      // target entry point is already in the scratch register at this point on 32 bit
+      if (comp()->target().is64Bit())
+         {
+         // The method is compiled - call through register to JIT entry point
+         generateRegMemInstruction(
+            TR::InstOpCode::L4RegMem,
+            callNode,
             j9mReg, // can reuse because the actual J9Method isn't needed anymore
-            generateX86MemoryReference(scratchReg, -4, cg()), cg());
+            generateX86MemoryReference(scratchReg, -4, cg()),
+            cg());
 
         generateRegImmInstruction(TR::InstOpCode::SHR4RegImm1, callNode, j9mReg, 16, cg());
 
-        generateRegRegInstruction(TR::InstOpCode::ADDRegReg(), callNode, scratchReg, j9mReg, cg());
+         generateRegRegInstruction(
+            TR::InstOpCode::ADDRegReg(), callNode, scratchReg, j9mReg, cg());
+         }
 
         callInstr = generateRegInstruction(TR::InstOpCode::CALLReg, callNode, scratchReg, cg());
 
