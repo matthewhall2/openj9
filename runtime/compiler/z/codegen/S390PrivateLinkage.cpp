@@ -2605,7 +2605,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
       postDeps->setAddCursorForPre(0);
-      postDeps->setNumPreConditions(0, trMemory());
+      //postDeps->setNumPreConditions(0, trMemory());
       postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
 
       if (getenv("enableSnippet") != NULL) {      
