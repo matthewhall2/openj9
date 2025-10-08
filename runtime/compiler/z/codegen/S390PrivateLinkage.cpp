@@ -2568,6 +2568,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
                                                           callSymRef?callSymRef:callNode->getSymbolReference(), reStartLabel, argSize);
+       traceMsg(comp(), "induceOSR: size of snippet = %zu bytes\n", sizeof(*snippet));
+      traceMsg(comp(), "induceOSR: size of class = %zu bytes\n", sizeof(TR::S390HelperCallSnippet));
       cg()->addSnippet(snippet);
 
       auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
@@ -2660,10 +2662,15 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       if (callSymRef->isUnresolved() || (comp()->compileRelocatableCode() && !comp()->getOption(TR_UseSymbolValidationManager)))
          {
          snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, label, argSize);
+         traceMsg(comp(), "S390UnresolvedCallSnippet: size of snippet = %zu bytes\n", sizeof(*snippet));
+      traceMsg(comp(), "S390UnresolvedCallSnippet: size of class = %zu bytes\n", sizeof(TR::S390UnresolvedCallSnippet));
+     // traceMsg(comp(), "JNIHelperCallSnippet: size of heapmem = %zu bytes\n", sizeof(TR_HeapMemory));
          }
       else
          {
          snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, label, callSymRef, argSize);
+           traceMsg(comp(), "S390J9CallSnippet: size of snippet = %zu bytes\n", sizeof(*snippet));
+      traceMsg(comp(), "S390J9CallSnippet: size of class = %zu bytes\n", sizeof(TR::S390J9CallSnippet));
          }
 
       cg()->addSnippet(snippet);
