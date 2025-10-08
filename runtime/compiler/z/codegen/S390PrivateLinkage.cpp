@@ -2616,9 +2616,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet * snippet =  new (trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, NULL, argSize);
       cg()->addSnippet(snippet);
-      generateS390LabelInstruction(cg, TR::InstOpCode::label, callNode, oolLabel);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
