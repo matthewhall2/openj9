@@ -2610,7 +2610,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       
 
-      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg);
+      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
       TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
