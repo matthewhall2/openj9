@@ -2632,7 +2632,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(snippet != NULL, "Failed to allocate S390HelperCallSnippet");
       traceMsg(comp(), "JNIHelperCallSnippet: size of snippet = %zu bytes\n", sizeof(*snippet));
       traceMsg(comp(), "JNIHelperCallSnippet: size of class = %zu bytes\n", sizeof(TR::S390HelperCallSnippet));
-      traceMsg(comp(), "JNIHelperCallSnippet: size of heapmem = %zu bytes\n", sizeof(TR_HeapMemory));
+      traceMsg(comp(), "JNIHelperCallSnippet: size of usable = %zu bytes\n", dlmalloc_usable_size(snippet););
+      
       cg()->addSnippet(snippet);
       doneLabel->setEndInternalControlFlow();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
