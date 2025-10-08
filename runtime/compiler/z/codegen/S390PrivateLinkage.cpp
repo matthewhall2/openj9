@@ -2626,7 +2626,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
 
       TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
-      TR::Snippet * snippet = new (cg()->trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
+      TR::Snippet * snippet =  new (cg()->trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
+      TR_ASSERT_FATAL(snippet != NULL, "Failed to allocate S390HelperCallSnippet");
+      traceMsg(comp(), "JNIHelperCallSnippet: size of snippet = %zu bytes\n", sizeof(*snippet));
       cg()->addSnippet(snippet);
       doneLabel->setEndInternalControlFlow();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
