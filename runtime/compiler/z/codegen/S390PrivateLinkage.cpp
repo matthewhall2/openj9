@@ -2608,8 +2608,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
 
-      
-
+      if (getenv("enableSnippet") != NULL) {      
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
@@ -2620,6 +2619,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
+      }
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
@@ -2629,8 +2629,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, oolLabel);
-      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      if (getenv("enableSnippet") != NULL) {    
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, oolLabel);
+      } else {
+
+      }
+     // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
@@ -2641,7 +2645,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
 
-      
       doneLabel->setEndInternalControlFlow();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
