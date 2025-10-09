@@ -2667,10 +2667,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *regEP = postDeps->searchPostConditionRegister(getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find EA register in post conditions");
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
 
       doneLabel->setEndInternalControlFlow();
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+      gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
       cg()->stopUsingRegister(scratchReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
