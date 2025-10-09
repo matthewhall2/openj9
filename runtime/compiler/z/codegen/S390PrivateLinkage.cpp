@@ -2642,7 +2642,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
-      TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+      TR_ASSERT_FATAL(TR::RealRegister::NoReg != regRA, "Expected to find return address register in post conditions");
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
 
       doneLabel->setEndInternalControlFlow();
