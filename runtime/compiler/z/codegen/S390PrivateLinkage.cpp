@@ -3476,11 +3476,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       TR::Register *specialArg = copyArgRegister(callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-      if (callNode->isJitDispatchJ9MethodCall(comp())) {
-         dependencies->addPostCondition(specialArg, specialArgReg);
-      } else {
-         dependencies->addPreCondition(specialArg, specialArgReg);
-      }
+      dependencies->addPreCondition(specialArg, specialArgReg);
       cg()->decReferenceCount(child);
 
       if (comp()->getOption(TR_TraceCG))
