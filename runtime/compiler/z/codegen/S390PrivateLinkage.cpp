@@ -2600,13 +2600,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
 
+      dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+
      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      postDeps->setAddCursorForPre(0);
-      postDeps->setNumPreConditions(0, trMemory());
-      postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
 
       if (getenv("enableSnippet") != NULL) {      
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
@@ -2643,7 +2642,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR_ASSERT_FATAL(TR::RealRegister::NoReg != regRA, "Expected to find return address register in post conditions");
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, postDeps);
 
       doneLabel->setEndInternalControlFlow();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
