@@ -2111,6 +2111,9 @@ void J9::X86::PrivateLinkage::buildDirectCall(
       TR::Snippet *snippet = new (trHeapMemory()) TR::X86CallSnippet(
          cg(), callNode, snippetLabel, false);
 
+         traceMsg(comp(), "X86CallSnippet: size of snippet = %zu bytes\n", sizeof(*snippet));
+      traceMsg(comp(), "X86CallSnippet: size of class = %zu bytes\n", sizeof(TR::X86CallSnippet));
+
       cg()->addSnippet(snippet);
       cg()->stopUsingRegister(scratchReg);
       }
