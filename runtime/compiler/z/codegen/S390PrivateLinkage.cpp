@@ -2628,6 +2628,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
           dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPost(), 0, cg());
    }
+   postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
    traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
 
    /// TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
@@ -2647,7 +2648,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
-            generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()), preDeps);
+            generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
