@@ -2609,16 +2609,16 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getNumPostConditions(), cg());
       traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
 
-      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
-      cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-      outlinedSlowPath->swapInstructionListsWithCompilation();
+     /// TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
+    //  cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+    //  outlinedSlowPath->swapInstructionListsWithCompilation();
       TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
-      TR::Snippet * snippet =  new (trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, NULL, argSize);
+      TR::Snippet * snippet =  new (trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
       cg()->addSnippet(snippet);
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel, postDeps); // exit OOL section
-      outlinedSlowPath->swapInstructionListsWithCompilation();
+    ///  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
+   //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
+   //   generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel, postDeps); // exit OOL section
+    //  outlinedSlowPath->swapInstructionListsWithCompilation();
       
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
@@ -2629,7 +2629,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, oolLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
@@ -2639,10 +2640,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, dependencies);
+      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
 
       doneLabel->setEndInternalControlFlow();
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
       cg()->stopUsingRegister(scratchReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
