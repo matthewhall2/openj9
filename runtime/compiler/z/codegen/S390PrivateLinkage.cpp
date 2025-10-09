@@ -2603,10 +2603,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
 
      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
-      traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-      traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
+            dependencies->getPreConditions(), NULL, dependencies->getNumPreConditions(), 0, cg());
+   
+      traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getNumPostConditions(), cg());
+      traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
