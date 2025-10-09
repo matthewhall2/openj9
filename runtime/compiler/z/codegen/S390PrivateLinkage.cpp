@@ -2600,31 +2600,54 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
 
-      dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      TR::RegisterDependencyConditions *preDeps = NULL;
+      if (getenv("useAllPreDeps") != NULL)
+      {
+         preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+             dependencies->getPreConditions(), NULL, dependencies->getNumPreConditions(), 0, cg());
+      }
+      else
+      {
+         preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+      }
 
-     TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            dependencies->getPreConditions(), NULL, dependencies->getNumPreConditions(), 0, cg());
-   
-      traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getNumPostConditions(), cg());
-      traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
+   traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
 
-     /// TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
-    //  cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-    //  outlinedSlowPath->swapInstructionListsWithCompilation();
-      TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
-      TR::Snippet * snippet =  new (trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
-      cg()->addSnippet(snippet);
-    ///  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
+   TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+   postDeps->setAddCursorForPre(0);
+   postDeps->setNumPreConditions(0, trMemory());
+
+   if (getenv("useAllPostDeps") != NULL)
+   {
+      postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+          dependencies->getPreConditions(), NULL, dependencies->getNumPostConditions(), 0, cg());
+   }
+   else if (getenv("useCursorPostDeps") != NULL)
+   {
+      postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+          dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPost(), 0, cg());
+   }
+   traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
+
+   /// TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
+   //  cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+   //  outlinedSlowPath->swapInstructionListsWithCompilation();
+   TR::SymbolReference *j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
+   TR::Snippet *snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
+   cg()->addSnippet(snippet);
+   ///  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
    //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
    //   generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel, postDeps); // exit OOL section
     //  outlinedSlowPath->swapInstructionListsWithCompilation();
       
+    //debug
+      generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, scratchReg, scratchReg, preDeps);
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
-            generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
+            generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()), preDeps);
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
