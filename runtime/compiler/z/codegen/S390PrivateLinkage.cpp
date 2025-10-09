@@ -2604,21 +2604,21 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
-
+      traceMsg("Deps predeps %d\nPredeps: %d", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+      traceMsg("Deps postdeps %d\npostdeps: %d", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
 
-      if (getenv("enableSnippet") != NULL) {      
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
       TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet * snippet =  new (trHeapMemory())  TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, NULL, argSize);
       cg()->addSnippet(snippet);
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel, postDeps); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
-      }
+      
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
@@ -2628,11 +2628,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      if (getenv("enableSnippet") != NULL) {    
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, oolLabel);
-      } else {
-
-      }
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
