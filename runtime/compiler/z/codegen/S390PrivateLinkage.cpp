@@ -2642,10 +2642,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, postDeps);
+      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, dependencies);
 
       doneLabel->setEndInternalControlFlow();
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
 
       cg()->stopUsingRegister(scratchReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
