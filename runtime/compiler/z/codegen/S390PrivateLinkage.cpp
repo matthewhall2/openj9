@@ -2604,9 +2604,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
-      traceMsg("Deps predeps %d\nPredeps: %d", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
+      traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-      traceMsg("Deps postdeps %d\npostdeps: %d", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
+      traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
 
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
