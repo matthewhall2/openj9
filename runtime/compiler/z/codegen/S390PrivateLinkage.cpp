@@ -2617,7 +2617,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (getenv("addToAllDeps") != NULL) {
       dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
    }
-   TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+   TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 3, cg());
    postDeps->setAddCursorForPre(0);
    postDeps->setNumPreConditions(0, trMemory());
 
@@ -2665,17 +2665,26 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      TR::Register *regRA = NULL;
+      TR::Register *regEP = NULL;
+      if (feGetEnv("manualRegs") !=- NULL) {
+         regRA = cg()->allocateRegister();
+         regEP = cg()->allocateRegister();
+         postDeps->addPostCondition(killRegRA, cg->getReturnAddressRegister());
+         postDeps->addPostCondition(killRegEP, cg->getEntryPointRegister());
+      } else {
       TR::Register *regRA = postDeps->searchPostConditionRegister(getReturnAddressRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       TR::Register *regEP = postDeps->searchPostConditionRegister(getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find EA register in post conditions");
+      }
       TR::Instruction *cursor = generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      if (getenv("useDirectCall") != NULL) {
-      generateDirectCall(cg(), callNode, false, callSymRef, dependencies, cursor);
-      } else if (getenv("tryNoCall") != NULL) {
+      if (feGetEnv("useDirectCall") != NULL) {
+      generateDirectCall(cg(), callNode, false, callSymRef, postDeps, cursor);
+      } else if (feGetEnv("tryNoCall") != NULL) {
       // nothing
       } else {
-         generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+         generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP, postDeps);
       }
 
       doneLabel->setEndInternalControlFlow();
