@@ -2685,6 +2685,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // nothing
       } else {
          generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP, postDeps);
+         if (feGetEnv("manualRegs") != NULL) {
+            cg()->stopUsingRegister(regEP);
+            cg()->stopUsingRegister(regRA);
+         }
       }
 
       doneLabel->setEndInternalControlFlow();
