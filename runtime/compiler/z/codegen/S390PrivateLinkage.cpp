@@ -2595,8 +2595,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
           TR::Register *scratchReg = cg()->allocateRegister();
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
-      TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
-      TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
+    //  TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+   //   TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
