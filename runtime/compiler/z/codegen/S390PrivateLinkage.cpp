@@ -2714,7 +2714,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, feGetEnv("useSnippet") != NULL ? interpreterCallLabel : doneLabel);
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-
+   bool attachPostDepsToBASR = feGetEnv("attachPostDepsToBASR") != NULL;
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
@@ -2739,7 +2739,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else if (feGetEnv("tryNoCall") != NULL) {
       // nothing
       } else {
+         if (attachPostDepsToBASR) {
          generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP, postDeps);
+         } else {
+            generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+         }
          if (feGetEnv("manualRegs") != NULL) {
             cg()->stopUsingRegister(regEP);
             cg()->stopUsingRegister(regRA);
@@ -2747,7 +2751,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       }
 
       doneLabel->setEndInternalControlFlow();
+      if (attachPostDepsToBASR) {
+      gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel);
+      } else {
       gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+      }
 
       cg()->stopUsingRegister(scratchReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
