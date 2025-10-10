@@ -2635,7 +2635,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    }
          generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
          generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, j9MethodReg, j9MethodReg);
-         return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, postDeps);
+         TR::Instruction *cursor =  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, postDeps);
+         cg()->stopUsingRegister(scratchReg);
+         return cursor;
       }
 
 
