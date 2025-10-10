@@ -2667,7 +2667,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = NULL;
       TR::Register *regEP = NULL;
-      if (feGetEnv("manualRegs") !=- NULL) {
+      if (feGetEnv("manualRegs") != NULL) {
          regRA = cg()->allocateRegister();
          regEP = cg()->allocateRegister();
          postDeps->addPostCondition(regRA, cg()->getReturnAddressRegister());
