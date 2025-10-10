@@ -2591,6 +2591,57 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    if (isJitDispatchJ9Method)
       {
+      if (feGetEnv("doNothing") != NULL) {
+          TR::Register *scratchReg = cg()->allocateRegister();
+      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+
+      TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
+      startICFLabel->setStartInternalControlFlow();
+      doneLabel->setEndInternalControlFlow();
+
+         TR::RegisterDependencyConditions *preDeps = NULL;
+      if (getenv("useAllPreDeps") != NULL)
+      {
+         preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+             dependencies->getPreConditions(), NULL, dependencies->getNumPreConditions(), 0, cg());
+      }
+      else
+      {
+         preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+      }
+
+   traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
+
+   if (getenv("addToAllDeps") != NULL) {
+      dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+   }
+   TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 3, cg());
+   postDeps->setAddCursorForPre(0);
+   postDeps->setNumPreConditions(0, trMemory());
+
+   if (getenv("useAllPostDeps") != NULL)
+   {
+      postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+          NULL, dependencies->getPostConditions(), 0, dependencies->getNumPostConditions(), cg());
+   }
+   else if (getenv("useCursorPostDeps") != NULL)
+   {
+      postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+          NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+   }
+         generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+         generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, j9MethodReg, j9MethodReg);
+         generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, postDeps);
+
+
+      }
+
+
+
       TR::Register *scratchReg = cg()->allocateRegister();
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
@@ -2637,16 +2688,18 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    /// TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(oolLabel, doneLabel, cg());
    //  cg()->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
    //  outlinedSlowPath->swapInstructionListsWithCompilation();
+   if (feGetEnv("useSnippet") != NULL) {
    TR::SymbolReference *j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
    TR::Snippet *snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
    cg()->addSnippet(snippet);
+   }
    ///  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel, preDeps);
    //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC , callNode, interpreterCallLabel);
    //   generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel, postDeps); // exit OOL section
     //  outlinedSlowPath->swapInstructionListsWithCompilation();
       
     //debug
-      generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, scratchReg, scratchReg, preDeps);
+  //    generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, scratchReg, scratchReg, preDeps);
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
@@ -2656,7 +2709,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, feGetEnv("useSnippet") != NULL ? interpreterCallLabel : doneLabel);
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
