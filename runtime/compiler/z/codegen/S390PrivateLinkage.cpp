@@ -2633,6 +2633,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
           NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
    }
+      postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+
          generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
          generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, j9MethodReg, j9MethodReg);
          TR::Instruction *cursor =  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, postDeps);
