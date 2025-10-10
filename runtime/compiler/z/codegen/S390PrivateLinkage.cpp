@@ -2669,8 +2669,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
       TR::Register *regEP = postDeps->searchPostConditionRegister(getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find EA register in post conditions");
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+      TR::Instruction *cursor = generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+      if (getenv("useDirectCall") != NULL) {
+      generateDirectCall(cg(), callNode, false, callSymRef, dependencies, cursor);
+      } else if (getenv("tryNoCall") != NULL) {
+      // nothing
+      } else {
+         generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
+      }
 
       doneLabel->setEndInternalControlFlow();
       gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
