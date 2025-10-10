@@ -2670,8 +2670,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       if (feGetEnv("manualRegs") !=- NULL) {
          regRA = cg()->allocateRegister();
          regEP = cg()->allocateRegister();
-         postDeps->addPostCondition(killRegRA, cg->getReturnAddressRegister());
-         postDeps->addPostCondition(killRegEP, cg->getEntryPointRegister());
+         postDeps->addPostCondition(regRA, cg()->getReturnAddressRegister());
+         postDeps->addPostCondition(regEP, cg()->getEntryPointRegister());
       } else {
       TR::Register *regRA = postDeps->searchPostConditionRegister(getReturnAddressRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
