@@ -2733,7 +2733,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *regEP = postDeps->searchPostConditionRegister(getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regEP, "Expected to find EA register in post conditions");
       }
-      TR::Instruction *cursor = generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg, postDeps);
+      TR::Instruction *cursor = generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       if (feGetEnv("useDirectCall") != NULL) {
       generateDirectCall(cg(), callNode, false, callSymRef, postDeps, cursor);
       } else if (feGetEnv("tryNoCall") != NULL) {
