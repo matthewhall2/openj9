@@ -2624,12 +2624,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (getenv("useAllPostDeps") != NULL)
    {
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-          dependencies->getPostConditions(), NULL, dependencies->getNumPostConditions(), 0, cg());
+          NULL, dependencies->getPostConditions(), 0, dependencies->getNumPostConditions());
    }
    else if (getenv("useCursorPostDeps") != NULL)
    {
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-          dependencies->getPostConditions(), NULL, dependencies->getAddCursorForPost(), 0, cg());
+          NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost());
    }
    postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
    traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
