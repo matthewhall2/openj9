@@ -2614,6 +2614,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
 
+   if (getenv("addToAllDeps") != NULL) {
+      dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+   }
    TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
    postDeps->setAddCursorForPre(0);
    postDeps->setNumPreConditions(0, trMemory());
@@ -2621,12 +2624,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (getenv("useAllPostDeps") != NULL)
    {
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-          dependencies->getPreConditions(), NULL, dependencies->getNumPostConditions(), 0, cg());
+          dependencies->getPostConditions(), NULL, dependencies->getNumPostConditions(), 0, cg());
    }
    else if (getenv("useCursorPostDeps") != NULL)
    {
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-          dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPost(), 0, cg());
+          dependencies->getPostConditions(), NULL, dependencies->getAddCursorForPost(), 0, cg());
    }
    postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
    traceMsg(cg()->comp(), "Deps postdeps %d\npostdeps: %d\n", dependencies->getNumPostConditions(), postDeps->getNumPostConditions());
