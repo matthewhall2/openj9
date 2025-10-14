@@ -2047,7 +2047,7 @@ void J9::X86::PrivateLinkage::buildDirectCall(
 
       // This will be assigned to getJ9MethodArgumentRegister().
 
-      TR::Register *j9mReg = comp()->target().is64Bit() ? callNode->getChild(0)->getRegister() : cg()->evaluate(callNode->getChild(0));
+      TR::Register *j9mReg = callNode->getChild(0)->getRegister();
 
       int32_t extraOffset = (int32_t)offsetof(J9Method, extra);
       generateRegMemInstruction(
