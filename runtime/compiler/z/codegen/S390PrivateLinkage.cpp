@@ -2593,7 +2593,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       {
       if (feGetEnv("doNothing") != NULL) {
           TR::Register *scratchReg = cg()->allocateRegister();
-      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
 
     //  TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
    //   TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
@@ -2602,6 +2602,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
       traceMsg(comp(), "jitDispatchJ9Method: labels set\n");
+
+      if (getenv("addToAllPreDeps") != NULL) {
+      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+   }
 
          TR::RegisterDependencyConditions *preDeps = NULL;
       if (getenv("useAllPreDeps") != NULL)
@@ -2621,6 +2625,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    if (getenv("addToAllDeps") != NULL) {
       dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
    }
    TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 3, cg());
    postDeps->setAddCursorForPre(0);
@@ -3581,6 +3586,9 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       {
       // Note: special long args are still only passed in one GPR
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+         if (callNode->isJitDispatchJ9MethodCall(comp())) {
+            traceMsg(comp(), "java_lang_invoke_ComputedCalls_dispatchJ9Method in isJitDispatch\n");
+         }
          specialArgReg = getJ9MethodArgumentRegister();
          break;
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
@@ -3591,17 +3599,17 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
          break;
       }
 
-   if (callNode->isJitDispatchJ9MethodCall(comp())) {
-      specialArgReg = getJ9MethodArgumentRegister();
-      child = callNode->getChild(from);
-      TR::Register *specialArg = cg()->evaluate(child);
-      if (specialArg->getRegisterPair())
-         specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-      dependencies->addPreCondition(specialArg, specialArgReg);
-      //cg()->decReferenceCount(child);
-      from += step;
-      return;
-   }
+   // if (callNode->isJitDispatchJ9MethodCall(comp())) {
+   //    specialArgReg = getJ9MethodArgumentRegister();
+   //    child = callNode->getChild(from);
+   //    TR::Register *specialArg = cg()->evaluate(child);
+   //    if (specialArg->getRegisterPair())
+   //       specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
+   //    dependencies->addPreCondition(specialArg, specialArgReg);
+   //    //cg()->decReferenceCount(child);
+   //    from += step;
+   //    return;
+   // }
 
    if (specialArgReg != TR::RealRegister::NoReg)
       {
