@@ -3582,13 +3582,13 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    {
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
+   bool isSpec = false;
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       // Note: special long args are still only passed in one GPR
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
-         if (callNode->isJitDispatchJ9MethodCall(comp())) {
-            traceMsg(comp(), "java_lang_invoke_ComputedCalls_dispatchJ9Method in isJitDispatch\n");
-         }
+         isSpec = true;
+         
          specialArgReg = getJ9MethodArgumentRegister();
          break;
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
@@ -3598,6 +3598,10 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       default:
          break;
       }
+
+   if (feGetEnv("fatalOnNoDispatch") != NULL) {
+      TR_ASSERT_FATAL(isSpec == callNode->isJitDispatchJ9MethodCall(comp()), "should have call node as jitDispatch when symbol is java_lang_invoke_ComputedCalls_dispatchJ9Method\n");
+   }
 
    // if (callNode->isJitDispatchJ9MethodCall(comp())) {
    //    specialArgReg = getJ9MethodArgumentRegister();
