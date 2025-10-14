@@ -2598,7 +2598,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       startICFLabel->setStartInternalControlFlow();
 
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
-      preDeps->setAddCursorForPost();
+      preDeps->setAddCursorForPost(0);
       preDeps->setNumPostConditions(0, trMemory());
       preDeps->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister());
 
