@@ -2590,7 +2590,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *scratchReg = cg()->allocateRegister();
-      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
