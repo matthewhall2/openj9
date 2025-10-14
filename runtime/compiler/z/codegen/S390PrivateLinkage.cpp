@@ -3398,7 +3398,7 @@ TR::Register * J9::Z::JNILinkage::buildDirectDispatch(TR::Node * callNode)
 // special regs (java stack ptr, system stack ptr, and method metadata reg)
 ////////////////////////////////////////////////////////////////////////////////
 void
-J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, bool isFastJNI, int64_t &killMask)
+J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, bool isFastJNI, int64_t &killMask, TR::Node *callNode)
    {
    TR::SystemLinkage * systemLinkage = (TR::SystemLinkage *) cg()->getLinkage(TR_System);
 
@@ -3424,11 +3424,18 @@ J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, b
       }
    else
       {
+      bool doNotKill = false;
       for (i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastFPR; i++)
          {
+         if (REGNUM(i) == getJ9MethodArgumentRegister()) {
+            doNotKill = true;
+         }
          if (linkage->getPreserved(REGNUM(i)))
             killMask &= ~(0x1L << REGINDEX(i));
          }
+      if (callNode->isJitDispatchJ9MethodCall(comp())) {
+         TR_ASSERT_FATAL(doNotKill, "should not kill j9methodarg reg for dispatchJ9Method\n");
+      }
       }
    }
 
