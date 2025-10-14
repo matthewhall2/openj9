@@ -3467,6 +3467,8 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       }
 
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
+      if (isSpec)
+      printf("testing\n");
       traceMsg(comp(), isSpec ? "node is correct" : "node is incorrect");
    }
 
