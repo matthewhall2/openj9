@@ -2597,8 +2597,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
 
-     TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
+      preDeps->setAddCursorForPost();
+      preDeps->setNumPostConditions(0, trMemory());
+      preDeps->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
       postDeps->setAddCursorForPre(0);
@@ -3433,7 +3435,7 @@ J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, b
          if (linkage->getPreserved(REGNUM(i)))
             killMask &= ~(0x1L << REGINDEX(i));
          }
-      if (callNode->isJitDispatchJ9MethodCall(comp())) {
+      if (callNode != NULL && callNode->isJitDispatchJ9MethodCall(comp())) {
          TR_ASSERT_FATAL(doNotKill, "should not kill j9methodarg reg for dispatchJ9Method\n");
       }
       }
@@ -3448,10 +3450,12 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    {
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
+   bool isSpec = false;
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       // Note: special long args are still only passed in one GPR
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
+         isSpec = true;
          specialArgReg = getJ9MethodArgumentRegister();
          break;
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
@@ -3463,7 +3467,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       }
 
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
-      specialArgReg = getJ9MethodArgumentRegister();
+      traceMsg(comp(), isSpec ? "node is correct" : "node is incorrect");
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
