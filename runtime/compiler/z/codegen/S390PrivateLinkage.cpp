@@ -2649,6 +2649,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
                      traceMsg(comp(), "jitDispatchJ9Method: end icf set\n");
          cg()->stopUsingRegister(scratchReg);
          traceMsg(comp(), "stop using regs\n");
+         cg()->decReferenceCount(callNode->getChild(0));
          return cursor;
       }
 
@@ -3592,6 +3593,14 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
 
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
       specialArgReg = getJ9MethodArgumentRegister();
+      child = callNode->getChild(from);
+      TR::Register *specialArg = cg()->evaluate(child);
+      if (specialArg->getRegisterPair())
+         specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
+      dependencies->addPreCondition(specialArg, specialArgReg);
+      //cg()->decReferenceCount(child);
+      from += step;
+      return;
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
