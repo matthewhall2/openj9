@@ -2601,6 +2601,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
+      traceMsg(comp(), "jitDispatchJ9Method: labels set\n");
 
          TR::RegisterDependencyConditions *preDeps = NULL;
       if (getenv("useAllPreDeps") != NULL)
@@ -2613,6 +2614,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
              dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
       }
+            traceMsg(comp(), "jitDispatchJ9Method: preconds set\n");
+
 
    traceMsg(cg()->comp(), "Deps predeps %d\nPredeps: %d\n", dependencies->getNumPreConditions(), preDeps->getNumPreConditions());
 
@@ -2633,12 +2636,19 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
           NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
    }
+         traceMsg(comp(), "jitDispatchJ9Method: postconds set\n");
+
       postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+            traceMsg(comp(), "jitDispatchJ9Method: scratch reg post cond set\n");
 
          generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+                     traceMsg(comp(), "jitDispatchJ9Method: start icf set\n");
+
          generateRRInstruction(cg(), TR::InstOpCode::LTGR, callNode, j9MethodReg, j9MethodReg);
-         TR::Instruction *cursor =  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, postDeps);
+         TR::Instruction *cursor =  generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+                     traceMsg(comp(), "jitDispatchJ9Method: end icf set\n");
          cg()->stopUsingRegister(scratchReg);
+         traceMsg(comp(), "stop using regs\n");
          return cursor;
       }
 
