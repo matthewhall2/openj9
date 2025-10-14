@@ -2539,6 +2539,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    bool isJitInduceOSR = callSymRef->isOSRInductionHelper();
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    myself = comp()->isRecursiveMethodTarget(fem);
+   traceMsg(comp(), myself ? "target is recursive\n" : "target is not recursive\n");
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
 
