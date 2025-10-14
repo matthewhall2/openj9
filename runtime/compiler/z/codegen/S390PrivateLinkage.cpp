@@ -2604,7 +2604,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       traceMsg(comp(), "jitDispatchJ9Method: labels set\n");
 
       if (getenv("addToAllPreDeps") != NULL) {
-      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      dependencies->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister());
    }
 
          TR::RegisterDependencyConditions *preDeps = NULL;
@@ -2625,7 +2625,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
    if (getenv("addToAllDeps") != NULL) {
       dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
-      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
    }
    TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 3, cg());
    postDeps->setAddCursorForPre(0);
