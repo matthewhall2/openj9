@@ -2597,15 +2597,20 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
 
+      dependencies->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister()); // probably not needed
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
       preDeps->setAddCursorForPost(0);
       preDeps->setNumPostConditions(0, trMemory());
-      preDeps->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister());
+      preDeps->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister()); // also probably not needed
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      postDeps->setAddCursorForPre(0);
-      postDeps->setNumPreConditions(0, trMemory());
-      postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      if (feGetEnv("useAllDepsForPost") != NULL) {
+         postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      } else {
+         postDeps->setAddCursorForPre(0);
+         postDeps->setNumPreConditions(0, trMemory());
+         postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      }
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
