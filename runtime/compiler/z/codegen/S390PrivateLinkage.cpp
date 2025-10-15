@@ -2606,8 +2606,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
    
-
-      
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
@@ -2622,7 +2620,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, 16);
+      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, j9MethodReg, 16);
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = cg()->allocateRegister();
       TR::Register *regEP = cg()->allocateRegister();
