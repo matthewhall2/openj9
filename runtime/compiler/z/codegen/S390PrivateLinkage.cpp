@@ -2609,6 +2609,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
          postDeps->setAddCursorForPre(0);
          postDeps->setNumPreConditions(0, trMemory());
+         postDeps->setAddCursorForPost(0);
          postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
       }
 
