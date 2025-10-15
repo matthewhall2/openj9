@@ -3465,17 +3465,16 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       default:
          break;
       }
-
-   if (callNode->isJitDispatchJ9MethodCall(comp())) {
-      if (isSpec)
-      printf("testing\n");
-      traceMsg(comp(), isSpec ? "node is correct" : "node is incorrect");
+   
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
+   if (isJitDispatchJ9Method) {
+      specialArgReg = getJ9MethodArgumentRegister();
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
       {
       child = callNode->getChild(from);
-      TR::Register *specialArg = copyArgRegister(callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
+      TR::Register *specialArg = isJitDispatchJ9Method ? cg()->evaluate(child) : (callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
