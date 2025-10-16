@@ -2610,8 +2610,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
 
-      TR_S390OutOfLineCodeSection *snippetCall = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-      cg->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+      cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateSnippetCall(cg(), callNode, snippet, postDeps, callSymRef);
