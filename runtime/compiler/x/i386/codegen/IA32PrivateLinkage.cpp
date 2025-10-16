@@ -221,7 +221,8 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
    if (callNode->getSymbol()->castToMethodSymbol()->firstArgumentIsReceiver() && callNode->getOpCode().isIndirect())
       receiverChildIndex = firstArgumentChild;
 
-   if (!callNode->getSymbolReference()->isUnresolved()) {
+   if (!callNode->getSymbolReference()->isUnresolved())
+      {
       switch(callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
          {
          case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
@@ -230,11 +231,19 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
             linkageRegChildIndex = firstArgumentChild;
             receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
          }
-         if (callNode->isJitDispatchJ9MethodCall(comp())) {
-            linkageRegChildIndex = firstArgumentChild;
-            receiverChildIndex = callNode->getOpCode().isIndirect()? firstArgumentChild + 1 : -1;
-         }
+      }
 
+   if (callNode->isJitDispatchJ9MethodCall(comp()))
+      {
+      firstArgumentChild = 1;
+      TR::Node *target = callNode->getChild(0);
+      TR::Register *reg = cg()->evaluate(target);
+      if (reg->getRegisterPair())
+         {
+         reg = reg->getRegisterPair()->getLowOrder();
+         }
+      dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+      cg()->decReferenceCount(target);
       }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
