@@ -2044,7 +2044,6 @@ void J9::X86::PrivateLinkage::buildDirectCall(
       TR::Register *scratchReg = cg()->allocateRegister();
       site.addPostCondition(
          scratchReg, getProperties().getVTableIndexArgumentRegister());
-
       // This will be assigned to getJ9MethodArgumentRegister().
 
       TR::Register *j9mReg = callNode->getChild(0)->getRegister();
@@ -2074,6 +2073,7 @@ void J9::X86::PrivateLinkage::buildDirectCall(
 
       generateLabelInstruction(oolBranchOp, callNode, interpreterCallLabel, cg());
 
+      if (comp()->target().is64Bit()) {
       // The method is compiled - call through register to JIT entry point
       generateRegMemInstruction(
          TR::InstOpCode::L4RegMem,
@@ -2087,6 +2087,7 @@ void J9::X86::PrivateLinkage::buildDirectCall(
 
       generateRegRegInstruction(
          TR::InstOpCode::ADDRegReg(), callNode, scratchReg, j9mReg, cg());
+      }
 
       callInstr = generateRegInstruction(
          TR::InstOpCode::CALLReg, callNode, scratchReg, cg());
