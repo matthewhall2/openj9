@@ -416,7 +416,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
             {
             if (feGetEnv("calcCursor") != NULL) {
             intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
-            *(int32_t *) cursor = (int32_t)((destAddr - cursor) / 2);
+            *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)cursor) / 2);
             }
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
