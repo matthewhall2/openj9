@@ -269,8 +269,8 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    // Flush in-register arguments back to the stack for interpreter
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
-
-   TR_RuntimeHelper runtimeHelper = getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
+   TR_RuntimeHelper runtimeHelper = isJitDispatchJ9Method ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
    TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
 
    // Generate RIOFF if RI is supported.
@@ -350,7 +350,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    //induceOSRAtCurrentPC is implemented in the VM, and it knows, by looking at the current PC, what method it needs to
    //continue execution in interpreted mode. Therefore, it doesn't need the method pointer.
-   if (!glueRef->isOSRInductionHelper())
+   if (!glueRef->isOSRInductionHelper() && !isJitDispatchJ9Method)
       {
       // Store the method pointer: it is NULL for unresolved
       // This field must be doubleword aligned for 64-bit and word aligned for 32-bit
@@ -374,7 +374,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                getNode());
             }
          }
-      else
+      else if (!isJitDispatchJ9Method)
          {
          uintptr_t ramMethod = (uintptr_t)methodSymRef->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier();
          *(uintptr_t *) cursor = ramMethod;
@@ -412,7 +412,10 @@ TR::S390J9CallSnippet::emitSnippetBody()
                __LINE__,
                callNode);
             }
-         }
+         } else if (isJitDispatchJ9Method)
+            {
+            
+            }
       }
 
    return cursor + sizeof(uintptr_t);

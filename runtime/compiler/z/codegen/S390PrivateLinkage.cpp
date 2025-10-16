@@ -2630,8 +2630,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
 
-      TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
-      TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, interpreterCallLabel, callSymRef, argSize);
+
+      //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
+      //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
       cg()->addSnippet(snippet);
 
       doneLabel->setEndInternalControlFlow();
