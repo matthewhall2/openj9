@@ -414,7 +414,18 @@ TR::S390J9CallSnippet::emitSnippetBody()
             }
          } else if (isJitDispatchJ9Method)
             {
-            
+            //intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
+            //*(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+            cg()->addExternalRelocation(
+               TR::ExternalRelocation::create(
+                  cursor,
+                  (uint8_t *)glueRef,
+                  TR_HelperAddress,
+                  cg()),
+               __FILE__,
+               __LINE__,
+               callNode);
+            cursor += sizeof(uintptr_t);
             }
       }
 
