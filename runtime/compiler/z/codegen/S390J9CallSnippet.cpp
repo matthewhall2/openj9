@@ -414,8 +414,10 @@ TR::S390J9CallSnippet::emitSnippetBody()
             }
          } else if (isJitDispatchJ9Method)
             {
-            //intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
-            //*(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+            if (feGetEnv("calcCursor") != NULL) {
+            intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
+            *(int32_t *) cursor = (int32_t)((destAddr - cursor) / 2);
+            }
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
                   cursor,
@@ -425,7 +427,9 @@ TR::S390J9CallSnippet::emitSnippetBody()
                __FILE__,
                __LINE__,
                callNode);
-            cursor += sizeof(uintptr_t);
+            if (feGetEnv("incCursor") != NULL) {
+            //cursor += sizeof(uintptr_t);
+            }
             }
       }
 
