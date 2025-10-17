@@ -109,7 +109,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    const bool enableVectorLinkage = codeGen->getSupportsVectorRegisters();
    if (enableVectorLinkage) setVectorReturnRegister(TR::RealRegister::VRF24);
 
-   setStackPointerRegister  (TR::RealRegister::GPR5 );
+   setStackPointerRegister  (TR::RealRegister::xx );
    setEntryPointRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR4 : TR::RealRegister::GPR15);
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
@@ -3491,7 +3491,8 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    if (isJitDispatchJ9Method) {
-      specialArgReg = getJ9MethodArgumentRegister();
+      from += step;
+      return;
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
