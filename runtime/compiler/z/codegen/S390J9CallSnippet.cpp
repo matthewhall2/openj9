@@ -414,10 +414,25 @@ TR::S390J9CallSnippet::emitSnippetBody()
             }
          } else if (isJitDispatchJ9Method)
             {
-            if (feGetEnv("calcCursor") != NULL) {
             intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
-            *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)cursor) / 2);
+            if (feGetEnv("cursor1") != NULL) {
+            // *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)cursor) / 2);
+               *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)(cursor - 2)) / 2);
             }
+
+            if (geGetEnv("setDestAddress") != NULL) {
+            self()->setSnippetDestAddr(destAddr);
+            }
+
+            if (feGetEnv("cursor2") != NULL) {
+               *(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+            }
+
+            if (feGetEnv("projectSpec") != NULL) {
+                cg()->addProjectSpecializedRelocation(cursor, (uint8_t*) glueRef, NULL, TR_HelperAddress,
+                                      __FILE__, __LINE__, self()->getNode());
+            } else {
+
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
                   cursor,
@@ -427,6 +442,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                __FILE__,
                __LINE__,
                callNode);
+            }
             if (feGetEnv("incCursor") != NULL) {
             //cursor += sizeof(uintptr_t);
             }
