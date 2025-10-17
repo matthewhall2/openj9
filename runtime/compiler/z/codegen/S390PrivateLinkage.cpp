@@ -109,7 +109,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    const bool enableVectorLinkage = codeGen->getSupportsVectorRegisters();
    if (enableVectorLinkage) setVectorReturnRegister(TR::RealRegister::VRF24);
 
-   setStackPointerRegister  (TR::RealRegister::xx );
+   setStackPointerRegister  (TR::RealRegister::GPR5 );
    setEntryPointRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR4 : TR::RealRegister::GPR15);
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
