@@ -283,7 +283,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    int32_t pad_bytes = (dataStartAddr + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - dataStartAddr;
    static char *pad = feGetEnv("padBytes");
    pad_bytes = (isJitDispatchJ9Method && pad != NULL ) ? atoi(pad) : pad_bytes;
-   traceMsg("pad bytes: (%s): %d\n", pad == NULL ? "manual" : "auto", pad_bytes);
+   traceMsg(comp, "pad bytes: (%s): %d\n", pad == NULL ? "manual" : "auto", pad_bytes);
 
    setPadBytes(pad_bytes);
 
