@@ -293,7 +293,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    cursor = generatePICBinary(cursor, glueRef);
 
    if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
-      traceMsg(comp(), "returning early\n");
+      traceMsg(comp, "returning early\n");
       return cursor + sizeof(uintptr_t);
    }
 
