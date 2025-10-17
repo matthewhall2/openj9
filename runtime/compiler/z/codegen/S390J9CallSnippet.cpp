@@ -596,6 +596,10 @@ TR::S390J9CallSnippet::print(TR::FILE *pOutFile, TR_Debug *debug)
       {
       glueRef = cg()->getSymRef(TR_S390interpreterStaticSpecialCallGlue);
       }
+   
+   if (callNode->isJitDispatchJ9MethodCall(comp())) {
+      glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
+   }
 
    bufferPos = debug->printRuntimeInstrumentationOnOffInstruction(pOutFile, bufferPos, false); // RIOFF
 
