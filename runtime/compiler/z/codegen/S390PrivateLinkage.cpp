@@ -2607,8 +2607,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
 
+      TR::Snippet * snippet = NULL;
+      TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
+      if (feGetEnv("helperSnippet")) {
+         snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel, cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition), doneLabel, argSize);
+      } else {
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+      }
 
       TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
@@ -3489,7 +3495,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    if (specialArgReg != TR::RealRegister::NoReg)
       {
       child = callNode->getChild(from);
-      TR::Register *specialArg = isJitDispatchJ9Method ? cg()->evaluate(child) : (callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
+      TR::Register *specialArg = isJitDispatchJ9Method ? cg()->evaluate(child) : copyArgRegister(callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
