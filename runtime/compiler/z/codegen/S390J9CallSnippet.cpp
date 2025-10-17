@@ -292,6 +292,11 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    cursor = generatePICBinary(cursor, glueRef);
 
+   if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
+      return cursor + sizeof(uintptr_t);
+   }
+   char *pad = feGetEnv("padBytes");
+   pad_bytes = pad != NULL ? atoi(pad) : pad_bytes;
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
