@@ -425,7 +425,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
             }
 
             if (feGetEnv("cursor2") != NULL) {
-               *(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+               *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)cursor) / 2);
             }
 
             if (feGetEnv("projectSpec") != NULL) {
