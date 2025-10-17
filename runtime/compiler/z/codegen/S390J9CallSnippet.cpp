@@ -295,8 +295,9 @@ TR::S390J9CallSnippet::emitSnippetBody()
    if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
       return cursor + sizeof(uintptr_t);
    }
-   char *pad = feGetEnv("padBytes");
-   pad_bytes = pad != NULL ? atoi(pad) : pad_bytes;
+
+   static char *pad = feGetEnv("padBytes");
+   pad_bytes = (isJitDispatchJ9Method && pad) != NULL ? atoi(pad) : pad_bytes;
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
