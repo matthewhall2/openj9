@@ -555,7 +555,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
       if (cg()->comp()->getOption(TR_EnableRMODE64))
 #endif
          {
-         if (cg()->directCallRequiresTrampoline(destAddr, instructionStartAddress))
+      if (cg()->directCallRequiresTrampoline(destAddr, instructionStartAddress) && !getNode()->isJitDispatchJ9MethodCall(comp()))
             {
             // Destination is beyond our reachable jump distance, we'll find the
             // trampoline.
