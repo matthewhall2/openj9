@@ -2590,7 +2590,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *scratchReg = cg()->allocateRegister();
-      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2601,7 +2601,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 0, cg());
       preDeps->setAddCursorForPost(0);
       preDeps->setNumPostConditions(0, trMemory());
-      preDeps->addPreConditionIfNotAlreadyInserted(j9MethodReg, getJ9MethodArgumentRegister()); // also probably not needed
+      preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 3, cg());
       postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
