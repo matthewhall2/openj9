@@ -118,7 +118,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
    setMethodMetaDataRegister(TR::RealRegister::GPR13 );
-3FF8E90C93C
+
    setIntegerArgumentRegister(0, TR::RealRegister::GPR1);
    setIntegerArgumentRegister(1, TR::RealRegister::GPR2);
    setIntegerArgumentRegister(2, TR::RealRegister::GPR3);
