@@ -2612,8 +2612,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       if (feGetEnv("helperSnippet") != NULL) {
          snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      } else if (feGetEnv("unResolvedSnippet") != NULL) {
+         snippet = new (trHeapMemory()) TR::S390UnresolvedCallSnippet(cg(), callNode, snippetLabel, argSize);
       } else {
-         snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, callSymRef, argSize);
+         snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, feGetEnv("useHelperRef") != NULL ? helperRef : callSymRef, argSize);
       }
 
       TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
