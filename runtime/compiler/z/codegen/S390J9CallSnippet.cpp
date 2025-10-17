@@ -297,7 +297,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    }
 
    static char *pad = feGetEnv("padBytes");
-   pad_bytes = (isJitDispatchJ9Method && pad) != NULL ? atoi(pad) : pad_bytes;
+   pad_bytes = (isJitDispatchJ9Method && pad != NULL ) ? atoi(pad) : pad_bytes;
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
