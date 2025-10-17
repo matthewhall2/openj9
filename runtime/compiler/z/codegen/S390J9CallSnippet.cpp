@@ -420,7 +420,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                *(int32_t *) cursor = (int32_t)((destAddr - (intptr_t)(cursor - 2)) / 2);
             }
 
-            if (geGetEnv("setDestAddress") != NULL) {
+            if (feGetEnv("setDestAddress") != NULL) {
             self()->setSnippetDestAddr(destAddr);
             }
 
