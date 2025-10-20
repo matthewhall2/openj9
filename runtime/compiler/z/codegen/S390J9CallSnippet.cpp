@@ -280,31 +280,34 @@ TR::S390J9CallSnippet::emitSnippetBody()
    if (isJitDispatchJ9Method && tempCursor == cursor) {
       TR::InstOpCode storeOp(TR::InstOpCode::getStoreOpCode());
       // j9methodArg gets stored - need to inc cursor
-      cursor -= storeOp.getInstructionLength();
+      //cursor -= storeOp.getInstructionLength();
    }
 
 
    // Generate RIOFF if RI is supported.
    cursor = generateRuntimeInstrumentationOnOffInstruction(cg(), cursor, TR::InstOpCode::RIOFF);
-
+   cursor = generatePICBinary(cursor, glueRef);
    // data area start address
    uintptr_t dataStartAddr = (uintptr_t) (getPICBinaryLength() + cursor);
 
    // calculate pad bytes to get the data area aligned
-   int32_t pad_bytes = ((dataStartAddr + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t)) * sizeof(uintptr_t) - dataStartAddr;
+
+   int32_t pad_bytes = (dataStartAddr + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - dataStartAddr;
    static char *pad = feGetEnv("padBytes");
    pad_bytes = (isJitDispatchJ9Method && pad != NULL ) ? atoi(pad) : pad_bytes;
+   if (feGetEnv("useCursorForPad")) {
+      pad_bytes = (((uintptr_t) cursor + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - (uintptr_t) cursor);
+   }
    traceMsg(comp, "pad bytes: (%s): %d\n", pad == NULL ? "manual" : "auto", pad_bytes);
-
+   
    setPadBytes(pad_bytes);
-
    //  branch to the glueRef
    //
    //  0d40        BASR  rEP,0
    //  5840 4006   L     rEP,6(,rEP)   LG   rEP, 8(rEP) for 64bit
    //  0de4        BASR  r14,rEP
 
-   cursor = generatePICBinary(cursor, glueRef);
+
 
    if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
       traceMsg(comp, "returning early\n");
