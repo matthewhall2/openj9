@@ -2627,7 +2627,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       // generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
       // snippetCall->swapInstructionListsWithCompilation();
-      // cg()->addSnippet(snippet);
+      cg()->addSnippet(snippet);
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
