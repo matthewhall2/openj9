@@ -181,6 +181,9 @@ TR::S390J9CallSnippet::generateInvokeExactJ2IThunk(TR::Node * callNode, int32_t 
       }
 
    cursor = S390flushArgumentsToStack(cursor, callNode, argSize, cg);
+   if (callNode->isJitDispatchJ9MethodCall(comp())) {
+      traceMsg(comp(), "found jitDispatch in genThunk\n");
+   }
 
    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    //  if you change the following code,
