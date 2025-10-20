@@ -291,7 +291,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    uintptr_t dataStartAddr = (uintptr_t) (getPICBinaryLength() + cursor);
 
    // calculate pad bytes to get the data area aligned
-   int32_t pad_bytes = (dataStartAddr + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - dataStartAddr;
+   int32_t pad_bytes = ((dataStartAddr + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t)) * sizeof(uintptr_t) - dataStartAddr;
    static char *pad = feGetEnv("padBytes");
    pad_bytes = (isJitDispatchJ9Method && pad != NULL ) ? atoi(pad) : pad_bytes;
    traceMsg(comp, "pad bytes: (%s): %d\n", pad == NULL ? "manual" : "auto", pad_bytes);
@@ -314,7 +314,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
    traceMsg(comp, "why are we here\n");
    }
-
+//0x000003ffd900ca34:	a7 5b 00 60	aghi	%r5,96 
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
