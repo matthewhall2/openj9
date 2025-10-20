@@ -310,7 +310,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
       traceMsg(comp, "returning early\n");
       return cursor + sizeof(uintptr_t);
    }
-
+//0x000003ffd8e89c42:	03 ff f7 c6	.long	0x03fff7c6
    if (isJitDispatchJ9Method && feGetEnv("noDataForSnippet") != NULL) {
    traceMsg(comp, "why are we here\n");
    }
