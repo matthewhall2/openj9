@@ -277,11 +277,11 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    uint8_t *tempCursor = cursor;
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
-   // if (isJitDispatchJ9Method && tempCursor == cursor) {
-   //    TR::InstOpCode storeOp(TR::InstOpCode::getStoreOpCode());
-   //    // j9methodArg gets stored - need to inc cursor
-   //    cursor += storeOp.getInstructionLength();
-   // }
+   if (isJitDispatchJ9Method && tempCursor == cursor) {
+      TR::InstOpCode storeOp(TR::InstOpCode::getStoreOpCode());
+      // j9methodArg gets stored - need to inc cursor
+      cursor -= storeOp.getInstructionLength();
+   }
 
 
    // Generate RIOFF if RI is supported.
