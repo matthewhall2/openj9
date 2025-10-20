@@ -2604,7 +2604,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 3, cg());
-     // postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      postDeps->addPreCondition(j9MethodReg, TR::RealRegister::AssignAny); // only used if interpreted
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
 
       TR::Snippet * snippet = NULL;
@@ -2622,6 +2622,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, feGetEnv("useHelperRef") != NULL ? helperRef : callSymRef);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
