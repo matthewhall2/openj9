@@ -273,7 +273,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    // Flush in-register arguments back to the stack for interpreter
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp);
    TR_RuntimeHelper runtimeHelper = isJitDispatchJ9Method ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
-   TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper, false, false, isJitDispatchJ9Method);
+   TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
 
    uint8_t *tempCursor = cursor;
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
