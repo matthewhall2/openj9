@@ -540,7 +540,46 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
       *(int16_t *) cursor = 0x07F0 + rEP;
       cursor += sizeof(int16_t);
       }
-   else
+   else if (getNode()->isJitDispatchJ9MethodCall(cg()->comp())) {
+       // helper call
+        // Load Return Address into R14.
+        intptr_t returnAddr = getCallRA();
+        *(int16_t *)cursor = 0xC0E0;
+        cursor += sizeof(int16_t);
+        *(int32_t *)cursor = (int32_t)((returnAddr - (intptr_t)(cursor - 2)) / 2);
+        cursor += sizeof(int32_t);
+
+        intptr_t branchInstructionStartAddress = (intptr_t)cursor;
+        *(int16_t *)cursor = 0xC0F4; // BRCL   <Helper Addr>
+        cursor += sizeof(int16_t);
+
+         intptr_t destAddr = (intptr_t)(glueRef->getSymbol()->castToMethodSymbol()->getMethodAddress());
+
+#if defined(TR_TARGET_64BIT)
+#if defined(J9ZOS390)
+      if (cg()->comp()->getOption(TR_EnableRMODE64))
+#endif
+         {
+      if (cg()->directCallRequiresTrampoline(destAddr, instructionStartAddress))
+            {
+            // Destination is beyond our reachable jump distance, we'll find the
+            // trampoline.
+            destAddr = TR::CodeCacheManager::instance()->findHelperTrampoline(glueRef->getReferenceNumber(), (void *)cursor);
+            self()->setUsedTrampoline(true);
+            }
+         }
+#endif
+
+      TR_ASSERT_FATAL(cg()->comp()->target().cpu.isTargetWithinBranchRelativeRILRange(destAddr, instructionStartAddress),
+                      "Helper Call is not reachable.");
+      self()->setSnippetDestAddr(destAddr);
+
+      *(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+      cg()->addProjectSpecializedRelocation(cursor, (uint8_t*) glueRef, NULL, TR_HelperAddress,
+                                      __FILE__, __LINE__, self()->getNode());
+      cursor += sizeof(int32_t);
+      return cursor;
+   } else 
       {
       // Generate BRASL instruction.
       intptr_t instructionStartAddress = (intptr_t)cursor;
