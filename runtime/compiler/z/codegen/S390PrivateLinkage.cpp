@@ -2604,8 +2604,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 3, cg());
-      postDeps->addPreCondition(j9MethodReg, TR::RealRegister::AssignAny); // only used if interpreted
+      postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
+      
+      TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies->getPreConditions(), dependencies->getPostConditions(), cg());
+      interpreterdDeps->setAddCursorForPre(0);
+      preDeps->setNumPreConditions(1, trMemory());
+      interpreterdDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::Snippet * snippet = NULL;
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
@@ -2617,7 +2622,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
          snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, helperRef, argSize);
       }
-
+//0x000003ffd9014d2c:	00 00 00 00	.long	0x00000000
       // TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
       // cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       // snippetCall->swapInstructionListsWithCompilation();
@@ -2658,7 +2663,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
-      generateSnippetCall(cg(), callNode, snippet, preDeps, snippetSymRef);
+      generateSnippetCall(cg(), callNode, snippet, interpreterdDeps, snippetSymRef);
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
