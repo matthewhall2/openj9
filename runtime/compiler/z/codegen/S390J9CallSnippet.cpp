@@ -543,7 +543,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
    else if (getNode()->isJitDispatchJ9MethodCall(cg()->comp())) {
        // helper call
         // Load Return Address into R14.
-        intptr_t returnAddr = getCallRA();
+        uintptr_t returnAddr = (uintptr_t) getCallRA();
         *(int16_t *)cursor = 0xC0E0;
         cursor += sizeof(int16_t);
         *(int32_t *)cursor = (int32_t)((returnAddr - (intptr_t)(cursor - 2)) / 2);
@@ -560,7 +560,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
       if (cg()->comp()->getOption(TR_EnableRMODE64))
 #endif
          {
-      if (cg()->directCallRequiresTrampoline(destAddr, instructionStartAddress))
+      if (cg()->directCallRequiresTrampoline(destAddr, branchInstructionStartAddress))
             {
             // Destination is beyond our reachable jump distance, we'll find the
             // trampoline.
@@ -570,7 +570,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
          }
 #endif
 
-      TR_ASSERT_FATAL(cg()->comp()->target().cpu.isTargetWithinBranchRelativeRILRange(destAddr, instructionStartAddress),
+      TR_ASSERT_FATAL(cg()->comp()->target().cpu.isTargetWithinBranchRelativeRILRange(destAddr, branchInstructionStartAddress),
                       "Helper Call is not reachable.");
       self()->setSnippetDestAddr(destAddr);
 
