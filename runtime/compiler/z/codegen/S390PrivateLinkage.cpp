@@ -2604,7 +2604,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 3, cg());
-    //  postDeps->addPreCondition(j9MethodReg, TR::RealRegister::AssignAny); // only used if interpreted
+      postDeps->addPreCondition(j9MethodReg, TR::RealRegister::AssignAny); // only used if interpreted
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
 
       TR::Snippet * snippet = NULL;
@@ -2654,7 +2654,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
-      dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      //dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
