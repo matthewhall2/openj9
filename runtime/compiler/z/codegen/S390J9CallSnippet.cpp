@@ -297,7 +297,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    cursor = generatePICBinary(cursor, glueRef);
 
-   if (feGetEnv("earlyExit") != NULL) {
+   if (feGetEnv("earlyExit") != NULL && isJitDispatchJ9Method) {
       return cursor;
    }
 
@@ -323,7 +323,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
          }
       }
 
-   if (feGetEnv("earlyExit2") != NULL) {
+   if (feGetEnv("earlyExit2") != NULL && isJitDispatchJ9Method) {
       return cursor;
    }
 
