@@ -2661,9 +2661,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       //dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+      if (feGetEnv("unResolvedSnippet") != NULL) {
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, interpreterdDeps);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      } else {
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
       generateSnippetCall(cg(), callNode, snippet, interpreterdDeps, snippetSymRef);
+      }
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
