@@ -335,6 +335,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    pad_bytes = (((uintptr_t) cursor + (sizeof(uintptr_t) - 1)) / sizeof(uintptr_t) * sizeof(uintptr_t) - (uintptr_t) cursor);
    TR_ASSERT( pad_bytes == 0, "Method address field must be aligned for patching");
 
+   if (!isJitDispatchJ9Method) {
    // Method address
    *(uintptr_t *) cursor = (uintptr_t) glueRef->getMethodAddress();
    cg()->addExternalRelocation(
@@ -360,6 +361,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
       __LINE__,
       callNode);
    cursor += sizeof(uintptr_t);
+   }
 
    //induceOSRAtCurrentPC is implemented in the VM, and it knows, by looking at the current PC, what method it needs to
    //continue execution in interpreted mode. Therefore, it doesn't need the method pointer.
@@ -445,7 +447,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                 cg()->addProjectSpecializedRelocation(cursor, (uint8_t*) glueRef, NULL, TR_HelperAddress,
                                       __FILE__, __LINE__, self()->getNode());
             } else {
-
+            *(uintptr_t *) cursor = (uintptr_t) glueRef->getMethodAddress();
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
                   cursor,
