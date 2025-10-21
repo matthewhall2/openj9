@@ -541,6 +541,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
       cursor += sizeof(int16_t);
       }
    else if (getNode()->isJitDispatchJ9MethodCall(cg()->comp())) {
+      traceMsg(cg()->comp(), "pic bin: jit dispatch\n");
        // helper call
         // Load Return Address into R14.
         uintptr_t returnAddr = (uintptr_t) getCallRA();
