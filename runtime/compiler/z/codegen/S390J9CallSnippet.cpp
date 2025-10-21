@@ -574,7 +574,7 @@ TR::S390J9CallSnippet::generatePICBinary(uint8_t * cursor, TR::SymbolReference* 
                       "Helper Call is not reachable.");
       self()->setSnippetDestAddr(destAddr);
 
-      *(int32_t *) cursor = (int32_t)((destAddr - instructionStartAddress) / 2);
+      *(int32_t *) cursor = (int32_t)((destAddr - branchInstructionStartAddress) / 2);
       cg()->addProjectSpecializedRelocation(cursor, (uint8_t*) glueRef, NULL, TR_HelperAddress,
                                       __FILE__, __LINE__, self()->getNode());
       cursor += sizeof(int32_t);
