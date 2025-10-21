@@ -297,6 +297,10 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    cursor = generatePICBinary(cursor, glueRef);
 
+   if (feGetEnv("earlyExit") != NULL) {
+      return cursor;
+   }
+
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
@@ -318,6 +322,10 @@ TR::S390J9CallSnippet::emitSnippetBody()
          cursor += 2;
          }
       }
+
+   if (feGetEnv("earlyExit2") != NULL) {
+      return cursor;
+   }
 
    // Data Area
    //              <method address>
