@@ -3607,6 +3607,7 @@ TR::Instruction* J9::Z::CodeGenerator::generateVMCallHelperSnippet(TR::Instructi
 
    // Store all arguments to the stack for access by the interpreted method
    J9::Z::PrivateLinkage *privateLinkage = static_cast<J9::Z::PrivateLinkage *>(self()->getLinkage());
+   traceMsg(comp, "generate vm call\n");
    cursor = static_cast<TR::Instruction*>(privateLinkage->saveArguments(cursor, false, true));
 
    // Load the EP register with the address of the next instruction
