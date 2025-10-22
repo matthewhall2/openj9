@@ -262,6 +262,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    uint8_t * cursor = cg()->getBinaryBufferCursor();
    TR::Node * callNode = getNode();
    TR::SymbolReference * methodSymRef =  getRealMethodSymbolReference();
+   traceMsg(comp, "snippet instr\n");
    for (int i = 0; i < 8; i++)
       traceMsg(comp, "%02x ", cursor[i]);
    if (!methodSymRef)
