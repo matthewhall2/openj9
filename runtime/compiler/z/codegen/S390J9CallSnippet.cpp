@@ -262,7 +262,8 @@ TR::S390J9CallSnippet::emitSnippetBody()
    uint8_t * cursor = cg()->getBinaryBufferCursor();
    TR::Node * callNode = getNode();
    TR::SymbolReference * methodSymRef =  getRealMethodSymbolReference();
-
+   for (int i = 0; i < 8; i++)
+      traceMsg(comp, "%02x ", cursor[i]);
    if (!methodSymRef)
       methodSymRef = callNode->getSymbolReference();
 
@@ -273,7 +274,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
    // Flush in-register arguments back to the stack for interpreter
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
 
-
+   
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp);
    TR_RuntimeHelper runtimeHelper = isJitDispatchJ9Method ? TR_j2iTransition : getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
    TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
