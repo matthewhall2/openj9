@@ -3601,7 +3601,7 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
 
    // setup arguments
    int64_t killMask = -1;
-   if (callNode->isJitDispatchJ9MethodCall(comp)) {
+   if (callNode->isJitDispatchJ9MethodCall(comp())) {
       killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister()));
    }
    argSize = buildArgs(callNode, dependencies, false, -1, vftReg);
