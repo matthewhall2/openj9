@@ -15,7 +15,10 @@ class S390J9HelperCallSnippet : public TR::S390HelperCallSnippet
    {
 
    public:
-      virtual uint8_t *emitSnippetBody();
+        S390J9HelperCallSnippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *snippetlab,
+        TR::SymbolReference *helper, TR::LabelSymbol *restartlab = NULL, int32_t s = 0)
+        : TR::S390HelperCallSnippet(cg, node, snippetlab, helper, restartlab, s) {}
+        virtual uint8_t *emitSnippetBody();
    };
 }
 
