@@ -2590,6 +2590,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *scratchReg = cg()->allocateRegister();
+      TR::Register *scratchReg2 = cg()->allocateRegister();
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
@@ -2599,18 +2600,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       doneLabel->setEndInternalControlFlow();
 
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 0, cg());
-      preDeps->setAddCursorForPost(0);
-      preDeps->setNumPostConditions(0, trMemory());
       preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 3, cg());
-      postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
+      postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
-      
-      TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
-      interpreterdDeps->setNumPreConditions(1, trMemory());
-      interpreterdDeps->setAddCursorForPre(0);
-      interpreterdDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+
+      TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
 
       TR::Snippet * snippet = NULL;
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
@@ -2646,10 +2643,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       TR::Instruction *branchInstr = gcPoint;
       // find target address
-      generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
+      generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg2,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, j9MethodReg, 16);
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, scratchReg2, scratchReg2, 16);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, scratchReg2);
       TR::Register *regRA = cg()->allocateRegister();
       TR::Register *regEP = cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
