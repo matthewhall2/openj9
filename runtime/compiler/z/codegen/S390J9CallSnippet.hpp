@@ -67,6 +67,9 @@ class S390J9CallSnippet : public TR::S390CallSnippet
    virtual void print(TR::FILE *pOutFile, TR_Debug *debug);
 
    virtual uint8_t *emitSnippetBody();
+
+   virtual uint8_t S390flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg)
+
    };
 
 
