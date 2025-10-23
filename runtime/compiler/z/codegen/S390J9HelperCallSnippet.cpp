@@ -17,5 +17,5 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
       cursor = TR::S390J9CallSnippet::S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
    }
 
-   return TR::S390HelperCallSnippet::emitSnippetBodyHelper(cursor, helperSymRef);
+   return emitSnippetBodyHelper(cursor, helperSymRef);
 }
