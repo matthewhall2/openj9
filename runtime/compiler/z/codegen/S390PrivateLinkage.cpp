@@ -3441,8 +3441,9 @@ TR::Register * J9::Z::JNILinkage::buildDirectDispatch(TR::Node * callNode)
 // special regs (java stack ptr, system stack ptr, and method metadata reg)
 ////////////////////////////////////////////////////////////////////////////////
 void
-J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, bool isFastJNI, int64_t &killMask, TR::Node *callNode)
+J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, bool isFastJNI, int64_t &killMask)
    {
+   traceMsg(comp(), "j9 linkage: do not kill\n")
    TR::SystemLinkage * systemLinkage = (TR::SystemLinkage *) cg()->getLinkage(TR_System);
 
    int32_t i;
@@ -3489,6 +3490,7 @@ J9::Z::PrivateLinkage::doNotKillSpecialRegsForBuildArgs (TR::Linkage *linkage, b
 void
 J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::RegisterDependencyConditions * dependencies, int32_t& from, int32_t step)
    {
+   traceMsg(comp(), "j9 linkage: reg deps\n");
    TR::Node * child;
    TR::RealRegister::RegNum specialArgReg = TR::RealRegister::NoReg;
    bool isSpec = false;
