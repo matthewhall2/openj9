@@ -68,15 +68,8 @@ class S390J9CallSnippet : public TR::S390CallSnippet
 
    virtual uint8_t *emitSnippetBody();
 
-   static uint8_t S390flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg);
+   static uint8_t *S390flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg);
 
-   };
-
-class S390J9HelperCallSnippet : public TR::S390HelperCallSnippet
-   {
-   
-   public:
-      virtual uint8_t *emitSnippetBody();
    };
 
 class S390UnresolvedCallSnippet : public TR::S390J9CallSnippet
