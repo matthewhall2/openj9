@@ -2599,8 +2599,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
 
-      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 0, cg());
-      preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+      preDeps->setNumPostConditions(0, trMemory());
+      preDeps->setAddCursorForPost(0);
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
       postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
@@ -2608,6 +2609,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
       TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+
 
       TR::Snippet * snippet = NULL;
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
