@@ -2606,15 +2606,23 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       preDeps->setNumPostConditions(0, trMemory());
       preDeps->setAddCursorForPost(0);
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
+      // TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(1, 5, cg());
+      // postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
+      // postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
+      // postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+
+      TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+      preDeps->setNumPostConditions(5, trMemory());
+      preDeps->setAddCursorForPost(0);
       postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
-     postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+      postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
-      TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
-     // postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
-     dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      
+   //    TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+   //    interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+   //   // postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
+   //   dependencies->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
 
 
 
@@ -2668,7 +2676,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       if (feGetEnv("helperSnippet") != NULL) {
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, interpreterdDeps);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, postDeps);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       } else {
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
