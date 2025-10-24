@@ -2681,8 +2681,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
-      generateSnippetCall(cg(), callNode, snippet, postDeps, snippetSymRef);
+      gcPoint = generateSnippetCall(cg(), callNode, snippet, postDeps, snippetSymRef);
       }
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
@@ -2690,7 +2691,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
       cg()->stopUsingRegister(scratchReg);
-      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       return gcPoint;
       }
 
