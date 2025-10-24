@@ -31,6 +31,7 @@ namespace TR { class CodeGenerator; }
 namespace TR { class RegisterDependencyConditions; }
 namespace TR { class ResolvedMethodSymbol; }
 namespace TR { class Snippet; }
+namespace TR { class S390J9HelperCallSnippet; }
 
 
 namespace J9
