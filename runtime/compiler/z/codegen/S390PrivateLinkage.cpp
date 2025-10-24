@@ -2681,7 +2681,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
-      generateSnippetCall(cg(), callNode, snippet, interpreterdDeps, snippetSymRef);
+      generateSnippetCall(cg(), callNode, snippet, postDeps, snippetSymRef);
       }
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
