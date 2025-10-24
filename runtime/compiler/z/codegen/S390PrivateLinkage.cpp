@@ -2600,6 +2600,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
 
+      // use preconditions from call deps
+      // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs 
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
       preDeps->setNumPostConditions(0, trMemory());
       preDeps->setAddCursorForPost(0);
@@ -2610,7 +2612,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
       TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
+      //interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
 
 
       TR::Snippet * snippet = NULL;
