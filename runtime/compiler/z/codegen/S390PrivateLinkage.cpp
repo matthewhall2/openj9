@@ -2612,8 +2612,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
      postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
       TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
-      postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
+      //interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
+     // postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
 
 
 
