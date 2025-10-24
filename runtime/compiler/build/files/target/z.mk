@@ -77,6 +77,7 @@ JIT_PRODUCT_SOURCE_FILES+=\
     compiler/z/codegen/ReduceSynchronizedFieldLoad.cpp \
     compiler/z/codegen/S390AOTRelocation.cpp \
     compiler/z/codegen/S390CHelperLinkage.cpp \
+    compiler/z/codegen/S390J9HelperCallSnippet.cpp \
     compiler/z/codegen/S390J9CallSnippet.cpp \
     compiler/z/codegen/S390PrivateLinkage.cpp \
     compiler/z/codegen/S390Recompilation.cpp \
