@@ -2687,10 +2687,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
-
+      cg()->stopUsingRegister(scratchReg);
+      cg()->stopUsingRegister(scratchReg2);
       gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
-      cg()->stopUsingRegister(scratchReg);
+      
       return gcPoint;
       }
 
