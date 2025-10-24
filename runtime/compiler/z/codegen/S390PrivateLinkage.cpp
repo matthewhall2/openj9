@@ -2591,7 +2591,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *scratchReg = cg()->allocateRegister();
-     // TR::Register *scratchReg2 = cg()->allocateRegister();
+      TR::Register *scratchReg2 = cg()->allocateRegister();
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
@@ -2609,7 +2609,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
       postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
-    //  postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
+     postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
       TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
       interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
@@ -2651,10 +2651,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       TR::Instruction *branchInstr = gcPoint;
       // find target address
-      generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
+      generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg2,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, j9MethodReg, j9MethodReg, 16);
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, scratchReg2, scratchReg2, 16);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, scratchReg2);
       TR::Register *regRA = cg()->allocateRegister();
       TR::Register *regEP = cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
