@@ -2682,7 +2682,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       if (feGetEnv("helperSnippet") != NULL) {
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, interpreterdDeps);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       cg()->stopUsingRegister(j9MethodReg);
       } else {
