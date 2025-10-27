@@ -2619,10 +2619,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       
       TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 2, cg());
-      interpreterdDeps->setNumPostConditions(2, trMemory());
-      interpreterdDeps->setAddCursorForPost(0);
+  //    interpreterdDeps->setNumPostConditions(2, trMemory());
+   //   interpreterdDeps->setAddCursorForPost(0);
       interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
-      interpreterdDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
+   //   interpreterdDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
 
       // interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
       // interpreterdDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
