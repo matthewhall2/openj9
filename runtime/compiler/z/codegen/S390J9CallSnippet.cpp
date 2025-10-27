@@ -262,7 +262,7 @@ TR::S390J9CallSnippet::S390flushArgumentsToStack(uint8_t *buffer, TR::Node *call
    int32_t argStart = callNode->getFirstArgumentIndex();
    bool rightToLeft = linkage->getRightToLeft() &&
         // we want the arguments for induceOSR to be passed from left to right as in any other non-helper call
-        !callNode->getSymbolReference()->isOSRInductionHelper() && isJitDispatchJ9Method;
+        !callNode->getSymbolReference()->isOSRInductionHelper() && !isJitDispatchJ9Method;
    
    if (isJitDispatchJ9Method)
       argStart++;   
