@@ -2684,7 +2684,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       if (feGetEnv("helperSnippet") != NULL) {
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, interpreterdDeps);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      cg()->stopUsingRegister(j9MethodReg);
       } else {
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
          comp()->getSymRefTab(), snippetLabel);
