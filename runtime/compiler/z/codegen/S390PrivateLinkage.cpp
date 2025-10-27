@@ -2618,10 +2618,34 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
       
-      TR::RegisterDependencyConditions *interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+      TR::RegisterDependencyConditions *interpreterdDeps = dependencies;
+      if (feGetEnv("jdDepsOption1") != NULL) {
+         interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+         interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+      } else if (feGetEnv("jdDepsOption2") != NULL) {
+         interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+         interpreterdDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
+      } else if (feGetEnv("jdDepsOption3") != NULL) {
+         interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+         interpreterdDeps->setNumPostConditions(1, trMemory());
+         interpreterdDeps->setAddCursorForPost(0);
+         interpreterdDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);     
+      } else if (feGetEnv("jdDepsOption4") != NULL) {
+         interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+         interpreterdDeps->setNumPostConditions(1, trMemory());
+         interpreterdDeps->setAddCursorForPost(0);
+         interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());     
+      } else if (feGetEnv("jdDepsOption5") != NULL) {
+         interpreterdDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+         interpreterdDeps->setNumPostConditions(2, trMemory());
+         interpreterdDeps->setAddCursorForPost(0);
+         interpreterdDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());     
+         interpreterdDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);   
+      }
+
+
   //    interpreterdDeps->setNumPostConditions(2, trMemory());
    //   interpreterdDeps->setAddCursorForPost(0);
-      interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
    //   interpreterdDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
 
       // interpreterdDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
