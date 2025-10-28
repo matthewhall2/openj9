@@ -2693,19 +2693,28 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       TR::Instruction *branchInstr = gcPoint;
       // find target address
-      generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, j9MethodReg,
+      generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, j9MethodReg, 16);
       if (feGetEnv("signExtend") != NULL) {
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+
+      if (feGetEnv("x86") != NULL) {
+         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      } else {
+         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+      }
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());//dependencies->findPostCondi
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());//cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
       postDeps->addPostCondition(regEP, getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+      if (feGetEnv("x86") != NULL) {
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+      } else {
+         generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
+      }
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
