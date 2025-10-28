@@ -77,7 +77,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
 
    setRegisterFlag(TR::RealRegister::GPR5, Preserved);
    setRegisterFlag(TR::RealRegister::GPR6, Preserved);
-   setRegisterFlag(TR::RealRegister::GPR7, Preserved);
+ //  setRegisterFlag(TR::RealRegister::GPR7, Preserved);
    setRegisterFlag(TR::RealRegister::GPR8, Preserved);
    setRegisterFlag(TR::RealRegister::GPR9, Preserved);
    setRegisterFlag(TR::RealRegister::GPR10, Preserved);
@@ -115,7 +115,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
    setVTableIndexArgumentRegister (TR::RealRegister::GPR0);
-   setJ9MethodArgumentRegister    (TR::RealRegister::GPR1);
+   setJ9MethodArgumentRegister    (TR::RealRegister::GPR7);
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
    setMethodMetaDataRegister(TR::RealRegister::GPR13 );
