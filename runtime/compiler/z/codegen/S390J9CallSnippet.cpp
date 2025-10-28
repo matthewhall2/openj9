@@ -267,7 +267,7 @@ TR::S390J9CallSnippet::S390flushArgumentsToStack(uint8_t *buffer, TR::Node *call
    
    if (isJitDispatchJ9Method) {
       argStart++;
-      intArgNum++; 
+   //   intArgNum++; 
    }
 
    return S390flushArgumentsToStackHelper(buffer, callNode, argSize, cg, argStart, intArgNum, rightToLeft, linkage);

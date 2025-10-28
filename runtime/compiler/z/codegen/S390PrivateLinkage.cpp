@@ -3627,7 +3627,7 @@ J9::Z::PrivateLinkage::storeExtraEnvRegForBuildArgs(TR::Node * callNode, TR::Lin
    // first child needs to be stored in j9MethodArgumentRegister (GPR1) to transition to the interpreter
    // but the first integer argument register is also GPR1
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
-      numIntegerArgs += 1;
+     // numIntegerArgs += 1;
    }
    return stackOffset;
    }
