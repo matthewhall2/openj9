@@ -2612,8 +2612,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // postDeps->addPostCondition(scratchReg2, TR::RealRegister::AssignAny);
 
 
-      TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
-      postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
+      // TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 5, cg());
+      // postDeps->addPostCondition(j9MethodReg, TR::RealRegister::AssignAny);
+
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+      postDeps->setNumPreConditions(0, trMemory());
+      postDeps->setAddCursorForPre(0);
+
       
       
       TR::RegisterDependencyConditions *interpreterdDeps = dependencies;
@@ -2720,7 +2725,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
       cg()->stopUsingRegister(scratchReg);
  //     cg()->stopUsingRegister(scratchReg2);
-      gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+      gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
 
       
       return gcPoint;
