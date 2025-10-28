@@ -16,6 +16,10 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
       // Flush in-register arguments back to the stack for interpreter
       cursor = TR::S390J9CallSnippet::S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
    }
+   
+   // LGR R1 R7
+   *(int32_t *)cursor = 0xB9040017;
+   cursor += sizeof(int32_t);
 
    return emitSnippetBodyHelper(cursor, helperSymRef);
 }
