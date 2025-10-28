@@ -2692,10 +2692,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg2,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRSInstruction(cg(), TR::InstOpCode::getShiftRightLogicalSingleOpCode(), callNode, scratchReg2, scratchReg2, 16);
+      generateRInstruction(cg(), TR::InstOpCode::SRA, callNode, scratchReg2, 16);
+      if (feGetEnv("signExtend") != NULL) {
+         generateRRInstruction(cg(), TR::InstOpCode::LGFR, callNode, scratchReg2, scratchReg2);
+      }
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, scratchReg2);
-      TR::Register *regRA = cg()->allocateRegister();
-      TR::Register *regEP = cg()->allocateRegister();
+      TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());//dependencies->findPostCondi
+      TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());//cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
       postDeps->addPostCondition(regEP, getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
