@@ -2702,7 +2702,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
       postDeps->addPostCondition(regEP, getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg2);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
