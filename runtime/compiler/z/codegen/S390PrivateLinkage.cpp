@@ -2696,7 +2696,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       if (feGetEnv("signExtend") != NULL) {
          generateRRInstruction(cg(), TR::InstOpCode::LGFR, callNode, scratchReg2, scratchReg2);
       }
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, scratchReg2);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg2, scratchReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());//dependencies->findPostCondi
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());//cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
