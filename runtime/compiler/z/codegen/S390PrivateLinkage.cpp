@@ -2686,6 +2686,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
+      
 //0x000003ffd8e87b2c:	00 00 00 00	.long	0x00000000
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
@@ -2693,6 +2694,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       TR::Instruction *branchInstr = gcPoint;
       // find target address
+      if (feGetEnv("likeX") != NULL) {
       generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, j9MethodReg, 16);
@@ -2705,16 +2707,22 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
          generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
       }
+   }
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());//dependencies->findPostCondi
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());//cg()->allocateRegister();
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
       postDeps->addPostCondition(regEP, getEntryPointRegister());
       TR_ASSERT_FATAL(NULL != regRA, "Expected to find return address register in post conditions");
+            if (feGetEnv("likeX") != NULL) {
+
       if (feGetEnv("x86") != NULL) {
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       } else {
          generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
       }
+   } else {
+            generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+   }
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
