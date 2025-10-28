@@ -2692,7 +2692,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg2,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRInstruction(cg(), TR::InstOpCode::SRA, callNode, scratchReg2, 16);
+      generateRIInstruction(cg(), TR::InstOpCode::SRA, callNode, scratchReg2, 16);
       if (feGetEnv("signExtend") != NULL) {
          generateRRInstruction(cg(), TR::InstOpCode::LGFR, callNode, scratchReg2, scratchReg2);
       }
