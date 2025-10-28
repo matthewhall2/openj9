@@ -2692,9 +2692,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg2,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRIInstruction(cg(), TR::InstOpCode::SRA, callNode, scratchReg2, 16);
+      generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, scratchReg2, 16);
       if (feGetEnv("signExtend") != NULL) {
-         generateRRInstruction(cg(), TR::InstOpCode::LGFR, callNode, scratchReg2, scratchReg2);
+         generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, scratchReg2, scratchReg2);
       }
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg2, scratchReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());//dependencies->findPostCondi
