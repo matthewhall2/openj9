@@ -589,7 +589,8 @@ bool
 J9::X86::CodeGenerator::supportsNonHelper(TR::SymbolReferenceTable::CommonNonhelperSymbol symbol)
    {
    if (symbol == TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol
-       && self()->comp()->target().is64Bit())
+    //   && self()->comp()->target().is64Bit())
+   )
       {
       return true;
       }
