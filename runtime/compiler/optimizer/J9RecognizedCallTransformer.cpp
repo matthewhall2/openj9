@@ -1636,7 +1636,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
    TR::TreeTop * cmpCheckTreeTop = TR::TreeTop::create(self()->comp(), isCompiledNode);
 
    TR::Node *jitAddress;
-   if (comp()->target().cpu.isI386() || (comp()->target().isX86() && comp()->target().is64Bit()))
+   if (comp()->target().cpu.isI386() || (comp()->target().cpu.isX86() && !comp()->target().is64Bit()))
       {
       jitAddress = TR::Node::create(TR::i2l, 1, TR::Node::createLoad(node, extraTempSlotSymRef));
       }
