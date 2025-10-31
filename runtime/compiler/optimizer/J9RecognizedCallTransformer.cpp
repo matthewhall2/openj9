@@ -1499,7 +1499,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
    TR::SymbolReference *vmTargetSymRef =
       comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
-   if (comp()->cg()->enableJitDispatchJ9Method() || feGetEnv("testDispatch") != NULL)
+   if (comp()->cg()->enableJitDispatchJ9Method())
       {
       node->setSymbolReference(
          comp()->getSymRefTab()->findOrCreateDispatchJ9MethodSymbolRef());
@@ -1559,7 +1559,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
    TR::SymbolReference *vmTargetSymRef =
       comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
-   if (comp()->cg()->enableJitDispatchJ9Method() || feGetEnv("testDispatch") != NULL)
+   if (comp()->cg()->enableJitDispatchJ9Method())
       {
       if (isLinkToSpecial)
          {
@@ -1636,7 +1636,7 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
    TR::TreeTop * cmpCheckTreeTop = TR::TreeTop::create(self()->comp(), isCompiledNode);
 
    TR::Node *jitAddress;
-   if (comp()->target().cpu.isI386())
+   if (comp()->target().cpu.isI386() || (comp()->target().isX86() && comp()->target().is64Bit()))
       {
       jitAddress = TR::Node::create(TR::i2l, 1, TR::Node::createLoad(node, extraTempSlotSymRef));
       }
