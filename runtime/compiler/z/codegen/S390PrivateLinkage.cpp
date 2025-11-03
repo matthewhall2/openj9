@@ -2669,17 +2669,33 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       } else {
          snippet = new (trHeapMemory()) TR::S390J9CallSnippet(cg(), callNode, snippetLabel, helperRef, argSize);
       }
-//0x000003ffd9014d2c:	00 00 00 00	.long	0x00000000
-      // TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-      // cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
-      // snippetCall->swapInstructionListsWithCompilation();
-      // generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      // dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
-      // gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, feGetEnv("useHelperRef") != NULL ? helperRef : callSymRef);
-      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      // generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
-      // snippetCall->swapInstructionListsWithCompilation();
       cg()->addSnippet(snippet);
+       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
+         comp()->getSymRefTab(), snippetLabel);
+
+
+//0x000003ffd9014d2c:	00 00 00 00	.long	0x00000000
+      if (feGetEnv("oolCall") != NULL) {
+      TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+      cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      snippetCall->swapInstructionListsWithCompilation();
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+      if (feGetEnv("helperSnippet") != NULL) {
+         if (feGetEnv("generateCall")) {
+            gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSymRef);
+         } else {
+            gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+         }
+      } else {
+         TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
+            comp()->getSymRefTab(), snippetLabel);
+         gcPoint = generateSnippetCall(cg(), callNode, snippet, postDeps, snippetSymRef);
+      }      
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+      snippetCall->swapInstructionListsWithCompilation();
+      }
+
 //0x000003ffd900b41e:	d0 50 00 21 c0 e5	trtr	33(81,%r0),229(%r12)
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
       // fetch J9Method::extra field
@@ -2727,16 +2743,21 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       //dependencies->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+      if (feGetEnv("oolCall") == NULL) {
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       if (feGetEnv("helperSnippet") != NULL) {
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
-      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+         if (feGetEnv("generateCall")) {
+            gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, snippetSymRef);
+            gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+         } else {
+            gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+            gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+         }
       } else {
-      TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(
-         comp()->getSymRefTab(), snippetLabel);
       gcPoint = generateSnippetCall(cg(), callNode, snippet, postDeps, snippetSymRef);
-      }
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      }
+   }
 
       //TR::SymbolReference * j2iCallRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       //TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, interpreterCallLabel, j2iCallRef, doneLabel, argSize);
@@ -3575,6 +3596,13 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    if (isJitDispatchJ9Method) {
       specialArgReg = getJ9MethodArgumentRegister();
+      TR::Register *specialArg = cg()->evaluate(callNode->getChild(from));
+      dependencies->addPreConditionIfNotAlreadyInserted(specialArg, specialArgReg);
+      from += step;
+      if (feGetEnv("decRef") != NULL) {
+         cg()->decReferenceCount(callNode->getChild(from));
+      }
+      return;
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
