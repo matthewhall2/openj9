@@ -3614,7 +3614,9 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreConditionIfNotAlreadyInserted(specialArg, specialArgReg);
-      cg()->decReferenceCount(child);
+
+      if (!isJitDispatchJ9Method || feGetEnv("decRef") != NULL)
+         cg()->decReferenceCount(child);
 
       if (comp()->getOption(TR_TraceCG))
          {
