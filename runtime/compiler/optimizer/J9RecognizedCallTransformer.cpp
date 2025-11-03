@@ -1512,7 +1512,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
       for (int32_t i = node->getNumChildren() - 1; i > 0; i--)
          node->setChild(i, node->getChild(i - 1));
 
-      node->setChild(0, j9m);
+      node->setAndIncChild(0, j9m);
       return;
       }
 
