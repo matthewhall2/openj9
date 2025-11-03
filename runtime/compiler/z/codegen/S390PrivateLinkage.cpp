@@ -3596,6 +3596,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    if (isJitDispatchJ9Method) {
       specialArgReg = getJ9MethodArgumentRegister();
+      if (feGetEnv("noCopy") != NULL) {
       TR::Register *specialArg = cg()->evaluate(callNode->getChild(from));
       dependencies->addPreConditionIfNotAlreadyInserted(specialArg, specialArgReg);
       from += step;
@@ -3603,6 +3604,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
          cg()->decReferenceCount(callNode->getChild(from));
       }
       return;
+   }
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
