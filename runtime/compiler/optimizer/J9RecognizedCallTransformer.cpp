@@ -1505,6 +1505,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
          comp()->getSymRefTab()->findOrCreateDispatchJ9MethodSymbolRef());
 
       TR::Node *mh = node->getChild(0);
+      mh->incReferenceCount();
       TR::Node *lf = TR::Node::createWithSymRef(node, TR::aloadi, 1, mh, lambdaFormSymRef);
       TR::Node *mn = TR::Node::createWithSymRef(node, TR::aloadi, 1, lf, memberNameSymRef);
       TR::Node *j9m = TR::Node::createWithSymRef(node, TR::aloadi, 1, mn, vmTargetSymRef);
@@ -1512,7 +1513,8 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
       for (int32_t i = node->getNumChildren() - 1; i > 0; i--)
          node->setChild(i, node->getChild(i - 1));
 
-      node->setAndIncChild(0, j9m);
+      node->setChild(0, j9m);
+      
       return;
       }
 
