@@ -3599,10 +3599,10 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       if (feGetEnv("noCopy") != NULL) {
       TR::Register *specialArg = cg()->evaluate(callNode->getChild(from));
       dependencies->addPreConditionIfNotAlreadyInserted(specialArg, specialArgReg);
-      from += step;
       if (feGetEnv("decRef") != NULL) {
          cg()->decReferenceCount(callNode->getChild(from));
       }
+      from += step;
       return;
    }
    }
