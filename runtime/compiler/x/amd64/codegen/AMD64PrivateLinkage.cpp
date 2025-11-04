@@ -1088,20 +1088,16 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node        
 
       if (vreg)
          {
-         traceMsg(comp(), "dec ref count...\n");
          cg()->decReferenceCount(child);
          ////if (child->getOpCode().isLoadConst() && !childReg)
          if (!willKeepConstRegLiveAcrossCall)
             {
-            traceMsg(comp(), "...and now setting count\n");
             child->setReferenceCount(oldRefCount-1);
             child->setRegister(NULL);
             }
          }
-      else {
-         traceMsg(comp(), "setting ref count only\n");
+      else
          child->setReferenceCount(oldRefCount-1);
-         }
       }
 
 
