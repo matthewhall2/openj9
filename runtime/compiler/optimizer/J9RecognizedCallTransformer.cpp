@@ -1636,12 +1636,14 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop*
    TR::TreeTop * cmpCheckTreeTop = TR::TreeTop::create(self()->comp(), isCompiledNode);
 
    TR::Node *jitAddress;
-   if (comp()->target().cpu.isI386() || (comp()->target().cpu.isX86() && !comp()->target().is64Bit()))
+   if (comp()->target().cpu.isI386() || ((feGetEnv("tryOtherBit") != NULL) && !comp()->target().is64Bit() && comp()->target().isX86()))
       {
+      traceMsg(comp(), "Processing INL for 32 bit\n");
       jitAddress = TR::Node::create(TR::i2l, 1, TR::Node::createLoad(node, extraTempSlotSymRef));
       }
    else
       {
+      traceMsg(comp(), "Processing INL for 64 bit\n");
       TR::SymbolReference *linkageInfoSymRef = comp()->getSymRefTab()->findOrCreateStartPCLinkageInfoSymbolRef(-4);
       TR::ILOpCodes x2a = comp()->target().is64Bit()? TR::l2a : TR::i2a;
       TR::Node *linkageInfo    = TR::Node::createWithSymRef(TR::iloadi, 1, 1, TR::Node::create(x2a, 1, TR::Node::createLoad(node, extraTempSlotSymRef)), linkageInfoSymRef);
