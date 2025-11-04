@@ -243,6 +243,7 @@ int32_t J9::X86::I386::PrivateLinkage::buildArgs(
          reg = reg->getRegisterPair()->getLowOrder();
          }
       dependencies->addPreCondition(reg, getProperties().getJ9MethodArgumentRegister(), cg());
+      cg()->decReferenceCount(target);
       }
 
    for (int i = firstArgumentChild; i < callNode->getNumChildren(); i++)
