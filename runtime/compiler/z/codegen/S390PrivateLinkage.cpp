@@ -2656,7 +2656,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
       generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MethodReg);
+      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       cg()->stopUsingRegister(scratchReg);
