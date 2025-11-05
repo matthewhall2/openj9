@@ -3492,7 +3492,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       dependencies->addPreCondition(specialArg, specialArgReg);
       callNode->getChild(from)->decReferenceCount();
       from += step;
-
+      return;
    }
 
    if (specialArgReg != TR::RealRegister::NoReg)
