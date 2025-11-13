@@ -2906,8 +2906,10 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    else if (isJitDispatchJ9Method)
       {
       auto flags = pp.getPreservedRegisterMapForGC();
+      printf("flags: %d\n", flags);
+      traceMsg(comp(), "flags are %d\n", flags);
       // we do not want gr11 in the gc map since this will not contain any object reference
-      flags ^= 1 << pp.getJ9MethodArgumentRegister();
+      flags ^= 1 << (pp.getJ9MethodArgumentRegister() - 1);
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister();
