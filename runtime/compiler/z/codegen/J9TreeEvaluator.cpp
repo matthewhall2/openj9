@@ -11878,6 +11878,31 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   int32_t fromClassDepth = -1;
+   TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+
+   if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp))
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp, TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassInterface", comp->signature()));
+      }
+
+   if ((NULL != toClassSymRef) && fromClassSymRef->isClassInterface(comp))
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp, TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/fromClassInterface", comp->signature()));
+      }
+
+   if ((NULL != toClassSymRef) && toClassSymRef->isClassArray(comp))
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp, TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassArray", comp->signature()));
+      }
+
+   if ((NULL != toClassSymRef) && fromClassSymRef->isClassArray(comp))
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp, TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/fromClassArray", comp->signature()));
+      }
+   
+   
+
    bool fastFail = false;
    if (comp->getOption(TR_TraceCG))
       traceMsg(comp,"%s: toClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
@@ -11885,8 +11910,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       traceMsg(comp,"%s: toClass is %s\n",node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
    if ((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp))
       {
-      int32_t fromClassDepth = -1;
-      TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+      
       if (comp->getOption(TR_TraceCG))
          traceMsg(comp,"%s: fromClassSymRef is %s\n",node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
       if ((NULL != fromClassSymRef) && !fromClassSymRef->isClassInterface(comp))
