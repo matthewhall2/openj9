@@ -4152,19 +4152,19 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (isFromClassCompileTimeKnownInterface)
          {
          TR::DebugCounter::incStaticDebugCounter(comp,
-                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/BothInterface");
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/BothInterface"));
          }
       else
          {
          TR::DebugCounter::incStaticDebugCounter(comp,
-                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassInterface");
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassInterface"));
          }
       }
 
    if (isToClassCompileTimeKnownArray)
       {
       TR::DebugCounter::incStaticDebugCounter(comp,
-                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassArray");
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassArray"));
       }
    
    TR::Register* resultReg = NULL;
