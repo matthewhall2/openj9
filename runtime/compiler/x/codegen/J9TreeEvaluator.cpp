@@ -4195,7 +4195,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest/Fail"), 1, TR::DebugCounter::Undetermined);
 
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
-   TR::Instruction* cursor = NULL
+   TR::Instruction* cursor = NULL;
    if (isToClassCompileTimeKnownArray)
       {
       generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
