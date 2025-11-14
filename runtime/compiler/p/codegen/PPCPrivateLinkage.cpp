@@ -1597,16 +1597,18 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       {
       from -= step;  // we do want to process special args in the following loop
       }
-   // else if (specialArgReg && isJitDispatchJ9Method)
-   //    {
-   //    TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
-   //    dependencies->addPreCondition(targetReg, specialArgReg);
-   //    }
+   else if (specialArgReg && isJitDispatchJ9Method)
+      {
+      TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
+      dependencies->addPreCondition(targetReg, specialArgReg);
+      TR::Register *r2 = cg()->allocateRegister();
+      dependencies->addPostCondition(r2, properties.getVTableIndexArgumentRegister())
+      }
 
-   // if (isJitDispatchJ9Method)
-   //    {
-   //    TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
-   //    }
+   if (isJitDispatchJ9Method)
+      {
+      TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
+      }
 
    numIntegerArgs = 0;
    numFloatArgs = 0;
@@ -1915,7 +1917,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       TR_ASSERT_FATAL(!isJitDispatchJ9Method, "should have already added dep for isJitDispatchJ9Method\n");
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
       }
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12))
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12) && !isJitDispatchJ9Method)
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
 
    for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i)
