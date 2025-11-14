@@ -1912,7 +1912,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          }
       }
 
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11))
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11) && !isJitDispatchJ9Method)
       {
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
       }
@@ -1928,6 +1928,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          continue; // already added deps above.  No need to add them here.
       if (callSymbol->isComputed() && i == getProperties().getComputedCallTargetRegister())
          continue; // will be handled elsewhere
+      if (realReg == getProperties().getVTableIndexArgumentRegister())
+         continue;
       if (!dependencies->searchPreConditionRegister(realReg))
          {
          if (realReg == properties.getIntegerArgumentRegister(0) && callNode->getDataType() == TR::Address)
