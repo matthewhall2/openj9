@@ -4040,7 +4040,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       debugObj->addInstructionComment(cursor, "-->load depth of toClass");
       }
 
-   // cast class depth >= obj class depth, throw
+   // cast class depth >= obj class depth, fail
    generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, toClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
    cursor = generateLabelInstruction(TR::InstOpCode::JAE4, node, failLabel, cg);
    if (debugObj)
@@ -4068,31 +4068,118 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
+   {
+   classDepth = -1;
+   TR::SymbolReference *classSymRef = NULL;
+   const TR::ILOpCodes opcode = classNode->getOpCodeValue();
+   bool isClassNodeLoadAddr = opcode == TR::loadaddr;
+
+   // getting the symbol ref
+   if (isClassNodeLoadAddr)
+      {
+      classSymRef = classNode->getSymbolReference();
+      }
+   else if (opcode == TR::aloadi)
+      {
+      // recognizedCallTransformer adds another layer of aloadi
+      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+         {
+         classNode = classNode->getFirstChild();
+         }
+
+      if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+         {
+         classSymRef = classNode->getFirstChild()->getSymbolReference();
+         }
+      }
+
+   // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
+   // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
+   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi ||
+        classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
+        classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
+      {
+      return classSymRef; // cannot find class depth
+      }
+
+   TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
+   TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
+
+   if (symRef != NULL && !symRef->isUnresolved())
+      {
+      TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
+      TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
+      if (clazz != NULL)
+         classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+      }
+
+   return classSymRef;
+   }
+
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
-   TR_Debug * debugObj = cg->getDebug();
-   TR::Register *toClassReg = cg->evaluate(node->getSecondChild());
-   TR::Register *fromClassReg = cg->evaluate(node->getFirstChild());
+   TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
+
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
-   startLabel->setStartInternalControlFlow();
-   doneLabel->setEndInternalControlFlow();
 
    TR::Compilation *comp = cg->comp();
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromPath/(%s)", comp->signature()), 1, TR::DebugCounter::Undetermined);
+   TR_Debug * debugObj = cg->getDebug();
+
    auto use64BitClasses = comp->target().is64Bit() &&
                (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
-   TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
-   TR::Register* resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-   og.endOutlinedInstructionSequence();
+   int32_t toClassDepth = -1;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
+   bool isToClassCompileTimeKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+   bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+   bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
+
+   if (isToClassCompileTimeKnownInterface)
+      {
+      int32_t fromClassDepth = -1;
+      TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+      bool isFromClassCompileTimeKnownInterface = (fromClassSymRef != NULL) && fromClassSymRef->isClassInterface(comp);
+      if (isFromClassCompileTimeKnownInterface)
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp,
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/BothInterface");
+         }
+      else
+         {
+         TR::DebugCounter::incStaticDebugCounter(comp,
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassInterface");
+         }
+      }
+
+   if (isToClassCompileTimeKnownArray)
+      {
+      TR::DebugCounter::incStaticDebugCounter(comp,
+                     TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassArray");
+      }
+   
+   TR::Register* resultReg = NULL;
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
+   // only needed for array case
+   if (!isToClassCompileTimeKnownInterface)
+      {
+      TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClass"), 1, TR::DebugCounter::Undetermined);
+      resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
+      og.endOutlinedInstructionSequence();
+      }
+
+   startLabel->setStartInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
    // initial result is true
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
@@ -4100,36 +4187,58 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    // no need for null checks. They are inserted prior to isAssignableFrom call in RecognizedCallTransformer
 
    // equality test
+   // unfortunately we cannot eliminate this test even if we know both classes are interfaces or arrays at compile,
+   // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest"), 1, TR::DebugCounter::Undetermined);
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
+   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest/Fail"), 1, TR::DebugCounter::Undetermined);
 
-   // testing if toClass is an array class
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
-   // If toClass is array, call out of line helper
-   TR::Instruction* cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
-   if (debugObj)
+   if (isToClassCompileTimeKnownArray)
       {
-      debugObj->addInstructionComment(cursor, "-->Test if array class");
+      generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
       }
-   generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+   else if (isToClassTypeNormalOrUnknownAtCompileTime)
+      {
+      // testing if toClass is an array class
+      generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
+      // If toClass is array, call out of line helper
+      TR::Instruction* cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+         generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+      if (debugObj)
+         debugObj->addInstructionComment(cursor, "-->Test if array class");
 
-   // test if toClass is an interface
-   cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
-   if (debugObj)
-      {
-      debugObj->addInstructionComment(cursor, "-->Test if interface class");
+      generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
       }
-   // skip inlined interface test if not an interface
-   generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+
+   if (isToClassTypeNormalOrUnknownAtCompileTime)
+      {
+      // test if toClass is an interface
+      cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+         generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+      if (debugObj)
+         {
+         debugObj->addInstructionComment(cursor, "-->Test if interface class");
+         }
+      // skip inlined interface test if not an interface
+      generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+      }
+
    srm->reclaimScratchRegister(toClassROMClassReg);
 
-   generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
+   if (!isToClassCompileTimeKnownArray)
+      {
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceClass"), 1, TR::DebugCounter::Undetermined);
+      generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
+      }
 
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-   generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses);
+   if (isToClassTypeNormalOrUnknownAtCompileTime)
+      {
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
+      generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses);
+      }
    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
 
    // fall through to fail label
@@ -4139,7 +4248,6 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       debugObj->addInstructionComment(cursor, "-->Test failed");
       }
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
-
 
    srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
@@ -4152,6 +4260,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
    deps->stopAddingConditions();
 
+   doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
    node->setRegister(resultReg);
    return resultReg;
@@ -4167,8 +4276,6 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    TR::Register *castClassReg = cg->evaluate(node->getSecondChild());
 
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
-   TR::Register *temp1Reg = cg->allocateRegister();
-   TR::Register *temp2Reg = cg->allocateRegister();
    TR::Register *objClassReg = cg->allocateRegister();
 
    bool isCheckCastAndNullCheck = (node->getOpCodeValue() == TR::checkcastAndNULLCHK);
