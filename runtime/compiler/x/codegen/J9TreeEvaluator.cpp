@@ -4195,6 +4195,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest/Fail"), 1, TR::DebugCounter::Undetermined);
 
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
+   TR::Instruction* cursor = NULL
    if (isToClassCompileTimeKnownArray)
       {
       generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
@@ -4204,7 +4205,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       // testing if toClass is an array class
       generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
       // If toClass is array, call out of line helper
-      TR::Instruction* cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+      cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
          generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
       if (debugObj)
          debugObj->addInstructionComment(cursor, "-->Test if array class");
