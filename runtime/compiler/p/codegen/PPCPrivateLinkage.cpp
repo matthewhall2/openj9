@@ -1903,7 +1903,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
 
    if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11))
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12))
+   // only want
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12) && !isJitDispatchJ9Method)
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
 
    for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i)
@@ -2906,7 +2907,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    else if (isJitDispatchJ9Method)
       {
       auto flags = pp.getPreservedRegisterMapForGC();
-      printf("flags: %d\n", flags);
+     // printf("flags: %d\n", flags);
       traceMsg(comp(), "flags are %d\n", flags);
       // we do not want gr11 in the gc map since this will not contain any object reference
       flags ^= 1 << (pp.getJ9MethodArgumentRegister() - 1);
@@ -2957,7 +2958,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
-      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+      gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
