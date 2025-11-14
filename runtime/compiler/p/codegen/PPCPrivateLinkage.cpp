@@ -1593,7 +1593,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
       }
 
-   if (specialArgReg)// && !isJitDispatchJ9Method)
+   if (specialArgReg && !isJitDispatchJ9Method)
       {
       from -= step;  // we do want to process special args in the following loop
       }
