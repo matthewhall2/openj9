@@ -1640,6 +1640,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          case TR::Address: // have to do something for GC maps here
             if (i == firstArgumentChild && callNode->getOpCode().isIndirect())
                {
+               TR_ASSERT_FATAL(!isJitDispatchJ9Method, "should not be indirect\n");
                argRegister = pushThis(child);
                }
             else
