@@ -4180,7 +4180,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
    else
       {
-      resultReg = cg()->allocateRegister();
+      resultReg = cg->allocateRegister();
       }
 
    startLabel->setStartInternalControlFlow();
