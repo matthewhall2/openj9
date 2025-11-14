@@ -1593,15 +1593,15 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
       }
 
-   if (specialArgReg && !isJitDispatchJ9Method)
+   if (specialArgReg)// && !isJitDispatchJ9Method)
       {
       from -= step;  // we do want to process special args in the following loop
       }
-   else if (specialArgReg && isJitDispatchJ9Method)
-      {
-      TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
-      dependencies->addPreCondition(targetReg, specialArgReg);
-      }
+   // else if (specialArgReg && isJitDispatchJ9Method)
+   //    {
+   //    TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
+   //    dependencies->addPreCondition(targetReg, specialArgReg);
+   //    }
 
    if (isJitDispatchJ9Method)
       {
@@ -1655,8 +1655,11 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
                }
             if (isSpecialArg)
                {
+               if (isJitDispatchJ9Method)
+                  TR_ASSERT_FATAL(i == 0, "special reg should be index 0\n");
                if (specialArgReg == properties.getIntegerReturnRegister(0))
                   {
+                  TR_ASSERT_FATAL(!isJitDispatchJ9Method, "should not be here for jitDispatchJ9Method\n");
                   TR::Register *resultReg;
                   if (resType.isAddress())
                      resultReg = cg()->allocateCollectedReferenceRegister();
@@ -1724,12 +1727,17 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
             argRegister = pushLongArg(child);
             if (isSpecialArg)
                {
+               if (isJitDispatchJ9Method) {
+                  TR_ASSERT_FATAL(i == 0, "stuff\n");
+                  printf("64 bit special arg\n");
+               }
                // Note: special arg regs use only one reg even on 32-bit platforms.
                // If the special arg is of type TR::Int64, that only means we don't
                // care about the top 32 bits.
                TR::Register *specialArgRegister = argRegister->getRegisterPair()? argRegister->getLowOrder() : argRegister;
                if (specialArgReg == properties.getIntegerReturnRegister(0))
                   {
+                  TR_ASSERT_FATAL(!isJitDispatchJ9Method, "should not be here for jitDispatchJ9Method\n");
                   TR::Register *resultReg;
                   if (resType.isAddress())
                      resultReg = cg()->allocateCollectedReferenceRegister();
@@ -1902,9 +1910,11 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       }
 
    if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11))
+      {
+      TR_ASSERT_FATAL(!isJitDispatchJ9Method, "should have already added dep for isJitDispatchJ9Method\n");
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
-   // only want
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12) && !isJitDispatchJ9Method)
+      }
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12))
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
 
    for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i)
@@ -2958,7 +2968,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
-      gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
