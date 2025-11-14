@@ -1928,7 +1928,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          continue; // already added deps above.  No need to add them here.
       if (callSymbol->isComputed() && i == getProperties().getComputedCallTargetRegister())
          continue; // will be handled elsewhere
-      if (realReg == getProperties().getVTableIndexArgumentRegister())
+      if (realReg == getProperties().getVTableIndexArgumentRegister() && isJitDispatchJ9Method)
          continue;
       if (!dependencies->searchPreConditionRegister(realReg))
          {
