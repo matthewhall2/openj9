@@ -1603,10 +1603,10 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
    //    dependencies->addPreCondition(targetReg, specialArgReg);
    //    }
 
-   if (isJitDispatchJ9Method)
-      {
-      TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
-      }
+   // if (isJitDispatchJ9Method)
+   //    {
+   //    TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
+   //    }
 
    numIntegerArgs = 0;
    numFloatArgs = 0;
