@@ -222,7 +222,7 @@ J9::ARM64::PrivateLinkage::PrivateLinkage(TR::CodeGenerator *cg)
    _properties._framePointerRegister        = TR::RealRegister::x29;
    _properties._computedCallTargetRegister  = TR::RealRegister::x8;
    _properties._vtableIndexArgumentRegister = TR::RealRegister::x9;
-   _properties._j9methodArgumentRegister    = TR::RealRegister::x0;
+   _properties._j9methodArgumentRegister    = TR::RealRegister::x8;
 
 #if defined(OSX)
    // Volatile GPR (0-15) + FPR (0-31) + VFT Reg
@@ -1060,10 +1060,11 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
 
    TR::MethodSymbol *callSymbol = callNode->getSymbol()->castToMethodSymbol();
 
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
    bool isHelperCall = linkage == TR_Helper || linkage == TR_CHelper;
    bool rightToLeft = isHelperCall &&
                       //we want the arguments for induceOSR to be passed from left to right as in any other non-helper call
-                      !callNode->getSymbolReference()->isOSRInductionHelper();
+                      !callNode->getSymbolReference()->isOSRInductionHelper() && !isJitDispatchJ9Method;
 
    if (rightToLeft)
       {
@@ -1098,6 +1099,12 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
       default:
          break;
       }
+
+   if (isJitDispatchJ9Method)
+      {
+      specialArgReg = getProperties().getJ9MethodArgumentRegister();
+      }
+
    if (specialArgReg != TR::RealRegister::NoReg)
       {
       logprintf(comp->getOption(TR_TraceCG), comp->log(), "Special arg %s in %s\n",
@@ -1161,8 +1168,16 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
       pushToMemory = new (trStackMemory()) TR::ARM64MemoryArgument[numMemArgs];
       }
 
-   if (specialArgReg)
+   if (specialArgReg && !isJitDispatchJ9Method)
+      {
       from -= step;  // we do want to process special args in the following loop
+      }
+   else if (specialArgReg && isJitDispatchJ9Method)
+      {
+      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
+      dependencies->addPreCondition(j9MethodReg, getProperties().getJ9MethodArgumentRegister());
+      }
+   TR_ASSERT_FATAL(!isJitDispatchJ9Method || from == 1, "must not use fierst arg\n");
 
    numIntegerArgs = 0;
    numFloatArgs = 0;
@@ -1386,17 +1401,18 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    {
    TR::Instruction *gcPoint;
    TR::MethodSymbol *callSymbol = callSymRef->getSymbol()->castToMethodSymbol();
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
 
    TR_J9VMBase *fej9 = comp()->fej9();
 
-   if (callSymRef->getReferenceNumber() >= TR_ARM64numRuntimeHelpers)
+   if ((callSymRef->getReferenceNumber() >= TR_ARM64numRuntimeHelpers) && !isJitDispatchJ9Method)
       fej9->reserveTrampolineIfNecessary(comp(), callSymRef, false);
 
    bool forceUnresolvedDispatch = !fej9->isResolvedDirectDispatchGuaranteed(comp());
 
-   if (callSymbol->isJITInternalNative() ||
+   if (!isJitDispatchJ9Method && (callSymbol->isJITInternalNative() ||
        (!callSymRef->isUnresolved() && !callSymbol->isInterpreted() &&
-        (callSymbol->isHelper() || !forceUnresolvedDispatch)))
+        (callSymbol->isHelper() || !forceUnresolvedDispatch))))
       {
       bool isMyself = comp()->isRecursiveMethodTarget(callSymbol);
 
@@ -1405,6 +1421,12 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          dependencies,
          callSymRef ? callSymRef : callNode->getSymbolReference(),
          NULL);
+      }
+   else if (isJitDispatchJ9Method)
+      {
+      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      TR::Register *scratchReg;
+      TR::Register *scratchReg2;
       }
    else
       {
