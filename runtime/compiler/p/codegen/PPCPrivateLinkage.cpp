@@ -2910,8 +2910,10 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       auto flags = pp.getPreservedRegisterMapForGC();
       printf("flags: %d\n", flags);
       traceMsg(comp(), "flags are %d\n", flags);
-      // we do not want gr11 in the gc map since this will not contain any object reference
+      // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
+      // the J9Method::extra field value, which is invalid for gc
       flags &= ~TR::RealRegister::gr11Mask;
+      flags &= ~TR::RealRegister::gr12Mask;
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister();
@@ -2957,7 +2959,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // test if compiled
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
-      generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 15);
+      generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 31);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
