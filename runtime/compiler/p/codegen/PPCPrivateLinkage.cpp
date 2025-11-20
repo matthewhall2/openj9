@@ -1593,15 +1593,16 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
       }
 
-   if (specialArgReg)
+   if (specialArgReg && !isJitDispatchJ9Method)
       {
       from -= step;  // we do want to process special args in the following loop
       }
-   // else if (specialArgReg && isJitDispatchJ9Method)
-   //    {
-   //    TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
-   //    dependencies->addPreCondition(targetReg, specialArgReg);
-   //    }
+   else if (specialArgReg && isJitDispatchJ9Method)
+      {
+      TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
+      dependencies->addPreCondition(targetReg, specialArgReg);
+      dependencies->addPostCondition(cg()->allocateRegister(), getProperties().getVTableIndexArgumentRegister());
+      }
 
    // if (isJitDispatchJ9Method)
    //    {
@@ -1905,7 +1906,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
 
    if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11))
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12))
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12) && !isJitDispatchJ9Method)
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
 
    for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i)
@@ -1917,7 +1918,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          continue; // already added deps above.  No need to add them here.
       if (callSymbol->isComputed() && i == getProperties().getComputedCallTargetRegister())
          continue; // will be handled elsewhere
-      if (!dependencies->searchPreConditionRegister(realReg))
+      if (!dependencies->searchPreConditionRegister(realReg) && !isJitDispatchJ9Method)
          {
          if (realReg == properties.getIntegerArgumentRegister(0) && callNode->getDataType() == TR::Address)
             {
@@ -2930,9 +2931,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       preDeps->setAddCursorForPost(0);
 
   //    dependencies->addPostCondition(scratchReg, TR::RealRegister::gr12);
-      TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 1, trMemory());
+      TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 2, trMemory());
       newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::gr0);
-   //  newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
+     newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::gr11);
 
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
       postDeps->setNumPreConditions(0, trMemory());
