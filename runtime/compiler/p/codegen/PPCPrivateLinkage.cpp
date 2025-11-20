@@ -1918,6 +1918,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          continue; // already added deps above.  No need to add them here.
       if (callSymbol->isComputed() && i == getProperties().getComputedCallTargetRegister())
          continue; // will be handled elsewhere
+      if (isJitDispatchJ9Method && i == getProperties().getVTableIndexArgumentRegister())
+         continue;
       if (!dependencies->searchPreConditionRegister(realReg))
          {
          if (realReg == properties.getIntegerArgumentRegister(0) && callNode->getDataType() == TR::Address)
@@ -1925,7 +1927,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
             dependencies->addPreCondition(cg()->allocateRegister(), TR::RealRegister::gr3);
             dependencies->addPostCondition(cg()->allocateCollectedReferenceRegister(), TR::RealRegister::gr3);
             }
-         else if (!isJitDispatchJ9Method || realReg != getProperties().getVTableIndexArgumentRegister())
+         else
             {
             // Helper linkage preserves all registers that are not argument registers, so we don't need to spill them.
             if (linkage != TR_Helper)
