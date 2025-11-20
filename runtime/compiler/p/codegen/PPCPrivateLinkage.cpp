@@ -2930,12 +2930,12 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
   //    dependencies->addPostCondition(scratchReg, TR::RealRegister::gr12);
       TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 1, trMemory());
       newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::NoReg);
-    //  newPostDeps->addPostCondition(scratchReg, TR::RealRegister::gr12);
+      newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
 
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
       postDeps->setNumPreConditions(1, trMemory());
       postDeps->setAddCursorForPre(0);
-      postDeps->addPreCondition(j9MethodReg, TR::RealRegister::gr11);
+     // postDeps->addPreCondition(j9MethodReg, TR::RealRegister::gr11);
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
