@@ -2965,7 +2965,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
-      gcPoint->PPCNeedsGCMap(flags);
+     // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
