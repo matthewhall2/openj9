@@ -2908,7 +2908,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    else if (isJitDispatchJ9Method)
       {
       auto flags = pp.getPreservedRegisterMapForGC();
-      printf("flags: %d\n", flags);
       traceMsg(comp(), "flags are %d\n", flags);
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
@@ -2965,7 +2964,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
-      gcPoint->PPCNeedsGCMap(flags);
+     // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
