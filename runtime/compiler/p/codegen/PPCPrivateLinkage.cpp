@@ -1667,6 +1667,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
                   }
                else
                   {
+                  if (isJitDispatchJ9Method)
+                     argRegister = cg()->evaluate(child);
                   TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                   }
                }
