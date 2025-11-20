@@ -1904,7 +1904,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
          }
       }
 
-   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11))
+   if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr11) && !isJitDispatchJ9Method)
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
    if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12) && !isJitDispatchJ9Method)
       TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
