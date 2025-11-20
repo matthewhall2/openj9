@@ -2910,7 +2910,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // the J9Method::extra field value, which is invalid for gc
       // flags &= ~TR::RealRegister::gr11Mask;
       // flags &= ~TR::RealRegister::gr12Mask;
-      flags &= ~TR::RealRegister::gr0Mask;
+    //  flags &= ~TR::RealRegister::gr0Mask;
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister();
@@ -2929,7 +2929,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    
   //    dependencies->addPostCondition(scratchReg, TR::RealRegister::gr12);
       TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 1, trMemory());
-      newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::gr0);
+      newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::NoReg);
     //  newPostDeps->addPostCondition(scratchReg, TR::RealRegister::gr12);
 
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
