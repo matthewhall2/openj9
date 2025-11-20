@@ -2930,7 +2930,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
 
       TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 2, trMemory());
       newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::gr0);
-      newPostDeps->addPostCondition(scratchReg2, TR::RealRegister::gr12);
+      newPostDeps->addPostCondition(scratchReg, TR::RealRegister::gr12);
 
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
       postDeps->setNumPreConditions(1, trMemory());
