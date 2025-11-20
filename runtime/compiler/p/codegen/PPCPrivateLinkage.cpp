@@ -2974,6 +2974,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          }
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
+       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 22);
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(flags);
 
