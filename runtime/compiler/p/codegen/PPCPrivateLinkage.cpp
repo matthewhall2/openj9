@@ -2948,7 +2948,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       snippetCall->swapInstructionListsWithCompilation();
       TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 26);
+      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 28);
       gcPoint->PPCNeedsGCMap(flags);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
       // helper snippet sets up jump back to doneLabel
@@ -2960,7 +2960,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 22);
+      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 23);
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
@@ -2977,7 +2977,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          }
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
-       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 25);
+       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 21);
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(flags);
 
