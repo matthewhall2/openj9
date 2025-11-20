@@ -2948,7 +2948,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       snippetCall->swapInstructionListsWithCompilation();
       TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 29);
+      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 20);
       gcPoint->PPCNeedsGCMap(flags);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
       // helper snippet sets up jump back to doneLabel
@@ -2970,14 +2970,14 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // compiled - jump to jit entry point
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4, TR::Compiler->om.sizeofReferenceAddress()));
-      generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srawi, callNode, j9MethodReg, j9MethodReg, 16);
+      generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srawi, callNode, j9MethodReg, j9MethodReg, 17);
       if (comp()->target().is64Bit())
          {
          generateTrg1Src1Instruction(cg(), TR::InstOpCode::extsw, callNode, j9MethodReg, j9MethodReg);
          }
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
-       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 21);
+       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 22);
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(flags);
 
