@@ -2909,9 +2909,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       traceMsg(comp(), "flags are %d\n", flags);
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
-      flags &= ~TR::RealRegister::gr11Mask;
-      flags &= ~TR::RealRegister::gr12Mask;
-      flags &= ~TR::RealRegister::gr0Mask;
+      // flags &= ~TR::RealRegister::gr11Mask;
+      // flags &= ~TR::RealRegister::gr12Mask;
+      // flags &= ~TR::RealRegister::gr0Mask;
 
       TR::Register *scratchReg = cg()->allocateRegister();/// ->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister();
