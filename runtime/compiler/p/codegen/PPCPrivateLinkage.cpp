@@ -1593,7 +1593,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
       }
 
-   if (specialArgReg && !isJitDispatchJ9Method)
+   if (specialArgReg)
       {
       from -= step;  // we do want to process special args in the following loop
       }
@@ -2906,7 +2906,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    else if (isJitDispatchJ9Method)
       {
       auto flags = pp.getPreservedRegisterMapForGC();
-      traceMsg(comp(), "flags are %d\n", flags);
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
       // flags &= ~TR::RealRegister::gr11Mask;
