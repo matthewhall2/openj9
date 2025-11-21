@@ -2890,7 +2890,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    TR::ResolvedMethodSymbol *sym   = callSymbol->getResolvedMethodSymbol();
    TR_ResolvedMethod *vmm       = (sym==NULL)?NULL:sym->getResolvedMethod();
    bool myself = comp()->isRecursiveMethodTarget(vmm);
-   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(cg()->comp());
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
 
