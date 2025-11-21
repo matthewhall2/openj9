@@ -2965,7 +2965,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
 
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
-      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::be, callNode, compiledLabel, cndReg);
+      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
       gcPoint->PPCNeedsGCMap(flags);
      // gcPoint->PPCNeedsGCMap(flags);
