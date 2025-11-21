@@ -1471,7 +1471,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
    TR_Array<TR::Register *>&        tempLongRegisters = cg()->getTransientLongRegisters();
    TR::MethodSymbol                *callSymbol = callNode->getSymbol()->castToMethodSymbol();
 
-   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp);
    bool isHelperCall = linkage == TR_Helper || linkage == TR_CHelper;
    bool rightToLeft = isHelperCall &&
                       //we want the arguments for induceOSR to be passed from left to right as in any other non-helper call
@@ -2890,7 +2890,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    TR::ResolvedMethodSymbol *sym   = callSymbol->getResolvedMethodSymbol();
    TR_ResolvedMethod *vmm       = (sym==NULL)?NULL:sym->getResolvedMethod();
    bool myself = comp()->isRecursiveMethodTarget(vmm);
-   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(cg()->comp());
 
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
 
@@ -2908,7 +2908,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
    else if (isJitDispatchJ9Method)
       {
       auto flags = pp.getPreservedRegisterMapForGC();
-      traceMsg(comp(), "flags are %d\n", flags);
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
       flags &= ~TR::RealRegister::gr11Mask;
