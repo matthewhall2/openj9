@@ -1600,7 +1600,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
    else if (specialArgReg && isJitDispatchJ9Method)
       {
       TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
-      dependencies->addPreCondition(targetReg, specialArgReg);
+      //dependencies->addPreCondition(targetReg, specialArgReg);
+      TR::addDependency(dependencies, targetReg, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
       TR::addDependency(dependencies, cg()->allocateRegister(), getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
       //dependencies->addPostCondition(cg()->allocateRegister(), getProperties().getVTableIndexArgumentRegister());
       }
