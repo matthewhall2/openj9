@@ -2910,13 +2910,14 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       auto flags = pp.getPreservedRegisterMapForGC();
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
-      flags &= ~TR::RealRegister::gr11Mask;
-      flags &= ~TR::RealRegister::gr12Mask;
+      // flags &= ~TR::RealRegister::gr11Mask;
+      // flags &= ~TR::RealRegister::gr12Mask;
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister(TR_GPR);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      
 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2958,6 +2959,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
+      TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
       // next: change count to 3 and always use li with last 1 bits 0
       // then or with 2
       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 33);
