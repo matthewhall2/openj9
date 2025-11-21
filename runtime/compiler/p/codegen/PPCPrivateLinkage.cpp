@@ -2943,15 +2943,15 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       interpCallSnippet->gcMap().setGCRegisterMask(flags);
       cg()->addSnippet(interpCallSnippet);
 
-      TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
-      cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
-      snippetCall->swapInstructionListsWithCompilation();
-      TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-      gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
-      gcPoint->PPCNeedsGCMap(flags);
-      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-      // helper snippet sets up jump back to doneLabel
-      snippetCall->swapInstructionListsWithCompilation();
+      // TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
+      // cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
+      // snippetCall->swapInstructionListsWithCompilation();
+      // TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+      // gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
+      // gcPoint->PPCNeedsGCMap(flags);
+      // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+      // // helper snippet sets up jump back to doneLabel
+      // snippetCall->swapInstructionListsWithCompilation();
 
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2963,10 +2963,15 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
-      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+
+      TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
+      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::be, callNode, compiledLabel, cndReg);
+      gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
+      gcPoint->PPCNeedsGCMap(flags);
      // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
+      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4, TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srawi, callNode, j9MethodReg, j9MethodReg, 16);
