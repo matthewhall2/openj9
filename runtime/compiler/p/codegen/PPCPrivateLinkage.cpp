@@ -2963,7 +2963,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
-
+      cg()->stopUsingRegister(scratchReg2);
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
@@ -2984,9 +2984,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(flags);
 
-      cg()->stopUsingRegister(scratchReg);
-      cg()->stopUsingRegister(scratchReg2);
-      cg()->stopUsingRegister(cndReg);
+   //   cg()->stopUsingRegister(scratchReg);
+    //  cg()->stopUsingRegister(scratchReg2);
+   //   cg()->stopUsingRegister(cndReg);
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
       return;
       }
