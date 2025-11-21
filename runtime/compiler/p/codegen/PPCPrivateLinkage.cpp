@@ -2914,7 +2914,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       flags &= ~TR::RealRegister::gr12Mask;
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
-      TR::Register *scratchReg2 = cg()->allocateRegister();
+      TR::Register *scratchReg2 = cg()->allocateRegister(TR_GPR);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
 
