@@ -2931,7 +2931,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
 
       TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 2, trMemory());
       newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
-      newPostDeps->addPostCondition(scratchReg2,TR::RealRegister::NoReg);
+      newPostDeps->addPostCondition(scratchReg2,TR::RealRegister::gr0);
 
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
       postDeps->setNumPreConditions(0, trMemory());
@@ -2940,7 +2940,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
-      interpCallSnippet->gcMap().setGCRegisterMask(flags);
+      interpCallSnippet->gcMap().setGCRegisterMask(flags ^ 1); // do not gc scratch reg 2
       cg()->addSnippet(interpCallSnippet);
 
       // TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
