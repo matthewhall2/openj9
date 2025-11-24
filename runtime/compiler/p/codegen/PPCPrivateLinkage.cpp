@@ -2940,7 +2940,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
-      interpCallSnippet->gcMap().setGCRegisterMask(flags ^ 1); // do not gc scratch reg 2
+      interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
       interpCallSnippet->gcMap().resetGCSafePoint();
       cg()->addSnippet(interpCallSnippet);
 
@@ -2970,9 +2970,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       cg()->stopUsingRegister(scratchReg2);
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
-      gcPoint->PPCNeedsGCMap(flags ^ 1);
+      gcPoint->PPCNeedsGCMap(0);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
-      gcPoint->PPCNeedsGCMap(flags ^ 1);
+      gcPoint->PPCNeedsGCMap(0);
      // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
@@ -2987,7 +2987,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
-      gcPoint->PPCNeedsGCMap(flags ^ 1);
+      gcPoint->PPCNeedsGCMap(0);
 
    //   cg()->stopUsingRegister(scratchReg);
     //  cg()->stopUsingRegister(scratchReg2);
