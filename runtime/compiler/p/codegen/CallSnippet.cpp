@@ -336,30 +336,22 @@ TR_RuntimeHelper TR::PPCCallSnippet::getInterpretedDispatchHelper(
    }
 
 uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
-    uint8_t *buffer = cg()->getBinaryBufferCursor();
-    uint8_t *gtrmpln, *trmpln;
+   uint8_t *buffer = cg()->getBinaryBufferCursor();
+   uint8_t *gtrmpln, *trmpln;
 
-    getSnippetLabel()->setCodeLocation(buffer);
-    buffer = flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
+   getSnippetLabel()->setCodeLocation(buffer);
+   buffer = flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
 
-    if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
-      {
-         // move value in r11 to r3 for the interpreter
-         // or     r11   r3    r11    444        0
-         // 011111 01011 00011 01011  0110111100 0
-         *(int32_t *)buffer = 0x7D635B78;
-         buffer += 4;
-      }
+   if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
+   {
+      // move value in r11 to r3 for the interpreter
+      // or     r11   r3    r11    444        0
+      // 011111 01011 00011 01011  0110111100 0
+      *(int32_t *)buffer = 0x7D635B78;
+      buffer += 4;
+   }
 
-   TR_GCStackMap *exitMap = gcMap().getStackMap()->clone(cg()->trMemory());
-   exitMap->setByteCodeInfo(getNode()->getByteCodeInfo());
-   exitMap->resetRegistersBits(0xffffffff);
-   exitMap->setRegisterBits(0x00007ffff);
-
-   // Throw away entry map
-   gcMap().setStackMap(exitMap);
-
-    return this->genHelperCall(buffer);
+   return this->genHelperCall(buffer);
 }
 
 uint8_t *TR::PPCCallSnippet::emitSnippetBody()
