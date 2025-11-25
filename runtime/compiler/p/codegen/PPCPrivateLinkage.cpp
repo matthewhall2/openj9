@@ -2907,7 +2907,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       }
    else if (isJitDispatchJ9Method)
       {
-      auto flags = pp.getPreservedRegisterMapForGC();
+      auto flags = 0xffffffff; //pp.getPreservedRegisterMapForGC();
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
       // flags &= ~TR::RealRegister::gr11Mask;
@@ -2964,7 +2964,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
       // next: change count to 3 and always use li with last 1 bits 0
       // then or with 2
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 47);
+    //  generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 47);
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
