@@ -351,6 +351,14 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
          buffer += 4;
       }
 
+   TR_GCStackMap *exitMap = gcMap().getStackMap()->clone(cg()->trMemory());
+   exitMap->setByteCodeInfo(getNode()->getByteCodeInfo());
+   exitMap->resetRegistersBits(0xffffffff);
+   exitMap->setRegisterBits(0x00007ffff);
+
+   // Throw away entry map
+   gcMap().setStackMap(exitMap);
+
     return this->genHelperCall(buffer);
 }
 
