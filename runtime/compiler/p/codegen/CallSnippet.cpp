@@ -350,7 +350,8 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
       *(int32_t *)buffer = 0x7D635B78;
       buffer += 4;
    }
-
+// disableinternalpointers
+// log of method
    return this->genHelperCall(buffer);
 }
 
