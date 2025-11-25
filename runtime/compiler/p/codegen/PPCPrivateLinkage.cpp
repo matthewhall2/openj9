@@ -2918,7 +2918,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
     //  TR::Register *scratchReg3 = cg()->allocateRegister(TR_GPR);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
-      
 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2941,6 +2940,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
       interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
       interpCallSnippet->gcMap().resetGCSafePoint();
       cg()->addSnippet(interpCallSnippet);
@@ -2972,7 +2972,11 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
-      gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+      gcPoint = generateDepImmSymInstruction(cg(), TR::InstOpCode::bl, callNode,
+                                                                  0,
+                                                                  dependencies,
+                                                                  snippetSymRef,
+                                                                  interpCallSnippet);
       gcPoint->PPCNeedsGCMap(flags);
      // gcPoint->PPCNeedsGCMap(flags);
 
