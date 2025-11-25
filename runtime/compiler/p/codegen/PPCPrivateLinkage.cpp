@@ -2972,7 +2972,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
-      gcPoint = generateDepImmSymInstruction(cg(), TR::InstOpCode::bl, callNode,
+      gcPoint = generateDepImmSymInstruction(cg(), TR::InstOpCode::b, callNode,
                                                                   0,
                                                                   dependencies,
                                                                   snippetSymRef,
