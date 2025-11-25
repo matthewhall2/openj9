@@ -2940,10 +2940,11 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
-      TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
+      
       interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
       interpCallSnippet->gcMap().resetGCSafePoint();
       cg()->addSnippet(interpCallSnippet);
+      TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
       // TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
       // cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
