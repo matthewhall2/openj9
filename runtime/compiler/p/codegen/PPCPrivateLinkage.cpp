@@ -2907,7 +2907,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       }
    else if (isJitDispatchJ9Method)
       {
-      auto flags = 0xffffffff; //pp.getPreservedRegisterMapForGC();
+      auto flags = pp.getPreservedRegisterMapForGC();
       // gr11 and gr12 will never contain an object ref in this sequence, and may contain values such as
       // the J9Method::extra field value, which is invalid for gc
       // flags &= ~TR::RealRegister::gr11Mask;
