@@ -2915,6 +2915,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = cg()->allocateRegister(TR_GPR);
+    //  TR::Register *scratchReg3 = cg()->allocateRegister(TR_GPR);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
       
@@ -2971,7 +2972,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint->PPCNeedsGCMap(0);
-      gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
+      gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
       gcPoint->PPCNeedsGCMap(0);
      // gcPoint->PPCNeedsGCMap(flags);
 
