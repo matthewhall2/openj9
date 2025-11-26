@@ -2565,6 +2565,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR_ASSERT_FATAL(scratchReg != NULL, "dependency for VTableIndexArgumentRegister should have been set\n");
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
@@ -2590,14 +2591,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
       cg()->addSnippet(snippet);
 
-      TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-      cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
-      snippetCall->swapInstructionListsWithCompilation();
-      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
-      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
-      snippetCall->swapInstructionListsWithCompilation();
+      // TR_S390OutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+      // cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      // snippetCall->swapInstructionListsWithCompilation();
+      // generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+      // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+      // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      // generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel); // exit OOL section
+      // snippetCall->swapInstructionListsWithCompilation();
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2608,11 +2609,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
-      TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK8;
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, compiledLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+   
       // find target address
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
       generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
       generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, j9MethodReg, 16);
@@ -2621,13 +2625,13 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
       postDeps->addPostCondition(regRA, getReturnAddressRegister());
       postDeps->addPostCondition(regEP, getEntryPointRegister());
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
