@@ -1603,6 +1603,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       {
       TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
       dependencies->addPreCondition(targetReg, specialArgReg);
+      dependencies->addPostCondition(targetReg, TR::RealRegister::NoReg);
       }
 
    if (isJitDispatchJ9Method)
@@ -2914,7 +2915,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // flags &= ~TR::RealRegister::gr12Mask;
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
-      TR::Register *scratchReg2 = cg()->allocateRegister(TR_GPR);
+      TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
     //  TR::Register *scratchReg3 = cg()->allocateRegister(TR_GPR);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
@@ -2929,20 +2930,20 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       preDeps->setNumPostConditions(0, trMemory());
       preDeps->setAddCursorForPost(0);
 
-      TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 2, trMemory());
-      newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
-      newPostDeps->addPostCondition(scratchReg2,TR::RealRegister::NoReg);
+  //    TR::RegisterDependencyConditions *newPostDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(0, 2, trMemory());
+    //  newPostDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
+   //   newPostDeps->addPostCondition(scratchReg2,TR::RealRegister::NoReg);
 
-      TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg(), newPostDeps);
+      TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
-      TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
+      TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      interpCallSnippet->gcMap().setGCRegisterMask(flags);
       // try changing stack map next
-      interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
-      interpCallSnippet->gcMap().resetGCSafePoint();
+   //   interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
       cg()->addSnippet(interpCallSnippet);
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
@@ -2962,7 +2963,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-      TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
+    //  TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
       // next: change count to 3 and always use li with last 1 bits 0
       // then or with 2
       generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 55);
@@ -2973,7 +2974,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
       gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
       gcPoint->PPCNeedsGCMap(flags);
-      gcPoint =  generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+      gcPoint =  generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
       gcPoint->PPCNeedsGCMap(flags);
      // gcPoint->PPCNeedsGCMap(flags);
 
