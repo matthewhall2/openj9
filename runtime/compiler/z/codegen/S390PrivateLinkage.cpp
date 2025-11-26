@@ -2612,7 +2612,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK8;
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, compiledLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
    
       // find target address
