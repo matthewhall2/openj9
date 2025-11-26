@@ -1603,7 +1603,6 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       {
       TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
       dependencies->addPreCondition(targetReg, specialArgReg);
-      dependencies->addPostCondition(targetReg, TR::RealRegister::NoReg);
       }
 
    if (isJitDispatchJ9Method)
@@ -2937,6 +2936,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
+      postDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
