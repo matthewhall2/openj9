@@ -2538,6 +2538,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Snippet * snippet = new (trHeapMemory()) TR::S390HelperCallSnippet(cg(), callNode, snippetLabel,
                                                           callSymRef?callSymRef:callNode->getSymbolReference(), reStartLabel, argSize);
       cg()->addSnippet(snippet);
+      snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
 
       auto* reStartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, reStartLabel);
 
@@ -2584,7 +2585,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       jitCallDeps->addPreCondition(j9MethodReg, getEntryPointRegister());
 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
-      TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition);
+      TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
       TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
       cg()->addSnippet(snippet);
 
