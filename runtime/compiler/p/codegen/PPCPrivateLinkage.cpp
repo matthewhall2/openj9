@@ -2966,7 +2966,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
     //  TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
       // next: change count to 3 and always use li with last 1 bits 0
       // then or with 2
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 55);
+      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 57);
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
