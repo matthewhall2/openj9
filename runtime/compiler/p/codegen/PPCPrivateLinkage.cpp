@@ -2936,7 +2936,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
-      postDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
+    //  postDeps->addPostCondition(j9MethodReg, TR::RealRegister::NoReg);
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
