@@ -2577,8 +2577,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       preDeps->setNumPostConditions(0, trMemory());
       preDeps->setAddCursorForPost(0);
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 3, cg());
-      postDeps->addPostConditionIfNotAlreadyInserted(j9MethodReg, TR::RealRegister::AssignAny);
+      dependencies->addPostCondition(j9MethodReg, TR::RealRegister::GPR7);
+
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
 
