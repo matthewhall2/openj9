@@ -1595,20 +1595,20 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
       }
 
-   if (specialArgReg && !isJitDispatchJ9Method)
+   if (specialArgReg)
       {
       from -= step;  // we do want to process special args in the following loop
       }
-   else if (specialArgReg && isJitDispatchJ9Method)
-      {
-      TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
-      dependencies->addPreCondition(targetReg, specialArgReg);
-      }
+   // else if (specialArgReg && isJitDispatchJ9Method)
+   //    {
+   //    TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
+   //    dependencies->addPreCondition(targetReg, specialArgReg);
+   //    }
 
-   if (isJitDispatchJ9Method)
-      {
-      TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
-      }
+   // if (isJitDispatchJ9Method)
+   //    {
+   //    TR_ASSERT_FATAL(from == step, "should skip first child for jitDispatchJ9Method\n");
+   //    }
 
    numIntegerArgs = 0;
    numFloatArgs = 0;
