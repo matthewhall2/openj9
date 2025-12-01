@@ -1603,6 +1603,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
    //    {
    //    TR::Register *targetReg = cg()->evaluate(callNode->getChild(0));
    //    dependencies->addPreCondition(targetReg, specialArgReg);
+   //    dependencies->addPostCondition(targetReg, specialArgReg);
    //    }
 
    // if (isJitDispatchJ9Method)
@@ -1633,7 +1634,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node             
       TR::MemoryReference *mref = NULL;
       TR::Register        *argRegister;
       child = callNode->getChild(i);
-      bool isSpecialArg = (i == from && specialArgReg != TR::RealRegister::NoReg) && !isJitDispatchJ9Method;
+      bool isSpecialArg = (i == from && specialArgReg != TR::RealRegister::NoReg);
       switch (child->getDataType())
          {
          case TR::Int8:
