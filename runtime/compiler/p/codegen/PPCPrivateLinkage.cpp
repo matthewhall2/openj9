@@ -2897,7 +2897,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       }
    else if (isJitDispatchJ9Method)
       {
-      auto regMap = pp.getPreservedRegisterMapForGC();
+      auto regMapMask = pp.getPreservedRegisterMapForGC();
 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
