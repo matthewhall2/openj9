@@ -48,7 +48,7 @@
 #include "il/TreeTop.hpp"
 #include "il/TreeTop_inlines.hpp"
 #include "p/codegen/CallSnippet.hpp"
-#include "p/codegen/PPCJ9HelperCallSnippet.hpp"
+#include "p/codegen/J9PPCSnippet.hpp"
 #include "p/codegen/GenerateInstructions.hpp"
 #include "p/codegen/PPCEvaluator.hpp"
 #include "p/codegen/PPCHelperCallSnippet.hpp"
