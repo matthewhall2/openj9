@@ -2940,20 +2940,17 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra), TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-    //  TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
-      // next: change count to 3 and always use li with last 1 bits 0
-      // then or with 2
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 61);
-     // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
-     // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
-      // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
       cg()->stopUsingRegister(scratchReg2);
-      TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
-      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
+
+      if (cg()->stressJitDispatchJ9MethodJ2I())
+         {
+         gcPoint =  generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
+         }
+      else
+         {
+         generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+         }
       gcPoint->PPCNeedsGCMap(regMap);
-      gcPoint =  generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
-      gcPoint->PPCNeedsGCMap(regMap);
-     // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
@@ -2969,9 +2966,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(regMap);
 
-   //   cg()->stopUsingRegister(scratchReg);
-    //  cg()->stopUsingRegister(scratchReg2);
-   //   cg()->stopUsingRegister(cndReg);
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
       return;
       }
