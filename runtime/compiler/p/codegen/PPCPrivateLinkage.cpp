@@ -2946,17 +2946,17 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       // try changing stack map next
    //   interpCallSnippet->gcMap().setGCRegisterMask(0); // do not gc scratch reg 2
       cg()->addSnippet(interpCallSnippet);
-      TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
+      //TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
-      // TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
-      // cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
-      // snippetCall->swapInstructionListsWithCompilation();
-      // TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-      // gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
-      // gcPoint->PPCNeedsGCMap(flags);
-      // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-      // // helper snippet sets up jump back to doneLabel
-      // snippetCall->swapInstructionListsWithCompilation();
+      TR_PPCOutOfLineCodeSection *snippetCall = new (cg()->trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
+      cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
+      snippetCall->swapInstructionListsWithCompilation();
+      TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+      gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
+      gcPoint->PPCNeedsGCMap(flags);
+      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+      // helper snippet sets up jump back to doneLabel
+      snippetCall->swapInstructionListsWithCompilation();
 
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2967,16 +2967,16 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
     //  TR_ASSERT_FATAL((scratchReg2->getFlags() & 0x0008) == 0, "register should not be reference\n");
       // next: change count to 3 and always use li with last 1 bits 0
       // then or with 2
-      generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 61);
+  //    generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, scratchReg2, 61);
      // generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, j9MethodReg, 15);
      // generateTrg1ImmInstruction(cg, TR::InstOpCode::li, callNode, scratchReg2, 7);
       // branch to ool if J9_STARTPC_NOT_TRANSLATED is set
       cg()->stopUsingRegister(scratchReg2);
       TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
-      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::beq, callNode, compiledLabel, cndReg);
-      gcPoint->PPCNeedsGCMap(flags);
-      gcPoint =  generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
-      gcPoint->PPCNeedsGCMap(flags);
+      gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+    //  gcPoint->PPCNeedsGCMap(flags);
+      // gcPoint =  generateDepLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel, dependencies);
+      // gcPoint->PPCNeedsGCMap(flags);
      // gcPoint->PPCNeedsGCMap(flags);
 
       // compiled - jump to jit entry point
