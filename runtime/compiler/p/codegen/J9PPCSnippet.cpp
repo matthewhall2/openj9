@@ -42,6 +42,7 @@
 #include "p/codegen/PPCEvaluator.hpp"
 #include "p/codegen/PPCInstruction.hpp"
 #include "p/codegen/GenerateInstructions.hpp"
+#include "p/codegen/CallSnippet.hpp"
 #include "ras/Logger.hpp"
 #include "runtime/CodeCache.hpp"
 #include "runtime/CodeCacheManager.hpp"
@@ -298,7 +299,7 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
     uint8_t *gtrmpln, *trmpln;
 
     getSnippetLabel()->setCodeLocation(buffer);
-    buffer = flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
+    buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
 
     if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
       {
