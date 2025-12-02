@@ -2953,7 +2953,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       gcPoint->PPCNeedsGCMap(regMapMask);
 
       // compiled - jump to jit entry point
-      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
       generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
                                  TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4, TR::Compiler->om.sizeofReferenceAddress()));
       generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srawi, callNode, j9MethodReg, j9MethodReg, 16);
