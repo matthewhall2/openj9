@@ -48,8 +48,8 @@
 #include "il/TreeTop.hpp"
 #include "il/TreeTop_inlines.hpp"
 #include "p/codegen/CallSnippet.hpp"
-#include "p/codegen/PPCJ9HelperCallSnippet.hpp"
 #include "p/codegen/GenerateInstructions.hpp"
+#include "p/codegen/J9PPCSnippet.hpp"
 #include "p/codegen/PPCEvaluator.hpp"
 #include "p/codegen/PPCHelperCallSnippet.hpp"
 #include "p/codegen/PPCInstruction.hpp"
@@ -2921,7 +2921,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
       TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
-      interpCallSnippet->gcMap().setGCRegisterMask(regMap);
+      interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
       cg()->addSnippet(interpCallSnippet);
       TR::SymbolReference *snippetSymRef = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
@@ -2930,7 +2930,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       snippetCall->swapInstructionListsWithCompilation();
       TR::Instruction *OOLLabelInstr = generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       gcPoint = generateDepLabelInstruction(cg(), TR::InstOpCode::bl, callNode, snippetLabel, dependencies);
-      gcPoint->PPCNeedsGCMap(regMap);
+      gcPoint->PPCNeedsGCMap(regMapMask);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
       snippetCall->swapInstructionListsWithCompilation();
 
@@ -2950,7 +2950,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          {
          generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
          }
-      gcPoint->PPCNeedsGCMap(regMap);
+      gcPoint->PPCNeedsGCMap(regMapMask);
 
       // compiled - jump to jit entry point
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
@@ -2964,7 +2964,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
-      gcPoint->PPCNeedsGCMap(regMap);
+      gcPoint->PPCNeedsGCMap(regMapMask);
 
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
       return;
