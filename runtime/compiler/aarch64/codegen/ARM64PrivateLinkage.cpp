@@ -1123,6 +1123,7 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
       totalSize += TR::Compiler->om.sizeofReferenceAddress();
       }
 
+   // will not process special args
    for (int32_t i = from; (rightToLeft && i >= to) || (!rightToLeft && i <= to); i += step)
       {
       child = callNode->getChild(i);
@@ -1168,17 +1169,11 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
       pushToMemory = new (trStackMemory()) TR::ARM64MemoryArgument[numMemArgs];
       }
 
-   if (specialArgReg && !isJitDispatchJ9Method)
+   if (specialArgReg)
       {
       from -= step;  // we do want to process special args in the following loop
       }
-   else if (specialArgReg && isJitDispatchJ9Method)
-      {
-      TR::Register *j9MethodReg = cg()->evaluate(callNode->getChild(0));
-      dependencies->addPreCondition(j9MethodReg, getProperties().getJ9MethodArgumentRegister());
-      }
-   TR_ASSERT_FATAL(!isJitDispatchJ9Method || from == 1, "must not use fierst arg\n");
-
+   
    numIntegerArgs = 0;
    numFloatArgs = 0;
 
