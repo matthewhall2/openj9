@@ -23,6 +23,7 @@
 #include "j9.h"
 
 #include "codegen/ARM64Instruction.hpp"
+#include "codegen/CallSnippet.hpp"
 #include "codegen/CodeGenerator.hpp"
 #include "codegen/GCStackAtlas.hpp"
 #include "codegen/J9ARM64Snippet.hpp"
@@ -44,6 +45,26 @@ TR::ARM64MonitorEnterSnippet::ARM64MonitorEnterSnippet(
    incLabel->setSnippet(this);
    gcMap().setGCRegisterMask(0xFFFFFFFF);
    }
+
+uint8_t *TR::ARM64JHelperCallSnippet::emitSnippetBody()
+   {
+   uint8_t *cursor = cg()->getBinaryBufferCursor();
+   getSnippetLabel()->setCodeLocation(cursor);
+   cursor = TR::ARM64CallSnippet::flushArgumentsToStack(cursor, this->getNode(), this->getSizeOfArguments(), cg());
+   if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
+      {
+         // move value in x8 to x0 for the interpreter
+         // This is needed since x0 is an argument register, so we cannot use it so store the j9method pointer
+         // until we know the target method is interpretted and have flushed the in-registers args to the stack for the interpreter
+         // orr    x0 x8 0
+         // 101100100 0 000000 000000  01000 00000
+         *(int32_t *)cursor = 0xB2000100;
+         cursor += 4;
+      }
+   
+   return emitSnippetBodyHelper(cursor);
+   }
+
 
 uint8_t *
 TR::ARM64MonitorEnterSnippet::emitSnippetBody()

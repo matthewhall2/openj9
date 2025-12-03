@@ -27,6 +27,7 @@
 #include "codegen/InstOpCode.hpp"
 #include "codegen/Linkage.hpp"
 #include "codegen/Linkage_inlines.hpp"
+#include "codegen/J9ARM64Snippet.hpp"
 #include "codegen/Machine.hpp"
 #include "codegen/Register.hpp"
 #include "env/CompilerEnv.hpp"
@@ -55,13 +56,15 @@ static uint8_t *storeArgumentItem(TR::InstOpCode::Mnemonic op, uint8_t *buffer, 
    return buffer+4;
    }
 
-static uint8_t *flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg)
+uint8_t *TR::ARM64CallSnippet::flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg)
    {
    uint32_t intArgNum=0, floatArgNum=0, offset;
    TR::Machine *machine = cg->machine();
    TR::Linkage* linkage = cg->getLinkage(callNode->getSymbol()->castToMethodSymbol()->getLinkageConvention());
    const TR::ARM64LinkageProperties &linkageProperties = linkage->getProperties();
    int32_t argStart = callNode->getFirstArgumentIndex();
+   if (callNode->isJitDispatchJ9MethodCall(cg->comp()))
+      argStart += 1;
 
    if (linkageProperties.getRightToLeft())
       offset = linkage->getOffsetToFirstParm();
