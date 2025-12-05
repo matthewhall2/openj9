@@ -84,6 +84,10 @@ class ARM64MonitorEnterSnippet : public TR::ARM64HelperCallSnippet
    TR::LabelSymbol *getIncLabel() { return _incLabel; };
    };
 
+/** 
+ * A type of helper call snippet used when
+ */
+
 class ARM64JHelperCallSnippet : public TR::ARM64HelperCallSnippet
    {
    int32_t _argSize;
@@ -95,8 +99,13 @@ class ARM64JHelperCallSnippet : public TR::ARM64HelperCallSnippet
         , _argSize(argSize)
     {}
 
+    
     int32_t getSizeOfArguments() { return _argSize; }
     virtual uint8_t *emitSnippetBody();
+    /**
+     * test comment
+     */
+    virtual uint32_t getLength(int32_t estimatedSnippetStart);
    };
 
 class ARM64MonitorExitSnippet : public TR::ARM64HelperCallSnippet

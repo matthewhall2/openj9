@@ -53,16 +53,26 @@ uint8_t *TR::ARM64JHelperCallSnippet::emitSnippetBody()
    cursor = TR::ARM64CallSnippet::flushArgumentsToStack(cursor, this->getNode(), this->getSizeOfArguments(), cg());
    if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
       {
-         // move value in x8 to x0 for the interpreter
-         // This is needed since x0 is an argument register, so we cannot use it so store the j9method pointer
-         // until we know the target method is interpretted and have flushed the in-registers args to the stack for the interpreter
-         // orr    x0 x8 0
-         // 101100100 0 000000 000000  01000 00000
-         *(int32_t *)cursor = 0xB2000100;
-         cursor += 4;
+      /*
+         * move value in x10 to x0 for the interpreter
+         * This is needed since x0 is an argument register, so private linkage cannot use x0 for the j9method pointer
+         * and we must wait until we are inside the snippet, where we know the target method is interpreted, to move the j9method 
+         * pointer to x0 where j2iTransition expects it
+         *
+         * orr x0 x10 x10
+         * 10101010 00 0 01010 000000 01010 00000
+         */
+      *(int32_t *)cursor = 0xAA0A0140;
+      cursor += 4;
       }
    
    return emitSnippetBodyHelper(cursor);
+   }
+
+uint32_t TR::ARM64JHelperCallSnippet::getLength(int32_t estimatedSnippetStart)
+   {
+   // flush args (first arg is special) + register mov + bl + b
+   return ((1 + (getNode()->getNumChildren() - 1)) * 4) + 8;
    }
 
 
