@@ -298,7 +298,7 @@ class S390J9HelperCallSnippet : public TR::S390HelperCallSnippet
    : TR::S390HelperCallSnippet(cg, node, snippetlab, helper, restartlab, s) {}
 
    virtual uint8_t *emitSnippetBody();
-   virtual void print(TR::FILE *, TR_Debug*);
+   virtual void print(OMR::Logger *log, TR_Debug*);
    virtual uint32_t getLength(int32_t estimatedSnippetStart);
    };
 
