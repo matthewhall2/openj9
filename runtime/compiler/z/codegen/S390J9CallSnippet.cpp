@@ -581,7 +581,7 @@ TR::S390J9CallSnippet::print(OMR::Logger *log, TR_Debug *debug)
    debug->printSnippetLabel(log, getSnippetLabel(), bufferPos,
       methodSymRef->isUnresolved() ? "Unresolved Call Snippet" : "Call Snippet");
 
-   bufferPos = TR::S390CallSnippet::printS390ArgumentsFlush(pOutFile, callNode, bufferPos, getSizeOfArguments(), debug, getNode()->getFirstArgumentIndex(), cg()->machine(), cg()->getLinkage(methodSymbol->getLinkageConvention()));
+   bufferPos = TR::S390CallSnippet::printS390ArgumentsFlush(log, callNode, bufferPos, getSizeOfArguments(), debug, getNode()->getFirstArgumentIndex(), cg()->machine(), cg()->getLinkage(methodSymbol->getLinkageConvention()));
 
    if (methodSymRef->isUnresolved() || (cg()->comp()->compileRelocatableCode() && !cg()->comp()->getOption(TR_UseSymbolValidationManager)))
       {
@@ -1991,30 +1991,30 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
 }
 
 void
-TR::S390J9HelperCallSnippet::print(TR::FILE * pOutFile, TR_Debug* debug)
+TR::S390J9HelperCallSnippet::print(OMR::Logger *log, TR_Debug *debug)
    {
-   if (pOutFile == NULL) {
+   if (log == NULL) {
       return;
    }
 
    TR::SymbolReference *helperSymRef = getHelperSymRef();
 
    uint8_t *bufferPos = getSnippetLabel()->getCodeLocation();
-   debug->printSnippetLabel(pOutFile, getSnippetLabel(), bufferPos, "Helper Call Snippet", debug->getName(helperSymRef));
+   debug->printSnippetLabel(log, getSnippetLabel(), bufferPos, "Helper Call Snippet", debug->getName(helperSymRef));
 
    TR::Node *callNode = getNode();
    TR::MethodSymbol *methodSymbol = callNode->getSymbol()->castToMethodSymbol();
    TR::Linkage *privateLinkage = cg()->getLinkage(methodSymbol->getLinkageConvention());
    TR::Machine *machine = cg()->machine();
    int32_t argStart = callNode->getFirstArgumentIndex() + (callNode->isJitDispatchJ9MethodCall(comp()) ? 1 : 0);
-   bufferPos = TR::S390CallSnippet::printS390ArgumentsFlush(pOutFile, getNode(), bufferPos, getSizeOfArguments(), debug, argStart, cg()->machine(), privateLinkage);
+   bufferPos = TR::S390CallSnippet::printS390ArgumentsFlush(log, getNode(), bufferPos, getSizeOfArguments(), debug, argStart, cg()->machine(), privateLinkage);
    if (getNode()->isJitDispatchJ9MethodCall(comp()))
       {
-      debug->printPrefix(pOutFile, NULL, bufferPos, 6);
-      trfprintf(pOutFile, "%s \t %s", comp()->target().is64Bit() ? "LGR  \tR1 R7" : "LR   \tR1 R11", "move j9method pointer to R1 for interpreter");
+      debug->printPrefix(log, NULL, bufferPos, 6);
+      log->printf("%s \t %s", comp()->target().is64Bit() ? "LGR  \tR1 R7" : "LR   \tR1 R11", "move j9method pointer to R1 for interpreter");
       bufferPos += comp()->target().is64Bit() ? 4 : 2;
       }
-   printInner(pOutFile, debug, bufferPos);
+   printInner(log, debug, bufferPos);
    }
 
 uint32_t 
