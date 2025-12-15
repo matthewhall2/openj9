@@ -2589,6 +2589,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
+      gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       snippetCall->swapInstructionListsWithCompilation();
 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
