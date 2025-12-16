@@ -3456,9 +3456,9 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       dependencies->addPreCondition(specialArg, specialArgReg);
       dependencies->addPostCondition(specialArg, specialArgReg);
 
-      TR::Register *scratchRegForCall = cg()->allocateRegister();
-      dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
-      dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
+      // TR::Register *scratchRegForCall = cg()->allocateRegister();
+      // dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
+      // dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
       from += step;
       return;
    }
