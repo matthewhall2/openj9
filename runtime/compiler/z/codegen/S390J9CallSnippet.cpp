@@ -2010,7 +2010,7 @@ TR::S390J9HelperCallSnippet::print(OMR::Logger *log, TR_Debug *debug)
    bufferPos = TR::S390CallSnippet::printS390ArgumentsFlush(log, getNode(), bufferPos, getSizeOfArguments(), debug, argStart, cg()->machine(), privateLinkage);
    if (getNode()->isJitDispatchJ9MethodCall(comp()))
       {
-      debug->printPrefix(log, NULL, bufferPos, 6);
+      debug->printPrefix(log, NULL, bufferPos, comp()->target().is64Bit() ? 4 : 2);
       log->printf("%s \t %s", comp()->target().is64Bit() ? "LGR  \tR1 R7" : "LR   \tR1 R11", "move j9method pointer to R1 for interpreter");
       bufferPos += comp()->target().is64Bit() ? 4 : 2;
       }
