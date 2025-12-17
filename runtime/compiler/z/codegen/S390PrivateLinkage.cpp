@@ -2604,7 +2604,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel, dependencies);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
@@ -2616,11 +2616,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
       gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
@@ -3456,9 +3456,9 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       dependencies->addPreCondition(specialArg, specialArgReg);
       dependencies->addPostCondition(specialArg, specialArgReg);
 
-      TR::Register *scratchRegForCall = cg()->allocateRegister();
-      dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
-      dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
+      // TR::Register *scratchRegForCall = cg()->allocateRegister();
+      // dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
+      // dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
       cg()->decReferenceCount(child);
       from += step;
       return;
