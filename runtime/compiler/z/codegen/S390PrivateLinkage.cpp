@@ -3450,7 +3450,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
       child = callNode->getChild(from);
       specialArgReg = getJ9MethodArgumentRegister();
-      TR::Register *specialArg = cg()->evaluate(child); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
+      TR::Register *specialArg = cg()->gprClobberEvaluate(child); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
@@ -3459,7 +3459,6 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       TR::Register *scratchRegForCall = cg()->allocateRegister();
       dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
       dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
-
       cg()->decReferenceCount(child);
       from += step;
       return;
