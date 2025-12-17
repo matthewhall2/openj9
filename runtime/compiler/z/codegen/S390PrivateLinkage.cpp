@@ -3456,7 +3456,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       dependencies->addPreCondition(specialArg, specialArgReg);
       dependencies->addPostCondition(specialArg, specialArgReg);
 
-      TR::Register *scratchRegForCall = cg()->allocateRegister();
+      TR::Register *scratchRegForCall = cg()->allocateClobberableRegister();
       dependencies->addPreCondition(scratchRegForCall, getVTableIndexArgumentRegister());
       dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
       cg()->decReferenceCount(child);
