@@ -533,6 +533,24 @@ class TR_VectorAPIExpansion : public TR::Optimization
    */
    void transformIL(bool checkBoxing);
 
+   /** \brief
+   *     Method called by transfomIL for each node recursively
+   *
+   *   \param treeTop
+   *     treeTop of the node being transformed
+   *
+   *   \param node
+   *     The node being transformed
+   *
+   *   \param parent
+   *     The parent node of the node being transformed
+   *
+   *   \param checkBoxing
+   *     true if in checkBoxing mode and false in transformation mode
+   *
+   */
+   void visitNodeToTransformIL(TR::TreeTop *treeTop, TR::Node *node, TR::Node *parent, bool checkBoxing);
+
 
   /** \brief
    *     The method performs analysis and transformation
@@ -1826,6 +1844,9 @@ class TR_VectorAPIExpansion : public TR::Optimization
   /** \brief
    *    Returns opcode for converting a load from a byte array into a mask
    *
+   *   \param comp
+   *      Compilation
+   *
    *   \param numLanes
    *      Nubmer of lanes
    *
@@ -1838,11 +1859,14 @@ class TR_VectorAPIExpansion : public TR::Optimization
    *   \return
    *      conversion opcode
    */
-   static TR::ILOpCodes getLoadToMaskConversion(int32_t numLanes, TR::DataType maskType, TR::ILOpCodes &loadOpCode);
+   static TR::ILOpCodes getLoadToMaskConversion(TR::Compilation *comp, int32_t numLanes, TR::DataType maskType, TR::ILOpCodes &loadOpCode);
 
 
    /** \brief
    *    Returns opcode for storying mask into boolean array
+   *
+   *   \param comp
+   *      Compilation
    *
    *   \param numLanes
    *      Nubmer of lanes
@@ -1856,7 +1880,7 @@ class TR_VectorAPIExpansion : public TR::Optimization
    *   \return
    *      conversion opcode
    */
-   static TR::ILOpCodes getMaskToStoreConversion(int32_t numLanes, TR::DataType maskType, TR::ILOpCodes &storeOpCode);
+   static TR::ILOpCodes getMaskToStoreConversion(TR::Compilation *comp, int32_t numLanes, TR::DataType maskType, TR::ILOpCodes &storeOpCode);
 
    };
 
