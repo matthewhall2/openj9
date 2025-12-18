@@ -2568,12 +2568,14 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
-      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
-      preDeps->setNumPostConditions(1, trMemory());
-      preDeps->setAddCursorForPost(0);
-      //preDeps->addPreCondition(scratchReg, getVTableIndexArgumentRegister());
+      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+      //TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+      // preDeps->setNumPostConditions(1, trMemory());
+      // preDeps->setAddCursorForPost(0);
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 2, cg());
+      postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
       postDeps->addPostCondition(scratchReg, getVTableIndexArgumentRegister());
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
@@ -3454,7 +3456,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
-      dependencies->addPostCondition(specialArg, TR::RealRegister::AssignAny);
+     // dependencies->addPostCondition(specialArg, TR::RealRegister::AssignAny);
 
       //TR::Register *scratchRegForCall = cg()->allocateRegister();
      // dependencies->addPostCondition(scratchRegForCall, getVTableIndexArgumentRegister());
