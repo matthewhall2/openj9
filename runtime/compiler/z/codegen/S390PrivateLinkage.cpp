@@ -2571,7 +2571,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
       //       dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
-      preDeps->addPreCondition(scratchReg, getVTableIndexArgumentRegister())
+      preDeps->addPreCondition(scratchReg, getVTableIndexArgumentRegister());
       preDeps->setNumPostConditions(1, trMemory());
       preDeps->setAddCursorForPost(0);
 
