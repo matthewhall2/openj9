@@ -2568,11 +2568,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
-      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
-      //TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
-      // preDeps->setNumPostConditions(1, trMemory());
-      // preDeps->setAddCursorForPost(0);
+      // TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+      //       dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+      TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 1, 0, cg());
+      preDeps->addPreCondition(scratchReg, getVTableIndexArgumentRegister())
+      preDeps->setNumPostConditions(1, trMemory());
+      preDeps->setAddCursorForPost(0);
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 2, cg());
       postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
