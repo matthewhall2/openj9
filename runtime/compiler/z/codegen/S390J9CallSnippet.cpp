@@ -1969,20 +1969,21 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
     * Since the first integer argument register is also R1, we only load it after we have flushed the args to the stack.
     *
     * 64 bit:
-    *    LGR R1, R7
+    *    LGR R1, R4
     * 32 bit:
-    *    LR R1, R7
+    *    LR R1, R4
     */
    if (getNode()->isJitDispatchJ9MethodCall(comp()))
       {
+      
       if (comp()->target().is64Bit())
          {
-         *(int32_t *)cursor = 0xB9040017;
+         *(int32_t *)cursor = 0xB9040014;
          cursor += sizeof(int32_t);
          }
       else
          {
-         *(int16_t *)cursor = 0x1817;
+         *(int16_t *)cursor = 0x1814;
          cursor += sizeof(int16_t);
          }
       }
