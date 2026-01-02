@@ -2576,7 +2576,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // preDeps->setAddCursorForPost(0);
 
       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-      postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
+    //  postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
      // postDeps->addPostCondition(scratchReg, TR::RealRegister::AssignAny);
       postDeps->setNumPreConditions(0, trMemory());
       postDeps->setAddCursorForPre(0);
@@ -3457,7 +3457,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
-
+      dependencies->addPostCondition(specialArg, specialArgReg);
       cg()->decReferenceCount(child);
       from += step;
       return;
