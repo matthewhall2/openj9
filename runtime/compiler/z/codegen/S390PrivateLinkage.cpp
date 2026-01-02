@@ -114,7 +114,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    setEntryPointRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR4 : TR::RealRegister::GPR15);
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
-   setVTableIndexArgumentRegister (TR::RealRegister::GPR0);
+   setVTableIndexArgumentRegister (TR::RealRegister::GPR5);
    setJ9MethodArgumentRegister    (TR::RealRegister::GPR14);
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
@@ -2558,7 +2558,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
-      TR::Register *scratchReg = dependencies->searchPostConditionRegister(TR::RealRegister::GPR5);
+      TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
