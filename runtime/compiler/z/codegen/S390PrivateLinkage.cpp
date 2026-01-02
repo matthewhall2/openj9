@@ -2575,11 +2575,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // preDeps->setNumPostConditions(0, trMemory());
       // preDeps->setAddCursorForPost(0);
 
-      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-    //  postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
-     // postDeps->addPostCondition(scratchReg, TR::RealRegister::AssignAny);
-      postDeps->setNumPreConditions(0, trMemory());
-      postDeps->setAddCursorForPre(0);
+      TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            NULL, dependencies->getPostConditions(), 0,  dependencies->getAddCursorForPost(), cg());
 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
