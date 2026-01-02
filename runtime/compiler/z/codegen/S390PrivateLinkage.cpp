@@ -115,7 +115,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
    setVTableIndexArgumentRegister (TR::RealRegister::GPR0);
-   setJ9MethodArgumentRegister    (TR::RealRegister::GPR4);
+   setJ9MethodArgumentRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR15 : TR::RealRegister::GPR4);
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
    setMethodMetaDataRegister(TR::RealRegister::GPR13 );
