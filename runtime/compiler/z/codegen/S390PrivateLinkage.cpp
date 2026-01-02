@@ -2619,12 +2619,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MedthodReg, screatchReg);
 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
      // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MedthodReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
