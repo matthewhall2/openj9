@@ -11938,6 +11938,15 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          {
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
+      else if (isToClassTypeNormalOrUnknownAtCompileTime)
+         {
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray);
+         }
+
+      if (isToClassTypeNormalOrUnknownAtCompileTime)
+         {
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+         }
 
       // superclass test
       if((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp))
