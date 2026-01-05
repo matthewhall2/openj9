@@ -11934,18 +11934,29 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          srm->reclaimScratchRegister(castClassCacheReg);
          }
 
+      TR::Register *modifierReg = srm->findOrCreateScratchRegister();
       if (isToClassCompileTimeKnownArray)
          {
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
       else if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray);
+         generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifierReg,
+                              generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+
+         cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifierReg,
+                                       generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
          }
 
       if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccInterface, modifierReg);
+         }
+      
+      if (!isToClassCompileTimeKnownArray)
+         {
+         genInlineInterfaceTest(cg, node, toClassReg, fromClassReg, failLabel, successLabel, srm);
          }
 
       // superclass test
