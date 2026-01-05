@@ -3371,7 +3371,9 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
  * If modifier reg is non-null, no load instruction will be generated, and modiferReg is assumed to contain the J9ROMClass modifiers.
  * In this case, it is up to the caller to load the modifiers into the register.
  */
-static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t classDepth, TR::LabelSymbol *handleFlagsLabel, TR_S390ScratchRegisterManager *srm, const int32_t flags, TR::Register *j9classModifierFlagsReg = NULL)
+static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t classDepth, TR::LabelSymbol *handleFlagsLabel, 
+   TR_S390ScratchRegisterManager *srm, const int32_t flags, TR::Register *j9classModifierFlagsReg = NULL,
+   TR::InstOpCode::Mnemonic branchCondition = TR::InstOpCode::COND_BNE)
    {
    TR_ASSERT_FATAL(classDepth == -1, "genTestModifierFlags should not be called when class depth is known at compile time.\n");
    TR::Register *scratchReg = (j9classModifierFlagsReg == NULL) ? srm->findOrCreateScratchRegister() : j9classModifierFlagsReg;
@@ -3406,7 +3408,7 @@ static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Regi
       generateRILInstruction(cg, TR::InstOpCode::NILF, node, scratchReg, flags);
       }
 
-   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, handleFlagsLabel);
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCondition, node, handleFlagsLabel);
    if (NULL == j9classModifierFlagsReg)
       srm->reclaimScratchRegister(scratchReg);
    }
@@ -11844,6 +11846,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    TR::Register *toClassReg = cg->evaluate(toClass);
 
    TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *successLabel = doneLabel;
@@ -11951,7 +11954,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
       if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccInterface, modifierReg);
+         genTestModifierFlags(cg, node, toClassReg, toClassDepth, notInterfaceOrArrayLabel, srm, J9AccInterface, modifierReg, TR::InstOpCode::COND_BE);
          }
       
       if (!isToClassCompileTimeKnownArray)
@@ -11959,20 +11962,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          genInlineInterfaceTest(cg, node, toClassReg, fromClassReg, failLabel, successLabel, srm);
          }
 
-      // superclass test
-      if((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp))
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
+      if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
-         const int32_t flags = (J9AccInterface | J9AccClassArray);
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()), 1, TR::DebugCounter::Undetermined);
-         if (toClassDepth == -1)
-            {
-            genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
-            }
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
-         }
-      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
+         }      
       }
 
    srm->stopUsingRegisters();
