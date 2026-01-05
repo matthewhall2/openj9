@@ -3520,8 +3520,19 @@ static void genInlineInterfaceTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
    cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
    srm->reclaimScratchRegister(lastItableScratchReg);
 
+   // loop
    TR::Register *iTableReg = srm->findOrCreateScratchRegister();
-   
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+                                       generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
+   TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
+   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
+   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+                               generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+   generateRXInstruction(cg, TR::InstOpCode::getLoadTestOpCode(), node, iTableReg,
+                                       generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BZ, node, failLabel);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
    }
 
 // Checks for the scenario where a call to Class.isInstance() is converted to instanceof,
