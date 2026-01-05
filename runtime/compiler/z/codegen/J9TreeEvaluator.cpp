@@ -3373,7 +3373,7 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
  */
 static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t classDepth, TR::LabelSymbol *handleFlagsLabel, 
    TR_S390ScratchRegisterManager *srm, const int32_t flags, TR::Register *j9classModifierFlagsReg = NULL,
-   TR::InstOpCode::Mnemonic branchCondition = TR::InstOpCode::COND_BNE)
+   TR::InstOpCode::S390BranchCondition branchCondition = TR::InstOpCode::COND_BNE)
    {
    TR_ASSERT_FATAL(classDepth == -1, "genTestModifierFlags should not be called when class depth is known at compile time.\n");
    TR::Register *scratchReg = (j9classModifierFlagsReg == NULL) ? srm->findOrCreateScratchRegister() : j9classModifierFlagsReg;
