@@ -11851,14 +11851,28 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
    TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
-   // create OOL section here to have access to the result register to load initial result
-   TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
-   cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
-   outlinedSlowPath->swapInstructionListsWithCompilation();
-   generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-   TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
-   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
-   outlinedSlowPath->swapInstructionListsWithCompilation();
+   int32_t toClassDepth = -1;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+
+   bool isToClassCompileTimeKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+   bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+   bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
+   
+   TR::Register *resultReg = NULL;
+   if (!isToClassCompileTimeKnownInterface)
+      {
+      TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+      cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+      outlinedSlowPath->swapInstructionListsWithCompilation();
+      generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+      TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
+      outlinedSlowPath->swapInstructionListsWithCompilation();
+      }
+   else 
+      {
+      resultReg = cg->allocateRegister();
+      }
 
    // load with initial result of true
    generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
@@ -11877,18 +11891,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       debugObj->addInstructionComment(cursor, "class equality test");
    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
 
-   int32_t toClassDepth = -1;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
-
-   bool isToClassCompileTimeKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
-   bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
-
    bool fastFail = false;
    logprintf(trace, log, "%s: toClassSymRef is %s\n", node->getOpCode().getName(), NULL == toClassSymRef ? "null" : "non-null");
    if (NULL != toClassSymRef)
       logprintf(trace, log, "%s: toClass is %s\n", node->getOpCode().getName(), toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
-   if (isToClassCompileTimeKnownInterface)
+   // check if we can fast fail
+   if ((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp))
       {
       int32_t fromClassDepth = -1;
       TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
@@ -11917,13 +11925,18 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          logprintf(trace, log, "%s: Emitting CastClassCacheTest\n", node->getOpCode().getName());
          TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()), 1, TR::DebugCounter::Undetermined);
-         generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
+         generateRXInstruction(cg, TR::InstOpCode::getCmpOpCode(), node, toClassReg,
             generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
-         cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+         cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
          if (debugObj)
             debugObj->addInstructionComment(cursor, "castclass cache test");
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()), 1, TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(castClassCacheReg);
+         }
+
+      if (isToClassCompileTimeKnownArray)
+         {
+         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
 
       // superclass test
