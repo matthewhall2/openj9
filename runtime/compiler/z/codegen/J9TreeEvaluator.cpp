@@ -3509,6 +3509,21 @@ static void genSuperclassTest(TR::CodeGenerator *cg, TR::Node *node, TR::Registe
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
+static void genInlineInterfaceTest(TR::CodeGenerator *cg, TR::Node *node, TR::Register *toClassReg, TR::Register *fromClassReg, TR::LabelSymbol *failLabel, TR::LabelSymbol *successLabel, TR_S390ScratchRegisterManager *srm)
+   {
+   // check last itable
+   TR::Register *lastItableScratchReg = srm->findOrCreateScratchRegister();
+   TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, lastItableScratchReg,
+                                       generateS390MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg));
+   cursor = generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+                               generateS390MemoryReference(lastItableScratchReg, offsetof(J9ITable, interfaceClass), cg));
+   cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+   srm->reclaimScratchRegister(lastItableScratchReg);
+
+   TR::Register *iTableReg = srm->findOrCreateScratchRegister();
+   
+   }
+
 // Checks for the scenario where a call to Class.isInstance() is converted to instanceof,
 // and we need to load the j9class of the cast class at runtime because we don't have it at compile time
 static bool isDynamicCastClassPointer(TR::Node * castOrInstanceOfNode)
