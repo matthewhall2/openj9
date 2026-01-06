@@ -4204,6 +4204,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    // initial result is true
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
+   bool trace = comp->getOption(TR_TraceCG);
+   OMR::Logger *log = comp->log();
    bool fastFail = false;
    if (toClassDepth != -1 && fromClassDepth != -1)
       {
@@ -4211,8 +4213,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
                      TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/BothDepthsKnown"));
       if (toClassDepth > fromClassDepth)
          {
-          TR::DebugCounter::incStaticDebugCounter(comp,
+         TR::DebugCounter::incStaticDebugCounter(comp,
                      TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/BothDepthsKnown/FastFail"));
+         logprintf(trace, log, "%s: toClass depth > fromClass depth - fast failing\n", node->getOpCode().getName());
          fastFail = true;
          }
       }
@@ -4233,6 +4236,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
       if (isToClassCompileTimeKnownArray)
          {
+         logprintf(trace, log, "%s: toClass is array class - only helper generated\n", node->getOpCode().getName());
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          }
       else if (isToClassTypeNormalOrUnknownAtCompileTime)
