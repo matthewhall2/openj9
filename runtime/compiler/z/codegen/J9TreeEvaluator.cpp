@@ -3535,6 +3535,7 @@ static void genInlineInterfaceTest(TR::CodeGenerator *cg, TR::Node *node, TR::Re
                                        generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BZ, node, failLabel);
    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, startLoop);
+   srm->reclaimScratchRegister(iTableReg);
    }
 
 // Checks for the scenario where a call to Class.isInstance() is converted to instanceof,
@@ -11951,12 +11952,14 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                                        generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
          genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
          }
+      
 
       if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
          genTestModifierFlags(cg, node, toClassReg, toClassDepth, notInterfaceOrArrayLabel, srm, J9AccInterface, modifierReg, TR::InstOpCode::COND_BE);
          }
-      
+      srm->reclaimScratchRegister(modifierReg);
+
       if (!isToClassCompileTimeKnownArray)
          {
          genInlineInterfaceTest(cg, node, toClassReg, fromClassReg, failLabel, successLabel, srm);
@@ -11967,7 +11970,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          {
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-         }      
+         }
       }
 
    srm->stopUsingRegisters();
