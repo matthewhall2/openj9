@@ -4083,6 +4083,55 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
+   {
+   classDepth = -1;
+   TR::SymbolReference *classSymRef = NULL;
+   const TR::ILOpCodes opcode = classNode->getOpCodeValue();
+   bool isClassNodeLoadAddr = opcode == TR::loadaddr;
+
+   // getting the symbol ref
+   if (isClassNodeLoadAddr)
+      {
+      classSymRef = classNode->getSymbolReference();
+      }
+   else if (opcode == TR::aloadi)
+      {
+      // recognizedCallTransformer adds another layer of aloadi
+      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+         {
+         classNode = classNode->getFirstChild();
+         }
+
+      if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+         {
+         classSymRef = classNode->getFirstChild()->getSymbolReference();
+         }
+      }
+
+   // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
+   // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
+   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi ||
+        classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
+        classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
+      {
+      return classSymRef; // cannot find class depth
+      }
+
+   TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
+   TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
+
+   if (symRef != NULL && !symRef->isUnresolved())
+      {
+      TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
+      TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
+      if (clazz != NULL)
+         classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+      }
+
+   return classSymRef;
+   }
+
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
    TR::Node *fromClass = node->getFirstChild();
