@@ -11869,11 +11869,11 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
       outlinedSlowPath->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
-      TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+      resultReg = TR::TreeEvaluator::performCall(node, false, cg);
       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, doneLabel); // exit OOL section
       outlinedSlowPath->swapInstructionListsWithCompilation();
       }
-   else 
+   else
       {
       resultReg = cg->allocateRegister();
       }
