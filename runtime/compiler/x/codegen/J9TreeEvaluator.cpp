@@ -4158,7 +4158,6 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL);
-   bool isToClassNormal = (toClassSymRef != NULL) && !toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp);
 
    int32_t fromClassDepth = -1;
    TR::SymbolReference *fromClassSymRef = NULL;
@@ -4263,7 +4262,6 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
          srm->reclaimScratchRegister(toClassROMClassReg);
          }
-
 
       if (isToClassKnownInterface || isToClassUnknown)
          {
