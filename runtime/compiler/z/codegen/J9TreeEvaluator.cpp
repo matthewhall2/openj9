@@ -3371,11 +3371,10 @@ J9::Z::TreeEvaluator::genLoadForObjectHeadersMasked(TR::CodeGenerator *cg, TR::N
  * If modifier reg is non-null, no load instruction will be generated, and modiferReg is assumed to contain the J9ROMClass modifiers.
  * In this case, it is up to the caller to load the modifiers into the register.
  */
-static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, int32_t classDepth, TR::LabelSymbol *handleFlagsLabel, 
+static void genTestModifierFlags(TR::CodeGenerator *cg, TR::Node *node, TR::Register *classReg, TR::LabelSymbol *handleFlagsLabel, 
    TR_S390ScratchRegisterManager *srm, const int32_t flags, TR::Register *j9classModifierFlagsReg = NULL,
    TR::InstOpCode::S390BranchCondition branchCondition = TR::InstOpCode::COND_BNE)
    {
-   TR_ASSERT_FATAL(classDepth == -1, "genTestModifierFlags should not be called when class depth is known at compile time.\n");
    TR::Register *scratchReg = (j9classModifierFlagsReg == NULL) ? srm->findOrCreateScratchRegister() : j9classModifierFlagsReg;
    TR::Instruction *cursor = NULL;
    TR_Debug * debugObj = cg->getDebug();
@@ -4517,7 +4516,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             TR_ASSERT(flags < UINT_MAX && flags > 0, "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
 
             if (castClassDepth == -1)
-               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
+               genTestModifierFlags(cg, node, castClassReg, callLabel, srm, flags);
 
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
@@ -9104,7 +9103,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             TR::LabelSymbol *callHelperLabel = (*(iter+1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
             if (castClassDepth == -1)
-               genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, flags);
+               genTestModifierFlags(cg, node, castClassReg, callHelperLabel, srm, flags);
 
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
@@ -11861,7 +11860,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    bool isToClassCompileTimeKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
-   
+
+   TR_ASSERT_FATAL(toClassDepth != -1 || !isToClassCompileTimeKnownInterface);
+   TR_ASSERT_FATAL(toClassDepth != -1 || !isToClassCompileTimeKnownArray);
+
    TR::Register *resultReg = NULL;
    if (!isToClassCompileTimeKnownInterface)
       {
@@ -11950,13 +11952,12 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
          cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifierReg,
                                        generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modifierReg);
+         genTestModifierFlags(cg, node, toClassReg, helperCallLabel, srm, J9AccClassArray, modifierReg);
          }
-      
 
       if (isToClassTypeNormalOrUnknownAtCompileTime)
          {
-         genTestModifierFlags(cg, node, toClassReg, toClassDepth, notInterfaceOrArrayLabel, srm, J9AccInterface, modifierReg, TR::InstOpCode::COND_BE);
+         genTestModifierFlags(cg, node, toClassReg, notInterfaceOrArrayLabel, srm, J9AccInterface, modifierReg, TR::InstOpCode::COND_BE);
          }
       srm->reclaimScratchRegister(modifierReg);
 
