@@ -11861,9 +11861,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
 
-   TR_ASSERT_FATAL(toClassDepth != -1 || !isToClassCompileTimeKnownInterface);
-   TR_ASSERT_FATAL(toClassDepth != -1 || !isToClassCompileTimeKnownArray);
-
    TR::Register *resultReg = NULL;
    if (!isToClassCompileTimeKnownInterface)
       {
