@@ -11857,12 +11857,13 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    int32_t toClassDepth = -1;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
-   bool isToClassCompileTimeKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
-   bool isToClassCompileTimeKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassTypeNormalOrUnknownAtCompileTime = !isToClassCompileTimeKnownArray && !isToClassCompileTimeKnownInterface;
+   bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+   bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+   bool isToClassUnknown = (toClassSymRef == NULL);
+   bool isToClassNormal = (toClassSymRef != NULL) && !toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp);
 
    TR::Register *resultReg = NULL;
-   if (!isToClassCompileTimeKnownInterface)
+   if (isToClassKnownArray || isToClassUnknown)
       {
       TR_S390OutOfLineCodeSection *outlinedSlowPath = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
       cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
@@ -11937,34 +11938,31 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          srm->reclaimScratchRegister(castClassCacheReg);
          }
 
-      TR::Register *modifierReg = srm->findOrCreateScratchRegister();
-      if (isToClassCompileTimeKnownArray)
+      if (isToClassKnownArray)
          {
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
          }
-      else if (isToClassTypeNormalOrUnknownAtCompileTime)
+
+      if (isToClassUnknown)
          {
+         TR::Register *modifierReg = srm->findOrCreateScratchRegister();
          generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifierReg,
                               generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
 
          cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifierReg,
                                        generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
          genTestModifierFlags(cg, node, toClassReg, helperCallLabel, srm, J9AccClassArray, modifierReg);
-         }
-
-      if (isToClassTypeNormalOrUnknownAtCompileTime)
-         {
          genTestModifierFlags(cg, node, toClassReg, notInterfaceOrArrayLabel, srm, J9AccInterface, modifierReg, TR::InstOpCode::COND_BE);
+         srm->reclaimScratchRegister(modifierReg);
          }
-      srm->reclaimScratchRegister(modifierReg);
 
-      if (!isToClassCompileTimeKnownArray)
+      if (isToClassUnknown || isToClassKnownInterface)
          {
          genInlineInterfaceTest(cg, node, toClassReg, fromClassReg, failLabel, successLabel, srm);
          }
 
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
-      if (isToClassTypeNormalOrUnknownAtCompileTime)
+      if (!isToClassKnownArray && !isToClassKnownInterface)
          {
          genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
          generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
