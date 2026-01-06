@@ -11860,7 +11860,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL);
-   bool isToClassNormal = (toClassSymRef != NULL) && !toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp);
 
    TR::Register *resultReg = NULL;
    if (isToClassKnownArray || isToClassUnknown)
