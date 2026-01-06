@@ -4025,10 +4025,11 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    static_assert(J9AccClassDepthMask == 0xffff, "J9_JAVA_CLASS_DEPTH_MASK must be 0xffff");
    TR::Register* superclassArrayReg = srm->findOrCreateScratchRegister();
    TR::Register *toClassDepthReg = NULL;
+   TR::Instruction *cursor = NULL;
    if (toClassDepth == -1)
       {
       toClassDepthReg = srm->findOrCreateScratchRegister();
-      TR::Instruction* cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
+      cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
                toClassDepthReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
       if (debugObj)
          {
