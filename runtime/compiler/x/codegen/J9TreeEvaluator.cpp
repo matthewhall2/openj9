@@ -5016,6 +5016,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
    TR::Compilation *comp = cg->comp();
 
    bool isCheckCast = false;
+   static bool useNew = feGetEnv("useNewIsAssignablFrom") != NULL;
    switch (node->getOpCodeValue())
       {
       case TR::checkcast:
@@ -5026,7 +5027,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-         if (cg->supportsInliningOfIsAssignableFrom())
+         if (useNew && cg->supportsInliningOfIsAssignableFrom())
             {
             return generateInlinedIsAssignableFrom(node, cg);
             }
