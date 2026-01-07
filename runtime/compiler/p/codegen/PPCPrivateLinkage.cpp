@@ -2932,7 +2932,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, snippetCallLabel);
       gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
       gcPoint->PPCNeedsGCMap(regMapMask);
-      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetReturnLabel);
+      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, snippetReturnLabel);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
       snippetCall->swapInstructionListsWithCompilation();
 
