@@ -2927,7 +2927,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       cg()->addSnippet(interpCallSnippet);
 
       TR_PPCOutOfLineCodeSection *snippetCall = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(snippetCallLabel, doneLabel, cg());
-      cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      cg()->getPPCOutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, snippetCallLabel);
       gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
