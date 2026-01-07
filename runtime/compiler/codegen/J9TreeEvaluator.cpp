@@ -1294,7 +1294,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
    // By default maxOnsiteCacheSlotForInstanceOf is set to 0 which means cache is disable.
    // To enable test pass JIT option maxOnsiteCacheSlotForInstanceOf=<number_of_slots>
    bool createDynamicCacheTests = cg->comp()->getOptions()->getMaxOnsiteCacheSlotForInstanceOf() > 0 && isInstanceOf;
-
+   static bool enableItableWalk = (feGetEnv("TR_enableItableWalkForInstanceOf") != NULL);
+   static bool enableSuperclassTestForUnresvoled = (feGetEnv("TR_enableSuperclassTestForUnresvoled") != NULL);
 
    uint32_t i = 0;
    uint32_t numProfiledClasses = 0;
@@ -1331,8 +1332,15 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
       // There is a possibility of attempt to cast object to another class and having cache on that object updated by helper.
       // Before going to helper checking the cache.
       sequences[i++] = CastClassCacheTest;
-      if (createDynamicCacheTests)
+      if (enableItableWalk)
+         sequences[i++] = ItableWalk;
+
+      if (enableSuperclassTestForUnresvoled)
+         sequences[i++] = SuperClassTest;
+
+      else if (createDynamicCacheTests)
          sequences[i++] = DynamicCacheObjectClassTest;
+      
       sequences[i++] = HelperCall;
       }
    // Cast class is a runtime variable, still not a lot of room to be fancy.
@@ -1344,12 +1352,16 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
          sequences[i++] = NullTest;
       sequences[i++] = ClassEqualityTest;
       sequences[i++] = CastClassCacheTest;
+      if (enableItableWalk)
+         sequences[i++] = ItableWalk;
       // On Z, We were having support for Super Class Test for dynamic Cast Class so adding it here. It can be guarded if Power/X do not need it.
       if ( (cg->supportsInliningOfIsInstance() || instanceOfOrCheckCastNode->getOpCodeValue() == TR::checkcast) &&
          instanceOfOrCheckCastNode->getSecondChild()->getOpCodeValue() != TR::loadaddr)
          sequences[i++] = SuperClassTest;
+      
       if (createDynamicCacheTests)
          sequences[i++] = DynamicCacheDynamicCastClassTest;
+
       sequences[i++] = HelperCall;
       }
 
@@ -1518,8 +1530,13 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                {
                sequences[i++] = CastClassCacheTest;
                }
-            if (createDynamicCacheTests)
+            
+            // Choose between inline itable walk, dynamic cache, or helper call
+            if (enableItableWalk)
+               sequences[i++] = ItableWalk;
+            else if (createDynamicCacheTests)
                sequences[i++] = DynamicCacheObjectClassTest;
+
             sequences[i++] = HelperCall;
             }
          // Cast class is an abstract class, we can skip the class equality test, a superclass test is enough.
