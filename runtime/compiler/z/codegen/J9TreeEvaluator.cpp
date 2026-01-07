@@ -4602,8 +4602,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          case ItableWalk:
             {
             logprintf(trace, log, "%s: Emitting inline itable walk\n", node->getOpCode().getName());
-            itableWalkLabel = generateLabelSymbol(cg);
-            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, resultLabel, resultLabel, srm);
+            // itableWalkLabel = generateLabelSymbol(cg);
+            // genInlineInterfaceTest(cg, node, castClassReg, objClassReg, resultLabel, resultLabel, srm);
             break;
             }
          case HelperCall:
