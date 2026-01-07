@@ -4445,6 +4445,7 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
    logprintf(trace, log, "Outline Super Class Test: %d\n", outLinedTest);
    InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
+   TR::LabelSymbol *itableWalkLabel = NULL;
    while (numSequencesRemaining > 1)
       {
       switch(*iter)
@@ -4515,8 +4516,22 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
             const int32_t flags = J9AccInterface | J9AccClassArray;
             TR_ASSERT(flags < UINT_MAX && flags > 0, "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
 
-            if (castClassDepth == -1)
+             if (NULL != itableWalkLabel)
+               {
+               TR::Register *modifierReg = srm->findOrCreateScratchRegister();
+               generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modifierReg,
+                                    generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
+   
+               cursor = generateRXInstruction(cg, TR::InstOpCode::L, node, modifierReg,
+                                             generateS390MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg));
+               genTestModifierFlags(cg, node, castClassReg, itableWalkLabel, srm, J9AccInterface, modifierReg);
+               genTestModifierFlags(cg, node, castClassReg, callLabel, srm, J9AccClassArray, modifierReg);
+               srm->reclaimScratchRegister(modifierReg);
+               }
+            else
+               {
                genTestModifierFlags(cg, node, castClassReg, callLabel, srm, flags);
+               }
 
             genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm);
             cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node, outlinedSlowPath ? resultLabel : callLabel);
@@ -4587,7 +4602,8 @@ J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node * node, TR::CodeGenerator * cg
          case ItableWalk:
             {
             logprintf(trace, log, "%s: Emitting inline itable walk\n", node->getOpCode().getName());
-            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, callLabel, resultLabel, srm);
+            itableWalkLabel = generateLabelSymbol(cg);
+            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, resultLabel, resultLabel, srm);
             break;
             }
          case HelperCall:
@@ -9226,7 +9242,7 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
             {
             logprintf(trace, log, "%s: Emitting inline itable walk\n", node->getOpCode().getName());
             iTableWalkLabel = generateLabelSymbol(cg);
-            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, falseLabel, trueLabel, srm);
+            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, dynamicCacheTestLabel, trueLabel, srm);
             break;
             }
          case HelperCall:
