@@ -12006,163 +12006,163 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
          TR::S390WritableDataSnippet *cacheSnippet = NULL;
          TR::LabelSymbol *itableSuccessLabel = NULL;
          
-         if (maxOnsiteCacheSlots > 0 && isToClassKnownInterface)
-            {
-            logprintf(trace, log, "%s: Emitting simple dynamic cache test for interface\n", node->getOpCode().getName());
+        // if (maxOnsiteCacheSlots > 0 && isToClassKnownInterface)
+            // {
+            // logprintf(trace, log, "%s: Emitting simple dynamic cache test for interface\n", node->getOpCode().getName());
             
-            // Create a simple single-slot cache for the most recent class pair
-            // Cache layout: [fromClass:toClass] as a single 64-bit or 128-bit value
-            int32_t sizeofJ9ClassFieldWithinReference = TR::Compiler->om.sizeofReferenceField();
-            bool isTarget64Bit = comp->target().is64Bit();
-            bool isCompressedRef = comp->useCompressedPointers();
+            // // Create a simple single-slot cache for the most recent class pair
+            // // Cache layout: [fromClass:toClass] as a single 64-bit or 128-bit value
+            // int32_t sizeofJ9ClassFieldWithinReference = TR::Compiler->om.sizeofReferenceField();
+            // bool isTarget64Bit = comp->target().is64Bit();
+            // bool isCompressedRef = comp->useCompressedPointers();
             
-            // For simplicity, use a single cache slot
-            int32_t cacheSize = sizeofJ9ClassFieldWithinReference * 2; // Store both classes
-            U_32 initialCache[4] = { 0 }; // Enough for 128-bit
-            cacheSnippet = (TR::S390WritableDataSnippet*)cg->CreateConstant(node, initialCache, cacheSize, true);
+            // // For simplicity, use a single cache slot
+            // int32_t cacheSize = sizeofJ9ClassFieldWithinReference * 2; // Store both classes
+            // U_32 initialCache[4] = { 0 }; // Enough for 128-bit
+            // cacheSnippet = (TR::S390WritableDataSnippet*)cg->CreateConstant(node, initialCache, cacheSize, true);
             
-            TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+            // TR::Register *cacheReg = srm->findOrCreateScratchRegister();
             
-            // For 64-bit non-compressed refs, we need register pairs and quadword load
-            TR::Register *cachedFromClass = NULL;
-            TR::Register *cachedToClass = NULL;
-            TR::RegisterPair *cachedClassPair = NULL;
+            // // For 64-bit non-compressed refs, we need register pairs and quadword load
+            // TR::Register *cachedFromClass = NULL;
+            // TR::Register *cachedToClass = NULL;
+            // TR::RegisterPair *cachedClassPair = NULL;
             
-            if (isTarget64Bit && !isCompressedRef)
-               {
-               // Allocate consecutive register pair for LPQ instruction
-               cachedFromClass = cg->allocateRegister();
-               cachedToClass = cg->allocateRegister();
-               cachedClassPair = cg->allocateConsecutiveRegisterPair(cachedToClass, cachedFromClass);
-               }
-            else
-               {
-               // For compressed refs or 32-bit, we can pack both into a single 64-bit register
-               cachedFromClass = srm->findOrCreateScratchRegister();
-               }
+            // if (isTarget64Bit && !isCompressedRef)
+            //    {
+            //    // Allocate consecutive register pair for LPQ instruction
+            //    cachedFromClass = cg->allocateRegister();
+            //    cachedToClass = cg->allocateRegister();
+            //    cachedClassPair = cg->allocateConsecutiveRegisterPair(cachedToClass, cachedFromClass);
+            //    }
+            // else
+            //    {
+            //    // For compressed refs or 32-bit, we can pack both into a single 64-bit register
+            //    cachedFromClass = srm->findOrCreateScratchRegister();
+            //    }
             
-            // Load cache address
-            generateRILInstruction(cg, TR::InstOpCode::LARL, node, cacheReg, cacheSnippet, 0);
+            // // Load cache address
+            // generateRILInstruction(cg, TR::InstOpCode::LARL, node, cacheReg, cacheSnippet, 0);
             
-            if (isTarget64Bit && !isCompressedRef)
-               {
-               // Use LPQ to load both class pointers atomically (quadword load)
-               generateRXInstruction(cg, TR::InstOpCode::LPQ, node, cachedClassPair,
-                                    generateS390MemoryReference(cacheReg, 0, cg));
+            // if (isTarget64Bit && !isCompressedRef)
+            //    {
+            //    // Use LPQ to load both class pointers atomically (quadword load)
+            //    generateRXInstruction(cg, TR::InstOpCode::LPQ, node, cachedClassPair,
+            //                         generateS390MemoryReference(cacheReg, 0, cg));
                
-               // Compare fromClass
-               generateRRInstruction(cg, TR::InstOpCode::XGR, node, cachedFromClass, fromClassReg);
+            //    // Compare fromClass
+            //    generateRRInstruction(cg, TR::InstOpCode::XGR, node, cachedFromClass, fromClassReg);
                
-               // If from class doesn't match, cache miss
-               TR::LabelSymbol *cacheMissLabel = generateLabelSymbol(cg);
-               generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, cacheMissLabel);
+            //    // If from class doesn't match, cache miss
+            //    TR::LabelSymbol *cacheMissLabel = generateLabelSymbol(cg);
+            //    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, cacheMissLabel);
                
-               // Compare toClass
-               generateRRInstruction(cg, TR::InstOpCode::XGR, node, cachedToClass, toClassReg);
+            //    // Compare toClass
+            //    generateRRInstruction(cg, TR::InstOpCode::XGR, node, cachedToClass, toClassReg);
                
-               // If both match, it's a cache hit - go to success
-               generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+            //    // If both match, it's a cache hit - go to success
+            //    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
                
-               // Cache miss label
-               generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cacheMissLabel);
+            //    // Cache miss label
+            //    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cacheMissLabel);
                
-               cg->stopUsingRegister(cachedFromClass);
-               cg->stopUsingRegister(cachedToClass);
-               cg->stopUsingRegister(cachedClassPair);
-               }
-            else
-               {
-               // For compressed refs or 32-bit: pack both classes into single 64-bit value
-               // Load the packed value
-               generateRXInstruction(cg, TR::InstOpCode::LG, node, cachedFromClass,
-                                    generateS390MemoryReference(cacheReg, 0, cg));
+            //    cg->stopUsingRegister(cachedFromClass);
+            //    cg->stopUsingRegister(cachedToClass);
+            //    cg->stopUsingRegister(cachedClassPair);
+            //    }
+            // else
+            //    {
+            //    // For compressed refs or 32-bit: pack both classes into single 64-bit value
+            //    // Load the packed value
+            //    generateRXInstruction(cg, TR::InstOpCode::LG, node, cachedFromClass,
+            //                         generateS390MemoryReference(cacheReg, 0, cg));
                
-               // Compare with fromClass (lower 32 bits for compressed, or full word for 32-bit)
-               if (isCompressedRef)
-                  {
-                  generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::CLR, node,
-                                                         fromClassReg, cachedFromClass,
-                                                         TR::InstOpCode::COND_BNE,
-                                                         generateLabelSymbol(cg), false);
-                  }
-               else
-                  {
-                  TR::Register *tempReg = srm->findOrCreateScratchRegister();
-                  generateRRInstruction(cg, TR::InstOpCode::LR, node, tempReg, cachedFromClass);
-                  generateRRInstruction(cg, TR::InstOpCode::XR, node, tempReg, fromClassReg);
-                  TR::LabelSymbol *cacheMissLabel = generateLabelSymbol(cg);
-                  generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, cacheMissLabel);
+            //    // Compare with fromClass (lower 32 bits for compressed, or full word for 32-bit)
+            //    if (isCompressedRef)
+            //       {
+            //       generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::CLR, node,
+            //                                              fromClassReg, cachedFromClass,
+            //                                              TR::InstOpCode::COND_BNE,
+            //                                              generateLabelSymbol(cg), false);
+            //       }
+            //    else
+            //       {
+            //       TR::Register *tempReg = srm->findOrCreateScratchRegister();
+            //       generateRRInstruction(cg, TR::InstOpCode::LR, node, tempReg, cachedFromClass);
+            //       generateRRInstruction(cg, TR::InstOpCode::XR, node, tempReg, fromClassReg);
+            //       TR::LabelSymbol *cacheMissLabel = generateLabelSymbol(cg);
+            //       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, cacheMissLabel);
                   
-                  // Extract toClass from upper 32 bits
-                  generateRIEInstruction(cg, TR::InstOpCode::RISBG, node, cachedFromClass, cachedFromClass, 32, 191, 32);
-                  generateRRInstruction(cg, TR::InstOpCode::XR, node, cachedFromClass, toClassReg);
-                  generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-                  generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cacheMissLabel);
-                  srm->reclaimScratchRegister(tempReg);
-                  }
+            //       // Extract toClass from upper 32 bits
+            //       generateRIEInstruction(cg, TR::InstOpCode::RISBG, node, cachedFromClass, cachedFromClass, 32, 191, 32);
+            //       generateRRInstruction(cg, TR::InstOpCode::XR, node, cachedFromClass, toClassReg);
+            //       generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+            //       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cacheMissLabel);
+            //       srm->reclaimScratchRegister(tempReg);
+            //       }
                
-               srm->reclaimScratchRegister(cachedFromClass);
-               }
+            //    srm->reclaimScratchRegister(cachedFromClass);
+            //    }
             
-            srm->reclaimScratchRegister(cacheReg);
+            // srm->reclaimScratchRegister(cacheReg);
             
-            // Create a label for after itable walk success to update cache
-            itableSuccessLabel = generateLabelSymbol(cg);
-            }
+            // // Create a label for after itable walk success to update cache
+            // itableSuccessLabel = generateLabelSymbol(cg);
+            // }
          
          genInlineInterfaceTest(cg, node, toClassReg, fromClassReg, failLabel,
                                itableSuccessLabel ? itableSuccessLabel : successLabel, srm);
          
          // Update cache after successful itable walk
-         if (maxOnsiteCacheSlots > 0 && isToClassKnownInterface && itableSuccessLabel)
-            {
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, itableSuccessLabel);
+         // if (maxOnsiteCacheSlots > 0 && isToClassKnownInterface && itableSuccessLabel)
+         //    {
+         //    generateS390LabelInstruction(cg, TR::InstOpCode::label, node, itableSuccessLabel);
             
-            int32_t sizeofJ9ClassFieldWithinReference = TR::Compiler->om.sizeofReferenceField();
-            bool isTarget64Bit = comp->target().is64Bit();
-            bool isCompressedRef = comp->useCompressedPointers();
+         //    int32_t sizeofJ9ClassFieldWithinReference = TR::Compiler->om.sizeofReferenceField();
+         //    bool isTarget64Bit = comp->target().is64Bit();
+         //    bool isCompressedRef = comp->useCompressedPointers();
             
-            TR::Register *cacheReg = srm->findOrCreateScratchRegister();
-            generateRILInstruction(cg, TR::InstOpCode::LARL, node, cacheReg, cacheSnippet, 0);
+         //    TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+         //    generateRILInstruction(cg, TR::InstOpCode::LARL, node, cacheReg, cacheSnippet, 0);
             
-            if (isTarget64Bit && !isCompressedRef)
-               {
-               // Use STPQ to store both class pointers atomically (quadword store)
-               TR::Register *storeFromClass = cg->allocateRegister();
-               TR::Register *storeToClass = cg->allocateRegister();
-               TR::RegisterPair *storeClassPair = cg->allocateConsecutiveRegisterPair(storeToClass, storeFromClass);
+         //    if (isTarget64Bit && !isCompressedRef)
+         //       {
+         //       // Use STPQ to store both class pointers atomically (quadword store)
+         //       TR::Register *storeFromClass = cg->allocateRegister();
+         //       TR::Register *storeToClass = cg->allocateRegister();
+         //       TR::RegisterPair *storeClassPair = cg->allocateConsecutiveRegisterPair(storeToClass, storeFromClass);
                
-               generateRRInstruction(cg, TR::InstOpCode::LGR, node, storeFromClass, fromClassReg);
-               generateRRInstruction(cg, TR::InstOpCode::LGR, node, storeToClass, toClassReg);
-               generateRXInstruction(cg, TR::InstOpCode::STPQ, node, storeClassPair,
-                                    generateS390MemoryReference(cacheReg, 0, cg));
+         //       generateRRInstruction(cg, TR::InstOpCode::LGR, node, storeFromClass, fromClassReg);
+         //       generateRRInstruction(cg, TR::InstOpCode::LGR, node, storeToClass, toClassReg);
+         //       generateRXInstruction(cg, TR::InstOpCode::STPQ, node, storeClassPair,
+         //                            generateS390MemoryReference(cacheReg, 0, cg));
                
-               cg->stopUsingRegister(storeFromClass);
-               cg->stopUsingRegister(storeToClass);
-               cg->stopUsingRegister(storeClassPair);
-               }
-            else
-               {
-               // For compressed refs or 32-bit: pack both classes into single 64-bit value
-               TR::Register *packedReg = toClassReg;
-               if (!isTarget64Bit)
-                  {
-                  packedReg = cg->allocateRegister();
-                  generateRRInstruction(cg, TR::InstOpCode::LGFR, node, packedReg, toClassReg);
-                  }
-               // Pack fromClass into lower 32 bits and toClass into upper 32 bits
-               generateRIEInstruction(cg, TR::InstOpCode::RISBG, node, packedReg, fromClassReg, 0, 31, 32);
-               generateRXInstruction(cg, TR::InstOpCode::STG, node, packedReg,
-                                    generateS390MemoryReference(cacheReg, 0, cg));
-               if (!isTarget64Bit)
-                  cg->stopUsingRegister(packedReg);
-               }
+         //       cg->stopUsingRegister(storeFromClass);
+         //       cg->stopUsingRegister(storeToClass);
+         //       cg->stopUsingRegister(storeClassPair);
+         //       }
+         //    else
+         //       {
+         //       // For compressed refs or 32-bit: pack both classes into single 64-bit value
+         //       TR::Register *packedReg = toClassReg;
+         //       if (!isTarget64Bit)
+         //          {
+         //          packedReg = cg->allocateRegister();
+         //          generateRRInstruction(cg, TR::InstOpCode::LGFR, node, packedReg, toClassReg);
+         //          }
+         //       // Pack fromClass into lower 32 bits and toClass into upper 32 bits
+         //       generateRIEInstruction(cg, TR::InstOpCode::RISBG, node, packedReg, fromClassReg, 0, 31, 32);
+         //       generateRXInstruction(cg, TR::InstOpCode::STG, node, packedReg,
+         //                            generateS390MemoryReference(cacheReg, 0, cg));
+         //       if (!isTarget64Bit)
+         //          cg->stopUsingRegister(packedReg);
+         //       }
             
-            srm->reclaimScratchRegister(cacheReg);
+         //    srm->reclaimScratchRegister(cacheReg);
             
-            // Now branch to success
-            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, successLabel);
-            }
+         //    // Now branch to success
+         //    generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, successLabel);
+         //    }
          }
 
       generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
