@@ -2907,6 +2907,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *snippetCallLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *snippetReturnLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
 
@@ -2920,9 +2922,19 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
 
       TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
-      TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory()) TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, snippetReturnLabel, argSize);
       interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
       cg()->addSnippet(interpCallSnippet);
+
+      TR_PPCOutOfLineCodeSection *snippetCall = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(snippetCallLabel, doneLabel, cg());
+      cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      snippetCall->swapInstructionListsWithCompilation();
+      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, snippetCallLabel);
+      gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+      gcPoint->PPCNeedsGCMap(regMapMask);
+      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetReturnLabel);
+      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+      snippetCall->swapInstructionListsWithCompilation();
 
       generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2934,11 +2946,11 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
 
       if (cg()->stressJitDispatchJ9MethodJ2I())
          {
-         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetCallLabel);
          }
       else
          {
-         gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetLabel, cndReg);
+         gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetCallLabel, cndReg);
          }
       gcPoint->PPCNeedsGCMap(regMapMask);
 
