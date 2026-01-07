@@ -9241,8 +9241,8 @@ J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node * node, TR::CodeGene
          case ItableWalk:
             {
             logprintf(trace, log, "%s: Emitting inline itable walk\n", node->getOpCode().getName());
-            iTableWalkLabel = generateLabelSymbol(cg);
-            genInlineInterfaceTest(cg, node, castClassReg, objClassReg, dynamicCacheTestLabel, trueLabel, srm);
+            // iTableWalkLabel = generateLabelSymbol(cg);
+            // genInlineInterfaceTest(cg, node, castClassReg, objClassReg, dynamicCacheTestLabel, trueLabel, srm);
             break;
             }
          case HelperCall:

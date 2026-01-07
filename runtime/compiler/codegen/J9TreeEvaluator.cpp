@@ -1369,7 +1369,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
    //
    else
       {
-
+      TR::DebugCounter::incStaticDebugCounter(cg->comp(), "checkCastStats/known");
       TR::StaticSymbol   *castClassSym = castClassSymRef->getSymbol()->getStaticSymbol();
       TR_OpaqueClassBlock *castClass = (TR_OpaqueClassBlock *)castClassSym->getStaticAddress();
       J9UTF8              *castClassName = J9ROMCLASS_CLASSNAME(TR::Compiler->cls.romClassOf((TR_OpaqueClassBlock *) castClass));
@@ -1533,7 +1533,10 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
             
             // Choose between inline itable walk, dynamic cache, or helper call
             if (enableItableWalk)
+               {
+               TR::DebugCounter::incStaticDebugCounter(cg->comp(), "checkCastStats/known/interface");
                sequences[i++] = ItableWalk;
+               }
             else if (createDynamicCacheTests)
                sequences[i++] = DynamicCacheObjectClassTest;
 
