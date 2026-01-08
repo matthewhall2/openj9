@@ -2620,7 +2620,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
      // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+      //gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+      gcPoint = generateS390BranchInstruction(cg, TR::InstOpCode::BCR, callNode, TR::InstOpCode::COND_B, scratchReg);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
