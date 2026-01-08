@@ -4053,14 +4053,6 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       debugObj->addInstructionComment(cursor, "-->toClass Depth > fromClassDepth - fast fail");
       }
 
-   // check obj class's super class array entry
-   // An alternative sequences requiring one less register may be:
-   // SHL toClassDepthReg, 3 for 64-bit or 2 for 32-bit
-   // ADD toClassDepthReg, [temp3Reg, superclasses offset]
-   // CMP classClassReg, [toClassDepthReg]
-   // On 64 bit, the extra reg isn't likely to cause significant register pressure.
-   // On 32 bit, it could put more register pressure due to limited number of regs.
-   // Since 64-bit is more prevalent, we opt to optimize for 64bit in this case
    cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
    if (debugObj)
       {
@@ -5024,7 +5016,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
    TR::Compilation *comp = cg->comp();
 
    bool isCheckCast = false;
-   static bool useNew = feGetEnv("useNewIsAssignablFrom") != NULL;
+   static bool useOld = feGetEnv("useOldAssignableFrom") != NULL;
    switch (node->getOpCodeValue())
       {
       case TR::checkcast:
@@ -5035,7 +5027,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-         if (cg->supportsInliningOfIsAssignableFrom())
+         if (!useOld && cg->supportsInliningOfIsAssignableFrom())
             {
             return generateInlinedIsAssignableFrom(node, cg);
             }
