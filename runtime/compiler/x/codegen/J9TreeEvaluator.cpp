@@ -5035,7 +5035,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-         if (useNew && cg->supportsInliningOfIsAssignableFrom())
+         if (cg->supportsInliningOfIsAssignableFrom())
             {
             return generateInlinedIsAssignableFrom(node, cg);
             }
