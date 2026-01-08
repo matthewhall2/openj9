@@ -4161,6 +4161,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    int32_t toClassDepth = -1;
+   static bool dynamicToClassDepth = feGetEnv("useDynamicToClassDepth") != NULL;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
@@ -4281,7 +4282,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (!isToClassKnownArray && !isToClassKnownInterface)
          {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
-         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, toClassDepth);
+         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
          }
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       }
