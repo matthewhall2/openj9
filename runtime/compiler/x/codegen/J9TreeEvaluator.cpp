@@ -4042,7 +4042,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    else
       {
       // cast class depth >= obj class depth, return false
-      generateMemImmInstruction(TR::InstOpCode::CMP4MemImm4, node,
+      generateMemImmInstruction(TR::InstOpCode::CMP2MemImms, node,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
       cursor = generateLabelInstruction(TR::InstOpCode::JLE4, node, failLabel, cg);
       }
@@ -4069,6 +4069,14 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    if (toClassDepth == -1)
       {
+      if (comp->target().is64Bit())
+         {
+         generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 3, cg);
+         }
+      else
+         {
+         generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, toClassDepthReg, 2, cg);
+         }
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
             generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->target().is64Bit()?3:2, cg), cg);
       srm->reclaimScratchRegister(toClassDepthReg);
@@ -4273,7 +4281,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (!isToClassKnownArray && !isToClassKnownInterface)
          {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
-         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses);
+         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, toClassDepth);
          }
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       }
