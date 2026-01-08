@@ -4042,7 +4042,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    else
       {
       // cast class depth >= obj class depth, return false
-      generateMemImmInstruction(TR::InstOpCode::CMP2MemImms, node,
+      generateMemImmInstruction(TR::InstOpCode::CMP2MemImm2, node,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
       cursor = generateLabelInstruction(TR::InstOpCode::JLE4, node, failLabel, cg);
       }
@@ -4069,7 +4069,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    if (toClassDepth == -1)
       {
-      if (comp->target().is64Bit())
+      if (cg->comp()->target().is64Bit())
          {
          generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 3, cg);
          }
