@@ -4053,7 +4053,6 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       debugObj->addInstructionComment(cursor, "-->toClass Depth > fromClassDepth - fast fail");
       }
 
-   
    // check obj class's super class array entry
    // An alternative sequences requiring one less register may be:
    // SHL toClassDepthReg, 3 for 64-bit or 2 for 32-bit
@@ -4078,7 +4077,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
          generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, toClassDepthReg, 2, cg);
          }
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
-            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->target().is64Bit()?3:2, cg), cg);
+            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, 0, cg), cg);
       srm->reclaimScratchRegister(toClassDepthReg);
       }
    else
