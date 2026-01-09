@@ -98,8 +98,8 @@
 			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_asSpreader"/>
 			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_foldArguments"/> -->
 			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_withVarargs"/>	
-			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_tryFinally"/>
-			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_loop"/>
+			<!-- <class name="com.ibm.j9.jsr292.api.MethodHandleAPI_tryFinally"/>
+			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_loop"/> -->
 			<!-- <class name="com.ibm.j9.jsr292.api.MethodHandleAPI_iteratedLoop"/>
 			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_zero"/>
 			<class name="com.ibm.j9.jsr292.api.MethodHandleAPI_whileLoop"/>
