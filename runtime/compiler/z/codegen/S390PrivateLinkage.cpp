@@ -2561,11 +2561,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *OOLReturnLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
-
+      bool oolReturn = feGetEnv("oolReturn") != NULL;
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
@@ -2580,7 +2581,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
-      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, oolReturn ? OOLReturnLabel : doneLabel, argSize);
       snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
       cg()->addSnippet(snippet);
 
@@ -2590,7 +2591,15 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
+      if (oolReturn)
+         {
+         generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
+         gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
+         }
+      else
+         {
+         
+         }
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       snippetCall->swapInstructionListsWithCompilation();
 
@@ -2616,12 +2625,27 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+      bool useScratch = feGetEnv("useScratch") != NULL;
+      if (useScratch)
+         {
+         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
+         }
+      else
+         {
+         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+         }
 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
      // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MethodReg);
+      if (useScratch)
+         {
+         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+         }
+      else
+         {
+         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MethodReg);
+         }
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
