@@ -4267,7 +4267,6 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       cursor = generateLabelInstruction(TR::InstOpCode::JLE4, node, failLabel, cg);
       }
 
-   
    if (debugObj)
       {
       debugObj->addInstructionComment(cursor, "-->toClass Depth > fromClassDepth - fast fail");
