@@ -235,7 +235,7 @@ void J9::Z::PrivateLinkage::alignLocalsOffset(uint32_t &stackIndex, uint32_t loc
       }
    }
 
-
+ 
 ////////////////////////////////////////////////////////////////////////////////
 // J9::Z::PrivateLinkage::mapCompactedStack - maps variables onto the stack, sharing
 //     stack slots for automatic variables with non-interfering live ranges.
@@ -2562,6 +2562,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
+      TR::LabelSymbol *OOLReturnLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
@@ -2580,7 +2581,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
-      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, OOLReturnLabel, argSize);
       snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
       cg()->addSnippet(snippet);
 
@@ -2588,8 +2589,9 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       snippetCall->swapInstructionListsWithCompilation();
@@ -2603,7 +2605,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel, dependencies);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
