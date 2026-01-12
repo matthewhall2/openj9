@@ -3585,7 +3585,7 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
    bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
    if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
-      killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?\
+      killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
 
    if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
