@@ -2567,6 +2567,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
       bool oolReturn = feGetEnv("oolReturn") != NULL;
+      bool useDeps = feGetEnv("useDeps") != NULL;
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
@@ -2589,7 +2590,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, useDeps ? dependencies : NULL);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       if (oolReturn)
          {
@@ -2612,7 +2613,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
-      bool useDeps = feGetEnv("useDeps") != NULL;
+      
       bool toOOL = feGetEnv("toOOL") != NULL;
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, toOOL ? interpreterCallLabel : snippetLabel, useDeps ? dependencies : NULL);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
