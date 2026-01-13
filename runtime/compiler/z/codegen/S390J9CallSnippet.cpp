@@ -325,8 +325,6 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    cursor = generatePICBinary(cursor, glueRef);
 
-   if (!isJitDispatchJ9Method)
-      {
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
@@ -382,7 +380,6 @@ TR::S390J9CallSnippet::emitSnippetBody()
       __LINE__,
       callNode);
    cursor += sizeof(uintptr_t);
-      }
 
    //induceOSRAtCurrentPC is implemented in the VM, and it knows, by looking at the current PC, what method it needs to
    //continue execution in interpreted mode. Therefore, it doesn't need the method pointer.
@@ -437,6 +434,20 @@ TR::S390J9CallSnippet::emitSnippetBody()
          else
 #endif /* defined(J9VM_OPT_JITSERVER) */
             {
+            if (isJitDispatchJ9Method)
+               {
+               cg()->addExternalRelocation(
+         TR::ExternalRelocation::create(
+            cursor,
+            (uint8_t *)glueRef,
+            TR_HelperAddress,
+            cg()),
+         __FILE__,
+         __LINE__,
+         getNode());
+               }
+            else 
+               {
             cg()->addExternalRelocation(
                TR::ExternalRelocation::create(
                   cursor,
@@ -447,6 +458,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                __FILE__,
                __LINE__,
                callNode);
+               }
             }
          }
       }
