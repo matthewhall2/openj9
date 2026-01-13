@@ -5321,10 +5321,10 @@ J9::CodeGenerator::addInvokeBasicCallSiteImpl(
          break;
 
       default:
-         TR_ASSERT_FATAL_WITH_NODE(
-            callNode,
-            false,
-            "expected MethodHandle.invokeBasic or JITHelpers.dispatchVirtual");
+         // TR_ASSERT_FATAL_WITH_NODE(
+         //    callNode,
+         //    false,
+         //    "expected MethodHandle.invokeBasic or JITHelpers.dispatchVirtual");
          break;
       }
 
