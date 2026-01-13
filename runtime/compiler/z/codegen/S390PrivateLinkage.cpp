@@ -3469,7 +3469,7 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       TR::Register *indexReg = cg()->allocateRegister();
       dependencies->addPreCondition(indexReg, getVTableIndexArgumentRegister());
       dependencies->addPostCondition(indexReg, getVTableIndexArgumentRegister());
-         cg()->decReferenceCount(child);
+      //   cg()->decReferenceCount(child);
       from += step;
       return;
    }
