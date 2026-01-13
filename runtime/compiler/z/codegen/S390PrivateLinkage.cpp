@@ -115,7 +115,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
    setVTableIndexArgumentRegister (TR::RealRegister::GPR0);
-   setJ9MethodArgumentRegister    (TR::RealRegister::GPR7);
+   setJ9MethodArgumentRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR15 : TR::RealRegister::GPR4);
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
    setMethodMetaDataRegister(TR::RealRegister::GPR13 );
@@ -3565,12 +3565,12 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
    int64_t killMask = -1;
   
   static bool doNotKillR0 = feGetEnv("doNotKillR0") != NULL;
-  if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
+  if ( callNode->isJitDispatchJ9MethodCall(comp()))
     //  do not kill helper handles j9methodargumentregister
      killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
 
   static bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
-  if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
+  if (callNode->isJitDispatchJ9MethodCall(comp()))
   //    do not kill helper handles j9methodargumentregister
      killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister())); // do we need this?
 
