@@ -2630,7 +2630,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
      
          gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
-         cg()->addInvokeBasicCallSite(callNode, gcPoint);
+     //    cg()->addInvokeBasicCallSite(callNode, gcPoint);
          
      
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
