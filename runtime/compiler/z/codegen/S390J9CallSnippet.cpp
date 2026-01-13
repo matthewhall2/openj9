@@ -286,12 +286,26 @@ TR::S390J9CallSnippet::emitSnippetBody()
    TR::MethodSymbol * methodSymbol = methodSymRef->getSymbol()->castToMethodSymbol();
 
    getSnippetLabel()->setCodeLocation(cursor);
-
+   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp);
    // Flush in-register arguments back to the stack for interpreter
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
+   if (isJitDispatchJ9Method)
+      {
+
+      if (comp->target().is64Bit())
+         {
+         *(int32_t *)cursor = 0xB9040017;
+         cursor += sizeof(int32_t);
+         }
+      else
+         {
+         *(int16_t *)cursor = 0x1817;
+         cursor += sizeof(int16_t);
+         }
+      }
 
    TR_RuntimeHelper runtimeHelper = getInterpretedDispatchHelper(methodSymRef, callNode->getDataType());
-   TR::SymbolReference * glueRef = cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
+   TR::SymbolReference * glueRef = isJitDispatchJ9Method ? cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition) : cg()->symRefTab()->findOrCreateRuntimeHelper(runtimeHelper);
 
    // Generate RIOFF if RI is supported.
    cursor = generateRuntimeInstrumentationOnOffInstruction(cg(), cursor, TR::InstOpCode::RIOFF);
@@ -312,6 +326,8 @@ TR::S390J9CallSnippet::emitSnippetBody()
 
    cursor = generatePICBinary(cursor, glueRef);
 
+   if (!isJitDispatchJ9Method)
+      {
    // add NOPs to make sure the data area is aligned
    if (pad_bytes == 2)
       {
@@ -367,10 +383,11 @@ TR::S390J9CallSnippet::emitSnippetBody()
       __LINE__,
       callNode);
    cursor += sizeof(uintptr_t);
+      }
 
    //induceOSRAtCurrentPC is implemented in the VM, and it knows, by looking at the current PC, what method it needs to
    //continue execution in interpreted mode. Therefore, it doesn't need the method pointer.
-   if (!glueRef->isOSRInductionHelper())
+   if (!glueRef->isOSRInductionHelper() && !isJitDispatchJ9Method)
       {
       // Store the method pointer: it is NULL for unresolved
       // This field must be doubleword aligned for 64-bit and word aligned for 32-bit
@@ -394,7 +411,7 @@ TR::S390J9CallSnippet::emitSnippetBody()
                getNode());
             }
          }
-      else
+      else if (!isJitDispatchJ9Method)
          {
          uintptr_t ramMethod = (uintptr_t)methodSymRef->getSymbol()->castToResolvedMethodSymbol()->getResolvedMethod()->getPersistentIdentifier();
          *(uintptr_t *) cursor = ramMethod;
