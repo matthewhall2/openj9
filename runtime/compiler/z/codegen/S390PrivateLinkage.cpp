@@ -2597,7 +2597,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->addInvokeBasicCallSite(callNode, gcPoint);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       TR::Instruction *restartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
-      cg()->insertPad(callNode, restartInstruction, 2, false);
+     // cg()->insertPad(callNode, restartInstruction, 2, false);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
