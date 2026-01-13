@@ -3564,15 +3564,15 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
    bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
    int64_t killMask = -1;
   
- //  static bool doNotKillR0 = feGetEnv("doNotKillR0") != NULL;
-//   if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
-      // do not kill helper handles j9methodargumentregister
-    //  killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
+  static bool doNotKillR0 = feGetEnv("doNotKillR0") != NULL;
+  if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
+      do not kill helper handles j9methodargumentregister
+     killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
 
-  // static bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
-  // if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
-      // do not kill helper handles j9methodargumentregister
-  //    killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister())); // do we need this?
+  static bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
+  if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
+      do not kill helper handles j9methodargumentregister
+     killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister())); // do we need this?
 
    argSize = buildArgs(callNode, dependencies, false, killMask, vftReg, true, passArgsRightToLeft);
 
