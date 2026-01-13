@@ -115,7 +115,7 @@ J9::Z::PrivateLinkage::PrivateLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
    setReturnAddressRegister (TR::RealRegister::GPR14);
 
    setVTableIndexArgumentRegister (TR::RealRegister::GPR0);
-   setJ9MethodArgumentRegister    (TR::RealRegister::GPR7);
+   setJ9MethodArgumentRegister    (comp()->target().isLinux() ? TR::RealRegister::GPR15 : TR::RealRegister::GPR4);
 
    setLitPoolRegister       (TR::RealRegister::GPR6  );
    setMethodMetaDataRegister(TR::RealRegister::GPR13 );
@@ -2591,10 +2591,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
-     
+      TR::Instruction *restartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
+      cg()->insertPad(callNode, restartInstruction, 2, false);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
-         
+
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       snippetCall->swapInstructionListsWithCompilation();
 
