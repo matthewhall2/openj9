@@ -2592,6 +2592,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       gcPoint = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
+      bool insertPadOOL = feGetEnv("insertPad") != NULL;
+      if (insertPadOOL)
       cg()->insertPad(callNode, gcPoint, 2, false);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
          
@@ -3455,7 +3457,8 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       default:
          break;
       }
-
+   
+   static bool doNotDecCount = feGetEnv("doNotDecCount") != NULL;
    if (callNode->isJitDispatchJ9MethodCall(comp())) {
       specialArgReg = getJ9MethodArgumentRegister();
       child = callNode->getChild(from);
@@ -3467,7 +3470,8 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       TR::Register *indexReg = cg()->allocateRegister();
       dependencies->addPreCondition(indexReg, getVTableIndexArgumentRegister());
       dependencies->addPostCondition(indexReg, getVTableIndexArgumentRegister());
-      cg()->decReferenceCount(child);
+      if (!doNotDecCount)
+         cg()->decReferenceCount(child);
       from += step;
       return;
    }
@@ -3564,11 +3568,13 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
    bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
    int64_t killMask = -1;
   
-   if (callNode->isJitDispatchJ9MethodCall(comp()))
+   static bool doNotKillR0 = feGetEnv("doNotKillR0") != NULL;
+   if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
       killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
 
-   if (callNode->isJitDispatchJ9MethodCall(comp()))
+   static bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
+   if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
       killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister())); // do we need this?
 
