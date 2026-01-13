@@ -578,8 +578,7 @@ TR::S390J9CallSnippet::getLength(int32_t  estimatedSnippetStart)
    int32_t length = isJitDispatchJ9Method ? (length += comp()->target().is64Bit() ? 4 : 2) : 0;
    length =  length + instructionCountForArguments(getNode(), cg()) + getPICBinaryLength() +  getRuntimeInstrumentationOnOffInstructionLength(cg());
    if (!isJitDispatchJ9Method)   
-      length += 3 * sizeof(uintptr_t);
-   length += sizeof(uintptr_t);  // the last item is for padding
+      length += 3 * sizeof(uintptr_t) + sizeof(uintptr_t);
    return length;
    }
 
