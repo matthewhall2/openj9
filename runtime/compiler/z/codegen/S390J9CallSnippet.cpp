@@ -291,7 +291,6 @@ TR::S390J9CallSnippet::emitSnippetBody()
    cursor = S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
    if (isJitDispatchJ9Method)
       {
-
       if (comp->target().is64Bit())
          {
          *(int32_t *)cursor = 0xB9040017;
@@ -575,7 +574,8 @@ TR::S390J9CallSnippet::getLength(int32_t  estimatedSnippetStart)
    // length = instructionCountForArgsInBytes + (BASR + L(or LG) + BASR +3*sizeof(uintptr_t)) + NOPs
    // number of pad bytes has not been set when this method is called to
    // estimate codebuffer size, so -- i'll put an conservative number here...
-   return (instructionCountForArguments(getNode(), cg()) +
+   int32_t length = getNode()->isJitDispatchJ9MethodCall(cg()->comp()) ? (length += comp()->target().is64Bit() ? 4 : 2) : 0;
+   return length + (instructionCountForArguments(getNode(), cg()) +
       getPICBinaryLength() +
       3 * sizeof(uintptr_t) +
       getRuntimeInstrumentationOnOffInstructionLength(cg()) +
