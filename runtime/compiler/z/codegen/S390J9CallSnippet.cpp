@@ -574,12 +574,13 @@ TR::S390J9CallSnippet::getLength(int32_t  estimatedSnippetStart)
    // length = instructionCountForArgsInBytes + (BASR + L(or LG) + BASR +3*sizeof(uintptr_t)) + NOPs
    // number of pad bytes has not been set when this method is called to
    // estimate codebuffer size, so -- i'll put an conservative number here...
-   int32_t length = getNode()->isJitDispatchJ9MethodCall(cg()->comp()) ? (length += comp()->target().is64Bit() ? 4 : 2) : 0;
-   return length + (instructionCountForArguments(getNode(), cg()) +
-      getPICBinaryLength() +
-      3 * sizeof(uintptr_t) +
-      getRuntimeInstrumentationOnOffInstructionLength(cg()) +
-      sizeof(uintptr_t));  // the last item is for padding
+   bool isJitDispatchJ9Method = getNode()->isJitDispatchJ9MethodCall(cg()->comp());
+   int32_t length = isJitDispatchJ9Method ? (length += comp()->target().is64Bit() ? 4 : 2) : 0;
+   length =  length + instructionCountForArguments(getNode(), cg()) + getPICBinaryLength() +  getRuntimeInstrumentationOnOffInstructionLength(cg());
+   if (!isJitDispatchJ9Method)   
+      length += 3 * sizeof(uintptr_t);
+   length += sizeof(uintptr_t);  // the last item is for padding
+   return length;
    }
 
 void
