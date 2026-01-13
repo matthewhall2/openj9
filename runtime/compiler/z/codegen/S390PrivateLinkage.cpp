@@ -2566,9 +2566,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       startICFLabel->setStartInternalControlFlow();
       doneLabel->setEndInternalControlFlow();
-      bool oolReturn = feGetEnv("oolReturn") != NULL;
-      bool useDepsInOOL = feGetEnv("useDepsInOOL") != NULL;
-      bool useDepsToOOL = feGetEnv("useDepsToOOL") != NULL;
+    
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
@@ -2583,7 +2581,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
 
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
-      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, oolReturn ? OOLReturnLabel : doneLabel, argSize);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, OOLReturnLabel, argSize);
       snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
       cg()->addSnippet(snippet);
 
@@ -2591,7 +2589,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, useDepsInOOL ? dependencies : NULL);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       if (oolReturn)
          {
@@ -2615,8 +2613,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
       
-      bool toOOL = feGetEnv("toOOL") != NULL;
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, toOOL ? interpreterCallLabel : snippetLabel, useDepsToOOL ? dependencies : NULL);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
@@ -2628,27 +2625,17 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      bool useScratch = feGetEnv("useScratch") != NULL;
-      if (useScratch)
-         {
+     
          generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
-         }
-      else
-         {
-         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
-         }
+         
+     
 
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-     // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-      if (useScratch)
-         {
+     
          gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
-         }
-      else
-         {
-         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MethodReg);
-         }
+         
+     
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
@@ -3581,13 +3568,12 @@ J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node * callNode)
    // force left to right for jitDispatchJ9Method
    bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
    int64_t killMask = -1;
-   bool doNotKillR0 = feGetEnv("doNotKillR0") != NULL;
-   bool doNotKillR7 = feGetEnv("doNotKillR7") != NULL;
-   if (doNotKillR0 && callNode->isJitDispatchJ9MethodCall(comp()))
+  
+   if (callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
       killMask &= ~(0x1L << REGINDEX(getVTableIndexArgumentRegister())); // do we need this?
 
-   if (doNotKillR7 && callNode->isJitDispatchJ9MethodCall(comp()))
+   if (callNode->isJitDispatchJ9MethodCall(comp()))
       // do not kill helper handles j9methodargumentregister
       killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister())); // do we need this?
 
