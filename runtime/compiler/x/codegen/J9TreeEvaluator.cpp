@@ -4240,6 +4240,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       
       if (isToClassUnknown)
          {
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown"), 1, TR::DebugCounter::Undetermined);
          TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
@@ -4250,6 +4251,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
             debugObj->addInstructionComment(cursor, "-->Test if array class");
 
          generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown/NotArray"), 1, TR::DebugCounter::Undetermined);
          // test if toClass is an interface
          cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
@@ -4259,11 +4261,13 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
             }
          // skip inlined interface test if not an interface
          generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown/Interface"), 1, TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(toClassROMClassReg);
          }
 
       if (isToClassKnownInterface || isToClassUnknown)
          {
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Undetermined);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceClassTest"), 1, TR::DebugCounter::Undetermined);
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
          }
