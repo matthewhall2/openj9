@@ -4269,9 +4269,10 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-      if (!isToClassKnownArray && !isToClassKnownInterface)
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
+      if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
          {
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass/run"), 1, TR::DebugCounter::Undetermined);
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
          }
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
