@@ -4470,7 +4470,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       og.endOutlinedInstructionSequence();
 //      }
   // else
-  /    {
+  //    {
    //   resultReg = cg->allocateRegister();
    ///   }
 
