@@ -4015,7 +4015,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
       
       // toClass matches, now check fromClass
-      TR::MemoryReference *cachedFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceAddress(), cg);
+      TR::MemoryReference *cachedFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceField(), cg);
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, cachedFromClassMR, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, cacheHitLabel, cg);
       
@@ -4055,7 +4055,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       TR::MemoryReference *cacheToClassMR = generateX86MemoryReference(cacheSnippet, cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheToClassMR, toClassReg, cg);
 
-      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceAddress(), cg);
+      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceField(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
       
       cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
