@@ -4054,7 +4054,6 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    if (useCache)
       {
       // Update cache with successful check
-      generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), interfaceReg, cg);
 
       TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
@@ -4069,6 +4068,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
          }
       }
     srm->reclaimScratchRegister(iTableReg);
+    srm->reclaimScratchRegister(interfaceReg);
    cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
    if (debugObj)
       {
