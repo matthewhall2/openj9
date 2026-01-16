@@ -3998,6 +3998,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    TR::X86DataSnippet *cacheSnippet = NULL;
    TR::LabelSymbol *cacheHitLabel = NULL;
    TR::LabelSymbol *cacheMissLabel = NULL;
+    TR::Register* dataReg = NULL;
 
    if (useCache)
       {
@@ -4005,20 +4006,21 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       // Cache format: [toClass pointer | fromClass pointer]
       size_t cacheSize = 2 * TR::Compiler->om.sizeofReferenceAddress();
       cacheSnippet = cg->createDataSnippet(node, NULL, cacheSize);
-
+      dataReg = srm->findOrCreateScratchRegister();
       cacheHitLabel = generateLabelSymbol(cg);
       cacheMissLabel = generateLabelSymbol(cg);
 
+      generateRegMemInstruction(TR::InstOpCode::LEARegMem(), node, dataReg, generateX86MemoryReference(cacheSnippet->getSnippetLabel(), cg), cg);
+
       // Check cache: compare toClassReg with cached toClass
-      TR::MemoryReference *cachedToClassMR = generateX86MemoryReference(cacheSnippet, cg);
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, cachedToClassMR, cg);
+      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(dataReg, 0, cg), cg);
       generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
-      
+
       // toClass matches, now check fromClass
       TR::MemoryReference *cachedFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceField(), cg);
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, cachedFromClassMR, cg);
+      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg), cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, cacheHitLabel, cg);
-      
+   
       // Cache miss - continue with ITable walk
       TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheMissLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknownCacheMiss"), 1, TR::DebugCounter::Punitive);
@@ -4052,12 +4054,11 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    if (useCache)
       {
       // Update cache with successful check
-      TR::MemoryReference *cacheToClassMR = generateX86MemoryReference(cacheSnippet, cg);
-      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheToClassMR, toClassReg, cg);
+      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), toClassReg, cg);
 
-      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceField(), cg);
+      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
-      
+
       cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
       if (debugObj)
          {
