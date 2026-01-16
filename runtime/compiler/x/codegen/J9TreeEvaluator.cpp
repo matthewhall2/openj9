@@ -4235,8 +4235,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
       
       // toClass matches, now check fromClass
-      TR::MemoryReference *cachedFromClassMR = generateX86MemoryReference(cacheSnippet, cg);
-      cachedFromClassMR->setOffset(TR::Compiler->om.sizeofReferenceAddress());
+      TR::MemoryReference *cachedFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceAddress(), cg);
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, cachedFromClassMR, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, cacheHitLabel, cg);
       
