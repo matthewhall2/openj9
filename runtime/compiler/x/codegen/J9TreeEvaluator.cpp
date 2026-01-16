@@ -4238,8 +4238,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
       }
       
-      if (isToClassUnknown)
-         {
+      // if (isToClassUnknown)
+      //    {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown"), 1, TR::DebugCounter::Undetermined);
          TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
@@ -4263,22 +4263,22 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown/Interface"), 1, TR::DebugCounter::Undetermined);
          srm->reclaimScratchRegister(toClassROMClassReg);
-         }
+        // }
 
-      if (isToClassKnownInterface || isToClassUnknown)
-         {
+     // if (isToClassKnownInterface || isToClassUnknown)
+     //    {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Undetermined);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceClassTest"), 1, TR::DebugCounter::Undetermined);
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
-         }
+     //    }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Undetermined);
-      if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
-         {
+    //  if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
+    //     {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass/run"), 1, TR::DebugCounter::Undetermined);
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
-         }
+      //   }
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       }
 
