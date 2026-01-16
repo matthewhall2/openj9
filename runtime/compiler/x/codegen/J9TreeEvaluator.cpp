@@ -4004,7 +4004,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       {
       // Create a data snippet to store the last successful interface check
       // Cache format: [toClass pointer | fromClass pointer]
-      size_t cacheSize = 2 * TR::Compiler->om.sizeofReferenceAddress();
+      size_t cacheSize = 2 * TR::Compiler->om.sizeofReferenceField();
       cacheSnippet = cg->createDataSnippet(node, NULL, cacheSize);
       dataReg = srm->findOrCreateScratchRegister();
       cacheHitLabel = generateLabelSymbol(cg);
