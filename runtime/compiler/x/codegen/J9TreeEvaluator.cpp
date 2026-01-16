@@ -4055,9 +4055,8 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       // Update cache with successful check
       TR::MemoryReference *cacheToClassMR = generateX86MemoryReference(cacheSnippet, cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheToClassMR, toClassReg, cg);
-      
-      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(cacheSnippet, cg);
-      cacheFromClassMR->setOffset(TR::Compiler->om.sizeofReferenceAddress());
+
+      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(cacheSnippet, TR::Compiler->om.sizeofReferenceAddress(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
       
       cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
