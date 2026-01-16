@@ -4241,18 +4241,18 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::Register* resultReg = NULL;
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    // only needed for array case
-   if (isToClassKnownArray || isToClassUnknown)
-      {
+   // if (isToClassKnownArray || isToClassUnknown)
+   //    {
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Undetermined);
       resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       og.endOutlinedInstructionSequence();
-      }
-   else
-      {
-      resultReg = cg->allocateRegister();
-      }
+//      }
+  // else
+  /    {
+   //   resultReg = cg->allocateRegister();
+   ///   }
 
    startLabel->setStartInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
