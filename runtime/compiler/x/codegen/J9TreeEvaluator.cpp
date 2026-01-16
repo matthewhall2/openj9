@@ -4057,7 +4057,8 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
 
       TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
-
+      srm->reclaimScratchRegister(dataReg);
+      
       cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
       if (debugObj)
          {
