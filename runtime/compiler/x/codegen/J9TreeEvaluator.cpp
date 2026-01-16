@@ -4047,7 +4047,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateMemRegInstruction(TR::InstOpCode::CMPMemReg(), node, interfaceMR, toClassReg, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
-   srm->reclaimScratchRegister(iTableReg);
+   
    
    //Found from I-Table - update cache if enabled
    if (useCache)
@@ -4057,6 +4057,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
 
       TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, iTableReg, cg);
+     
       srm->reclaimScratchRegister(dataReg);
       
       cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
@@ -4065,7 +4066,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
          debugObj->addInstructionComment(cursor, "-->Interface cache hit or updated");
          }
       }
-   
+    srm->reclaimScratchRegister(iTableReg);
    cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
    if (debugObj)
       {
