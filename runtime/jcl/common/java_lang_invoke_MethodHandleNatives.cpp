@@ -211,6 +211,9 @@ initImpl(J9VMThread *currentThread, j9object_t membernameObject, j9object_t refO
 #if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
 		if (J9ROMFIELD_IS_NULL_RESTRICTED(romField)) {
 			flags |= MN_NULL_RESTRICTED;
+			if (vm->internalVMFunctions->isFlattenableFieldFlattened(fieldID->declaringClass, romField)) {
+				flags |= MN_FLAT_FIELD;
+			}
 		}
 #endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
 
@@ -1344,6 +1347,9 @@ Java_java_lang_invoke_MethodHandleNatives_resolve(
 #if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
 					if (J9ROMFIELD_IS_NULL_RESTRICTED(romField)) {
 						new_flags |= MN_NULL_RESTRICTED;
+						if (vm->internalVMFunctions->isFlattenableFieldFlattened(fieldID->declaringClass, romField)) {
+							new_flags |= MN_FLAT_FIELD;
+						}
 					}
 #endif /* defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES) */
 
