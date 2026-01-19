@@ -4310,7 +4310,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
             debugObj->addInstructionComment(cursor, "-->Test if interface class");
             }
          // skip inlined interface test if not an interface
-         generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/UnknownButInterface"), 1, TR::DebugCounter::Punitive);
          srm->reclaimScratchRegister(toClassROMClassReg);
          }
