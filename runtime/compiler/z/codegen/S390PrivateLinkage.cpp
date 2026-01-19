@@ -2613,7 +2613,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
       
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
       // find target address
@@ -2625,11 +2625,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          gcPoint = generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
     //  gcPoint = generateRILInstruction(cg(), TR::InstOpCode::LARL, callNode, regRA, doneLabel, gcPoint);
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, j9MethodReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BCR, callNode, TR::InstOpCode::COND_BCR, regEP);
    //      cg()->addInvokeBasicCallSite(callNode, gcPoint);
