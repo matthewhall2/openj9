@@ -3502,7 +3502,7 @@ fast_jitCheckAssignable(J9VMThread *currentThread, J9Class *castClass, J9Class *
 #endif /* J9VM_ARCH_X86 || J9VM_ARCH_S390*/
 {
 	JIT_HELPER_PROLOGUE();
-	return VM_VMHelpers::inlineCheckCast(clazz, castClass) ? 1 : 0;
+	return VM_VMHelpers::inlineCheckCast(clazz, castClass, true, true) ? 1 : 0;
 }
 
 UDATA J9FASTCALL
