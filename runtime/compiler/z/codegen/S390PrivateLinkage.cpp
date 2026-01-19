@@ -2619,20 +2619,21 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // find target address
       generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
             generateS390MemoryReference(scratchReg, -4, cg()));
-      generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, j9MethodReg, 16);
+      gcPoint = generateRSInstruction(cg(), TR::InstOpCode::SRA, callNode, j9MethodReg, 16);
 
       if (comp()->target().is64Bit()) {
-         generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
+         gcPoint = generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
+      gcPoint = generateRILInstruction(cg(), TR::InstOpCode::LARL, callNode, regRA, doneLabel, gcPoint);
      // TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
      
        //  gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, j9MethodReg);
          gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BCR, callNode, TR::InstOpCode::COND_BCR, j9MethodReg);
    //      cg()->addInvokeBasicCallSite(callNode, gcPoint);
-         
+
      
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
