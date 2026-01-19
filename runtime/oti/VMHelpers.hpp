@@ -586,11 +586,13 @@ public:
 	 * @returns true if instanceClass may be cast to castClass, false if not
 	 */
 	static VMINLINE bool
-	inlineCheckCast(J9Class *instanceClass, J9Class *castClass, bool updateCache = true)
+	inlineCheckCast(J9Class *instanceClass, J9Class *castClass, bool updateCache = true, bool isAssignableFrom = false)
 	{
 		J9Class *initialInstanceClass = instanceClass;
 		J9Class *initialCastClass = castClass;
 		bool didRetry = false;
+		static long hits = 0;
+		static long misses = 0;
 retry:
 		bool castable = true;
 		/* start with the trivial case - do not cache successful equality check to avoid cache pollution */
@@ -612,6 +614,14 @@ retry:
 				/***** casting to an interface - do itable check */
 				iTable = (J9ITable*)instanceClass->lastITable;
 				if (iTable->interfaceClass == castClass) {
+					if (isAssignableFrom)
+						{
+						hits += 1;
+						}
+					else
+						{
+						misses += 1;
+						}
 					goto cacheCastable;
 				}
 				iTable = (J9ITable*)instanceClass->iTable;
