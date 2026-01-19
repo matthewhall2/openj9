@@ -4318,7 +4318,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (isToClassKnownInterface || isToClassUnknown)
          {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Punitive);
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, feGetEnv("useCache") != NULL);
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+         //generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, feGetEnv("useCache") != NULL);
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
