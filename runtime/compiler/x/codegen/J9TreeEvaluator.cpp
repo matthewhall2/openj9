@@ -4048,8 +4048,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, interfaceReg, toClassReg, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
-   
-   
+
    //Found from I-Table - update cache if enabled
    if (useCache)
       {
@@ -4283,14 +4282,6 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       {
       // no need for null checks. They are inserted prior to isAssignableFrom call in RecognizedCallTransformer
 
-      // equality test
-      // unfortunately we cannot eliminate this test even if we know both classes are interfaces or arrays at compile,
-      // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest"), 1, TR::DebugCounter::Punitive);
-      generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTestFail"), 1, TR::DebugCounter::Punitive);
-
       if (isToClassKnownArray)
       {
          logprintf(trace, log, "%s: toClass is array class - only helper generated\n", node->getOpCode().getName());
@@ -4327,13 +4318,20 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (isToClassKnownInterface || isToClassUnknown)
          {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Punitive);
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, true);
+         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, feGetEnv("useCache") != NULL);
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Punitive);
       if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
          {
+           // equality test
+      // unfortunately we cannot eliminate this test even if we know both classes are interfaces or arrays at compile,
+      // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest"), 1, TR::DebugCounter::Punitive);
+         generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTestFail"), 1, TR::DebugCounter::Punitive);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass/run"), 1, TR::DebugCounter::Undetermined);
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
          }
