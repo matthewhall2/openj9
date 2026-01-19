@@ -589,8 +589,8 @@ public:
 		J9Class *initialInstanceClass = instanceClass;
 		J9Class *initialCastClass = castClass;
 		bool didRetry = false;
-		static long hits = 0;
-		static long misses = 0;
+	//	static long hits = 0;
+	//	static long misses = 0;
 retry:
 		bool castable = true;
 		/* start with the trivial case - do not cache successful equality check to avoid cache pollution */
@@ -612,14 +612,14 @@ retry:
 				/***** casting to an interface - do itable check */
 				iTable = (J9ITable*)instanceClass->lastITable;
 				if (iTable->interfaceClass == castClass) {
-					if (isAssignableFrom)
-						{
-						hits += 1;
-						}
-					else
-						{
-						misses += 1;
-						}
+					// if (isAssignableFrom)
+					// 	{
+					// 	hits += 1;
+					// 	}
+					// else
+					// 	{
+					// 	misses += 1;
+					// 	}
 					goto cacheCastable;
 				}
 				iTable = (J9ITable*)instanceClass->iTable;
@@ -697,8 +697,8 @@ done:
 				initialInstanceClass->castClassCache = (UDATA)initialCastClass | 1;
 			}
 		}
-		if (isAssignableFrom)
-			printf("hits: %ld, misses: %ld\n", hits, misses);
+		// if (isAssignableFrom)
+		// 	printf("hits: %ld, misses: %ld\n", hits, misses);
 		return castable;
 	}
 
