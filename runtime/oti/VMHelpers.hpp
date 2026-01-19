@@ -699,6 +699,8 @@ done:
 				initialInstanceClass->castClassCache = (UDATA)initialCastClass | 1;
 			}
 		}
+		if (isAssignableFrom)
+			printf("hits: %ld, misses: %ld\n", hits, misses);
 		return castable;
 	}
 
