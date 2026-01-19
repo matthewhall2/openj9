@@ -4242,7 +4242,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
    TR::Register* resultReg = NULL;
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
-   only needed for array case
+ //  only needed for array case
    if (isToClassKnownArray || isToClassUnknown)
       {
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
