@@ -3467,11 +3467,11 @@ J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node * callNode, TR::Re
       if (specialArg->getRegisterPair())
          specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
       dependencies->addPreCondition(specialArg, specialArgReg);
-      dependencies->addPostCondition(specialArg, specialArgReg);
-      TR::Register *indexReg = cg()->allocateRegister();
-      dependencies->addPreCondition(indexReg, getVTableIndexArgumentRegister());
-      dependencies->addPostCondition(indexReg, getVTableIndexArgumentRegister());
-      //   cg()->decReferenceCount(child);
+   //   dependencies->addPostCondition(specialArg, specialArgReg);
+  //    TR::Register *indexReg = cg()->allocateRegister();
+     // dependencies->addPreCondition(indexReg, getVTableIndexArgumentRegister());
+  //    dependencies->addPostCondition(indexReg, getVTableIndexArgumentRegister());
+      cg()->decReferenceCount(child);
       from += step;
       return;
    }
