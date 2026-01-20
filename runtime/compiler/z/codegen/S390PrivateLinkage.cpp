@@ -2558,7 +2558,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
    if (isJitDispatchJ9Method)
       {
       TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
-      TR::Register *scratchReg = cg()->allocateRegister();
+      TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
       TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *OOLReturnLabel = generateLabelSymbol(cg());
@@ -2566,7 +2566,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
      // startICFLabel->setStartInternalControlFlow();
     //  doneLabel->setEndInternalControlFlow();
-    
+
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
       TR::RegisterDependencyConditions * preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
@@ -2577,10 +2577,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // preDeps->setAddCursorForPost(0);
 
       // Make a copy of input deps, but add on 2 new slots.
-         TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
-         postDeps->setAddCursorForPre(0);                     // Ignore all pre-deps that were copied.
-         postDeps->setNumPreConditions(0, trMemory());        // Ignore all pre-deps that were copied.
-      postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
+  //       TR::RegisterDependencyConditions * postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+ //        postDeps->setAddCursorForPre(0);                     // Ignore all pre-deps that were copied.
+ //        postDeps->setNumPreConditions(0, trMemory());        // Ignore all pre-deps that were copied.
+     // postDeps->addPostConditionIfNotAlreadyInserted(scratchReg, getVTableIndexArgumentRegister());
       
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
@@ -2640,7 +2640,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
      
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-      return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+      return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
       }
 
    if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted() && ((comp()->compileRelocatableCode() && callSymbol->isHelper()) || !comp()->compileRelocatableCode()))
