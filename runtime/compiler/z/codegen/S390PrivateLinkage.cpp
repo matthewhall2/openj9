@@ -2595,7 +2595,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
     //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, helperRef);
     //  cg()->addInvokeBasicCallSite(callNode, gcPoint);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
@@ -2619,7 +2619,6 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       cg()->insertPad(callNode, gcPoint, 2, false);
-       
 
       // find target address
       gcPoint = generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
