@@ -2001,20 +2001,20 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
     * 32 bit:
     *    LR R1, R4
     */
-   if (getNode()->isJitDispatchJ9MethodCall(comp()))
-      {
+   // if (getNode()->isJitDispatchJ9MethodCall(comp()))
+   //    {
       
-      if (comp()->target().is64Bit())
-         {
-         *(int32_t *)cursor = 0xB9040017;
-         cursor += sizeof(int32_t);
-         }
-      else
-         {
-         *(int16_t *)cursor = 0x1817;
-         cursor += sizeof(int16_t);
-         }
-      }
+   //    if (comp()->target().is64Bit())
+   //       {
+   //       *(int32_t *)cursor = 0xB9040017;
+   //       cursor += sizeof(int32_t);
+   //       }
+   //    else
+   //       {
+   //       *(int16_t *)cursor = 0x1817;
+   //       cursor += sizeof(int16_t);
+   //       }
+   //    }
 
    return TR::S390HelperCallSnippet::emitSnippetBodyInner(cursor, helperSymRef);
 }
@@ -2052,7 +2052,7 @@ TR::S390J9HelperCallSnippet::getLength(int32_t estimatedSnippetStart)
    uint32_t length = TR::S390J9CallSnippet::instructionCountForArguments(getNode(), cg());
    if (getNode()->isJitDispatchJ9MethodCall(comp()))
       {
-      length += comp()->target().is64Bit() ? 4 : 2; // register move
+    //  length += comp()->target().is64Bit() ? 4 : 2; // register move
       }
    return length + TR::S390HelperCallSnippet::getLength(length+estimatedSnippetStart);  
    }
