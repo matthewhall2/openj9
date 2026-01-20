@@ -2564,8 +2564,8 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       TR::LabelSymbol *OOLReturnLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
-     // startICFLabel->setStartInternalControlFlow();
-    //  doneLabel->setEndInternalControlFlow();
+      startICFLabel->setStartInternalControlFlow();
+      doneLabel->setEndInternalControlFlow();
 
       // use preconditions from call deps
       // predep of <j9MethodArgumentRegister> (GRP1) was set is buildArgs
