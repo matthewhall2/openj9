@@ -2584,7 +2584,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       
       TR::LabelSymbol * snippetLabel = generateLabelSymbol(cg());
       TR::SymbolReference *helperRef = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
-      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, OOLReturnLabel, argSize);
+      TR::Snippet * snippet = new (trHeapMemory()) TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
       snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
       cg()->addSnippet(snippet);
       TR::SymbolReference *labelSymRef = new (trHeapMemory()) TR::SymbolReference(
@@ -2595,12 +2595,12 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
       snippetCall->swapInstructionListsWithCompilation();
       generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel, dependencies);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, snippetLabel);
     //  gcPoint = generateSnippetCall(cg(), callNode, snippet, dependencies, helperRef);
     //  cg()->addInvokeBasicCallSite(callNode, gcPoint);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      TR::Instruction *restartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
-     cg()->insertPad(callNode, restartInstruction, 2, false);
+     // TR::Instruction *restartInstruction = generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, OOLReturnLabel);
+     cg()->insertPad(callNode, gcPoint, 2, false);
       gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
