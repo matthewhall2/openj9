@@ -418,7 +418,9 @@ public class MethodHandleAPI_loop {
 	}
 
 	private static void testLoopFloat(MethodHandle mh) throws Throwable {
+		System.out.println("start float");
 		Assert.assertEquals(21F, (float)mh.invokeExact(10.5F, 20.5F));
+		System.out.println("end float");
 	}
 	
 	// /**
@@ -449,6 +451,8 @@ public class MethodHandleAPI_loop {
 	}
 
 	private static void testLoopDouble(MethodHandle mh) throws Throwable {
+		System.out.println("start double");
 		Assert.assertEquals(21D, (double)mh.invokeExact(10.5D, 20.5D));
+		System.out.println("end double");
 	}
 }
