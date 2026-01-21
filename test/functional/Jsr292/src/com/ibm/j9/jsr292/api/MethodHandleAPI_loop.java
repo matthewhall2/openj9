@@ -412,6 +412,12 @@ public class MethodHandleAPI_loop {
 		MethodHandle[] clause1 = new MethodHandle[]{null, mhStep1};
 		MethodHandle[] clause2 = new MethodHandle[]{mhInit2, mhStep2, mhPred2, mhFini2};
 		MethodHandle mhLoop = MethodHandles.loop(clause1, clause2);
+		MethodHandle mhLoop2 = MethodHandles.loop(clause2, clause1);
+		System.out.println(mhLoop.equals(mhLoop2));
+		testLoopFloat(mhLoop);
+	}
+
+	private static void testLoopFloat(MethodHandle mh) {
 		Assert.assertEquals(21F, (float)mhLoop.invokeExact(10.5F, 20.5F));
 	}
 	
@@ -437,6 +443,12 @@ public class MethodHandleAPI_loop {
 		MethodHandle[] clause1 = new MethodHandle[]{null, mhStep1};
 		MethodHandle[] clause2 = new MethodHandle[]{mhInit2, mhStep2, mhPred2, mhFini2};
 		MethodHandle mhLoop = MethodHandles.loop(clause1, clause2);
+		MethodHandle mhLoop2 = MethodHandles.loop(clause2, clause1);
+		System.out.println(mhLoop.equals(mhLoop2));
+		testLoopDouble(mhLoop);
+	}
+
+	private static void testLoopDouble(MethodHandle mh) {
 		Assert.assertEquals(21D, (double)mhLoop.invokeExact(10.5D, 20.5D));
 	}
 }
