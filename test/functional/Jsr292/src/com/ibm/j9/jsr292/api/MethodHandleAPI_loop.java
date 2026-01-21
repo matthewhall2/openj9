@@ -417,7 +417,7 @@ public class MethodHandleAPI_loop {
 		testLoopFloat(mhLoop);
 	}
 
-	private static void testLoopFloat(MethodHandle mh) {
+	private static void testLoopFloat(MethodHandle mh) throws Throwable {
 		Assert.assertEquals(21F, (float)mh.invokeExact(10.5F, 20.5F));
 	}
 	
@@ -448,7 +448,7 @@ public class MethodHandleAPI_loop {
 		testLoopDouble(mhLoop);
 	}
 
-	private static void testLoopDouble(MethodHandle mh) {
+	private static void testLoopDouble(MethodHandle mh) throws Throwable {
 		Assert.assertEquals(21D, (double)mh.invokeExact(10.5D, 20.5D));
 	}
 }
