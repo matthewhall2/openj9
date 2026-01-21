@@ -413,7 +413,7 @@ public class MethodHandleAPI_loop {
 		MethodHandle[] clause2 = new MethodHandle[]{mhInit2, mhStep2, mhPred2, mhFini2};
 		MethodHandle mhLoop = MethodHandles.loop(clause1, clause2);
 		MethodHandle mhLoop2 = MethodHandles.loop(clause2, clause1);
-		System.out.println(mhLoop.equals(mhLoop2));
+		System.out.println("float: " + mhLoop.equals(mhLoop2));
 		testLoopFloat(mhLoop);
 	}
 
@@ -444,7 +444,7 @@ public class MethodHandleAPI_loop {
 		MethodHandle[] clause2 = new MethodHandle[]{mhInit2, mhStep2, mhPred2, mhFini2};
 		MethodHandle mhLoop = MethodHandles.loop(clause1, clause2);
 		MethodHandle mhLoop2 = MethodHandles.loop(clause2, clause1);
-		System.out.println(mhLoop.equals(mhLoop2));
+		System.out.println("double: " + mhLoop.equals(mhLoop2));
 		testLoopDouble(mhLoop);
 	}
 
