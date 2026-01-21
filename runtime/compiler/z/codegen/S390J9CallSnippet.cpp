@@ -2006,12 +2006,12 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
       
       if (comp()->target().is64Bit())
          {
-         *(int32_t *)cursor = 0xB9040018;
+         *(int32_t *)cursor = 0xB9040014;
          cursor += sizeof(int32_t);
          }
       else
          {
-         *(int16_t *)cursor = 0x1818;
+         *(int16_t *)cursor = 0x1814;
          cursor += sizeof(int16_t);
          }
       }
