@@ -3998,30 +3998,51 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    TR::X86DataSnippet *cacheSnippet = NULL;
    TR::LabelSymbol *cacheHitLabel = NULL;
    TR::LabelSymbol *cacheMissLabel = NULL;
+   TR::LabelSymbol *nextSlotLabel = NULL;
+   TR::LabelSymbol *internalSuccessLabel = NULL;
+   TR::LabelSymbol *updateCacheLabel = failLabel;
     TR::Register* dataReg = NULL;
-
+      TR::Register* cachedObjReg = NULL;
+        TR::Register* indexReg = NULL;
+   
    if (useCache)
       {
+      internalSuccessLabel = generateLabelSymbol(cg);
       // Create a data snippet to store the last successful interface check
       // Cache format: [toClass pointer | fromClass pointer]
-      size_t cacheSize = 2 * TR::Compiler->om.sizeofReferenceField();
+      size_t cacheSize = 5 * TR::Compiler->om.sizeofReferenceField();
       cacheSnippet = cg->createDataSnippet(node, NULL, cacheSize);
       dataReg = srm->findOrCreateScratchRegister();
+      cachedObjReg = srm->findOrCreateScratchRegister();
       cacheHitLabel = generateLabelSymbol(cg);
       cacheMissLabel = generateLabelSymbol(cg);
+      nextSlotLabel = genereateLabelSymbol(cg);
 
       generateRegMemInstruction(TR::InstOpCode::LEARegMem(), node, dataReg, generateX86MemoryReference(cacheSnippet->getSnippetLabel(), cg), cg);
 
       // Check cache: compare toClassReg with cached toClass
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(dataReg, 0, cg), cg);
-      generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
+      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg), cg);
+      generateLabelInstruction(TR::InstOpCode::JNE4, node, nextSlotLabel, cg);
 
       // toClass matches, now check fromClass
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg), cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, cacheHitLabel, cg);
+      generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cachedObjReg, generateX86MemoryReference(dataReg, 2 * TR::Compiler->om.sizeofReferenceField(), cg), cg);
+      generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cachedObjReg, fromClassReg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
+      generateRegImmInstruction(TR::InstOpCode::CMPRegImms(use64BitClasses), node, cachedObjReg, 1, cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
+
+      TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, nextSlotLabel, cg);
+       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(dataReg, 3 * TR::Compiler->om.sizeofReferenceField(), cg), cg);
+      generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
+      
+       generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cachedObjReg, generateX86MemoryReference(dataReg, 4 * TR::Compiler->om.sizeofReferenceField(), cg), cg);
+      generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cachedObjReg, fromClassReg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
+      generateRegImmInstruction(TR::InstOpCode::CMPRegImms(use64BitClasses), node, cachedObjReg, 1, cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    
       // Cache miss - continue with ITable walk
-      TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheMissLabel, cg);
+      cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheMissLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknownCacheMiss"), 1, TR::DebugCounter::Punitive);
       if (debugObj)
          {
@@ -4043,20 +4064,48 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       debugObj->addInstructionComment(cursor, "-->Start of ITable walk");
       }
    generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, updateCacheLabel, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, interfaceReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, interfaceReg, toClassReg, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
-
+     srm->reclaimScratchRegister(interfaceReg);
    //Found from I-Table - update cache if enabled
    if (useCache)
       {
+      TR::Register *offsetReg = srm->findOrCreateScratchRegister();
+      generateLabelSymbol(TR::InstOpCode::label, node, updateCacheLabel, cg);
+      indexReg = srm->findOrCreateScratchRegister();
+      generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, indexReg, generateX86MemoryReference(dataReg, 0, cg), cg);
+      generateRegRegInstruction(TR::InstOpCode::LRegReg(use64BitClasses), node, offsetReg, indexReg, cg);
+       if (cg->comp()->target().is64Bit())
+         {
+         generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, offsetReg, 4, cg);
+         }
+      else
+         {
+         generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, offsetReg, 3, cg);
+         }
+      
       // Update cache with successful check
-      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), interfaceReg, cg);
+      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, offsetReg, TR::Compiler->om.sizeofReferenceField(), cg), toClassReg, cg);
+      
 
-      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
-      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
+      generateRegRegInstruction(TR::InstOpCode::LRegReg(use64BitClasses), node, cachedObjReg, fromClassReg, cg);
+
+      generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, internalSuccessLabel, cg);
+      generateRegImmInstruction(TR::InstOpCode::ANDRegImms(use64BitClasses), node, cachedObjReg, 1, cg);
+      
+      generateLabelSymbol(TR::InstOpCode::label, node, internalSuccessLabel, cg);
+      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, offsetReg, 2 * TR::Compiler->om.sizeofReferenceField(), cg);
+      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, cachedObjReg, cg);
+
+        generateRegImmInstruction(TR::InstOpCode::XORRegImms(use64BitClasses), node, cachedObjReg, 1);
+         generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), cachedObjReg, cg);
+
+
+
      
       srm->reclaimScratchRegister(dataReg);
       
@@ -4065,6 +4114,8 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
          {
          debugObj->addInstructionComment(cursor, "-->Interface cache hit or updated");
          }
+          srm->reclaimScratchRegister(indexReg);
+         srm->reclaimScratchRegister(cachedObjReg);
       }
     srm->reclaimScratchRegister(iTableReg);
     srm->reclaimScratchRegister(interfaceReg);
@@ -4241,7 +4292,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
 
    TR::Register* resultReg = NULL;
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(5);
  //  only needed for array case
    if (isToClassKnownArray || isToClassUnknown)
       {
