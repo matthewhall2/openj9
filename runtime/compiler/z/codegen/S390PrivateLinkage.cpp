@@ -2611,12 +2611,18 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
       // test J9Method::extra - if 1 then target is not compiled yet
-      generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
+      gcPoint = generateRIInstruction(cg(), TR::InstOpCode::TMLL, callNode, scratchReg, J9_STARTPC_NOT_TRANSLATED);
 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
-      TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
+      TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BCR : TR::InstOpCode::COND_MASK1;
       
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
+     // gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
+        TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+         gcPoint = new (trHeapMemory()) TR::S390RILInstruction(TR::InstOpCode::LARL, callNode, regEP, snippet, gcPoint, cg());
+
+         gcPoint = generateS390RegInstruction(cg(), TR::InstOpCode::BCR, callNode, regEP, gcPoint);
+         ((TR::S390RegInstruction *)gcPoint)->setBranchCondition(oolBranchOp);
+
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
      // cg()->insertPad(callNode, gcPoint, 2, false);
       gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
@@ -2633,7 +2639,7 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
     //  gcPoint = generateRILInstruction(cg(), TR::InstOpCode::LARL, callNode, regRA, doneLabel, gcPoint);
-      TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+   
      // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BCR, callNode, TR::InstOpCode::COND_BCR, regEP);
