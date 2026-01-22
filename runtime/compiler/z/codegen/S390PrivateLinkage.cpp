@@ -2616,9 +2616,10 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
       // always go through j2iTransition if stressJitDispatchJ9MethodJ2I is set
       TR::InstOpCode::S390BranchCondition oolBranchOp = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
       
-      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+      gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
       gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-    //  cg()->insertPad(callNode, gcPoint, 2, false);
+     // cg()->insertPad(callNode, gcPoint, 2, false);
+      gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
 
       // find target address
       gcPoint = generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
