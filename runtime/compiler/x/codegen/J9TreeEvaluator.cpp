@@ -4209,7 +4209,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    int32_t toClassDepth = -1;
-   static bool dynamicToClassDepth = feGetEnv("useDynamicToClassDepth") != NULL;
+   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
@@ -4287,14 +4287,17 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          logprintf(trace, log, "%s: toClass is array class - only helper generated\n", node->getOpCode().getName());
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
       }
-      
+      static bool delayEqualityTest = feGetEnv("delayEqualityTest") != NULL;
       if (isToClassUnknown)
          {
+         if (!delayEqualityTest)
+            {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest"), 1, TR::DebugCounter::Punitive);
          generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
          generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTestFail"), 1, TR::DebugCounter::Punitive);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown"), 1, TR::DebugCounter::Punitive);
+            }
          TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
@@ -4321,19 +4324,19 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
       if (isToClassKnownInterface || isToClassUnknown)
          {
-         if (feGetEnv("equalInterface"))
+         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Punitive);
+         //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, false);
+         }
+      
+      generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
+       if (delayEqualityTest)
             {
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityInterfaceTest"), 1, TR::DebugCounter::Punitive);
             generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
             generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityInterfaceTestFail"), 1, TR::DebugCounter::Punitive);
             }
-         cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Punitive);
-         //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, feGetEnv("useCache") != NULL);
-         }
-
-      generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Punitive);
       if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
          {
