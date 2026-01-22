@@ -4102,7 +4102,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       // cast class depth >= obj class depth, return false
       generateMemImmInstruction(TR::InstOpCode::CMP2MemImm2, node,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
-      cursor = generateLabelInstruction(TR::InstOpCode::JLE4, node, failLabel, cg);
+      cursor = generateLabelInstruction(TR::InstOpCode::JBE4, node, failLabel, cg);
       }
 
    if (debugObj)
