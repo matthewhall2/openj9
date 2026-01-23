@@ -4105,7 +4105,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       generateMemImmInstruction(TR::InstOpCode::CMP2MemImm2, node,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
       static auto jumpInstr = feGetEnv("jle") != NULL ? TR::InstOpCode::JLE4 : TR::InstOpCode::JBE4;
-      cursor = generateLabelInstruction(TR::InstOpCode::JBE4, node, failLabel, cg);
+      cursor = generateLabelInstruction(jumpInstr, node, failLabel, cg);
       }
 
    if (debugObj)
