@@ -4086,7 +4086,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    TR::Instruction *cursor = NULL;
    if (toClassDepth == -1)
       {
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassDepthUnknown"), 1, TR::DebugCounter::Punitive);
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "isAssignableFromStats/toClassDepthUnknown"), 1, TR::DebugCounter::Punitive);
       toClassDepthReg = srm->findOrCreateScratchRegister();
       cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
                toClassDepthReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
@@ -4100,7 +4100,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    else
       {
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassDepthKnown"), 1, TR::DebugCounter::Punitive);
+      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "isAssignableFromStats/toClassDepthKnown"), 1, TR::DebugCounter::Punitive);
       // cast class depth >= obj class depth, return false
       generateMemImmInstruction(TR::InstOpCode::CMP2MemImm2, node,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
