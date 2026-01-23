@@ -2629,11 +2629,11 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
          gcPoint = generateRREInstruction(cg(), TR::InstOpCode::LGFR, callNode, j9MethodReg, j9MethodReg);
       }
 
-      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, j9MethodReg, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
       TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
     //  gcPoint = generateRILInstruction(cg(), TR::InstOpCode::LARL, callNode, regRA, doneLabel, gcPoint);
       TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-     // generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+      generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
       //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BCR, callNode, TR::InstOpCode::COND_BCR, regEP);
    //      cg()->addInvokeBasicCallSite(callNode, gcPoint);
