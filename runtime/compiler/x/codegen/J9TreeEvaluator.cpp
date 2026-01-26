@@ -4291,9 +4291,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
       }
       static bool delayEqualityTest = feGetEnv("delayEqualityTest") != NULL;
-      if (isToClassUnknown)
-         {
-         if (!delayEqualityTest)
+   if (!delayEqualityTest)
             {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTest"), 1, TR::DebugCounter::Punitive);
          generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
@@ -4301,6 +4299,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ClassEqualityTestFail"), 1, TR::DebugCounter::Punitive);
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/Unknown"), 1, TR::DebugCounter::Punitive);
             }
+      if (isToClassUnknown)
+         {
+         
          TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
