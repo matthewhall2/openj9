@@ -4080,6 +4080,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       generateRegRegInstruction(TR::InstOpCode::LRegReg(use64BitClasses), node, offsetReg, indexReg, cg);
        if (cg->comp()->target().is64Bit())
          {
+         // 2x index x ref size
          generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, offsetReg, 4, cg);
          }
       else
@@ -4088,24 +4089,23 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
          }
       
       // Update cache with successful check
-      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, offsetReg, TR::Compiler->om.sizeofReferenceField(), cg), toClassReg, cg);
+      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, offsetReg, 0, cg), toClassReg, cg);
       
 
       generateRegRegInstruction(TR::InstOpCode::LRegReg(use64BitClasses), node, cachedObjReg, fromClassReg, cg);
 
       generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, internalSuccessLabel, cg);
-      generateRegImmInstruction(TR::InstOpCode::ANDRegImms(use64BitClasses), node, cachedObjReg, 1, cg);
+      generateRegImmInstruction(TR::InstOpCode::ORRegImms(use64BitClasses), node, cachedObjReg, 1, cg);
       
       generateLabelSymbol(TR::InstOpCode::label, node, internalSuccessLabel, cg);
       TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, offsetReg, 2 * TR::Compiler->om.sizeofReferenceField(), cg);
       generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, cachedObjReg, cg);
 
-        generateRegImmInstruction(TR::InstOpCode::XORRegImms(use64BitClasses), node, cachedObjReg, 1);
-         generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), cachedObjReg, cg);
+      generateRegImmInstruction(TR::InstOpCode::XORRegImms(use64BitClasses), node, cachedObjReg, 1);
+      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, offsetReg, TR::Compiler->om.sizeofReferenceField(), cg), cachedObjReg, cg);
 
-
-
+      // index | c0 | o1 | c1 | o1 | c2 | o2 | c3 | o3
      
       srm->reclaimScratchRegister(dataReg);
       
