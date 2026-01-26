@@ -4120,7 +4120,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    if (toClassDepth == -1)
       {
-      if (cg->comp()->target().is64Bit())
+      if (use64BitClasses)
          {
          generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 3, cg);
          }
@@ -4344,9 +4344,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass"), 1, TR::DebugCounter::Punitive);
       if (!isToClassKnownArray && !isToClassKnownInterface) // (null || not array) && (null || not interface)
          {
-           // equality test
-      // unfortunately we cannot eliminate this test even if we know both classes are interfaces or arrays at compile,
-      // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
+         // equality test
+         // unfortunately we cannot eliminate this test even if we know both classes are interfaces or arrays at compile,
+         // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass/run"), 1, TR::DebugCounter::Undetermined);
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
          }
