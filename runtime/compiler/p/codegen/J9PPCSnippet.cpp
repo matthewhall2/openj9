@@ -302,7 +302,7 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
    buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
    TR::RealRegister *r11 = cg()->machine()->getRealRegister(TR::RealRegister::gr11);
    TR::RealRegister *r3 = cg()->machine()->getRealRegister(TR::RealRegister::gr3);
-
+    *(int32_t *)buffer = 0;
    TR::InstOpCode opcode;
 
    // li lengthReg, #byteLen
