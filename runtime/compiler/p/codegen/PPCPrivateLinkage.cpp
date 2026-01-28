@@ -2923,7 +2923,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR_PPCOutOfLineCodeSection *slowCallOOL = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
       cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
       slowCallOOL->swapInstructionListsWithCompilation();
-      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
+      generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
       gcPoint->PPCNeedsGCMap(regMapMask);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
