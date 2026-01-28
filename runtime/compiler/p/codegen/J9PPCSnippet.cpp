@@ -306,7 +306,7 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
    TR::InstOpCode opcode;
 
    // li lengthReg, #byteLen
-   opcode.setOpCodeValue(TR::InstOpCode::or);
+   opcode.setOpCodeValue(TR::InstOpCode::OR);
    buffer = opcode.copyBinaryToBuffer(buffer);
    r11->setRegisterFieldRS((uint32_t *)buffer);
    r3->setRegisterFieldRA((uint32_t *)buffer);
