@@ -295,20 +295,29 @@ int32_t TR::PPCReadMonitorSnippet::setEstimatedCodeLocation(int32_t estimatedSni
    }
 
 uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
-    uint8_t *buffer = cg()->getBinaryBufferCursor();
-    uint8_t *gtrmpln, *trmpln;
+   uint8_t *buffer = cg()->getBinaryBufferCursor();
+   uint8_t *gtrmpln, *trmpln;
 
-    getSnippetLabel()->setCodeLocation(buffer);
-    buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
+   getSnippetLabel()->setCodeLocation(buffer);
+   buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
 
-    if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
-      {
-         // move value in r11 to r3 for the interpreter
-         // or     r11   r3    r11    444        0
-         // 011111 01011 00011 01011  0110111100 0
-         *(int32_t *)buffer = 0x7D635B78;
-         buffer += 4;
-      }
+   TR::InstOpCode opcode;
+
+   // li lengthReg, #byteLen
+   //opcode.setOpCodeValue(TR::InstOpCode::or);
+  // buffer = opcode.copyBinaryToBuffer(buffer);
+  // lengthReg->setRegisterFieldRT((uint32_t *)buffer);
+
+   if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
+   {
+      // move value in r11 to r3 for the interpreter
+      // or     r11   r3    r11    444        0
+      // 011111 01011 00011 01011  0110111100 0
+      *(int32_t *)buffer = 0x7D635B78;
+      if (comp->target().isAIX())
+         *(int32_t *)buffer = 0x785B637D;
+      buffer += 4;
+   }
 
     return this->genHelperCall(buffer);
 }
