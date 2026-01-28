@@ -300,24 +300,29 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
 
    getSnippetLabel()->setCodeLocation(buffer);
    buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
+   TR::RealRegister *r11 = cg()->machine()->getRealRegister(TR::RealRegister::gr11);
+   TR::RealRegister *r3 = cg()->machine()->getRealRegister(TR::RealRegister::gr3);
 
    TR::InstOpCode opcode;
 
    // li lengthReg, #byteLen
-   //opcode.setOpCodeValue(TR::InstOpCode::or);
-  // buffer = opcode.copyBinaryToBuffer(buffer);
-  // lengthReg->setRegisterFieldRT((uint32_t *)buffer);
-
-   if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
-   {
-      // move value in r11 to r3 for the interpreter
-      // or     r11   r3    r11    444        0
-      // 011111 01011 00011 01011  0110111100 0
-      *(int32_t *)buffer = 0x7D635B78;
-      if (comp->target().isAIX())
-         *(int32_t *)buffer = 0x785B637D;
-      buffer += 4;
-   }
+   opcode.setOpCodeValue(TR::InstOpCode::or);
+   buffer = opcode.copyBinaryToBuffer(buffer);
+   r11->setRegisterFieldRS((uint32_t *)buffer);
+   r3->setRegisterFieldRA((uint32_t *)buffer);
+   r11->setRegisterFieldRB((uint32_t *)buffer);
+    *(int32_t *)buffer |= 888;
+   buffer += PPC_INSTRUCTION_LENGTH;
+   // if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp()))
+   // {
+   //    // move value in r11 to r3 for the interpreter
+   //    // or     r11   r3    r11    444        0
+   //    // 011111 01011 00011 01011  0110111100 0
+   //    *(int32_t *)buffer = 0x7D635B78;
+   //    if (comp->target().isAIX())
+   //       *(int32_t *)buffer = 0x785B637D;
+   //    buffer += 4;
+   // }
 
     return this->genHelperCall(buffer);
 }
