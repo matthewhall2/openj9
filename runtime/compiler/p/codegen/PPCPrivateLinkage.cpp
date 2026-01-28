@@ -2902,7 +2902,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
       TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
-      TR::Register *j9MethodReg = callNode->getChild(0)->getRegister();
+      TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(pp.getJ9MethodArgumentRegister());
 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
