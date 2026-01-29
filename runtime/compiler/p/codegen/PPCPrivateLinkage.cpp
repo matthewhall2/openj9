@@ -2926,7 +2926,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
       slowCallOOL->swapInstructionListsWithCompilation();
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-      if(comp->target().isLinux() && comp->target().is64Bit() && comp->target().cpu.isLittleEndian())
+      if(comp()->target().isLinux() && comp()->target().is64Bit() && comp()->target().cpu.isLittleEndian())
          {
          if (!comp->getOption(TR_DisableTOC) && !comp->compilePortableCode())
             {
