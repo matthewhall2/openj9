@@ -4105,10 +4105,10 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       // cast class depth >= obj class depth, return false
       cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
                fromClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
-      generateRegImmInstruction(TR::InstOpCode::CMP2RegImm2, node,
-            generateX86MemoryReference(fromClassDepthReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
+      generateRegImmInstruction(TR::InstOpCode::CMP2RegImm2, node, fromClassDepthReg, toClassDepth, cg);
       static auto jumpInstr = feGetEnv("jle") != NULL ? TR::InstOpCode::JLE4 : TR::InstOpCode::JBE4;
       cursor = generateLabelInstruction(jumpInstr, node, failLabel, cg);
+      srm->reclaimScratchRegister(fromClassDepthReg);
       }
 
    if (debugObj)
