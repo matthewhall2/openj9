@@ -319,8 +319,8 @@ uint8_t *TR::PPCJ9HelperCallSnippet::emitSnippetBody() {
       // or     r11   r3    r11    444        0
       // 011111 01011 00011 01011  0110111100 0
       *(int32_t *)buffer = 0x7D635B78;
-      if (cg()->comp()->target().isAIX())
-         *(int32_t *)buffer = 0x785B637D;
+      // if (cg()->comp()->target().isAIX())
+      //    *(int32_t *)buffer = 0x785B637D;
       buffer += PPC_INSTRUCTION_LENGTH;
    }
 
