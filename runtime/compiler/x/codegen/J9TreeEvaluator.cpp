@@ -4376,6 +4376,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
    node->setRegister(resultReg);
+   cg->decReferenceCount(node->getFirstChild());
+   cg->decReferenceCount(node->getSecondChild());
    return resultReg;
    }
 
@@ -4460,8 +4462,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    deps->addPostCondition(ObjReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(castClassReg, TR::RealRegister::NoReg, cg);
-   srm->addScratchRegistersToDependencyList(deps);
    srm->stopUsingRegisters();
+   srm->addScratchRegistersToDependencyList(deps);
    deps->addPostCondition(objClassReg, TR::RealRegister::NoReg, cg);
 
    TR::Node *callNode = outlinedHelperCall->getCallNode();
