@@ -86,6 +86,9 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
       }
    node->setNumChildren(2);
 
+   TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
+   TR::Node::recreateWithSymRef(node, TR::icall, jitCheckAssignableSR);
+
    TR::Node::recreate(treetop->getNode(), TR::treetop);
    node->setSymbolReference(comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
    node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
