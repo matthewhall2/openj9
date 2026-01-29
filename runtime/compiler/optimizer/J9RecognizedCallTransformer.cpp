@@ -77,16 +77,31 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
    treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, toClass), nullchk)));
    treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, fromClass), nullchk)));
 
-   prepareToReplaceNode(node);
+ //  prepareToReplaceNode(node);
+   if (node->getOpCode().isIndirect())
+      {
+         auto child = node->getChild(0);
+         node->setChild(0, NULL);
+         child->recursivelyDecReferenceCount();
+      }
    node->setNumChildren(2);
 
-   TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
-   TR::Node::recreateWithSymRef(node, TR::icall, jitCheckAssignableSR);
+   TR::Node::recreate(treetop->getNode(), TR::treetop);
+   node->setSymbolReference(comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable));
+   node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+   node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef()));
+   node->swapChildren();
 
-   TR::SymbolReference *classFromJavaLangClassSR = comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef();
+   toClass->recursivelyDecReferenceCount();
+   fromClass->recursivelyDecReferenceCount();
 
-   node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, classFromJavaLangClassSR));
-   node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, classFromJavaLangClassSR));
+   // TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
+   // TR::Node::recreateWithSymRef(node, TR::icall, jitCheckAssignableSR);
+
+   // TR::SymbolReference *classFromJavaLangClassSR = comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef();
+
+   // node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, classFromJavaLangClassSR));
+   // node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, classFromJavaLangClassSR));
    }
 
 static void substituteNode(
