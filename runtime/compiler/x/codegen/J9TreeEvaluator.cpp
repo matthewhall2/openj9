@@ -4490,8 +4490,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    // Decrement use counts on the children
    //
-   cg->decReferenceCount(node->getFirstChild());
-   cg->decReferenceCount(node->getSecondChild());
+   // cg->decReferenceCount(node->getFirstChild());
+   // cg->decReferenceCount(node->getSecondChild());
    }
 
 static void
