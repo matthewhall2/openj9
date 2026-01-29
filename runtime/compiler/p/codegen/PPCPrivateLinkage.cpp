@@ -2903,6 +2903,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
       TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(pp.getJ9MethodArgumentRegister());
+      TR::Register *gr2Reg = dependencies->searchPostConditionRegister(TR::RealRegister::gr2);
+      TR::Register *gr12Reg = dependencies->searchPostConditionRegister(TR::RealRegister::gr12);
 
       TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
       TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2924,6 +2926,25 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
       slowCallOOL->swapInstructionListsWithCompilation();
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+      if(comp->target().isLinux() && comp->target().is64Bit() && comp->target().cpu.isLittleEndian())
+         {
+         if (!comp->getOption(TR_DisableTOC) && !comp->compilePortableCode())
+            {
+            int32_t helperOffset = (helperRef->getReferenceNumber() - 1)*sizeof(intptr_t);
+            generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr12Reg,
+                                      TR::MemoryReference::createWithDisplacement(cg(), cg()->getTOCBaseRegister(), helperOffset, TR::Compiler->om.sizeofReferenceAddress()));
+            }
+            else
+            {
+            loadAddressConstant(cg(), callNode, (int64_t)runtimeHelperValue((TR_RuntimeHelper)helperRef->getReferenceNumber()),
+                                gr12Reg, NULL, false, TR_AbsoluteHelperAddress);
+            }
+         }
+         else if (comp()->target().isAIX() || (comp()->target().isLinux() && comp()->target().is64Bit()))
+         {
+         generateTrg1MemInstruction(cg, TR::InstOpCode::Op_load, callNode, gr2Reg,
+                                    TR::MemoryReference::createWithDisplacement(cg, cg->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
+         }
       gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
       gcPoint->PPCNeedsGCMap(regMapMask);
       generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
@@ -2955,8 +2976,12 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          {
          generateTrg1Src1Instruction(cg(), TR::InstOpCode::extsw, callNode, j9MethodReg, j9MethodReg);
          }
+
       generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
+      if (comp()->target().isAIX())
+         generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr2Reg,
+                                    TR::MemoryReference::createWithDisplacement(cg, cg->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(regMapMask);
 
