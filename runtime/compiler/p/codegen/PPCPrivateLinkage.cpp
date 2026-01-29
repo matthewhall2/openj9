@@ -2928,7 +2928,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
       if(comp()->target().isLinux() && comp()->target().is64Bit() && comp()->target().cpu.isLittleEndian())
          {
-         if (!comp->getOption(TR_DisableTOC) && !comp->compilePortableCode())
+         if (!comp()->getOption(TR_DisableTOC) && !comp()->compilePortableCode())
             {
             int32_t helperOffset = (helperRef->getReferenceNumber() - 1)*sizeof(intptr_t);
             generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr12Reg,
@@ -2942,8 +2942,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
          }
          else if (comp()->target().isAIX() || (comp()->target().isLinux() && comp()->target().is64Bit()))
          {
-         generateTrg1MemInstruction(cg, TR::InstOpCode::Op_load, callNode, gr2Reg,
-                                    TR::MemoryReference::createWithDisplacement(cg, cg->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
+         generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr2Reg,
+                                    TR::MemoryReference::createWithDisplacement(cg(), cg()->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
          }
       gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
       gcPoint->PPCNeedsGCMap(regMapMask);
@@ -2981,7 +2981,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode,
       generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
       if (comp()->target().isAIX())
          generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr2Reg,
-                                    TR::MemoryReference::createWithDisplacement(cg, cg->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
+                                    TR::MemoryReference::createWithDisplacement(cg(), cg()->getMethodMetaDataRegister(), offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
       gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
       gcPoint->PPCNeedsGCMap(regMapMask);
 
