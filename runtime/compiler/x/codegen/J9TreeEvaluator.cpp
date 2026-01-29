@@ -3994,7 +3994,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    bool use64BitClasses = comp->target().is64Bit() &&
                           (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                           (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
-   
+
    TR::X86DataSnippet *cacheSnippet = NULL;
    TR::LabelSymbol *cacheHitLabel = NULL;
    TR::LabelSymbol *cacheMissLabel = NULL;
@@ -4100,10 +4100,13 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    else
       {
+      TR::Register *fromClassDepthReg = srm->findOrCreateScratchRegister();
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "isAssignableFromStats/toClassDepthKnown"), 1, TR::DebugCounter::Punitive);
       // cast class depth >= obj class depth, return false
-      generateMemImmInstruction(TR::InstOpCode::CMP2MemImm2, node,
-            generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
+      cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
+               fromClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
+      generateRegImmInstruction(TR::InstOpCode::CMP2RegImm2, node,
+            generateX86MemoryReference(fromClassDepthReg, offsetof(J9Class, classDepthAndFlags), cg), toClassDepth, cg);
       static auto jumpInstr = feGetEnv("jle") != NULL ? TR::InstOpCode::JLE4 : TR::InstOpCode::JBE4;
       cursor = generateLabelInstruction(jumpInstr, node, failLabel, cg);
       }
@@ -4129,7 +4132,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
          generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, toClassDepthReg, 2, cg);
          }
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
-            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, use64BitClasses ? 3 : 2, cg), cg);
+            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, use64BitClasses ? 3 : 2, 0, cg), cg);
       srm->reclaimScratchRegister(toClassDepthReg);
       }
    else
