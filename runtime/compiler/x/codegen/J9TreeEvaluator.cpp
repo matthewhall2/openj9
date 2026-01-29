@@ -5113,6 +5113,9 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
             {
             return generateInlinedIsAssignableFrom(node, cg);
             }
+         else {
+            return TR::TreeEvaluator::performCall(node, false, false, cg);
+         }
          break;
       default:
          TR_ASSERT(false, "Incorrect Op Code %d.", node->getOpCodeValue());
