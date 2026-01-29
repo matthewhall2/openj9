@@ -4265,7 +4265,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    startLabel->setStartInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
    // initial result is true
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 1, cg);
 
    bool trace = comp->getOption(TR_TraceCG);
    OMR::Logger *log = comp->log();
@@ -4332,8 +4332,11 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       if (isToClassKnownInterface || isToClassUnknown)
          {
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknown"), 1, TR::DebugCounter::Punitive);
-         //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, false);
+         static bool oolForInterface = feGetEnv("oolInterface") != NULL;
+         if (oolForInterface)
+            generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+         else 
+            generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, false);
          }
       
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
@@ -4362,7 +4365,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       {
       debugObj->addInstructionComment(cursor, "-->Test failed");
       }
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 0, cg);
 
    srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
