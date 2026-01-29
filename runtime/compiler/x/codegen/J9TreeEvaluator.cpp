@@ -4198,8 +4198,17 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    {
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
-   TR::Register *fromClassReg = cg->evaluate(fromClass);
-   TR::Register *toClassReg = cg->evaluate(toClass);
+   
+   TR::Register *fromClassReg = fromClass->getRegister();
+   if (fromClassReg == NULL)
+      {
+      fromClassReg = cg->evaluate(fromClass);
+      }
+    TR::Register *toClassReg = toClass->getRegister();
+   if (toClassReg == NULL)
+      {
+      toClassReg = cg->evaluate(toClass);
+      }
 
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
