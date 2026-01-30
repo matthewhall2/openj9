@@ -4384,8 +4384,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
    node->setRegister(resultReg);
-   cg->decReferenceCount(node->getFirstChild());
-   cg->decReferenceCount(node->getSecondChild());
+   cg->recursivelyDecReferenceCount(node->getFirstChild());
+   cg->recursivelyDecReferenceCount(node->getSecondChild());
    return resultReg;
    }
 
