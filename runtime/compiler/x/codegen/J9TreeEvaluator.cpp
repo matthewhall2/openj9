@@ -4294,7 +4294,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
      
          logprintf(trace, log, "%s: toClass is array class - only helper generated\n", node->getOpCode().getName());
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+       //  generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
       
       static bool delayEqualityTest = feGetEnv("delayEqualityTest") != NULL;
    if (!delayEqualityTest)
