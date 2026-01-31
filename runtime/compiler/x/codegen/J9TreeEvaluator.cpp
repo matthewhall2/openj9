@@ -4358,7 +4358,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          // because of the unlikely, but this possible, case of calling Class.isAssignableFrom on equal interfaces
          cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/NormalClass/run"), 1, TR::DebugCounter::Undetermined);
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, failLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
-         }
+         } 
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       }
 
