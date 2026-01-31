@@ -5103,6 +5103,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
 
    bool isCheckCast = false;
    static bool useOld = feGetEnv("useOldAssignableFrom") != NULL;
+   static bool evalBeforeHelper = feGetEnv("evalBeforeHelper") != NULL;
    switch (node->getOpCodeValue())
       {
       case TR::checkcast:
@@ -5117,6 +5118,12 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          if (!useOld && cg->supportsInliningOfIsAssignableFrom())
             {
             return generateInlinedIsAssignableFrom(node, cg);
+            }
+         else if (evalBeforeHelper)
+            {
+            TR::Register *reg1 = cg->evaluate(node->getChild(0));
+            TR::Register *reg2 = cg->evaluate(node->getChild(1));
+            return TR::TreeEvaluator::performCall(node, false, false, cg);
             }
          else {
             return TR::TreeEvaluator::performCall(node, false, false, cg);
