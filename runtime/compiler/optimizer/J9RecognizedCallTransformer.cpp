@@ -68,8 +68,10 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
    // The call to Class.isAssignableFrom will usually be direct, but could be
    // indirect in rare circumstances.  Make sure any NULLCHK that might appear
    // for a dereference of the vft-symbol is preserved.
-   //
-   TR::TransformUtil::separateNullCheck(comp(), treetop, trace());
+   //ƒ
+
+   if (node->getOpCode().isIndirect())
+      TR::TransformUtil::separateNullCheck(comp(), treetop, trace());
 
    auto toClass = node->getArgument(0);
    auto fromClass = node->getArgument(1);
