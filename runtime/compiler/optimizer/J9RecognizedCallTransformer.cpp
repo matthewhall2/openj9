@@ -1565,7 +1565,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 
    if (comp()->cg()->enableJitDispatchJ9Method())
       {
-      if (isLinkToSpecial)
+      if (isLinkToSpecial) 
          {
          // Null check the receiver
          TR::SymbolReference *nullCheckSymRef =
