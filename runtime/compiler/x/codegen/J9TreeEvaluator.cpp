@@ -4042,7 +4042,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       {
       debugObj->addInstructionComment(cursor, "-->Start of ITable walk");
       }
-   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
+   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(use64BitClasses), node, iTableReg, iTableReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, interfaceReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, interfaceReg, toClassReg, cg);
