@@ -4303,8 +4303,13 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       {
 
       static bool onlyHelper = feGetEnv("onlyHelper") != NULL;
-      if (onlyHelper)
-               generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+      if (onlyHelper) {
+
+          tempReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
+      generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
+      }
+
       // no need for null checks. They are inserted prior to isAssignableFrom call in RecognizedCallTransformer
 
      
