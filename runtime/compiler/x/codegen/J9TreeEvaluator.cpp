@@ -4400,6 +4400,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
       }
    deps->stopAddingConditions();
+   cg->stopUsingRegister()
 
    doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
@@ -4519,8 +4520,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    // Decrement use counts on the children
    //
-   // cg->decReferenceCount(node->getFirstChild());
-   // cg->decReferenceCount(node->getSecondChild());
+   cg->decReferenceCount(node->getFirstChild());
+   cg->decReferenceCount(node->getSecondChild());
    }
 
 static void
