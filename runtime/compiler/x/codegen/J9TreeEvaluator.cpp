@@ -4263,7 +4263,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
                      TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/toClassIsArray"));
       }
 
-   TR::Register* resultReg = NULL;
+   TR::Register* resultReg = cg->allocateRegister();
    TR::Register *tempReg = NULL;
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
  //  only needed for array case
