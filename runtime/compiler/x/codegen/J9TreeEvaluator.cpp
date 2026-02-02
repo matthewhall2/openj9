@@ -4136,7 +4136,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       //    generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, toClassDepthReg, 2, cg);
       //    }
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
-            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, cg->comp()->target().is64Bit()?3:2, cg), cg);
+            generateX86MemoryReference(superclassArrayReg, toClassDepthReg, (uint8_t)(cg->comp()->target().is64Bit()?3:2), cg), cg);
       srm->reclaimScratchRegister(toClassDepthReg);
       }
    else
