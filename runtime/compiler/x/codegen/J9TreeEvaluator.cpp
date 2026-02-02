@@ -4602,6 +4602,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    
    auto linkageProperties = linkage->getProperties();
    deps->addPostCondition(resultReg, linkageProperties.getIntegerReturnRegister(), cg);
+   deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (toClassReg != fromClassReg)
       {
