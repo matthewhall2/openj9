@@ -4269,12 +4269,12 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
  //  only needed for array case
 
 
-      TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
-      tempReg = TR::TreeEvaluator::performCall(node, false, false, cg);
-      generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
-      generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-      og.endOutlinedInstructionSequence();
+      // TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+      // cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
+      // tempReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      // generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
+      // generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
+      // og.endOutlinedInstructionSequence();
      
 
    startLabel->setStartInternalControlFlow();
