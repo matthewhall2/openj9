@@ -4196,6 +4196,9 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
+    TR_ASSERT_FATAL_WITH_NODE(node, node->getNumChildren() == 2, "call should have exactly 2 children\n");
+   TR_ASSERT_FATAL_WITH_NODE(node, node->getOpCode().isCallDirect(), "call should be direct\n");
+
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
    
@@ -4210,6 +4213,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       toClassReg = cg->evaluate(toClass);
       }
 
+  
    TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
