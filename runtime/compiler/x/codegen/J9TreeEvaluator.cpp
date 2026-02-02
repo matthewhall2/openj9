@@ -4400,7 +4400,6 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
       }
    deps->stopAddingConditions();
-   cg->stopUsingRegister()
 
    doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
