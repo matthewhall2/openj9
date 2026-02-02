@@ -4264,13 +4264,15 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
 
    TR::Register* resultReg = NULL;
+   TR::Register *tempReg = NULL;
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
  //  only needed for array case
 
 
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
-      resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      tempReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       og.endOutlinedInstructionSequence();
      
@@ -4384,7 +4386,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 0, cg);
 
    srm->stopUsingRegisters();
-   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
+   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 4 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
    TR::Linkage *linkage = cg->getLinkage(runtimeHelperLinkage(TR_checkAssignable));
    
@@ -4392,6 +4394,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
   // deps->addPostCondition(resultReg, linkageProperties.getIntegerReturnRegister(), cg);
    deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(tempReg, TR::RealRegister::NoReg, cg);
    if (toClassReg != fromClassReg)
       {
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
