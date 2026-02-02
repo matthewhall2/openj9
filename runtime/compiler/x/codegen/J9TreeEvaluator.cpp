@@ -4261,7 +4261,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
-      resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+      resultReg = TR::TreeEvaluator::performHelperCall(node, node->getSymbolReference(), TR::icall, false, cg);
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       og.endOutlinedInstructionSequence();
      
