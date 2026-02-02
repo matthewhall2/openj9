@@ -4123,7 +4123,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
       }
    if (toClassDepth == -1)
       {
-      if (use64BitClasses)
+      if (comp->target().is64Bit())
          {
          generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 3, cg);
          }
