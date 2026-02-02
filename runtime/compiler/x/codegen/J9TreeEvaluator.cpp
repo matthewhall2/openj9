@@ -4258,7 +4258,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::Register* resultReg = NULL;
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
  //  only needed for array case
-   
+
+
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
       resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
@@ -4377,7 +4378,10 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
-   deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
+   TR::Linkage *linkage = cg->getLinkage(runtimeHelperLinkage(TR_checkAssignable));
+   
+   auto linkageProperties = linkage->getProperties();
+   deps->addPostCondition(resultReg, linkageProperties.getIntegerReturnRegister(), cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (toClassReg != fromClassReg)
       {
@@ -14185,6 +14189,7 @@ J9::X86::TreeEvaluator::generateFillInDataBlockSequenceForUnresolvedField (TR::C
    TR_RuntimeHelper helperIndex = isWrite? (isStatic ?  TR_jitResolveStaticFieldSetterDirect: TR_jitResolveFieldSetterDirect):
                                            (isStatic ?  TR_jitResolveStaticFieldDirect: TR_jitResolveFieldDirect);
    TR::Linkage *linkage = cg->getLinkage(runtimeHelperLinkage(helperIndex));
+   
    auto linkageProperties = linkage->getProperties();
    intptr_t offsetInDataBlock = isStatic ? offsetof(J9JITWatchedStaticFieldData, fieldAddress): offsetof(J9JITWatchedInstanceFieldData, offset);
 
