@@ -4271,7 +4271,12 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
       TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ArrayClassTest"), 1, TR::DebugCounter::Punitive);
-      tempReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+      static bool useCallOp = feGetEnv("useCallOp") != NULL;
+      static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+      if (useHelperCall)
+         tempReg = TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
+      else
+         tempReg = TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
       generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
       generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
       og.endOutlinedInstructionSequence();
