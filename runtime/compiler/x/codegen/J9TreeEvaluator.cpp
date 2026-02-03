@@ -4224,6 +4224,10 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    og.endOutlinedInstructionSequence();
 
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+      generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, returnReg, 1, cg);
+
+   // generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+   // generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
    generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
    
   
