@@ -4241,7 +4241,6 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
 
-   
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
@@ -4288,11 +4287,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
   srm->addScratchRegistersToDependencyList(deps);
+  
   srm->stopUsingRegisters();
    deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+   deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(returnReg);
    return returnReg;
