@@ -4393,7 +4393,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    startLabel->setStartInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
    // initial result is true
-   generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 1, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
    bool trace = comp->getOption(TR_TraceCG);
    OMR::Logger *log = comp->log();
@@ -4501,7 +4501,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       {
       debugObj->addInstructionComment(cursor, "-->Test failed");
       }
-   generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 0, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
 
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)2, 4 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
@@ -5255,23 +5255,23 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-         return testAssignableFrom(node, cg);
-         // if (!useOld && cg->supportsInliningOfIsAssignableFrom())
-         //    {
-         //    return generateInlinedIsAssignableFrom(node, cg);
-         //    }
-         // else if (evalBeforeHelper)
-         //    {
-         //    TR::Register *reg1 = cg->evaluate(node->getChild(0));
-         //    TR::Register *reg2 = cg->evaluate(node->getChild(1));
-         //    auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
-         //    cg->recursivelyDecReferenceCount(node->getChild(0));
-         //    cg->recursivelyDecReferenceCount(node->getChild(1));
-         //    }
-         // else {
-         //    return TR::TreeEvaluator::performCall(node, false, false, cg);
-         // }
-         // break;
+       //  return testAssignableFrom(node, cg);
+         if (!useOld && cg->supportsInliningOfIsAssignableFrom())
+            {
+            return generateInlinedIsAssignableFrom(node, cg);
+            }
+         else if (evalBeforeHelper)
+            {
+            TR::Register *reg1 = cg->evaluate(node->getChild(0));
+            TR::Register *reg2 = cg->evaluate(node->getChild(1));
+            auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
+            cg->recursivelyDecReferenceCount(node->getChild(0));
+            cg->recursivelyDecReferenceCount(node->getChild(1));
+            }
+         else {
+            return TR::TreeEvaluator::performCall(node, false, false, cg);
+         }
+         break;
       default:
          TR_ASSERT(false, "Incorrect Op Code %d.", node->getOpCodeValue());
          break;
