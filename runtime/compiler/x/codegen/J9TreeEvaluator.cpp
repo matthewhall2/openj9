@@ -4464,7 +4464,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
 
    if (isToClassKnownArray) {
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
@@ -4493,9 +4493,6 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    if (isToClassUnknown || isToClassKnownInterface) {
       generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
    }
-   
-
-   
    
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    if (isToClassUnknown) {
