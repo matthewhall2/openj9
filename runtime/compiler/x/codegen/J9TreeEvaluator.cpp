@@ -4404,9 +4404,11 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
   // deps->addPostCondition(resultReg, linkageProperties.getIntegerReturnRegister(), cg);
    deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+   deps->addPreCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(tempReg, TR::RealRegister::NoReg, cg);
    if (toClassReg != fromClassReg)
       {
+      deps->addPreCondition(toClassReg, TR::RealRegister::NoReg, cg);
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
       }
    deps->stopAddingConditions();
