@@ -4396,7 +4396,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 0, cg);
 
    srm->stopUsingRegisters();
-   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 4 + srm->numAvailableRegisters(), cg);
+   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)2, 4 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
    TR::Linkage *linkage = cg->getLinkage(runtimeHelperLinkage(TR_checkAssignable));
    
