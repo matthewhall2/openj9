@@ -5148,7 +5148,9 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
             {
             TR::Register *reg1 = cg->evaluate(node->getChild(0));
             TR::Register *reg2 = cg->evaluate(node->getChild(1));
-            return TR::TreeEvaluator::performCall(node, false, false, cg);
+            auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
+            cg->recursivelyDecReferenceCount(node->getChild(0));
+            cg->recursivelyDecReferenceCount(node->getChild(1));
             }
          else {
             return TR::TreeEvaluator::performCall(node, false, false, cg);
