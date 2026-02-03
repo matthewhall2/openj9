@@ -4241,9 +4241,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
 
-
+   
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   if (isToClassUnknown)
+      {
+      
+      
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
@@ -4259,14 +4263,20 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
       generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
    srm->reclaimScratchRegister(toClassROMClassReg);
-   generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
+      }
+
+   if (isToClassUnknown || isToClassKnownInterface) {
+      generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
+   }
    
 
    
    
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
+   if (isToClassUnknown) {
    generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg); 
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   }
    //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
