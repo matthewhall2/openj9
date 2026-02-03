@@ -4208,18 +4208,25 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    endLabel->setEndInternalControlFlow();
 
-   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
-   
-   static bool useCallOp = feGetEnv("useCallOp") != NULL;
+   TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+    static bool useCallOp = feGetEnv("useCallOp") != NULL;
       static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
    TR::Register * returnReg = NULL;
       if (useHelperCall)
          returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
       else
          returnReg =  TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+   og.endOutlinedInstructionSequence();
+
+   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+   
+  
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
