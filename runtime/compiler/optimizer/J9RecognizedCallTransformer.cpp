@@ -83,7 +83,8 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
    node->setNumChildren(2);
 
    TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
-   TR::Node::recreateWithSymRef(node, TR::icall, jitCheckAssignableSR);
+   static bool useCallOp = feGetEnv("useCallOp") != NULL;
+   TR::Node::recreateWithSymRef(node, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, jitCheckAssignableSR);
 
    TR::SymbolReference *classFromJavaLangClassSR = comp()->getSymRefTab()->findOrCreateClassFromJavaLangClassSymbolRef();
 
