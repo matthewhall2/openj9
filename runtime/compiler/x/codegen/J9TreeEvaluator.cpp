@@ -4198,6 +4198,24 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
+inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+   
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
+   
+   static bool useCallOp = feGetEnv("useCallOp") != NULL;
+      static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+      if (useHelperCall)
+         return TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
+      else
+         return TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
+   //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
+  //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
+
+   }
 
 
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
@@ -5152,22 +5170,23 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-         if (!useOld && cg->supportsInliningOfIsAssignableFrom())
-            {
-            return generateInlinedIsAssignableFrom(node, cg);
-            }
-         else if (evalBeforeHelper)
-            {
-            TR::Register *reg1 = cg->evaluate(node->getChild(0));
-            TR::Register *reg2 = cg->evaluate(node->getChild(1));
-            auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
-            cg->recursivelyDecReferenceCount(node->getChild(0));
-            cg->recursivelyDecReferenceCount(node->getChild(1));
-            }
-         else {
-            return TR::TreeEvaluator::performCall(node, false, false, cg);
-         }
-         break;
+         return testAssignableFrom(node, cg);
+         // if (!useOld && cg->supportsInliningOfIsAssignableFrom())
+         //    {
+         //    return generateInlinedIsAssignableFrom(node, cg);
+         //    }
+         // else if (evalBeforeHelper)
+         //    {
+         //    TR::Register *reg1 = cg->evaluate(node->getChild(0));
+         //    TR::Register *reg2 = cg->evaluate(node->getChild(1));
+         //    auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
+         //    cg->recursivelyDecReferenceCount(node->getChild(0));
+         //    cg->recursivelyDecReferenceCount(node->getChild(1));
+         //    }
+         // else {
+         //    return TR::TreeEvaluator::performCall(node, false, false, cg);
+         // }
+         // break;
       default:
          TR_ASSERT(false, "Incorrect Op Code %d.", node->getOpCodeValue());
          break;
