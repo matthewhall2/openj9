@@ -4229,11 +4229,33 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
    og.endOutlinedInstructionSequence();
 
+   int32_t toClassDepth = -1;
+   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+
+   bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+   bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+   bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
 
+
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
+   TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
+         // testing if toClass is an array class
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
+         // If toClass is array, call out of line helper
+         cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+         if (debugObj)
+            debugObj->addInstructionComment(cursor, "-->Test if array class");
+
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+   srm->reclaimScratchRegister(toClassROMClassReg);
+   
    generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
@@ -4241,7 +4263,9 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
+  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
+  srm->addScratchRegistersToDependencyList(deps);
+  srm->stopUsingRegisters();
    deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
