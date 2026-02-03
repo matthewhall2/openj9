@@ -4209,8 +4209,14 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    endLabel->setEndInternalControlFlow();
+   auto comp = cg->comp();
+
+   auto use64BitClasses = comp->target().is64Bit() &&
+               (!TR::Compiler->om.generateCompressedObjectHeaders() ||
+               (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
     static bool useCallOp = feGetEnv("useCallOp") != NULL;
@@ -4223,14 +4229,16 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
    og.endOutlinedInstructionSequence();
 
-   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
+   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
 
-   // generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
-   // generateLabelInstruction(TR::InstOpCode::JE4, node, doneLabel, cg);
+   generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+
+   generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 0, cg);
    
-  
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
