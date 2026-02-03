@@ -4214,6 +4214,9 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
     TR::Register *toClassReg = toClass->getRegister();
  //  if (toClassReg == NULL)
   //    {
+
+
+
       toClassReg = cg->evaluate(toClass);
    //   }
 
@@ -4395,10 +4398,10 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
       }
    generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, resultReg, 0, cg);
 
-   srm->stopUsingRegisters();
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)2, 4 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
    TR::Linkage *linkage = cg->getLinkage(runtimeHelperLinkage(TR_checkAssignable));
+   srm->stopUsingRegisters();
    
    auto linkageProperties = linkage->getProperties();
   // deps->addPostCondition(resultReg, linkageProperties.getIntegerReturnRegister(), cg);
@@ -4416,8 +4419,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    doneLabel->setEndInternalControlFlow();
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
    node->setRegister(resultReg);
-   cg->decReferenceCount(node->getChild(0));
-      cg->decReferenceCount(node->getChild(1));
+   // cg->decReferenceCount(node->getChild(0));
+   //    cg->decReferenceCount(node->getChild(1));
    return resultReg;
    }
 
