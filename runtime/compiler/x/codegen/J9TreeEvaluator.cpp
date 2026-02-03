@@ -4265,7 +4265,9 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+   generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg); 
+   //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 0, cg);
