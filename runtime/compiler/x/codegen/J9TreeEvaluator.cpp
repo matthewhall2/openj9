@@ -4198,6 +4198,8 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
+
+
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
     TR_ASSERT_FATAL_WITH_NODE(node, node->getNumChildren() == 2, "call should have exactly 2 children\n");
@@ -4420,8 +4422,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    generateLabelInstruction(TR::InstOpCode::label, node, doneLabel, deps, cg);
    node->setRegister(resultReg);
    cg->recursivelyDecReferenceCount(node->getChild(0));
-      cg->recursivelyDecReferenceCount(node->getChild(1));
-   return resultReg;
+   cg->recursivelyDecReferenceCount(node->getChild(1));
+   return node->getRegister();
    }
 
 inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::CodeGenerator* cg)
