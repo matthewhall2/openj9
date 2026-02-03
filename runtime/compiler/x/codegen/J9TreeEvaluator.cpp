@@ -4205,16 +4205,32 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    TR::Register *fromClassReg = cg->evaluate(fromClass);
    TR::Register *toClassReg = cg->evaluate(toClass);
+
+   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
+   startLabel->setStartInternalControlFlow();
+   endLabel->setEndInternalControlFlow();
+
+   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
    
    static bool useCallOp = feGetEnv("useCallOp") != NULL;
       static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+   TR::Register * returnReg = NULL;
       if (useHelperCall)
-         return TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
+         returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
       else
-         return TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
+         returnReg =  TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-
+   TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
+   deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+   if (fromClassReg != toClassReg)
+      deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+   generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
+   node->setRegister(returnReg);
+   return returnReg;
+   
    }
 
 
