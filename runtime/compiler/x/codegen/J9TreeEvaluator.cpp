@@ -4223,7 +4223,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
    og.endOutlinedInstructionSequence();
 
-   generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, returnReg, 1, cg);
+ //  generateRegImmInstruction(TR::InstOpCode::MOV8RegImm64, node, returnReg, 1, cg);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
 
    // generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
