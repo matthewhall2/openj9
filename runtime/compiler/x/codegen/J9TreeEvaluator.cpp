@@ -4244,11 +4244,11 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
    if (isToClassUnknown)
       {
       
       
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(3);
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
