@@ -4259,7 +4259,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
       generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
    srm->reclaimScratchRegister(toClassROMClassReg);
-   generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endlabel, falseLabel, false);
+   generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
    
 
    
