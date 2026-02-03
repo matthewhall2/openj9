@@ -5255,23 +5255,23 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
          // disabled if TR_disableInliningOfIsAssignableFrom is set
-       //  return testAssignableFrom(node, cg);
-         if (!useOld && cg->supportsInliningOfIsAssignableFrom())
-            {
-            return generateInlinedIsAssignableFrom(node, cg);
-            }
-         else if (evalBeforeHelper)
-            {
-            TR::Register *reg1 = cg->evaluate(node->getChild(0));
-            TR::Register *reg2 = cg->evaluate(node->getChild(1));
-            auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
-            cg->recursivelyDecReferenceCount(node->getChild(0));
-            cg->recursivelyDecReferenceCount(node->getChild(1));
-            }
-         else {
-            return TR::TreeEvaluator::performCall(node, false, false, cg);
-         }
-         break;
+         return testAssignableFrom(node, cg);
+         // if (!useOld && cg->supportsInliningOfIsAssignableFrom())
+         //    {
+         //    return generateInlinedIsAssignableFrom(node, cg);
+         //    }
+         // else if (evalBeforeHelper)
+         //    {
+         //    TR::Register *reg1 = cg->evaluate(node->getChild(0));
+         //    TR::Register *reg2 = cg->evaluate(node->getChild(1));
+         //    auto r =  TR::TreeEvaluator::performCall(node, false, false, cg);
+         //    cg->recursivelyDecReferenceCount(node->getChild(0));
+         //    cg->recursivelyDecReferenceCount(node->getChild(1));
+         //    }
+         // else {
+         //    return TR::TreeEvaluator::performCall(node, false, false, cg);
+         // }
+         // break;
       default:
          TR_ASSERT(false, "Incorrect Op Code %d.", node->getOpCodeValue());
          break;
