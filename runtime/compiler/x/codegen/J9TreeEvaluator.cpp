@@ -4210,6 +4210,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
@@ -4252,8 +4253,18 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
         
          generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+
+         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+
+      generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
    srm->reclaimScratchRegister(toClassROMClassReg);
+   generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endlabel, falseLabel, false);
    
+
+   
+   
+   generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
