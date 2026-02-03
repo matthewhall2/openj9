@@ -4250,9 +4250,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          // If toClass is array, call out of line helper
          cursor = generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
-         if (debugObj)
-            debugObj->addInstructionComment(cursor, "-->Test if array class");
-
+        
          generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
    srm->reclaimScratchRegister(toClassROMClassReg);
    
