@@ -4238,8 +4238,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
 
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
@@ -4247,7 +4247,6 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    if (isToClassKnownArray) {
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
-
    }
    if (isToClassUnknown)
       {
