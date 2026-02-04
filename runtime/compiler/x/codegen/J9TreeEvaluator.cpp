@@ -4224,6 +4224,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
 
+    TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
+   
+   oolDeps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+   if (fromClassReg != toClassReg)
+      oolDeps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+  
+
    auto use64BitClasses = comp->target().is64Bit() &&
                (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
@@ -4236,7 +4243,9 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
       else
          returnReg =  TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+        oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+    oolDeps->stopAddingConditions();
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, oolDeps, cg);
    og.endOutlinedInstructionSequence();
 
    int32_t toClassDepth = -1;
