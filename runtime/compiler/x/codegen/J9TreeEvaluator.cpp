@@ -80,7 +80,7 @@
 #include "codegen/J9WatchedStaticFieldSnippet.hpp"
 #include "codegen/X86FPConversionSnippet.hpp"
 
-#define iComment(str, cursor) if (debugObj) debugObj->addInstructionComment(cursor, (const_cast<char*>(str)));
+#define iComment2(str, cursor) if (debugObj) debugObj->addInstructionComment(cursor, (const_cast<char*>(str)));
 
 
 #ifdef TR_TARGET_64BIT
@@ -4236,10 +4236,10 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
    outlinedHelperCall->swapInstructionListsWithCompilation();
    TR::Instruction *cursor = generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
-    iComment("ool label start", cursor);
+    iComment2("ool label start", cursor);
    resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
  cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
-   iComment("ool label start", cursor);
+   iComment2("ool label start", cursor);
    outlinedHelperCall->swapInstructionListsWithCompilation();
         
 //  TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
