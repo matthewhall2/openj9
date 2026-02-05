@@ -4226,8 +4226,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
   //    if (useHelperCall)
        //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
   //    else
-     generateRegInstruction(TR::InstOpCode::PUSHReg, node, objClassReg, cg);
-      generateRegInstruction(TR::InstOpCode::PUSHReg, node, castClassReg, cg);
+   //   generateRegInstruction(TR::InstOpCode::PUSHReg, node, objClassReg, cg);
+   //    generateRegInstruction(TR::InstOpCode::PUSHReg, node, castClassReg, cg);
       // auto call = generateHelperCallInstruction(node, TR_throwClassCastException, NULL, cg);
       // call->setNeedsGCMap(0xFF00FFFF);
       // call->setAdjustsFramePointerBy(-2*(int32_t)sizeof(J9Class*));
