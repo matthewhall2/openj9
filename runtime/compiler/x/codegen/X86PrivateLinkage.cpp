@@ -1124,7 +1124,7 @@ J9::X86::PrivateLinkage::buildDirectDispatch(
          }
       }
    TR::SymbolReference * ref = callNode->getSymbolReference();
-      if (cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable))
+      if (ref == cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable))
          {
          printf("x86 normal call for checkassignable\n");
          }
