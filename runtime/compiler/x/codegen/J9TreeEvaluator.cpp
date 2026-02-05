@@ -4231,6 +4231,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
    outlinedHelperCall->swapInstructionListsWithCompilation();
    generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
+   resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
  generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
    outlinedHelperCall->swapInstructionListsWithCompilation();
         
