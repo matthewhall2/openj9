@@ -6253,6 +6253,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
    bool isCheckCast = false;
    static bool useOld = feGetEnv("useOldAssignableFrom") != NULL;
    static bool evalBeforeHelper = feGetEnv("evalBeforeHelper") != NULL;
+    TR::SymbolReference * ref = node->getSymbolReference();
    switch (node->getOpCodeValue())
       {
       case TR::checkcast:
@@ -6263,7 +6264,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
 
          break;
       case TR::icall: // TR_checkAssignable
-         TR::SymbolReference * ref = node->getSymbolReference();
+       //  TR::SymbolReference * ref = node->getSymbolReference();
          TR_ASSERT_FATAL(ref == cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable), "must be checkAssignable\n");
          // disabled if TR_disableInliningOfIsAssignableFrom is set
          if (!useOld)
