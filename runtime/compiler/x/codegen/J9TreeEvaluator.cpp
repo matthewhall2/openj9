@@ -4323,7 +4323,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
   srm->addScratchRegistersToDependencyList(deps);
   
   srm->stopUsingRegisters();
-   deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
