@@ -4272,7 +4272,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
 
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   printf("evalugin isAssignableFrom\n");
+   //printf("evalugin isAssignableFrom\n");
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
