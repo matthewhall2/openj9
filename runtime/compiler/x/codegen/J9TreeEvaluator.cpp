@@ -4235,11 +4235,11 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
    outlinedHelperCall->swapInstructionListsWithCompilation();
-   TR::Instruction *cursor = generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
-    iComment2("ool label start", cursor);
-   resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
- cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
-   iComment2("ool label start", cursor);
+//    TR::Instruction *cursor = generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
+//     iComment2("ool label start", cursor);
+//    resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+//  cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+   //iComment2("ool label start", cursor);
    outlinedHelperCall->swapInstructionListsWithCompilation();
         
 //  TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
@@ -4342,7 +4342,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 4 + srm->numAvailableRegisters(), cg);
+  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 8 + srm->numAvailableRegisters(), cg);
   srm->addScratchRegistersToDependencyList(deps);
   
   srm->stopUsingRegisters();
@@ -4351,6 +4351,32 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+
+
+   TR::Node *callNode = outlinedHelperCall->getCallNode();
+   TR::Register *reg;
+
+   if (callNode->getFirstChild() == node->getFirstChild())
+      {
+      reg = callNode->getFirstChild()->getRegister();
+      if (reg)
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+
+   if (callNode->getSecondChild() == node->getSecondChild())
+      {
+      reg = callNode->getSecondChild()->getRegister();
+      if (reg)
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+   if (callNode->getRegister() == resultReg)
+      {
+       reg = callNode->getRegister();
+      if (reg)
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+      
+   
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
