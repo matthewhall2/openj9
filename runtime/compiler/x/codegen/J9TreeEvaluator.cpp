@@ -4310,7 +4310,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
-   TR::Register *helperResultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+   TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
    generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
 
