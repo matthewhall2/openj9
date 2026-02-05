@@ -4262,6 +4262,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+   printf("evalugin isAssignableFrom\n");
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
@@ -5285,10 +5286,10 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       case TR::checkcast:
       case TR::checkcastAndNULLCHK:
          isCheckCast = true;
-         printf("checkcast\n");
+       //  printf("checkcast\n");
          break;
       case TR::instanceof:
-         printf("instanceof\n");
+      //   printf("instanceof\n");
          break;
       case TR::icall: // TR_checkAssignable
        //  TR::SymbolReference * ref = node->getSymbolReference();
