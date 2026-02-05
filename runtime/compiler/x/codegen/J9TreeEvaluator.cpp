@@ -4224,11 +4224,11 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
 
-    TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 3, cg);
+    
    
-   oolDeps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
-   if (fromClassReg != toClassReg)
-      oolDeps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+  // oolDeps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+ //  if (fromClassReg != toClassReg)
+ //     oolDeps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
   
 
    auto use64BitClasses = comp->target().is64Bit() &&
@@ -4238,13 +4238,14 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
     static bool useCallOp = feGetEnv("useCallOp") != NULL;
       static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+      TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
    TR::Register * returnReg = NULL;
-      if (useHelperCall)
-         returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, false, cg);
-      else
-         returnReg =  TR::TreeEvaluator::performCall(node, useCallOp ? node->getOpCode().isIndirect() : false, false, cg);
-        oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
-    oolDeps->stopAddingConditions();
+  //    if (useHelperCall)
+       //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+  //    else
+         returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
+  //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+   oolDeps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, oolDeps, cg);
    og.endOutlinedInstructionSequence();
 
@@ -4306,7 +4307,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
   srm->addScratchRegistersToDependencyList(deps);
   
   srm->stopUsingRegisters();
-   deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+ //  deps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
