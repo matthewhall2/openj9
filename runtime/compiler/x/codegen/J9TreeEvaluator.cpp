@@ -4209,12 +4209,6 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
-   TR::Node *fromClass = node->getFirstChild();
-   TR::Node *toClass = node->getSecondChild();
-   
-   TR::Register *fromClassReg = cg->evaluate(fromClass);
-   TR::Register *toClassReg = cg->evaluate(toClass);
-
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
@@ -4223,6 +4217,28 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    startLabel->setStartInternalControlFlow();
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
+
+   TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+    static bool useCallOp = feGetEnv("useCallOp") != NULL;
+      static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+      TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
+   TR::Register * returnReg = NULL;
+  //    if (useHelperCall)
+       //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+  //    else
+         returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
+  //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+  // oolDeps->stopAddingConditions();
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+   og.endOutlinedInstructionSequence();
+
+   TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+
+   TR::Register *fromClassReg = fromClass->getRegister();
+   TR::Register *toClassReg = toClass->getRegister();
+
+  
 
     
    
@@ -4235,19 +4251,6 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
                (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
-   TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
-    static bool useCallOp = feGetEnv("useCallOp") != NULL;
-      static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
-      TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
-   TR::Register * returnReg = NULL;
-  //    if (useHelperCall)
-       //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
-  //    else
-         returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
-  //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
-   oolDeps->stopAddingConditions();
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, oolDeps, cg);
-   og.endOutlinedInstructionSequence();
 
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
