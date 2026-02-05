@@ -5287,6 +5287,8 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
 
          break;
       case TR::icall: // TR_checkAssignable
+         TR::SymbolReference * ref = callNode->getSymbolReference();
+         TR_ASSERT_FATAL(ref == cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable), "must be checkAssignable\n");
          // disabled if TR_disableInliningOfIsAssignableFrom is set
          if (!useOld)
             return testAssignableFrom(node, cg);
