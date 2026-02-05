@@ -4231,6 +4231,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       // auto call = generateHelperCallInstruction(node, TR_throwClassCastException, NULL, cg);
       // call->setNeedsGCMap(0xFF00FFFF);
       // call->setAdjustsFramePointerBy(-2*(int32_t)sizeof(J9Class*));
+      printf("generatingPerformCall for isAssignableFrom\n");
          returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
        //  call->setNeedsGCMap(0xFF00FFFF);
   //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
