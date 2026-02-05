@@ -105,10 +105,7 @@ class HelperLinkage : public TR::Linkage
    virtual TR::Register* buildDirectDispatch(TR::Node* callNode, bool spillFPRegs)
       {
       TR::SymbolReference * ref = callNode->getSymbolReference();
-      if (ref == cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable))
-         {
-         printf("x86 helper call for checkassignable\n");
-         }
+     
       HelperCallSite CallSite(callNode, cg());
       // Evaluate children
       for (int i = 0; i < callNode->getNumChildren(); i++)

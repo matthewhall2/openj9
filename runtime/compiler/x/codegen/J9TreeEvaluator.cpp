@@ -4211,39 +4211,40 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
-   TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
 
-   TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
-    static bool useCallOp = feGetEnv("useCallOp") != NULL;
-      static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
-      TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
-   TR::Register * returnReg = NULL;
-  //    if (useHelperCall)
-       //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
-  //    else
-   //   generateRegInstruction(TR::InstOpCode::PUSHReg, node, objClassReg, cg);
-   //    generateRegInstruction(TR::InstOpCode::PUSHReg, node, castClassReg, cg);
-      // auto call = generateHelperCallInstruction(node, TR_throwClassCastException, NULL, cg);
-      // call->setNeedsGCMap(0xFF00FFFF);
-      // call->setAdjustsFramePointerBy(-2*(int32_t)sizeof(J9Class*));
-      printf("generatingPerformCall for isAssignableFrom\n");
-         returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
-       //  call->setNeedsGCMap(0xFF00FFFF);
-  //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
-  // oolDeps->stopAddingConditions();
-   generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
-   og.endOutlinedInstructionSequence();
+//    TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+//     static bool useCallOp = feGetEnv("useCallOp") != NULL;
+//       static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+//       TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
+//    TR::Register * returnReg = NULL;
+//   //    if (useHelperCall)
+//        //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+//   //    else
+//    //   generateRegInstruction(TR::InstOpCode::PUSHReg, node, objClassReg, cg);
+//    //    generateRegInstruction(TR::InstOpCode::PUSHReg, node, castClassReg, cg);
+//       // auto call = generateHelperCallInstruction(node, TR_throwClassCastException, NULL, cg);
+//       // call->setNeedsGCMap(0xFF00FFFF);
+//       // call->setAdjustsFramePointerBy(-2*(int32_t)sizeof(J9Class*));
+//     //  printf("generatingPerformCall for isAssignableFrom\n");
+//          returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
+//        //  call->setNeedsGCMap(0xFF00FFFF);
+//   //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+//   // oolDeps->stopAddingConditions();
+//    generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+//    og.endOutlinedInstructionSequence();
 
    TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
 
-   TR::Register *fromClassReg = fromClass->getRegister();
-   TR::Register *toClassReg = toClass->getRegister();
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
+   TR::Register *resultReg = cg->allocateRegister();
 
   
 
@@ -4268,14 +4269,14 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 1, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
 
    if (isToClassKnownArray) {
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, arrayLabel, cg);
    }
    if (isToClassUnknown)
       {
@@ -4288,7 +4289,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
         
-         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, arrayLabel, cg);
 
          generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
@@ -4308,8 +4309,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    }
    //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
+   generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
+   TR::Register *helperResultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
+   generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, returnReg, 0, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
    
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
@@ -4323,8 +4329,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
-   node->setRegister(returnReg);
-   return returnReg;
+   node->setRegister(resultReg);
+   return resultReg;
    
    }
 
