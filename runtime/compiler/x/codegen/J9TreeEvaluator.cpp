@@ -4230,9 +4230,11 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
    outlinedHelperCall->swapInstructionListsWithCompilation();
-   generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
+   TR::Instruction *cursor = generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
+    iComment("ool label start", cursor);
    resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
- generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+ cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+   iComment("ool label start", cursor);
    outlinedHelperCall->swapInstructionListsWithCompilation();
         
 //  TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
