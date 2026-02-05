@@ -4301,7 +4301,12 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    if (isToClassUnknown || isToClassKnownInterface) {
       generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
    }
-   
+
+   generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
+   TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+   generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    if (isToClassUnknown) {
    generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
@@ -4309,10 +4314,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    }
    //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
 
-   generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
-   TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
-   generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   
 
    generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
@@ -5283,9 +5285,10 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       case TR::checkcast:
       case TR::checkcastAndNULLCHK:
          isCheckCast = true;
+         printf("checkcast\n")
          break;
       case TR::instanceof:
-
+         printf("instanceof\n");
          break;
       case TR::icall: // TR_checkAssignable
        //  TR::SymbolReference * ref = node->getSymbolReference();
