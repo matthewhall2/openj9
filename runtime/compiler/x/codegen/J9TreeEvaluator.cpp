@@ -4287,7 +4287,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
 
    if (isToClassKnownArray) {
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, arrayLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
    }
    if (isToClassUnknown)
       {
@@ -4337,7 +4337,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
   
   srm->stopUsingRegisters();
    deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
-   deps->addPostCondition(helperResultReg, TR::RealRegister::NoReg, cg);
+ //  deps->addPostCondition(helperResultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
