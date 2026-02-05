@@ -4319,11 +4319,12 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    
    //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
   //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
-  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 3 + srm->numAvailableRegisters(), cg);
+  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 4 + srm->numAvailableRegisters(), cg);
   srm->addScratchRegistersToDependencyList(deps);
   
   srm->stopUsingRegisters();
    deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(helperResultReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
    if (fromClassReg != toClassReg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
