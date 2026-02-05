@@ -104,6 +104,11 @@ class HelperLinkage : public TR::Linkage
    virtual TR::Register* buildIndirectDispatch(TR::Node *callNode) { TR_ASSERT(false, "Indirect dispatch is not currently supported"); return NULL; }
    virtual TR::Register* buildDirectDispatch(TR::Node* callNode, bool spillFPRegs)
       {
+      TR::SymbolReference * ref = callNode->getSymbolReference();
+      if (cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable))
+         {
+         printf("x86 helper call for checkassignable\n");
+         }
       HelperCallSite CallSite(callNode, cg());
       // Evaluate children
       for (int i = 0; i < callNode->getNumChildren(); i++)
