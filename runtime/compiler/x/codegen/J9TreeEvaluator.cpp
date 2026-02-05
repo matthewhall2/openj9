@@ -80,6 +80,9 @@
 #include "codegen/J9WatchedStaticFieldSnippet.hpp"
 #include "codegen/X86FPConversionSnippet.hpp"
 
+#define iComment(str, cursor) if (debugObj) debugObj->addInstructionComment(cursor, (const_cast<char*>(str)));
+
+
 #ifdef TR_TARGET_64BIT
 #include "codegen/AMD64PrivateLinkage.hpp"
 #endif
@@ -4209,6 +4212,8 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
 inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
+      TR_Debug * debugObj = cg->getDebug();
+
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
