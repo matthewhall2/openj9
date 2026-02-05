@@ -4300,7 +4300,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
          generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
         
-         generateLabelInstruction(TR::InstOpCode::JNE4, node, arrayLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
          generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
@@ -4312,11 +4312,11 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    if (isToClassUnknown || isToClassKnownInterface) {
       generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
    }
-
-   generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
-   TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
-   generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+å
+   // generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
+   // TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+   // generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
+   // generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    if (isToClassUnknown) {
