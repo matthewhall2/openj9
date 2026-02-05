@@ -4220,6 +4220,12 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    endLabel->setEndInternalControlFlow();
    auto comp = cg->comp();
 
+    TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+
+   TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg = cg->evaluate(toClass);
+
 
 TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
@@ -4250,11 +4256,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
   // generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
  //  og.endOutlinedInstructionSequence();
 
-   TR::Node *fromClass = node->getFirstChild();
-   TR::Node *toClass = node->getSecondChild();
-
-   TR::Register *fromClassReg = cg->evaluate(fromClass);
-   TR::Register *toClassReg = cg->evaluate(toClass);
+  
 
   
 
