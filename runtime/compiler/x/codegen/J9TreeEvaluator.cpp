@@ -4532,7 +4532,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    if (isToClassUnknown || isToClassKnownInterface) {
       generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
    }
-å
+
    // generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
    // TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
    // generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
