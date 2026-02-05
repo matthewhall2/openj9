@@ -5285,7 +5285,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       case TR::checkcast:
       case TR::checkcastAndNULLCHK:
          isCheckCast = true;
-         printf("checkcast\n")
+         printf("checkcast\n");
          break;
       case TR::instanceof:
          printf("instanceof\n");
