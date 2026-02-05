@@ -66,7 +66,7 @@ void J9::RecognizedCallTransformer::processConvertingUnaryIntrinsicFunction(TR::
 void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR::TreeTop* treetop, TR::Node* node)
    {
    // The call to Class.isAssignableFrom will usually be direct, but could be
-   // indirect in rare circumstances.  Make sure any NULLCHK that might appear
+   // indirect in rare cåircumstances.  Make sure any NULLCHK that might appear
    // for a dereference of the vft-symbol is preserved.
    //
 
@@ -82,7 +82,7 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
    prepareToReplaceNode(node);
    node->setNumChildren(2);
 
-   TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
+   TR::SymbolReference *jitCheckAssignableSR = comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable, true, false, false);
    static bool useCallOp = feGetEnv("useCallOp") != NULL;
    TR::Node::recreateWithSymRef(node, useCallOp ? node->getOpCode().getOpCodeValue() : TR::icall, jitCheckAssignableSR);
 
