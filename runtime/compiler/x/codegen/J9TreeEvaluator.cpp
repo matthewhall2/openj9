@@ -4602,7 +4602,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
       }
    else {
-      deps->addPostCondition(callNode->getRegister());
+      deps->addPostCondition(callNode->getRegister(), TR::RealRegister::NoReg, cg);
    }
       
    
