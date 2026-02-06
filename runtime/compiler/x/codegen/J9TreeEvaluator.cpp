@@ -4232,13 +4232,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
 TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
-   outlinedHelperCall->swapInstructionListsWithCompilation();
-//    TR::Instruction *cursor = generateLabelInstruction(TR::InstOpCode::label, node, outlinedCallLabel, cg);
-//     iComment2("ool label start", cursor);
-//    resultReg = TR::TreeEvaluator::performCall(node, false, false, cg);
-//  cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
-   //iComment2("ool label start", cursor);
-   outlinedHelperCall->swapInstructionListsWithCompilation();
+   // outlinedHelperCall->swapInstructionListsWithCompilation();
+   // outlinedHelperCall->swapInstructionListsWithCompilation();
         
 //  TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
 
@@ -4359,8 +4354,11 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    if (callNode->getFirstChild() == node->getFirstChild())
       {
       reg = callNode->getFirstChild()->getRegister();
-      if (reg)
+      if (reg) {
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+      }else{
+         deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
    if (callNode->getSecondChild() == node->getSecondChild())
@@ -4369,6 +4367,12 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
       if (reg)
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
+      else {
+         deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
+         
+      }
+
+
    if (callNode->getRegister() == resultReg)
       {
        reg = callNode->getRegister();
