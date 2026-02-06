@@ -4228,9 +4228,11 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
     TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
 
+    TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg =  cg->evaluate(toClass);
    
 
-TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+   TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
    // outlinedHelperCall->swapInstructionListsWithCompilation();
    // outlinedHelperCall->swapInstructionListsWithCompilation();
@@ -4259,8 +4261,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
 
   
 
-  TR::Register *fromClassReg = fromClass->getRegister();
-   TR::Register *toClassReg = toClass->getRegister();
+ 
 
 
     
@@ -4358,7 +4359,7 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       }else{
-         deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
+        // deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
    if (callNode->getSecondChild() == node->getSecondChild())
@@ -4368,17 +4369,21 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       else {
-         deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
+       //  deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
          
       }
 
 
-   if (callNode->getRegister() == resultReg)
+   if (callNode == node)
       {
        reg = callNode->getRegister();
-      if (reg)
+      if (reg) {
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
+      }
+   else {
+      deps->addPostCondition(callNode->getRegister());
+   }
       
    
    deps->stopAddingConditions();
