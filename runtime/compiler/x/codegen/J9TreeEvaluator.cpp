@@ -4380,8 +4380,8 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
-   cg->recursivelyDecReferenceCount(toClass);
-   cg->recursivelyDecReferenceCount(fromClass);
+   // cg->recursivelyDecReferenceCount(toClass);
+   // cg->recursivelyDecReferenceCount(fromClass);
    return resultReg;
    
    }
