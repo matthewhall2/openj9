@@ -69,7 +69,10 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
    // indirect in rare cåircumstances.  Make sure any NULLCHK that might appear
    // for a dereference of the vft-symbol is preserved.
    //
-
+   if (node->isPreparedForDirectJNI())
+      {
+      printf("isAssignableFrom JNI\n");
+      }
    //if (node->getOpCode().isIndirect())
       TR::TransformUtil::separateNullCheck(comp(), treetop, trace());
 
@@ -90,6 +93,10 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
 
    node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, classFromJavaLangClassSR));
    node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, classFromJavaLangClassSR));
+    if (node->isPreparedForDirectJNI())
+      {
+      printf("isAssignableFrom JNI after transform\n");
+      }
    // if (!node->getOpCode().isIndirect())
    // {
    //    toClass->recursivelyDecReferenceCount();
