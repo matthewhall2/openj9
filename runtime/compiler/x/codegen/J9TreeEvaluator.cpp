@@ -4400,8 +4400,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
-   // cg->recursivelyDecReferenceCount(toClass);
-   // cg->recursivelyDecReferenceCount(fromClass);
+   static bool doNotDecCount = feGetEnv("doNotDecCount") != NULL;
+   if (!doNotDecCount)
+      {
+cg->recursivelyDecReferenceCount(toClass);
+   cg->recursivelyDecReferenceCount(fromClass);
+      }
+   
    return resultReg;
    
    }
