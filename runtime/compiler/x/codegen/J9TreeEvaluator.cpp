@@ -4228,9 +4228,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
     TR::Node *fromClass = node->getFirstChild();
    TR::Node *toClass = node->getSecondChild();
 
-   TR::Register *fromClassReg = cg->evaluate(fromClass);
-   TR::Register *toClassReg = cg->evaluate(toClass);
-
+   
 
 TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
@@ -4266,7 +4264,9 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
 
   
 
-  
+  TR::Register *fromClassReg = fromClass->getRegister();
+   TR::Register *toClassReg = toClass->getRegister();
+
 
     
    
@@ -4380,6 +4380,8 @@ TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_Outline
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
+   cg->recursivelyDecReferenceCount(toClass);
+   cg->recursivelyDecReferenceCount(fromClass);
    return resultReg;
    
    }
