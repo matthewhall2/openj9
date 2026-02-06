@@ -4359,7 +4359,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       }else{
-        // deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
+         deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
    if (callNode->getSecondChild() == node->getSecondChild())
@@ -4369,8 +4369,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       else {
-       //  deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
-         
+         deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
 
