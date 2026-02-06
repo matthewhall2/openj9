@@ -4403,8 +4403,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    static bool doNotDecCount = feGetEnv("doNotDecCount") != NULL;
    if (!doNotDecCount)
       {
-cg->recursivelyDecReferenceCount(toClass);
-   cg->recursivelyDecReferenceCount(fromClass);
+         cg->decReferenceCount(toClass);
+         cg->decReferenceCount(fromClass);
       }
    
    return resultReg;
