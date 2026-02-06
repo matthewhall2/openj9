@@ -4364,7 +4364,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       if (reg) {
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
-      }else{
+      } else {
        //  deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
