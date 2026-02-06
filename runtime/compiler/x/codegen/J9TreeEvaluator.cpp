@@ -4360,33 +4360,39 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    if (callNode->getFirstChild() == node->getFirstChild())
       {
+      printf("first child same\n");
       reg = callNode->getFirstChild()->getRegister();
       if (reg) {
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       } else {
-       //  deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
+         printf("first child different\n");
+         deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
    if (callNode->getSecondChild() == node->getSecondChild())
       {
+      printf("second child same\n");
       reg = callNode->getSecondChild()->getRegister();
       if (reg)
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       else {
-      //   deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
+         printf("second child different\n");
+         deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
       }
 
 
    if (callNode == node)
       {
+         printf("nodes same\n");
        reg = callNode->getRegister();
       if (reg) {
          deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
       }
       }
    else {
+      printf("ndoes different\n");
       deps->addPostCondition(callNode->getRegister(), TR::RealRegister::NoReg, cg);
    }
       
