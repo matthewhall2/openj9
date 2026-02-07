@@ -4239,6 +4239,210 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
+inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
+   {
+      TR_Debug * debugObj = cg->getDebug();
+
+   TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
+   TR::Register *resultReg = cg->allocateRegister();
+   startLabel->setStartInternalControlFlow();
+   endLabel->setEndInternalControlFlow();
+   auto comp = cg->comp();
+
+    TR::Node *fromClass = node->getFirstChild();
+   TR::Node *toClass = node->getSecondChild();
+
+    TR::Register *fromClassReg = cg->evaluate(fromClass);
+   TR::Register *toClassReg =  cg->evaluate(toClass);
+   
+
+  
+   // outlinedHelperCall->swapInstructionListsWithCompilation();
+   // outlinedHelperCall->swapInstructionListsWithCompilation();
+        
+//  TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+
+   // static bool useCallOp = feGetEnv("useCallOp") != NULL;
+     // static bool useHelperCall = feGetEnv("useHelperCall") != NULL;
+     // TR::RegisterDependencyConditions  *oolDeps = generateRegisterDependencyConditions((uint8_t)0, 1, cg);
+ //  TR::Register * returnReg = NULL;
+  //    if (useHelperCall)
+       //  returnReg =  TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+  //    else
+   //   generateRegInstruction(TR::InstOpCode::PUSHReg, node, objClassReg, cg);
+   //    generateRegInstruction(TR::InstOpCode::PUSHReg, node, castClassReg, cg);
+      // auto call = generateHelperCallInstruction(node, TR_throwClassCastException, NULL, cg);
+      // call->setNeedsGCMap(0xFF00FFFF);
+      // call->setAdjustsFramePointerBy(-2*(int32_t)sizeof(J9Class*));
+    //  printf("generatingPerformCall for isAssignableFrom\n");
+     //    returnReg =  TR::TreeEvaluator::performCall(node, false, false, cg);
+       //  call->setNeedsGCMap(0xFF00FFFF);
+  //      oolDeps->addPostCondition(returnReg, TR::RealRegister::NoReg, cg);
+  // oolDeps->stopAddingConditions();
+  // generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
+ //  og.endOutlinedInstructionSequence();
+
+  
+
+ 
+
+
+    
+   
+  // oolDeps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+ //  if (fromClassReg != toClassReg)
+ //     oolDeps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+  
+
+   auto use64BitClasses = comp->target().is64Bit() &&
+               (!TR::Compiler->om.generateCompressedObjectHeaders() ||
+               (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
+
+
+   int32_t toClassDepth = -1;
+   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+   //printf("evalugin isAssignableFrom\n");
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+
+   bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+   bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+   bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+
+   generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+    TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+  cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
+
+   generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
+
+   if (isToClassKnownArray) {
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+   }
+   if (isToClassUnknown)
+      {
+      
+      
+   TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
+         // testing if toClass is an array class
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
+         // If toClass is array, call out of line helper
+         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+        
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+
+         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
+            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+
+      generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
+   srm->reclaimScratchRegister(toClassROMClassReg);
+      }
+
+   if (isToClassUnknown || isToClassKnownInterface) {
+      generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
+   }
+
+   // generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
+   // TR::Register *helperResultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
+   // generateRegRegInstruction(TR::InstOpCode::MOV4RegReg, node, resultReg, helperResultReg, cg);
+   // generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+
+   generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
+   if (isToClassUnknown) {
+   generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   }
+   //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+
+   
+
+   generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
+   
+   //   generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, resultReg, tempReg, cg);
+  //    generateLabelInstruction(TR::InstOpCode::JMP4, node, doneLabel, cg);
+  TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 8 + srm->numAvailableRegisters(), cg);
+  srm->addScratchRegistersToDependencyList(deps);
+  
+  srm->stopUsingRegisters();
+   deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
+ //  deps->addPostCondition(helperResultReg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+   if (fromClassReg != toClassReg) {
+deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+   }
+   // if (fromClass == toClass) {
+   //    deps->unionPostCondition(toClass->getRegister(), TR::RealRegister::NoReg, cg);
+   // } else if (fromClassReg != toClassReg) {
+   //    deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+   // } else if (fromClassReg ==toClassReg) {
+   //    deps->unionPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
+   // }
+
+
+   TR::Node *callNode = outlinedHelperCall->getCallNode();
+   TR::Register *reg;
+
+   if (callNode->getFirstChild() == node->getFirstChild())
+      {
+   //   printf("first child same\n");
+      reg = callNode->getFirstChild()->getRegister();
+      if (reg) {
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+      } else {
+      //   printf("first child different\n");
+        // deps->addPostCondition(callNode->getFirstChild()->getRegister(), TR::RealRegister::NoReg, cg);
+      }
+
+   if (callNode->getSecondChild() == node->getSecondChild())
+      {
+  //    printf("second child same\n");
+      reg = callNode->getSecondChild()->getRegister();
+      if (reg)
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+      else {
+    //     printf("second child different\n");
+      //   deps->addPostCondition(callNode->getSecondChild()->getRegister(), TR::RealRegister::NoReg, cg);
+      }
+
+
+   if (callNode == node)
+      {
+       //  printf("nodes same\n");
+       reg = callNode->getRegister();
+      if (reg) {
+         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
+      }
+      }
+   else {
+      printf("ndoes different\n");
+      deps->addPostCondition(callNode->getRegister(), TR::RealRegister::NoReg, cg);
+   }
+      
+   
+   deps->stopAddingConditions();
+   generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
+   node->setRegister(resultReg);
+   static bool doNotDecCount = feGetEnv("doNotDecCount") != NULL;
+   if (!doNotDecCount)
+      {
+         cg->decReferenceCount(toClass);
+         cg->decReferenceCount(fromClass);
+      }
+   
+   return resultReg;
+   
+   }
+
 inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGenerator *cg)
    {
    TR::Node *fromClass = node->getFirstChild();
@@ -5149,7 +5353,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          // disabled if TR_disableInliningOfIsAssignableFrom is set
          if (!useOld && cg->supportsInliningOfIsAssignableFrom())
             {
-            return generateInlinedIsAssignableFrom(node, cg);
+            return testAssignableFrom(node, cg);
             }
          break;
       default:
