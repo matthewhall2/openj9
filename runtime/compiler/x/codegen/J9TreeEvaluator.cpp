@@ -4438,7 +4438,7 @@ deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
       }
       }
    else {
-      printf("ndoes different\n");
+   //   printf("ndoes different\n");
       deps->addPostCondition(callNode->getRegister(), TR::RealRegister::NoReg, cg);
    }
       
