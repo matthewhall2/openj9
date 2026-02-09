@@ -4303,24 +4303,22 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    static bool disableCastClassCacheTest = feGetEnv("disableCastClassCacheTest") != NULL;
    static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
    if (!disableCastClassCacheTest && !cacheOnlyForNormal) {
-      TR::LabelSymbol *failCache = generateLabelSymbol(cg);
-            TR::LabelSymbol *noMatch = generateLabelSymbol(cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTest"), 1, TR::DebugCounter::Punitive);
+     
    TR::Register *cacheReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
    generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, failCache, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestNoMatch"), 1, TR::DebugCounter::Punitive);
-      generateLabelInstruction(TR::InstOpCode::JMP4, node, noMatch, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+  //    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestNoMatch"), 1, TR::DebugCounter::Punitive);
+    //  generateLabelInstruction(TR::InstOpCode::JMP4, node, noMatch, cg);
    //   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
 
-      generateLabelInstruction(TR::InstOpCode::label, node, failCache, cg);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestFailCache"), 1, TR::DebugCounter::Punitive);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+      //generateLabelInstruction(TR::InstOpCode::label, node, failCache, cg);
+   //cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestFailCache"), 1, TR::DebugCounter::Punitive);
+    //  generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
 
-            generateLabelInstruction(TR::InstOpCode::label, node, noMatch, cg);
+      //      generateLabelInstruction(TR::InstOpCode::label, node, noMatch, cg);
 
 
    srm->reclaimScratchRegister(cacheReg);
@@ -4362,24 +4360,12 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    if (isToClassUnknown) {
    if (!disableCastClassCacheTest && cacheOnlyForNormal) {
-      TR::LabelSymbol *failCache = generateLabelSymbol(cg);
-            TR::LabelSymbol *noMatch = generateLabelSymbol(cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTest"), 1, TR::DebugCounter::Punitive);
-   TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+     TR::Register *cacheReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
    generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, failCache, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestNoMatch"), 1, TR::DebugCounter::Punitive);
-      generateLabelInstruction(TR::InstOpCode::JMP4, node, noMatch, cg);
-   //   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
-
-      generateLabelInstruction(TR::InstOpCode::label, node, failCache, cg);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestFailCache"), 1, TR::DebugCounter::Punitive);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
-
-            generateLabelInstruction(TR::InstOpCode::label, node, noMatch, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
 
 
    srm->reclaimScratchRegister(cacheReg);
