@@ -4305,7 +4305,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    if (!disableCastClassCacheTest && !cacheOnlyForNormal) {
      
    TR::Register *cacheReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
    generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
