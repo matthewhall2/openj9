@@ -4284,17 +4284,35 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
-    TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
-  cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
+   TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
+
+   // load with initial result of true
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
+
+   // cast class cache test
+   // last assignabilty check is saved in cache as (castClass | x), where x is 1 for a fail and 0 for pass
+   //
+   static bool disableCastClassCacheTest = feGetEnv("disableCastClassCacheTest") != NULL;
+   static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
+   if (!disableCastClassCacheTest && !cacheOnlyForNormal) {
+   TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+   generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+   srm->reclaimScratchRegister(cacheReg);
+   }
+
 
    if (isToClassKnownArray) {
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+      generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
    }
    if (isToClassUnknown)
       {
@@ -4327,6 +4345,15 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
    if (isToClassUnknown) {
+   if (!disableCastClassCacheTest && cacheOnlyForNormal) {
+       TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+   generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+   generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+   srm->reclaimScratchRegister(cacheReg);
+   }
    generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    }
