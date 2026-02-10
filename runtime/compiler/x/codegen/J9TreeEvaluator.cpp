@@ -4228,7 +4228,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
       if (isToClassUnknown || isToClassKnownInterface)
          {
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
+         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
