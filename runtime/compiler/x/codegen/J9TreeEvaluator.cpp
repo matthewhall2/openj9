@@ -4165,7 +4165,8 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       {
       int32_t fromClassDepth = -1;
       TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
-      if (toClassDepth > fromClassDepth)
+      bool isNormal = fromClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
+      if (isNormal && toClassDepth != -1 && toClassDepth != -1 && toClassDepth > fromClassDepth)
          {
          fastFail = true;
          }
