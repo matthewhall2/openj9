@@ -4171,10 +4171,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
       }
    
+   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
    if (!fastFail)
       {
-      TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
 
       generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
       outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
