@@ -2003,15 +2003,14 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
     */
    if (getNode()->isJitDispatchJ9MethodCall(comp()))
       {
-      
       if (comp()->target().is64Bit())
          {
-         *(int32_t *)cursor = 0xB9040014;
+         *(int32_t *)cursor = comp()->target().isLinux() ? 0xB9040014 : 0xB904001F;
          cursor += sizeof(int32_t);
          }
       else
          {
-         *(int16_t *)cursor = 0x1814;
+         *(int16_t *)cursor = comp()->target().isLinux() ? 0x1814 : 0x181F;
          cursor += sizeof(int16_t);
          }
       }
