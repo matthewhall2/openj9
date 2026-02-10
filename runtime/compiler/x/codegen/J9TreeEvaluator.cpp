@@ -4129,7 +4129,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    return classSymRef;
    }
 
-inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
+inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
    TR_Debug * debugObj = cg->getDebug();
 
@@ -4171,12 +4171,13 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          }
       }
    
+   TR_OutlinedInstructions *outlinedHelperCall = NULL;
    if (!fastFail)
       {
       TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
 
       generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
-      TR_OutlinedInstructions *outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+      outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
       // load with initial result of true
       generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
@@ -4243,7 +4244,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
             generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
             srm->reclaimScratchRegister(cacheReg);
             }
-         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
+         generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, toClassDepth);
          generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
          }
       }
@@ -4260,29 +4261,32 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
    }
    
-   TR::Node *callNode = outlinedHelperCall->getCallNode();
-   TR::Register *helperReg = NULL;
-   if (callNode->getFirstChild() == node->getFirstChild())
+   if (!fastFail)
       {
-      helperReg = callNode->getFirstChild()->getRegister();
-      if (helperReg) {
-         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-      }
-   }
-
-   if (callNode->getSecondChild() == node->getSecondChild())
-      {
-      helperReg = callNode->getSecondChild()->getRegister();
-      if (helperReg)
+      TR::Node *callNode = outlinedHelperCall->getCallNode();
+      TR::Register *helperReg = NULL;
+      if (callNode->getFirstChild() == node->getFirstChild())
          {
-         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+         helperReg = callNode->getFirstChild()->getRegister();
+         if (helperReg) {
+            deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
          }
       }
-   
-   helperReg = callNode->getRegister();
-   if (resultReg != helperReg)
-      {
-      deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+
+      if (callNode->getSecondChild() == node->getSecondChild())
+         {
+         helperReg = callNode->getSecondChild()->getRegister();
+         if (helperReg)
+            {
+            deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+            }
+         }
+      
+      helperReg = callNode->getRegister();
+      if (resultReg != helperReg)
+         {
+         deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+         }
       }
 
    deps->stopAddingConditions();
