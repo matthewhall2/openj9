@@ -3998,7 +3998,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
                           (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                           (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
-   static bool useLastITable = feGetEnv("useLastTtable");
+   static bool useLastITable = feGetEnv("useLastTtable") != NULL;
    TR::Instruction *cursor = NULL;
    if (useLastITable)
       {
