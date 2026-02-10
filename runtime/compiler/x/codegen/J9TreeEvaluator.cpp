@@ -4005,7 +4005,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITable"), 1, TR::DebugCounter::Punitive);
       TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
       cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
-      iComment2("-->Load last ITable");
+      iComment2("-->Load last ITable", cursor);
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
       cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITableMiss"), 1, TR::DebugCounter::Punitive);
