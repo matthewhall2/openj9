@@ -4201,7 +4201,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          if (cacheOnlySuccess)
             {
-            generateRegmemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+            generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
             }
          else
