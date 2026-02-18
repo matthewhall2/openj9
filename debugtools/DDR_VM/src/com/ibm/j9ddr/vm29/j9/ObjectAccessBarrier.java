@@ -73,21 +73,6 @@ public final class ObjectAccessBarrier
 	}
 	
 	/**
-	 * Fetch the ownableSynchronizer link field of object.
-	 * @param object[in] the object to read
-	 * @return the value stored in the object's ownableSynchronizer field
-	 */
-	public static J9ObjectPointer getOwnableSynchronizerLink(J9ObjectPointer object) throws CorruptDataException
-	{
-		return mmObjectAccessBarrier.getOwnableSynchronizerLink(object);
-	}
-
-	public static J9ObjectPointer isObjectInOwnableSynchronizerList(J9ObjectPointer object) throws CorruptDataException
-	{
-		return mmObjectAccessBarrier.isObjectInOwnableSynchronizerList(object);
-	}
-
-	/**
 	 * Fetch the reference link field of the specified reference object.
 	 * @param object the object to read
 	 * @return the value stored in the object's reference link field

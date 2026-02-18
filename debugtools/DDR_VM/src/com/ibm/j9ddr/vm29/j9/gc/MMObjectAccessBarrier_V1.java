@@ -90,24 +90,6 @@ class MMObjectAccessBarrier_V1 extends MMObjectAccessBarrier
 		return ObjectReferencePointer.cast(object.addOffset(fieldOffset)).at(0);
 	}
 	
-	@Override
-	public J9ObjectPointer getOwnableSynchronizerLink(J9ObjectPointer object) throws CorruptDataException
-	{
-		UDATA fieldOffset = getExtensions().accessBarrier()._ownableSynchronizerLinkOffset();
-		J9ObjectPointer next = ObjectReferencePointer.cast(object.addOffset(fieldOffset)).at(0);
-		if (object.equals(next)) {
-			return J9ObjectPointer.NULL;
-		}
-		return next;
-	}
-
-	@Override
-	public J9ObjectPointer  isObjectInOwnableSynchronizerList(J9ObjectPointer object) throws CorruptDataException
-	{
-		UDATA fieldOffset = getExtensions().accessBarrier()._ownableSynchronizerLinkOffset();
-		return ObjectReferencePointer.cast(object.addOffset(fieldOffset)).at(0);
-	}
-	
 	/**
 	 * @see MMObjectAccessBarrier
 	 */
