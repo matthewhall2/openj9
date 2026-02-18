@@ -4138,6 +4138,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
    TR::Register *resultReg = cg->allocateRegister();
@@ -4234,15 +4235,17 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
          } else {
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
-            generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, interfaceLabel, cg);
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray, cg);
-            generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+            generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+            generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          }
          srm->reclaimScratchRegister(modifierReg);
          }
 
       if (!disableInlineInterfaceTest && (isToClassUnknown || isToClassKnownInterface))
          {
+         generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
 
