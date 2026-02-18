@@ -4002,13 +4002,11 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    TR::Instruction *cursor = NULL;
    if (useLastITable)
       {
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITable"), 1, TR::DebugCounter::Punitive);
       TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
       cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
       iComment2("-->Load last ITable", cursor);
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITableMiss"), 1, TR::DebugCounter::Punitive);
       srm->reclaimScratchRegister(lastITableReg);
       }
 
@@ -4182,26 +4180,36 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
       // load with initial result of true
       generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
-
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/classEqualityTest"), 1, TR::DebugCounter::Punitive);
+       static bool disableClassEqualityTest = feGetEnv("disableClassEqualityTest") != NULL;
+      if (!disableClassEqualityTest) {
       generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/classEqualityTestFail"), 1, TR::DebugCounter::Punitive);
+      }
 
       // cast class cache test
       // last assignabilty check is saved in cache as (castClass | x), where x is 1 for a fail and 0 for pass
       //
       static bool disableCastClassCacheTest = feGetEnv("disableCastClassCacheTest") != NULL;
       static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
+      static bool disableInlineInterfaceTest = feGetEnv("disableInlineInterfaceTest") != NULL;
+      static bool cacheOnlySuccess = feGetEnv("cacheOnlySuccess");
       if (!disableCastClassCacheTest && !cacheOnlyForNormal)
          {
-         TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+         if (cacheOnlySuccess)
+            {
+            generateRegmemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+            }
+         else
+            {
+             TR::Register *cacheReg = srm->findOrCreateScratchRegister();
          generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
          generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
-         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);   
          generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
          generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
          srm->reclaimScratchRegister(cacheReg);
+            }
          }
 
       if (isToClassKnownArray)
@@ -4211,23 +4219,25 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
       if (isToClassUnknown)
          {
-         TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
-         // testing if toClass is an array class
-         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
-         // If toClass is array, call out of line helper
-         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
-
-         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
-
-         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
-
-         generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
-         srm->reclaimScratchRegister(toClassROMClassReg);
+         //TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
+         TR::Register *modifierReg = srm->findOrCreateScratchRegister();
+         
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg), cg);
+         
+         if (disableInlineInterfaceTest) {
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray | J9AccInterface, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         } else {
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
+            generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         }
+         srm->reclaimScratchRegister(modifierReg);
          }
 
-      if (isToClassUnknown || isToClassKnownInterface)
+      if (!disableInlineInterface && (isToClassUnknown || isToClassKnownInterface))
          {
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
