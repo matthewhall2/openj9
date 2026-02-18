@@ -3999,6 +3999,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
                           (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    static bool useLastITable = feGetEnv("useLastTtable") != NULL;
+   static bool branchImmOnSuccess = feGetEnv("branchImmOnSuccess") != NULL;
    TR::Instruction *cursor = NULL;
    if (useLastITable)
       {
@@ -4022,6 +4023,9 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    generateRegRegInstruction(TR::InstOpCode::TESTRegReg(use64BitClasses), node, iTableReg, iTableReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
+   if (branchImmOnSuccess) {
+      generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
+   }
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
 
