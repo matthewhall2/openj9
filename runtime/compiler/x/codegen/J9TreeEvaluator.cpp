@@ -4197,7 +4197,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          if (cacheOnlySuccess)
             {
-            generateRegmemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg);
+            generateRegmemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
             }
          else
@@ -4221,7 +4221,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          //TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          TR::Register *modifierReg = srm->findOrCreateScratchRegister();
-         
+   
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg), cg);
          
@@ -4237,7 +4237,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          srm->reclaimScratchRegister(modifierReg);
          }
 
-      if (!disableInlineInterface && (isToClassUnknown || isToClassKnownInterface))
+      if (!disableInlineInterfaceTest && (isToClassUnknown || isToClassKnownInterface))
          {
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
