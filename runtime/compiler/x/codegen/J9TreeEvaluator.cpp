@@ -4084,7 +4084,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
-static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth)
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, TR_OpaqueClassBlock *&clazz)
    {
    classDepth = -1;
    TR::SymbolReference *classSymRef = NULL;
@@ -4123,7 +4123,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    if (symRef != NULL && !symRef->isUnresolved())
       {
       TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
-      TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
+      clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
       if (clazz != NULL)
          classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
       }
@@ -4157,29 +4157,49 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
    int32_t toClassDepth = -1;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   TR_OpaqueClassBlock *toClassClazz = NULL;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, toClassClazz);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
    bool fastFail = false;
+   bool fastPass = false;
    if (toClassDepth != -1)
       {
       int32_t fromClassDepth = -1;
-      TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
-      bool isNormal = fromClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
-      if (isNormal && toClassDepth != -1 && fromClassDepth != -1 && toClassDepth > fromClassDepth)
+      TR_OpaqueClassBlock *fromClassClazz = NULL;
+      TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, fromClassClazz);
+      //bool isNormal = fromClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
+      if (fromClassDepth != -1 && toClassDepth > fromClassDepth)
          {
          fastFail = true;
          }
+      else if (fromClassDepth != -1 && fromClassClazz != NULL &&  toClassClazz != NULL)
+         {
+         auto fej9 = static_cast<TR_J9VMBase *>(comp->fe());
+    
+         if (fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz))
+            {
+            fastPass = true;
+            }
+         else
+            {
+            fastFail = true;
+            }
+         }
+      }
+
+   if (toClassReg == fromClassReg)
+      {
+      fastPass = true;
       }
    
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
-   if (!fastFail)
+   if (!fastFail && !fastPass)
       {
-
       generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
       outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
@@ -4267,8 +4287,11 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
       }
 
-   generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
+   if (!fastPass)
+      {
+      generateLabelInstruction(TR::InstOpCode::label, node, falseLabel, cg);
+      generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 0, cg);
+      }
 
    TR::RegisterDependencyConditions  *deps = generateRegisterDependencyConditions((uint8_t)0, 6 + srm->numAvailableRegisters(), cg);
    srm->addScratchRegistersToDependencyList(deps);
@@ -4279,7 +4302,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
    }
    
-   if (!fastFail)
+   if (!fastFail && !fastPass)
       {
       TR::Node *callNode = outlinedHelperCall->getCallNode();
       TR::Register *helperReg = NULL;
