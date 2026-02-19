@@ -4278,7 +4278,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
          generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
          srm->reclaimScratchRegister(lastITableReg);
-         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
