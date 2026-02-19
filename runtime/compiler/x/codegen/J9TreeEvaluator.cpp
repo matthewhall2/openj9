@@ -4218,6 +4218,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
       static bool disableInlineInterfaceTest = feGetEnv("disableInlineInterfaceTest") != NULL;
       static bool cacheOnlySuccess = feGetEnv("cacheOnlySuccess");
+      static bool lastITableThenHelper = feGetEnv("lastITableThenHelper");
       if (!disableCastClassCacheTest && !cacheOnlyForNormal)
          {
          if (cacheOnlySuccess)
@@ -4262,10 +4263,21 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
          srm->reclaimScratchRegister(modifierReg);
          }
-
-      if (!disableInlineInterfaceTest && (isToClassUnknown || isToClassKnownInterface))
+      
+      if (!disableInlineInterfaceTest && !lastITableThenHelper && (isToClassUnknown || isToClassKnownInterface))
          {
          generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
+         generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
+         }
+      else if (lastITableThenHelper)
+         {
+         generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
+         TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
+         TR::Instruction *cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
+         iComment2("-->Load last ITable", cursor);
+         generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+         srm->reclaimScratchRegister(lastITableReg);
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
 
