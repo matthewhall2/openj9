@@ -4163,14 +4163,15 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
-
+   bool printInterface = feGetEnv("printInterface") != NULL;
    bool fastFail = false;
    bool fastPass = false;
+   TR_OpaqueClassBlock *fromClassClazz = NULL;
+   TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, fromClassClazz);
    if (toClassDepth != -1)
       {
       int32_t fromClassDepth = -1;
-      TR_OpaqueClassBlock *fromClassClazz = NULL;
-      TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, fromClassClazz);
+      
       //bool isNormal = fromClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
       if (fromClassDepth != -1 && toClassDepth > fromClassDepth)
          {
@@ -4189,6 +4190,24 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             fastFail = true;
             }
          }
+      }
+
+   if (fromClassClazz != NULL && toClassClazz != NULL)
+      {
+      if (printInterface) {
+         if (isToClassKnownInterface && fromClassSymRef->isClassInterface(comp)) {
+            printf("both interface at compile time found\n");
+         }
+      }
+      TR::DebugCounter::incStaticDebugCounter(comp, "staticAssignableFromStats/compileTimeKnown", 1);
+      if (fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz))
+            {
+            fastPass = true;
+            }
+         else
+            {
+            fastFail = true;
+            }
       }
 
    if (toClassReg == fromClassReg)
@@ -4218,7 +4237,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
       static bool disableInlineInterfaceTest = feGetEnv("disableInlineInterfaceTest") != NULL;
       static bool cacheOnlySuccess = feGetEnv("cacheOnlySuccess");
-      static bool lastITableThenHelper = feGetEnv("lastITableThenHelper");
+      static bool lastITableThenHelper = feGetEnv("lastITableThenHelper") != NULL;
       if (!disableCastClassCacheTest && !cacheOnlyForNormal)
          {
          if (cacheOnlySuccess)
