@@ -4168,7 +4168,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       printf("compiling isassignableFrom call\n");
    static int numCompiles = 1;
    if (printInterface)
-   printf("compiled %d times\n", numCompiles);
+   printf("compiled %d times\n", numCompiles++);
    bool fastFail = false;
    bool fastPass = false;
    TR_OpaqueClassBlock *fromClassClazz = NULL;
