@@ -4389,8 +4389,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
    TR::Register *ObjReg = cg->evaluate(node->getFirstChild());
    TR::Register *castClassReg = cg->evaluate(node->getSecondChild());
-
-   TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
+   TR::Register *temp1Reg = cg->allocateRegister();
+   TR::Register *temp2Reg = cg->allocateRegister();
    TR::Register *objClassReg = cg->allocateRegister();
 
    bool isCheckCastAndNullCheck = (node->getOpCodeValue() == TR::checkcastAndNULLCHK);
@@ -4400,6 +4400,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *throwLabel = generateLabelSymbol(cg);
    TR::LabelSymbol *isClassLabel = generateLabelSymbol(cg);
+   TR::LabelSymbol *iTableLoopLabel = generateLabelSymbol(cg);
    startLabel->setStartInternalControlFlow();
    fallThruLabel->setEndInternalControlFlow();
 
@@ -4412,13 +4413,12 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    if (isCheckCastAndNullCheck)
       generateLoadJ9Class(node, objClassReg, ObjReg, cg);
 
-   TR::Register* castClassRomClassReg = srm->findOrCreateScratchRegister();
-   // get romClass of cast class, for testing array, interface class type
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, castClassRomClassReg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
+   // temp2Reg holds romClass of cast class, for testing array, interface class type
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, temp2Reg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
 
    // If cast class is array, call out of line helper
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
+       generateX86MemoryReference(temp2Reg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
    // objClassReg holds object class
@@ -4432,11 +4432,24 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    // Object not array, inline checks
    // Check cast class is interface
    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-       generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
+       generateX86MemoryReference(temp2Reg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
-   srm->reclaimScratchRegister(castClassRomClassReg);
 
-   generateInlineInterfaceTest(node, cg, castClassReg, objClassReg, srm, fallThruLabel, throwLabel);
+   // Obtain I-Table
+   // temp1Reg holds head of J9Class->iTable of obj class
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, temp1Reg, generateX86MemoryReference(objClassReg, offsetof(J9Class, iTable), cg), cg);
+   // Loop through I-Table
+   // temp1Reg holds iTable list element through the loop
+   generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
+   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, temp1Reg, temp1Reg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, throwLabel, cg);
+   auto interfaceMR = generateX86MemoryReference(temp1Reg, offsetof(J9ITable, interfaceClass), cg);
+   generateMemRegInstruction(TR::InstOpCode::CMPMemReg(), node, interfaceMR, castClassReg, cg);
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, temp1Reg, generateX86MemoryReference(temp1Reg, offsetof(J9ITable, next), cg), cg);
+   generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
+
+   // Found from I-Table
+   generateLabelInstruction(TR::InstOpCode::JMP4, node, fallThruLabel, cg);
 
    // cast class is non-interface class
    generateLabelInstruction(TR::InstOpCode::label, node, isClassLabel, cg);
@@ -4445,7 +4458,29 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    generateLabelInstruction(TR::InstOpCode::JE4, node, fallThruLabel, cg);
 
    // class not equal
-   generateInlineSuperclassTest(node, cg, castClassReg, objClassReg, srm, throwLabel, use64BitClasses);
+   // temp2 holds cast class depth
+   // class depth mask must be low 16 bits to safely load without the mask.
+   static_assert(J9AccClassDepthMask == 0xffff, "J9_JAVA_CLASS_DEPTH_MASK must be 0xffff");
+   generateRegMemInstruction(comp->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
+            temp2Reg, generateX86MemoryReference(castClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
+
+   // cast class depth >= obj class depth, throw
+   generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, temp2Reg, generateX86MemoryReference(objClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
+   generateLabelInstruction(TR::InstOpCode::JAE4, node, throwLabel, cg);
+
+   // check obj class's super class array entry
+   // temp1Reg holds superClasses array of obj class
+   // An alternative sequences requiring one less register may be:
+   // SHL temp2Reg, 3 for 64-bit or 2 for 32-bit
+   // ADD temp2Reg, [temp3Reg, superclasses offset]
+   // CMP classClassReg, [temp2Reg]
+   // On 64 bit, the extra reg isn't likely to cause significant register pressure.
+   // On 32 bit, it could put more register pressure due to limited number of regs.
+   // Since 64-bit is more prevalent, we opt to optimize for 64bit in this case
+   generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, temp1Reg, generateX86MemoryReference(objClassReg, offsetof(J9Class, superclasses), cg), cg);
+   generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, castClassReg,
+       generateX86MemoryReference(temp1Reg, temp2Reg, comp->target().is64Bit()?3:2, cg), cg);
+   generateLabelInstruction(TR::InstOpCode::JNE4, node, throwLabel, cg);
 
    // throw classCastException
    {
@@ -4462,8 +4497,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    deps->addPostCondition(ObjReg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(castClassReg, TR::RealRegister::NoReg, cg);
-   srm->addScratchRegistersToDependencyList(deps);
-   srm->stopUsingRegisters();
+   deps->addPostCondition(temp1Reg, TR::RealRegister::NoReg, cg);
+   deps->addPostCondition(temp2Reg, TR::RealRegister::NoReg, cg);
    deps->addPostCondition(objClassReg, TR::RealRegister::NoReg, cg);
 
    TR::Node *callNode = outlinedHelperCall->getCallNode();
@@ -4487,6 +4522,8 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 
    generateLabelInstruction(TR::InstOpCode::label, node, fallThruLabel, deps, cg);
 
+   cg->stopUsingRegister(temp1Reg);
+   cg->stopUsingRegister(temp2Reg);
    cg->stopUsingRegister(objClassReg);
 
    // Decrement use counts on the children
