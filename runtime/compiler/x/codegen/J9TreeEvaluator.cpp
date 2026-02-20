@@ -4167,10 +4167,11 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    bool fastFail = false;
    bool fastPass = false;
    TR_OpaqueClassBlock *fromClassClazz = NULL;
+    int32_t fromClassDepth = -1;
    TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, fromClassClazz);
    if (toClassDepth != -1)
       {
-      int32_t fromClassDepth = -1;
+     
       
       //bool isNormal = fromClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
       if (fromClassDepth != -1 && toClassDepth > fromClassDepth)
@@ -4196,10 +4197,12 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       {
       if (printInterface) {
          if (isToClassKnownInterface && fromClassSymRef->isClassInterface(comp)) {
+            cg->generateDebugCounter("isAssignableFromStats/BothKnownInterface", 1, TR::DebugCounter::Undetermined);
             printf("both interface at compile time found\n");
          }
       }
       TR::DebugCounter::incStaticDebugCounter(comp, "staticAssignableFromStats/compileTimeKnown", 1);
+      cg->generateDebugCounter("isAssignableFromStats/BothKnown", 1, TR::DebugCounter::Undetermined);
       if (fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz))
             {
             fastPass = true;
