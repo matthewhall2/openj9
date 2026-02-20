@@ -4382,7 +4382,8 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+   bool isToClassUnknown = toClassSymRef == NULL;
+  // bool isToClassNormal = toClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
    bool printInterface = feGetEnv("printInterface") != NULL;
    if (printInterface)
       printf("compiling isassignableFrom call\n");
@@ -4456,10 +4457,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       // load with initial result of true
       generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
        static bool disableClassEqualityTest = feGetEnv("disableClassEqualityTest") != NULL;
-      if (!disableClassEqualityTest) {
-      generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-      }
+     
 
       // cast class cache test
       // last assignabilty check is saved in cache as (castClass | x), where x is 1 for a fail and 0 for pass
@@ -4469,7 +4467,9 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       static bool disableInlineInterfaceTest = feGetEnv("disableInlineInterfaceTest") != NULL;
       static bool cacheOnlySuccess = feGetEnv("cacheOnlySuccess");
       static bool lastITableThenHelper = feGetEnv("lastITableThenHelper") != NULL;
-      if (!disableCastClassCacheTest && !cacheOnlyForNormal)
+       static bool cacheOnlyForInterface = feGetEnv("cacheOnlyForInterface") != NULL;
+       static bool doArrayCheckFirst = feGetEnv("doArrayCheckFirst") != NULL;
+      if (!disableCastClassCacheTest && !cacheOnlyForNormal && !cacheOnlyForInterface)
          {
          if (cacheOnlySuccess)
             {
@@ -4492,7 +4492,9 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          }
-
+      
+      // not interface and not array and 
+      // null || 
       if (isToClassUnknown)
          {
          //TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
@@ -4504,6 +4506,12 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          if (disableInlineInterfaceTest) {
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray | J9AccInterface, cg);
             generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         } else if (doArrayCheckFirst) {
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, notInterfaceOrArrayLabel, cg);
+           // generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          } else {
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
             generateLabelInstruction(TR::InstOpCode::JNE4, node, interfaceLabel, cg);
@@ -4513,6 +4521,26 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
          srm->reclaimScratchRegister(modifierReg);
          }
+      
+         if ((isToClassKnownInterface || isToClassUnknown) && !disableCastClassCacheTest && cacheOnlyForInterface)
+         {
+         if (cacheOnlySuccess)
+            {
+            generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+            }
+         else
+            {
+             TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+         generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);   
+         generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+         srm->reclaimScratchRegister(cacheReg);
+            }
+         }
+
       
       if (!disableInlineInterfaceTest && !lastITableThenHelper && (isToClassUnknown || isToClassKnownInterface))
          {
@@ -4532,7 +4560,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-      if (isToClassUnknown)
+      if (isToClassUnknown || (!isToClassKnownArray && !isToClassKnownInterface))
          {
          if (!disableCastClassCacheTest && cacheOnlyForNormal)
             {
@@ -4544,6 +4572,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
             srm->reclaimScratchRegister(cacheReg);
             }
+          if (!disableClassEqualityTest) {
+      generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+      generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+      }
          generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, toClassDepth);
          generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
          }
@@ -4595,7 +4627,6 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
-   static bool doNotDecCount = feGetEnv("doNotDecCount") != NULL;
    cg->decReferenceCount(toClass);
    cg->decReferenceCount(fromClass);
    return resultReg;
