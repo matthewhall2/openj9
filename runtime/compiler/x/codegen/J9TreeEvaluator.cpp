@@ -4164,6 +4164,11 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
    bool printInterface = feGetEnv("printInterface") != NULL;
+   if (printInterface)
+      printf("compiling isassignableFrom call\n");
+   static int numCompiles = 1;
+   if (printInterface)
+   printf("compiled %d times\n", numCompiles);
    bool fastFail = false;
    bool fastPass = false;
    TR_OpaqueClassBlock *fromClassClazz = NULL;
