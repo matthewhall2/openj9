@@ -4169,6 +4169,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR_OpaqueClassBlock *fromClassClazz = NULL;
     int32_t fromClassDepth = -1;
    TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, fromClassClazz);
+    auto fej9 = static_cast<TR_J9VMBase *>(comp->fe());
    if (toClassDepth != -1)
       {
      
@@ -4180,7 +4181,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
       else if (fromClassDepth != -1 && fromClassClazz != NULL &&  toClassClazz != NULL)
          {
-         auto fej9 = static_cast<TR_J9VMBase *>(comp->fe());
+        
     
          if (fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz))
             {
