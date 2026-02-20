@@ -4213,6 +4213,8 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    if (toClassReg == fromClassReg)
       {
       fastPass = true;
+      if (printInterface)
+         printf("same reg found\n");
       }
    
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
