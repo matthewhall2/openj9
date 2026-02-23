@@ -4163,7 +4163,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = toClassSymRef == NULL;
-  // bool isToClassNormal = toClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
+   bool isToClassNormal = toClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
    bool printInterface = feGetEnv("printInterface") != NULL;
    if (printInterface)
       printf("compiling isassignableFrom call\n");
@@ -4246,9 +4246,11 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
       static bool disableInlineInterfaceTest = feGetEnv("disableInlineInterfaceTest") != NULL;
       static bool cacheOnlySuccess = feGetEnv("cacheOnlySuccess");
-      static bool lastITableThenHelper = feGetEnv("lastITableThenHelper") != NULL;
+      static bool lastITable = feGetEnv("lastITable") != NULL;
        static bool cacheOnlyForInterface = feGetEnv("cacheOnlyForInterface") != NULL;
        static bool doArrayCheckFirst = feGetEnv("doArrayCheckFirst") != NULL;
+              static bool interfaceAndArrayOOLNoCache = feGetEnv("interfaceAndArrayOOLNoCache") != NULL;
+
       if (!disableCastClassCacheTest && !cacheOnlyForNormal && !cacheOnlyForInterface)
          {
          if (cacheOnlySuccess)
@@ -4274,16 +4276,17 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
       
       // not interface and not array and 
-      // null || 
+      // null ||
       if (isToClassUnknown)
          {
+         cg->generateDebugCounter("isAssignableFromStats/ToClassUnknown", 1, TR::DebugCounter::Undetermined);
          //TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          TR::Register *modifierReg = srm->findOrCreateScratchRegister();
    
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg), cg);
          
-         if (disableInlineInterfaceTest) {
+         if (interfaceAndArrayOOLNoCache) {
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray | J9AccInterface, cg);
             generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
          } else if (doArrayCheckFirst) {
@@ -4301,9 +4304,26 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
          srm->reclaimScratchRegister(modifierReg);
          }
-      
+      else {
+         cg->generateDebugCounter("isAssignableFromStats/ToClassKnown", 1, TR::DebugCounter::Undetermined);
+      }
+
+
+      generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
+
+      if (lastITable) {
+       TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
+         TR::Instruction *cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
+         iComment2("-->Load last ITable", cursor);
+         generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
+         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+         srm->reclaimScratchRegister(lastITableReg);
+      }
+
          if ((isToClassKnownInterface || isToClassUnknown) && !disableCastClassCacheTest && cacheOnlyForInterface)
          {
+         cg->generateDebugCounter("isAssignableFromStats/ToClassKnownInterface", 1, TR::DebugCounter::Undetermined);
+
          if (cacheOnlySuccess)
             {
             generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
@@ -4321,26 +4341,17 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             }
          }
 
-      
-      if (!disableInlineInterfaceTest && !lastITableThenHelper && (isToClassUnknown || isToClassKnownInterface))
+      if (disableInlineInterfaceTest && (isToClassUnknown || isToClassKnownInterface)) {
+         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+      }
+      else if (!disableInlineInterfaceTest && (isToClassUnknown || isToClassKnownInterface))
          {
-         generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
-      else if (lastITableThenHelper)
-         {
-         generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
-         TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
-         TR::Instruction *cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
-         iComment2("-->Load last ITable", cursor);
-         generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
-         generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-         srm->reclaimScratchRegister(lastITableReg);
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
-         }
+      
 
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-      if (isToClassUnknown || (!isToClassKnownArray && !isToClassKnownInterface))
+      if (isToClassUnknown || isToClassNormal)
          {
          if (!disableCastClassCacheTest && cacheOnlyForNormal)
             {
