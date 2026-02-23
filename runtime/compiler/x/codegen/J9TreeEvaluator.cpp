@@ -4528,8 +4528,9 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          cg->generateDebugCounter("isAssignableFromStats/ToClassKnown", 1, TR::DebugCounter::Undetermined);
       }
 
-
+      if ( (isToClassUnknown || isToClassKnownInterface)) {
       generateLabelInstruction(TR::InstOpCode::label, node, interfaceLabel, cg);
+       cg->generateDebugCounter("isAssignableFromStats/Interface", 1, TR::DebugCounter::Undetermined);
 
       if (lastITable) {
        TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
@@ -4542,7 +4543,6 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
          if ((isToClassKnownInterface || isToClassUnknown) && !disableCastClassCacheTest && cacheOnlyForInterface)
          {
-         cg->generateDebugCounter("isAssignableFromStats/ToClassKnownInterface", 1, TR::DebugCounter::Undetermined);
 
          if (cacheOnlySuccess)
             {
@@ -4568,11 +4568,14 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
          }
+      }
       
 
-      generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
       if (isToClassUnknown || isToClassNormal)
-         {
+      {
+         generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
+                cg->generateDebugCounter("isAssignableFromStats/Normal", 1, TR::DebugCounter::Undetermined);
+
          if (!disableCastClassCacheTest && cacheOnlyForNormal)
             {
             TR::Register *cacheReg = srm->findOrCreateScratchRegister();
