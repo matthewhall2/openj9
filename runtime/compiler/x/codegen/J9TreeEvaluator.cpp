@@ -4161,6 +4161,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          fastFail = true;
          }
+      }
 
    if (fromClassClazz != NULL && toClassClazz != NULL)
       {
