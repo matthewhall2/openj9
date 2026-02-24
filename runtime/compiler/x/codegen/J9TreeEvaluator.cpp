@@ -4254,7 +4254,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
     if (helperCallNode == node)
       {
-      helperReg = callNode->getRegister();
+      helperReg = helperCallNode->getRegister();
       if (NULL != helperReg) {
          deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
       }
