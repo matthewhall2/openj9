@@ -4161,13 +4161,8 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          {
          fastFail = true;
          }
-      else if (fromClassDepth != -1 && fromClassClazz != NULL &&  toClassClazz != NULL)
-         {
-         fastPass = fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz);
-         fastFail = !fastPass;
-         }
-      }
-   else if (fromClassClazz != NULL && toClassClazz != NULL)
+
+   if (fromClassClazz != NULL && toClassClazz != NULL)
       {
       if (fej9->instanceOfOrCheckCastNoCacheUpdate((J9Class*)fromClassClazz, (J9Class*)toClassClazz))
             {
@@ -4179,11 +4174,6 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             }
       }
 
-   if (toClassReg == fromClassReg)
-      {
-      fastPass = true;
-      }
-   
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
