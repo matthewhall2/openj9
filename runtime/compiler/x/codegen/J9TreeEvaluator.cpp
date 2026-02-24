@@ -4146,7 +4146,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassUnknown = toClassSymRef == NULL;
+   bool isToClassUnknown = toClassSymRef == NULL || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
    bool isToClassNormal = toClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
 
    bool fastFail = false;
@@ -4196,11 +4196,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg), cg);
          
-         generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
-         generateLabelInstruction(TR::InstOpCode::JNE4, node, interfaceLabel, cg);
          generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray, cg);
-         generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);
-         generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+         generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
+         generateLabelInstruction(TR::InstOpCode::JNE4, node, notInterfaceOrArrayLabel, cg);
          srm->reclaimScratchRegister(modifierReg);
          }
 
@@ -4266,8 +4265,19 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
-   cg->decReferenceCount(toClass);
-   cg->decReferenceCount(fromClass);
+   static bool recDec = feGetEnv("recDec");
+   if (recDec){
+            cg->recursivelyDecReferenceCount(fromClass);
+                        cg->recursivelyDecReferenceCount(toClass);
+
+
+   }
+   static bool decCount = feGetEnv("decCount");
+   if (!recDec && decCount) {
+
+      cg->decReferenceCount(toClass);
+      cg->decReferenceCount(fromClass);
+   }
    return resultReg;
    }
 
