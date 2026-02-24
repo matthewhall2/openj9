@@ -4190,17 +4190,20 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
    if (!fastFail && !fastPass)
       {
-      outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
-      cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
-      // load with initial result of true
       generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+
+      if (isToClassUnknown || isToClassKnownArray)
+         {
+         outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+         cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
+         }
 
       if (isToClassKnownArray)
          {
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          }
-      
+
       if (isToClassUnknown)
          {
          TR::Register *modifierReg = srm->findOrCreateScratchRegister();
@@ -4243,9 +4246,9 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    if (fromClassReg != toClassReg) {
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
    }
-   
+
    // no helper call used for fast fail/pass cases
-   if (!fastFail && !fastPass)
+   if (isToClassUnknown || isToClassKnownArray)
       {
       TR::Node *helperCallNode = outlinedHelperCall->getCallNode();
       TR::Register *helperReg = NULL;
