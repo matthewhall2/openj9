@@ -4162,7 +4162,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassUnknown = toClassSymRef == NULL;
+   bool isToClassUnknown = toClassSymRef == NULL || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
    bool isToClassNormal = toClassSymRef != NULL && !toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp);
    bool printInterface = feGetEnv("printInterface") != NULL;
    if (printInterface)
