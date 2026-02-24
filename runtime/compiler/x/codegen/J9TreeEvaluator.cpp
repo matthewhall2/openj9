@@ -4284,7 +4284,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassUnknown = (toClassSymRef == NULL) || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+   bool isToClassUnknown = (toClassSymRef == NULL);// || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+   bool isToClassNormal(toClassSymRef != NULL) && (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
@@ -4360,7 +4361,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    // generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
 
    generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
-   if (isToClassUnknown) {
+   if (isToClassUnknown || isToClassNormal) {
    if (!disableCastClassCacheTest && cacheOnlyForNormal) {
      TR::Register *cacheReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
