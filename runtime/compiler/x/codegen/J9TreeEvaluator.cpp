@@ -4192,7 +4192,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    if (classSymRef == NULL)
       return NULL;
 
-   TR::SymbolReference *symRef = classSymRef->getOpCode().hasSymbolReference() ? classSymRef->getSymbolReference() : NULL;
+   TR::SymbolReference *symRef = classNode->getOpCode().hasSymbolReference() ? classNode->getSymbolReference() : NULL;
 
    if (symRef != NULL && !symRef->isUnresolved())
       {
