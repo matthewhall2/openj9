@@ -4182,12 +4182,17 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          }
 
 
+      
 
       // if (classNode->getOpCodeValue() == TR::loadaddr || classNode->getOpCodeValue() == TR::aload)
       //    {
       //    classSymRef = classNode->getFirstChild()->getSymbolReference();
       //    }
       }
+   
+   if (classNode->getOpCodeValue() != TR::loadaddr && classNode->getOpCodeValue() != TR::aload) {
+      return NULL;
+   }
 
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
