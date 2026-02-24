@@ -4200,9 +4200,10 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
       if (clazz != NULL)
          classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+         return classSymRef;
       }
 
-   return classSymRef;
+   return NULL;
    }
 
 
