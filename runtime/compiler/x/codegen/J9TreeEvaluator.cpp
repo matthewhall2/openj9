@@ -4276,8 +4276,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
    node->setRegister(resultReg);
+   if (!fastFail && !fastPass) {
    cg->decReferenceCount(toClass);
    cg->decReferenceCount(fromClass);
+   }
    return resultReg;
    }
 
