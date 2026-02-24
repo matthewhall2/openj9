@@ -4008,7 +4008,7 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
    // iTableReg holds iTable list element through the loop
    cursor = generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
    iComment2( "-->Start of ITable walk", cursor);
-   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(use64BitClasses), node, iTableReg, iTableReg, cg);
+   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
