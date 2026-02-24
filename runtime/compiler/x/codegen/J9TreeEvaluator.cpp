@@ -4181,10 +4181,10 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
          classNode = classNode->getFirstChild();
          }
 
-      if (classNode->getOpCodeValue() == TR::loadaddr || classNode->getOpCodeValue() == TR::aload)
-         {
-         classSymRef = classNode->getFirstChild()->getSymbolReference();
-         }
+      // if (classNode->getOpCodeValue() == TR::loadaddr || classNode->getOpCodeValue() == TR::aload)
+      //    {
+      //    classSymRef = classNode->getFirstChild()->getSymbolReference();
+      //    }
       }
 
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
