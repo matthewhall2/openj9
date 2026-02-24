@@ -4168,7 +4168,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    const TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = opcode == TR::loadaddr;
 
-   // getting the symbol ref
+   // transformation guarentees either loadaddr or aloadi
    if (isClassNodeLoadAddr)
       {
       classSymRef = classNode->getSymbolReference();
@@ -4176,12 +4176,12 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    else if (opcode == TR::aloadi)
       {
       // recognizedCallTransformer adds another layer of aloadi
-      while (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::aloadi)
+      while (classNode->getOpCodeValue() == TR::aloadi)
          {
          classNode = classNode->getFirstChild();
          }
 
-      if (classNode->getOpCodeValue() == TR::aloadi && classNode->getFirstChild()->getOpCodeValue() == TR::loadaddr)
+      if (classNode->getOpCodeValue() == TR::loadaddr || classNode->getOpCodeValue() == TR::aload)
          {
          classSymRef = classNode->getFirstChild()->getSymbolReference();
          }
@@ -4189,15 +4189,10 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
-   if (!isClassNodeLoadAddr && (classNode->getOpCodeValue() != TR::aloadi ||
-        classNode->getSymbolReference() != comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef() ||
-        classNode->getFirstChild()->getOpCodeValue() != TR::loadaddr))
-      {
-      return classSymRef; // cannot find class depth
-      }
+   if (classSymRef == NULL)
+      return NULL;
 
-   TR::Node *classRef = isClassNodeLoadAddr ? classNode : classNode->getFirstChild();
-   TR::SymbolReference *symRef = classRef->getOpCode().hasSymbolReference() ? classRef->getSymbolReference() : NULL;
+   TR::SymbolReference *symRef = classSymRef->getOpCode().hasSymbolReference() ? classSymRef->getSymbolReference() : NULL;
 
    if (symRef != NULL && !symRef->isUnresolved())
       {
@@ -4209,6 +4204,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
 
    return classSymRef;
    }
+
 
 inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    {
