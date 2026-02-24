@@ -4178,19 +4178,13 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+   outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
+   cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
    generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
    if (!fastFail && !fastPass)
       {
-      
-
-      if (isToClassUnknown || isToClassKnownArray)
-         {
-         outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
-         cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
-         }
-
       if (isToClassKnownArray)
          {
          generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
@@ -4239,33 +4233,29 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
       deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
    }
 
-   // no helper call used for fast fail/pass cases
-   if (isToClassUnknown || isToClassKnownArray)
+   TR::Node *helperCallNode = outlinedHelperCall->getCallNode();
+   TR::Register *helperReg = NULL;
+   if (helperCallNode->getFirstChild() == node->getFirstChild())
       {
-      TR::Node *helperCallNode = outlinedHelperCall->getCallNode();
-      TR::Register *helperReg = NULL;
-      if (helperCallNode->getFirstChild() == node->getFirstChild())
+      helperReg = helperCallNode->getFirstChild()->getRegister();
+      if (NULL != helperReg) {
+         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+      }
+   }
+
+   if (helperCallNode->getSecondChild() == node->getSecondChild())
+      {
+      helperReg = helperCallNode->getSecondChild()->getRegister();
+      if (NULL != helperReg)
          {
-         helperReg = helperCallNode->getFirstChild()->getRegister();
-         if (NULL != helperReg) {
-            deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
          }
       }
 
-      if (helperCallNode->getSecondChild() == node->getSecondChild())
-         {
-         helperReg = helperCallNode->getSecondChild()->getRegister();
-         if (NULL != helperReg)
-            {
-            deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-            }
-         }
-
-      helperReg = helperCallNode->getRegister();
-      if (resultReg != helperReg)
-         {
-         deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-         }
+   helperReg = helperCallNode->getRegister();
+   if (resultReg != helperReg)
+      {
+      deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
       }
 
    deps->stopAddingConditions();
