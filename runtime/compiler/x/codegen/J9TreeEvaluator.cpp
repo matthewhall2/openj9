@@ -4252,11 +4252,16 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
          }
       }
 
-   helperReg = helperCallNode->getRegister();
-   if (resultReg != helperReg)
+    if (helperCallNode == node)
       {
-      deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+      helperReg = callNode->getRegister();
+      if (NULL != helperReg) {
+         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
       }
+      }
+   else {
+      deps->addPostCondition(helperCallNode->getRegister(), TR::RealRegister::NoReg, cg);
+   }
 
    deps->stopAddingConditions();
    generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
