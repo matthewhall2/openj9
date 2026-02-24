@@ -4178,11 +4178,12 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+   generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
    if (!fastFail && !fastPass)
       {
-      generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+      
 
       if (isToClassUnknown || isToClassKnownArray)
          {
