@@ -4187,12 +4187,12 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    TR_OutlinedInstructions *outlinedHelperCall = NULL;
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
+   generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
    if (!fastFail && !fastPass)
       {
       outlinedHelperCall = new (cg->trHeapMemory())TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
       cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
       // load with initial result of true
-      generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
       generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
       generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
 
