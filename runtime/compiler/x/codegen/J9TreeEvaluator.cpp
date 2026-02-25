@@ -4329,7 +4329,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    }
    if (isToClassUnknown)
       {
-      
+                     cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ToClassKnown"), 1, TR::DebugCounter::Punitive);
+
       
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
@@ -4341,6 +4342,9 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, toClassROMClassReg, J9AccInterface, cg);
             generateLabelInstruction(TR::InstOpCode::JNE4, node, notInterfaceOrArrayLabel, cg);   
    srm->reclaimScratchRegister(toClassROMClassReg);
+      } else {
+               cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ToClassUnknown"), 1, TR::DebugCounter::Punitive);
+
       }
 
    if (isToClassUnknown || isToClassKnownInterface) {
