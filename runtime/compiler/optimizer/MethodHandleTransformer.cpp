@@ -1061,7 +1061,6 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
    logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
    logprintf(trace(), comp()->log(), "MethodType is obj%d\n", mtIndex);
 
-
    auto knot = comp()->getKnownObjectTable();
    bool transformed = false;
    TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
@@ -1070,11 +1069,18 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
       bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtIndex);
       if (typesMatch)
          {
+         logprintf(trace(), comp()->log(), "Method types are the same%d\n");
          anchorAllChildren(node, tt);
          node->removeAllChildren();
          TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(mhIndex));
          return;
          }
       
+      bool compatible = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtIndex);
+      if (compatible)
+         {
+         logprintf(trace(), comp()->log(), "Method types are the compatible%d\n");
+         }
+
       }
    }
