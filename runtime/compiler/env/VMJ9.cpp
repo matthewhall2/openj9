@@ -5469,10 +5469,10 @@ TR_J9VMBase::isMethodHandleCompatibleType(
 
    uintptr_t mhObject = knot->getPointer(mhIndex);
    uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
-   uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/invoke/Class;");
+   uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/Class;");
 
    uintptr_t dType = knot->getPointer(desiredTypeIndex);
-   uintptr_t dRType = getReferenceField(dType, "rtype", "Ljava/lang/invoke/Class;");
+   uintptr_t dRType = getReferenceField(dType, "rtype", "Ljava/lang/Class;");
 
    TR_OpaqueClassBlock *mhRTypeClazz = getClassFromJavaLangClass(mhRType);
    TR_OpaqueClassBlock *dRTypeClazz = getClassFromJavaLangClass(dRType);
