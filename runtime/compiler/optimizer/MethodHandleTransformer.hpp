@@ -169,6 +169,8 @@ class TR_MethodHandleTransformer : public TR::Optimization
     */
    void process_java_lang_invoke_Invokers_checkVarHandleGenericType(TR::TreeTop* tt, TR::Node* node);
 
+   void process_java_lang_invoke_MethodHandle_asType(TR::TreeTop* tt, TR::Node* node);
+
    private:
    int32_t _numLocals; // Number of parms, autos and temps
    ObjectInfo * _currentObjectInfo;  // Object info for current block being processed

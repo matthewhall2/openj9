@@ -5455,6 +5455,23 @@ TR_J9VMBase::isMethodHandleExpectedType(
    return mtObject == etObject;
    }
 
+bool
+TR_J9VMBase::isMethodHandleExpectedType(
+   TR::Compilation *comp,
+   TR::KnownObjectTable::Index mhIndex,
+   TR::KnownObjectTable::Index expectedTypeIndex)
+   {
+   TR::KnownObjectTable *knot = comp->getKnownObjectTable();
+   if (!knot)
+      return false;
+
+   TR::VMAccessCriticalSection vmAccess(this);
+   uintptr_t mhObject = knot->getPointer(mhIndex);
+   uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
+   uintptr_t etObject = knot->getPointer(expectedTypeIndex);
+   return mtObject == etObject;
+   }
+
 /**
  * \brief
  *    Check if two java/lang/String objects are equal. Equivalent to java/lang/String.equals.

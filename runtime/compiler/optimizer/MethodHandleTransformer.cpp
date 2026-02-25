@@ -613,7 +613,9 @@ void TR_MethodHandleTransformer::visitCall(TR::TreeTop* tt, TR::Node* node)
       case TR::java_lang_invoke_Invokers_checkVarHandleGenericType:
          process_java_lang_invoke_Invokers_checkVarHandleGenericType(tt, node);
          break;
-
+      case TR::java_lang_invoke_MethodHandle_asType:
+         process_java_lang_invoke_MethodHandle_asType(tt, node);
+         break;
       default:
          break;
       }
@@ -1046,4 +1048,33 @@ TR_MethodHandleTransformer::process_java_lang_invoke_Invokers_checkVarHandleGene
       tt->insertBefore(TR::TreeTop::create(comp(), TR::Node::createCompressedRefsAnchor(node)));
       }
 #endif // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+   }
+
+void
+TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::TreeTop* tt, TR::Node* node)
+   {
+   printf("transforming asType()\n");
+   auto mhNode = node->getChild(0);
+   auto desiredMTNode = node->getChild(1);
+   TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);
+   TR::KnownObjectTable::Index mtIndex = getObjectInfoOfNode(desiredMTNode);
+   logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
+   logprintf(trace(), comp()->log(), "MethodType is obj%d\n", mtIndex);
+
+
+   auto knot = comp()->getKnownObjectTable();
+   bool transformed = false;
+   TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
+   if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(mtIndex) && !knot->isNull(mtIndex))
+      {
+      bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtIndex);
+      if (typesMatch)
+         {
+         anchorAllChildren(node, tt);
+         node->removeAllChildren();
+         TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(mhIndex));
+         return;
+         }
+      
+      }
    }
