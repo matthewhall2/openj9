@@ -5456,10 +5456,10 @@ TR_J9VMBase::isMethodHandleExpectedType(
    }
 
 bool
-TR_J9VMBase::isMethodHandleExpectedType(
+TR_J9VMBase::isMethodHandleCompatibleType(
    TR::Compilation *comp,
    TR::KnownObjectTable::Index mhIndex,
-   TR::KnownObjectTable::Index expectedTypeIndex)
+   TR::KnownObjectTable::Index desiredTypeIndex)
    {
    TR::KnownObjectTable *knot = comp->getKnownObjectTable();
    if (!knot)
@@ -5468,7 +5468,18 @@ TR_J9VMBase::isMethodHandleExpectedType(
    TR::VMAccessCriticalSection vmAccess(this);
    uintptr_t mhObject = knot->getPointer(mhIndex);
    uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
-   uintptr_t etObject = knot->getPointer(expectedTypeIndex);
+   uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/invoke/Class;");
+
+   uintptr_t dType = knot->getPointer(desiredTypeIndex);
+   uintptr_t dRType = getReferenceField(dType, "rtype", "Ljava/lang/invoke/Class;");
+
+   TR_OpaqueClassBlock *mhRTypeClazz = getClassFromJavaLangClass(mhRType);
+   TR_OpaqueClassBlock *dRTypeClazz = getClassFromJavaLangClass(dRType);
+   
+
+   
+
+
    return mtObject == etObject;
    }
 
