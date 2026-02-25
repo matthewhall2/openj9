@@ -4336,15 +4336,10 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), cg);
          // If toClass is array, call out of line helper
-         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
-        
-         generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
-
-         generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
-            generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
-
-      generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);            
+         generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, toClassROMClassReg, J9AccClassArray, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
+            generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, toClassROMClassReg, J9AccInterface, cg);
+            generateLabelInstruction(TR::InstOpCode::JNE4, node, notInterfaceOrArrayLabel, cg);   
    srm->reclaimScratchRegister(toClassROMClassReg);
       }
 
