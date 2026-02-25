@@ -4255,7 +4255,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
       }
 
    if (isToClassUnknown || isToClassKnownInterface) {
-      generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel, false);
+      generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, endLabel, falseLabel);
    }
 
    // generateLabelInstruction(TR::InstOpCode::label, node, arrayLabel, cg);
@@ -4535,7 +4535,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
          if (oolForInterface)
             generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
          else 
-            generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel, false);
+            generateInlineInterfaceTest(node, cg, toClassReg, fromClassReg, srm, doneLabel, failLabel);
          }
       
       generateLabelInstruction(TR::InstOpCode::label, node, notInterfaceOrArrayLabel, cg);
@@ -4647,7 +4647,7 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
    generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
    srm->reclaimScratchRegister(castClassRomClassReg);
 
-   generateInlineInterfaceTest(node, cg, castClassReg, objClassReg, srm, fallThruLabel, throwLabel, false);
+   generateInlineInterfaceTest(node, cg, castClassReg, objClassReg, srm, fallThruLabel, throwLabel);
 
    // cast class is non-interface class
    generateLabelInstruction(TR::InstOpCode::label, node, isClassLabel, cg);
