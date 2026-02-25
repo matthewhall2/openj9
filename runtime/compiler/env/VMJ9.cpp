@@ -5466,6 +5466,7 @@ TR_J9VMBase::isMethodHandleCompatibleType(
       return false;
 
    TR::VMAccessCriticalSection vmAccess(this);
+
    uintptr_t mhObject = knot->getPointer(mhIndex);
    uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
    uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/invoke/Class;");
