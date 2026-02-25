@@ -3990,7 +3990,7 @@ TR::Register *J9::X86::TreeEvaluator::longNumberOfTrailingZeros(TR::Node *node, 
    return resultReg;
    }
 
-inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* successLabel, TR::LabelSymbol* failLabel, bool useCache = false)
+inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_X86ScratchRegisterManager *srm, TR::LabelSymbol* successLabel, TR::LabelSymbol* failLabel)
    {
    TR_Debug * debugObj = cg->getDebug();
    TR::Compilation *comp = cg->comp();
@@ -3998,99 +3998,30 @@ inline void generateInlineInterfaceTest(TR::Node* node, TR::CodeGenerator *cg, T
                           (!TR::Compiler->om.generateCompressedObjectHeaders() ||
                           (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
-   TR::X86DataSnippet *cacheSnippet = NULL;
-   TR::LabelSymbol *cacheHitLabel = NULL;
-   TR::LabelSymbol *cacheMissLabel = NULL;
-    TR::Register* dataReg = NULL;
-
-   if (useCache)
-      {
-      // Create a data snippet to store the last successful interface check
-      // Cache format: [toClass pointer | fromClass pointer]
-      size_t cacheSize = 2 * TR::Compiler->om.sizeofReferenceField();
-      cacheSnippet = cg->createDataSnippet(node, NULL, cacheSize);
-      dataReg = srm->findOrCreateScratchRegister();
-      cacheHitLabel = generateLabelSymbol(cg);
-      cacheMissLabel = generateLabelSymbol(cg);
-
-      generateRegMemInstruction(TR::InstOpCode::LEARegMem(), node, dataReg, generateX86MemoryReference(cacheSnippet->getSnippetLabel(), cg), cg);
-
-      // Check cache: compare toClassReg with cached toClass
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(dataReg, 0, cg), cg);
-      generateLabelInstruction(TR::InstOpCode::JNE4, node, cacheMissLabel, cg);
-
-      // toClass matches, now check fromClass
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, fromClassReg, generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg), cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, cacheHitLabel, cg);
-   
-      // Cache miss - continue with ITable walk
-      TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheMissLabel, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/InterfaceOrUnknownCacheMiss"), 1, TR::DebugCounter::Punitive);
-      if (debugObj)
-         {
-         debugObj->addInstructionComment(cursor, "-->Interface cache miss");
-         }
-      }
-
-   static bool useLastITable = feGetEnv("useLastTtable");
-   if (useLastITable)
-      {
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITable"), 1, TR::DebugCounter::Punitive);
-      TR::Register* lastITableReg = srm->findOrCreateScratchRegister();
-      generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, lastITableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, lastITable), cg), cg);
-      generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(lastITableReg, offsetof(J9ITable, interfaceClass), cg), cg);
-      generateLabelInstruction(TR::InstOpCode::JE4, node, successLabel, cg);
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/LastITableMiss"), 1, TR::DebugCounter::Punitive);
-      srm->reclaimScratchRegister(lastITableReg);
-      }
-   
+   TR::Instruction *cursor = NULL;
    TR::LabelSymbol *iTableLoopLabel = generateLabelSymbol(cg);
    // Obtain I-Table
-   // iTableReg holds head of J9Class->iTable of obj class
+   // iTableReg holds head of J9Class->iTable of fromClass
    TR::Register* iTableReg = srm->findOrCreateScratchRegister();
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg), cg);
    // Loop through I-Table
    // iTableReg holds iTable list element through the loop
-   TR::Instruction* cursor = generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
-   if (debugObj)
-      {
-      debugObj->addInstructionComment(cursor, "-->Start of ITable walk");
-      }
-   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(use64BitClasses), node, iTableReg, iTableReg, cg);
+   cursor = generateLabelInstruction(TR::InstOpCode::label, node, iTableLoopLabel, cg);
+   iComment2( "-->Start of ITable walk", cursor);
+   generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, iTableReg, iTableReg, cg);
    generateLabelInstruction(TR::InstOpCode::JE4, node, failLabel, cg);
    generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg), cg);
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, iTableReg, generateX86MemoryReference(iTableReg, offsetof(J9ITable, next), cg), cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, iTableLoopLabel, cg);
 
-   //Found from I-Table - update cache if enabled
-   if (useCache)
-      {
-      // Update cache with successful check
-   //   generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, generateX86MemoryReference(dataReg, 0, cg), interfaceReg, cg);
-
-      TR::MemoryReference *cacheFromClassMR = generateX86MemoryReference(dataReg, TR::Compiler->om.sizeofReferenceField(), cg);
-      generateMemRegInstruction(TR::InstOpCode::SMemReg(use64BitClasses), node, cacheFromClassMR, fromClassReg, cg);
-     
-      srm->reclaimScratchRegister(dataReg);
-      
-      cursor = generateLabelInstruction(TR::InstOpCode::label, node, cacheHitLabel, cg);
-      if (debugObj)
-         {
-         debugObj->addInstructionComment(cursor, "-->Interface cache hit or updated");
-         }
-      }
-    srm->reclaimScratchRegister(iTableReg);
+   srm->reclaimScratchRegister(iTableReg);
    cursor = generateLabelInstruction(TR::InstOpCode::JMP4, node, successLabel, cg);
-   if (debugObj)
-      {
-      debugObj->addInstructionComment(cursor, "-->ITable walk succeeded");
-      }
+   iComment2("-->ITable walk succeeded", cursor);
    }
 
 inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, TR::Register *toClassReg, TR::Register* fromClassReg, TR_ScratchRegisterManager *srm, TR::LabelSymbol* failLabel, bool use64BitClasses, int32_t toClassDepth = -1)
    {
    TR_Debug * debugObj = cg->getDebug();
-   // temp2 holds cast class depth
    // class depth mask must be low 16 bits to safely load without the mask.
    static_assert(J9AccClassDepthMask == 0xffff, "J9_JAVA_CLASS_DEPTH_MASK must be 0xffff");
    TR::Register* superclassArrayReg = srm->findOrCreateScratchRegister();
@@ -4098,14 +4029,10 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    TR::Instruction *cursor = NULL;
    if (toClassDepth == -1)
       {
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "isAssignableFromStats/toClassDepthUnknown"), 1, TR::DebugCounter::Punitive);
       toClassDepthReg = srm->findOrCreateScratchRegister();
       cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
                toClassDepthReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
-      if (debugObj)
-         {
-         debugObj->addInstructionComment(cursor, "-->load depth of toClass");
-         }
+      iComment2("-->Load toClass depth", cursor);
       // cast class depth >= obj class depth, return false
       generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, toClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
       cursor = generateLabelInstruction(TR::InstOpCode::JAE4, node, failLabel, cg);
@@ -4113,40 +4040,20 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    else
       {
       TR::Register *fromClassDepthReg = srm->findOrCreateScratchRegister();
-      cg->generateDebugCounter(TR::DebugCounter::debugCounterName(cg->comp(), "isAssignableFromStats/toClassDepthKnown"), 1, TR::DebugCounter::Punitive);
       // cast class depth >= obj class depth, return false
       cursor = generateRegMemInstruction(cg->comp()->target().is64Bit()? TR::InstOpCode::MOVZXReg8Mem2 : TR::InstOpCode::MOVZXReg4Mem2, node,
                fromClassDepthReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
+      iComment2("-->Load fromClass depth", cursor);
       generateRegImmInstruction(TR::InstOpCode::CMP2RegImm2, node, fromClassDepthReg, toClassDepth, cg);
-      static auto jumpInstr = feGetEnv("jle") != NULL ? TR::InstOpCode::JLE4 : TR::InstOpCode::JBE4;
-      cursor = generateLabelInstruction(jumpInstr, node, failLabel, cg);
+      cursor = generateLabelInstruction(TR::InstOpCode::JBE4, node, failLabel, cg);
       srm->reclaimScratchRegister(fromClassDepthReg);
       }
-
-   if (debugObj)
-      {
-      debugObj->addInstructionComment(cursor, "-->toClass Depth > fromClassDepth - fast fail");
-      }
+   iComment2("-->toClass Depth >= fromClassDepth - fast fail", cursor);
 
    cursor = generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, superclassArrayReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, superclasses), cg), cg);
-   if (debugObj)
-      {
-      debugObj->addInstructionComment(cursor, "-->load superclass array");
-      }
+   iComment2("Load superclass array", cursor);
    if (toClassDepth == -1)
       {
-      // if (use64BitClasses && cg->comp()->target().is64Bit())
-      //    {
-      //    generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 3, cg);
-      //    }
-      // else if (!use64BitClasses && cg->comp()->target().is64Bit())
-      //    {
-      //    generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, toClassDepthReg, 2, cg);
-      //    }
-      // else
-      //    {
-      //    generateRegImmInstruction(TR::InstOpCode::SHL4RegImm1, node, toClassDepthReg, 2, cg);
-      //    }
       generateRegMemInstruction(TR::InstOpCode::CMPRegMem(use64BitClasses), node, toClassReg,
             generateX86MemoryReference(superclassArrayReg, toClassDepthReg, (uint8_t)(cg->comp()->target().is64Bit()?3:2), cg), cg);
       srm->reclaimScratchRegister(toClassDepthReg);
@@ -4340,7 +4247,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
          generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, toClassROMClassReg, J9AccClassArray, cg);
             generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
             generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, toClassROMClassReg, J9AccInterface, cg);
-            generateLabelInstruction(TR::InstOpCode::JNE4, node, notInterfaceOrArrayLabel, cg);   
+            generateLabelInstruction(TR::InstOpCode::JE4, node, notInterfaceOrArrayLabel, cg);   
    srm->reclaimScratchRegister(toClassROMClassReg);
       } else {
                cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/ToClassUnknown"), 1, TR::DebugCounter::Punitive);
