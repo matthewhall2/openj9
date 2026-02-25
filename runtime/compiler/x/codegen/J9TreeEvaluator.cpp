@@ -4295,11 +4295,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    // load with initial result of true
    generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
 
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/classEqualityTest"), 1, TR::DebugCounter::Punitive);
-   generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-   cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/classEqualityTestFail"), 1, TR::DebugCounter::Punitive);
-
+  
    // cast class cache test
    // last assignabilty check is saved in cache as (castClass | x), where x is 1 for a fail and 0 for pass
    //
@@ -4307,24 +4303,24 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    static bool cacheOnlyForNormal = feGetEnv("cacheOnlyForNormal") != NULL;
    if (!disableCastClassCacheTest && !cacheOnlyForNormal) {
      
-   TR::Register *cacheReg = srm->findOrCreateScratchRegister();
-   generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
-   generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
-   generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
-  //    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestNoMatch"), 1, TR::DebugCounter::Punitive);
-    //  generateLabelInstruction(TR::InstOpCode::JMP4, node, noMatch, cg);
-   //   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+//    TR::Register *cacheReg = srm->findOrCreateScratchRegister();
+//    generateRegMemInstruction(TR::InstOpCode::LRegMem(use64BitClasses), node, cacheReg, generateX86MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg), cg);
+//    generateRegRegInstruction(TR::InstOpCode::XORRegReg(use64BitClasses), node, cacheReg, toClassReg, cg);
+//    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
+//    generateRegInstruction(TR::InstOpCode::DEC4Reg, node, cacheReg, cg);
+//    generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+//   //    cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestNoMatch"), 1, TR::DebugCounter::Punitive);
+//     //  generateLabelInstruction(TR::InstOpCode::JMP4, node, noMatch, cg);
+//    //   generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
 
-      //generateLabelInstruction(TR::InstOpCode::label, node, failCache, cg);
-   //cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestFailCache"), 1, TR::DebugCounter::Punitive);
-    //  generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
+//       //generateLabelInstruction(TR::InstOpCode::label, node, failCache, cg);
+//    //cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/cacheTestFailCache"), 1, TR::DebugCounter::Punitive);
+//     //  generateLabelInstruction(TR::InstOpCode::JE4, node, falseLabel, cg);
 
-      //      generateLabelInstruction(TR::InstOpCode::label, node, noMatch, cg);
+//       //      generateLabelInstruction(TR::InstOpCode::label, node, noMatch, cg);
 
 
-   srm->reclaimScratchRegister(cacheReg);
+//    srm->reclaimScratchRegister(cacheReg);
    }
 
 
@@ -4338,6 +4334,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    TR::Register* toClassROMClassReg = srm->findOrCreateScratchRegister();
          // testing if toClass is an array class
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassReg, offsetof(J9Class, romClass), cg), cg);
+         generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, toClassROMClassReg, generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), cg);
          // If toClass is array, call out of line helper
          generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
             generateX86MemoryReference(toClassROMClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
@@ -4373,6 +4370,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
 
    srm->reclaimScratchRegister(cacheReg);
    }
+   generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toClassReg, fromClassReg, cg);
+   generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    }
