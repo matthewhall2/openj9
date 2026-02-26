@@ -3305,6 +3305,22 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
             break;
     }
 
+    if (callNode->isJitDispatchJ9MethodCall(comp())) {
+      specialArgReg = getJ9MethodArgumentRegister();
+      child = callNode->getChild(from);
+      TR::Register *specialArg = copyArgRegister(callNode, child, cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
+      if (specialArg->getRegisterPair())
+         specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
+      dependencies->addPreCondition(specialArg, specialArgReg);
+      dependencies->addPostCondition(specialArg, specialArgReg);
+  //    TR::Register *indexReg = cg()->allocateRegister();
+     // dependencies->addPreCondition(indexReg, getVTableIndexArgumentRegister());
+  //    dependencies->addPostCondition(indexReg, getVTableIndexArgumentRegister());
+      cg()->decReferenceCount(child);
+      from += step;
+      return;
+   }
+
     if (specialArgReg != TR::RealRegister::NoReg) {
         child = callNode->getChild(from);
         TR::Register *specialArg = copyArgRegister(callNode, child,
@@ -3389,8 +3405,8 @@ TR::Register *J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node *callNode)
         getNumberOfDependencyGPRegisters(), getNumberOfDependencyGPRegisters(), cg());
 
     // setup arguments
-    argSize = buildArgs(callNode, dependencies, false, -1, vftReg);
-
+    bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
+argSize = buildArgs(callNode, dependencies, false, killMask, vftReg, true, passArgsRightToLeft);
     buildDirectCall(callNode, callSymRef, dependencies, argSize);
 
     // set dependency on return register
