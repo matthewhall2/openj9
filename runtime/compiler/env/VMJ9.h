@@ -1165,13 +1165,6 @@ public:
     */
    virtual bool isMethodHandleCompatibleType(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex, TR::KnownObjectTable::Index expectedTypeIndex);
 
-   /*
-    * \brief
-    *    tell whether it's possible to dereference a field given the field symbol reference at compile time
-	@@ -1067,6 +1077,10 @@ class TR_J9VMBase : public TR_FrontEnd
-    */
-   virtual bool canDereferenceAtCompileTime(TR::SymbolReference *fieldRef,  TR::Compilation *comp);
-
    virtual bool isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass);
 
    virtual uintptr_t getMethodHandleAsTypeCache(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex);
