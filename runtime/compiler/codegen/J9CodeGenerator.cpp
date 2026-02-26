@@ -4659,7 +4659,11 @@ bool J9::CodeGenerator::isProfiledClassAndCallSiteCompatible(TR_OpaqueClassBlock
 bool J9::CodeGenerator::enableJitDispatchJ9Method()
 {
     static const bool disable = feGetEnv("TR_disableJitDispatchJ9Method") != NULL;
-    return !disable && self()->supportsNonHelper(TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol);
+    printf("jitDispatchJ9Method: %s\n", disable ? "disabled" : "enabled");
+    static const bool supported = self()->supportsNonHelper(TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol);
+        printf("jitDispatchJ9Method supported: %s\n", supported ? "supported" : "not supported");
+
+    return !disable && supported;
 }
 
 bool J9::CodeGenerator::stressJitDispatchJ9MethodJ2I()
