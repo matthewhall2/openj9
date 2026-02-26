@@ -957,22 +957,21 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_Invokers_checkVarHandl
 void
 TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::TreeTop* tt, TR::Node* node)
    {
-   printf("transforming asType()\n");
    auto mhNode = node->getChild(0);
    auto desiredMTNode = node->getChild(1);
    TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);
-   TR::KnownObjectTable::Index mtIndex = getObjectInfoOfNode(desiredMTNode);
+   TR::KnownObjectTable::Index desiredMTIndex = getObjectInfoOfNode(desiredMTNode);
    logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
-   logprintf(trace(), comp()->log(), "MethodType is obj%d\n", mtIndex);
+   logprintf(trace(), comp()->log(), "MethodType is obj%d\n", desiredMTIndex);
    J9::ConstProvenanceGraph *cpg = comp()->constProvenanceGraph();
   // cpg->addEdge(cpg->knownObject(idx), clazz);
    auto knot = comp()->getKnownObjectTable();
    bool transformed = false;
    TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
-   if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(mtIndex) && !knot->isNull(mtIndex))
+   if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(desiredMTIndex) && !knot->isNull(desiredMTIndex))
       {
       logprintf(trace(), comp()->log(), "Have known object info - checking exact compatibility\n");
-      bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtIndex);
+      bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtInddesiredMTIndexex);
       if (typesMatch)
          {
          logprintf(trace(), comp()->log(), "Method types are the object\n");
@@ -983,7 +982,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
          }
 
       logprintf(trace(), comp()->log(), "Have known object info - checking subtype compatibility\n");
-      bool compatible = fej9->isMethodHandleCompatibleType(comp(), mhIndex, mtIndex);
+      bool compatible = fej9->isMethodHandleCompatibleType(comp(), mhIndex, desiredMTIndex);
       if (compatible)
          {
          logprintf(trace(), comp()->log(), "Method types are the compatible%d\n");

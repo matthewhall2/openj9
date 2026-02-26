@@ -5001,33 +5001,33 @@ TR_J9VMBase::isMethodHandleCompatibleType(
 
    uintptr_t mhObject = knot->getPointer(mhIndex);
    uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
-   uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/Class;");
+   uintptr_t mhReturnType = getReferenceField(mtObject, "rtype", "Ljava/lang/Class;");
 
-   uintptr_t dType = knot->getPointer(desiredTypeIndex);
-   uintptr_t dRType = getReferenceField(dType, "rtype", "Ljava/lang/Class;");
+   uintptr_t desiredMethodType = knot->getPointer(desiredTypeIndex);
+   uintptr_t desiredReturnType = getReferenceField(desiredMethodType, "rtype", "Ljava/lang/Class;");
 
-   TR_OpaqueClassBlock *mhRTypeClazz = getClassFromJavaLangClass(mhRType);
-   TR_OpaqueClassBlock *dRTypeClazz = getClassFromJavaLangClass(dRType);
+   TR_OpaqueClassBlock *mhReturnTypeClazz = getClassFromJavaLangClass(mhReturnType);
+   TR_OpaqueClassBlock *desiredReturnTypeClazz = getClassFromJavaLangClass(desiredReturnType);
 
-   if (!isSubtypeOf(dRTypeClazz, mhRTypeClazz))
+   if (!isSubtypeOf(desiredReturnTypeClazz, mhReturnTypeClazz))
       return false;
 
-   uintptr_t mhPTypes = getReferenceField(mtObject, "ptypes", "[Ljava/lang/Class;");
-   uintptr_t dPTypes = getReferenceField(dType, "ptypes", "[Ljava/lang/Class;");
+   uintptr_t mhParamTypes = getReferenceField(mtObject, "ptypes", "[Ljava/lang/Class;");
+   uintptr_t desiredParamTypes = getReferenceField(desiredMethodType, "ptypes", "[Ljava/lang/Class;");
 
-   intptr_t mtNumParams = getArrayLengthInElements(mhPTypes);
-   intptr_t dtNumParams = getArrayLengthInElements(dPTypes);
+   intptr_t mhNumParams = getArrayLengthInElements(mhParamTypes);
+   intptr_t desiredNumParams = getArrayLengthInElements(desiredParamTypes);
 
-   if (mtNumParams != dtNumParams)
+   if (mhNumParams != desiredNumParams)
       return false;
 
-   if (mtNumParams == 0)
+   if (mhNumParams == 0)
       return true;
 
-   for (int i = 0; i < mtNumParams; i++)
+   for (int i = 0; i < mhNumParams; i++)
       {
-      TR_OpaqueClassBlock *mhParamClazz = getClassFromJavaLangClass(getReferenceElement(mhPTypes, i));
-      TR_OpaqueClassBlock *dtParamclazz = getClassFromJavaLangClass(getReferenceElement(dPTypes, i));
+      TR_OpaqueClassBlock *mhParamClazz = getClassFromJavaLangClass(getReferenceElement(mhParamTypes, i));
+      TR_OpaqueClassBlock *dtParamclazz = getClassFromJavaLangClass(getReferenceElement(desiredParamTypes, i));
 
       if (!isSubtypeOf(dtParamclazz, mhParamClazz))
          return false;
