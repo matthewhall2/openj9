@@ -3406,7 +3406,7 @@ TR::Register *J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node *callNode)
 
     // setup arguments
     bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
-argSize = buildArgs(callNode, dependencies, false, killMask, vftReg, true, passArgsRightToLeft);
+argSize = buildArgs(callNode, dependencies, false, -1, vftReg, true, passArgsRightToLeft);
     buildDirectCall(callNode, callSymRef, dependencies, argSize);
 
     // set dependency on return register
