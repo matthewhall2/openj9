@@ -3520,6 +3520,7 @@ void TR_ResolvedJ9Method::construct()
          "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;") },
         { x(TR::java_lang_invoke_MethodHandle_asType_instance, "asType",
          "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;") },
+        {x(TR::java_lang_invoke_Invokers_checkGenericType, "checkGenericType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
         { TR::java_lang_invoke_MethodHandle_invokeBasic, 11, "invokeBasic", (int16_t)-1, "*" },
         { TR::java_lang_invoke_MethodHandle_linkToStatic, 12, "linkToStatic", (int16_t)-1, "*" },
         { TR::java_lang_invoke_MethodHandle_linkToSpecial, 13, "linkToSpecial", (int16_t)-1, "*" },

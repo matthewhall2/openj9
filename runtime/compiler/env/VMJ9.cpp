@@ -4972,6 +4972,84 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
     return mtObject == etObject;
 }
 
+bool
+TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass)
+   {
+   J9Class *from   = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
+   J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
+
+   if (isAnonymousClass(fromClass) || isAnonymousClass(toClass))
+      return false;
+
+   if (!sameClassLoaders(fromClass, toClass))
+      return false;
+
+   return instanceOfOrCheckCast(from, to);
+   }
+
+bool
+TR_J9VMBase::isMethodHandleCompatibleType(
+   TR::Compilation *comp,
+   TR::KnownObjectTable::Index mhIndex,
+   TR::KnownObjectTable::Index desiredTypeIndex)
+   {
+   TR::KnownObjectTable *knot = comp->getKnownObjectTable();
+   if (!knot) 
+      return false;
+
+   TR::VMAccessCriticalSection vmAccess(this);
+
+   uintptr_t mhObject = knot->getPointer(mhIndex);
+   uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
+   uintptr_t mhRType = getReferenceField(mtObject, "rtype", "Ljava/lang/Class;");
+
+   uintptr_t dType = knot->getPointer(desiredTypeIndex);
+   uintptr_t dRType = getReferenceField(dType, "rtype", "Ljava/lang/Class;");
+
+   TR_OpaqueClassBlock *mhRTypeClazz = getClassFromJavaLangClass(mhRType);
+   TR_OpaqueClassBlock *dRTypeClazz = getClassFromJavaLangClass(dRType);
+
+   if (!isSubtypeOf(dRTypeClazz, mhRTypeClazz))
+      return false;
+
+   uintptr_t mhPTypes = getReferenceField(mtObject, "ptypes", "[Ljava/lang/Class;");
+   uintptr_t dPTypes = getReferenceField(dType, "ptypes", "[Ljava/lang/Class;");
+
+   intptr_t mtNumParams = getArrayLengthInElements(mhPTypes);
+   intptr_t dtNumParams = getArrayLengthInElements(dPTypes);
+
+   if (mtNumParams != dtNumParams)
+      return false;
+
+   if (mtNumParams == 0)
+      return true;
+
+   for (int i = 0; i < mtNumParams; i++)
+      {
+      TR_OpaqueClassBlock *mhParamClazz = getClassFromJavaLangClass(getReferenceElement(mhPTypes, i));
+      TR_OpaqueClassBlock *dtParamclazz = getClassFromJavaLangClass(getReferenceElement(dPTypes, i));
+
+      if (!isSubtypeOf(dtParamclazz, mhParamClazz))
+         return false;
+      }
+      return true;
+   }
+
+uintptr_t
+TR_J9VMBase::getMethodHandleAsTypeCache(
+   TR::Compilation *comp,
+   TR::KnownObjectTable::Index mhIndex)
+   {
+   TR::KnownObjectTable *knot = comp->getKnownObjectTable();
+   if (!knot) 
+      return false;
+
+   TR::VMAccessCriticalSection vmAccess(this);
+
+   uintptr_t mhObject = knot->getPointer(mhIndex);
+   return getReferenceField(mhObject, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
+   }
+
 /**
  * \brief
  *    Check if two java/lang/String objects are equal. Equivalent to java/lang/String.equals.

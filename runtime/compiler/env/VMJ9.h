@@ -1155,6 +1155,27 @@ public:
     virtual bool isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex,
         TR::KnownObjectTable::Index expectedTypeIndex);
 
+    /**
+    * \brief
+    *   Tell whether a method handle type at a given known object table index matches the compatable type.
+    *
+    * \param comp the compilation object
+    * \param mhIndex known object index of the java/lang/invoke/MethodHandle object
+    * \param expectedTypeIndex known object index of  java/lang/invoke/MethodType object
+    */
+   virtual bool isMethodHandleCompatibleType(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex, TR::KnownObjectTable::Index expectedTypeIndex);
+
+   /*
+    * \brief
+    *    tell whether it's possible to dereference a field given the field symbol reference at compile time
+	@@ -1067,6 +1077,10 @@ class TR_J9VMBase : public TR_FrontEnd
+    */
+   virtual bool canDereferenceAtCompileTime(TR::SymbolReference *fieldRef,  TR::Compilation *comp);
+
+   virtual bool isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass);
+
+   virtual uintptr_t getMethodHandleAsTypeCache(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex);
+
     /*
      * \brief
      *    tell whether it's possible to dereference a field given the field symbol reference at compile time
