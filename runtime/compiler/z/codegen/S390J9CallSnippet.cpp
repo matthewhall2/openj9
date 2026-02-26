@@ -1683,52 +1683,6 @@ TR::S390J9HelperCallSnippet::emitSnippetBody() {
    return TR::S390HelperCallSnippet::emitSnippetBodyInner(cursor, helperSymRef);
 }
 
-uint8_t *
-TR::S390J9HelperCallSnippet::emitSnippetBody() {
-   uint8_t *cursor = cg()->getBinaryBufferCursor();
-   getSnippetLabel()->setCodeLocation(cursor);
-
-   TR::Node *callNode = getNode();
-   TR::SymbolReference *helperSymRef = getHelperSymRef();
-   bool jitInduceOSR = helperSymRef->isOSRInductionHelper();
-   bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(cg()->comp());
-   // Flush in-register arguments back to the stack for interpreter
-   cursor = TR::S390J9CallSnippet::S390flushArgumentsToStack(cursor, callNode, getSizeOfArguments(), cg());
-
-   /* The J9Method pointer to be passed to be interpreter is in R7, but the interpreter expects it to be in R1.
-    * Since the first integer argument register is also R1, we only load it after we have flushed the args to the stack.
-    *
-    * 64 bit:
-    *    LGR R1, R4
-    * 32 bit:
-    *    LR R1, R4
-    */
-   if (getNode()->isJitDispatchJ9MethodCall(comp()))
-      {
-
-      if (comp()->target().is64Bit())
-         {
-         if (comp()->target().isZOS()) {
-            *(int32_t *)cursor = 0xB904001F;
-         } else {
-            *(int32_t *)cursor = 0xB9040014;
-         }
-         cursor += sizeof(int32_t);
-         }
-      else
-         {
-         if (comp()->target().isZOS()) {
-            *(int16_t *)cursor = 0x181F;
-         } else {
-         *(int16_t *)cursor = 0x1814;
-         }
-         cursor += sizeof(int16_t);
-         }
-      }
-
-   return TR::S390HelperCallSnippet::emitSnippetBodyInner(cursor, helperSymRef);
-}
-
 void
 TR::S390J9HelperCallSnippet::print(OMR::Logger *log, TR_Debug *debug)
    {
