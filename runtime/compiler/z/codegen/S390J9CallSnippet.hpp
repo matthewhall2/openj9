@@ -26,6 +26,7 @@
 #include "z/codegen/CallSnippet.hpp"
 #include "z/codegen/ConstantDataSnippet.hpp"
 #include "z/codegen/S390Instruction.hpp"
+#include "z/codegen/S390HelperCallSnippet.hpp"
 
 class TR_MHJ2IThunk;
 
@@ -64,6 +65,9 @@ public:
     virtual void print(OMR::Logger *log, TR_Debug *debug);
 
     virtual uint8_t *emitSnippetBody();
+
+      static uint8_t *S390flushArgumentsToStack(uint8_t *buffer, TR::Node *callNode, int32_t argSize, TR::CodeGenerator *cg);
+   static int32_t instructionCountForArguments(TR::Node *, TR::CodeGenerator *);
 };
 
 class S390UnresolvedCallSnippet : public TR::S390J9CallSnippet {
@@ -275,6 +279,21 @@ public:
     virtual uint32_t getLength(int32_t estimatedSnippetStart);
     virtual uint8_t *emitSnippetBody();
 };
+
+class S390J9HelperCallSnippet : public TR::S390HelperCallSnippet
+   {
+
+   public:
+
+   S390J9HelperCallSnippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *snippetlab,
+   TR::SymbolReference *helper, TR::LabelSymbol *restartlab = NULL, int32_t s = 0)
+   : TR::S390HelperCallSnippet(cg, node, snippetlab, helper, restartlab, s) {}
+
+   virtual uint8_t *emitSnippetBody();
+   virtual void print(OMR::Logger *log, TR_Debug*);
+   virtual uint32_t getLength(int32_t estimatedSnippetStart);
+   };
+
 } // namespace TR
 
 #endif
