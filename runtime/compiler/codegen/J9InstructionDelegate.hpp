@@ -29,24 +29,24 @@
 #ifndef J9_INSTRUCTIONDELEGATE_CONNECTOR
 #define J9_INSTRUCTIONDELEGATE_CONNECTOR
 
-namespace J9 { class InstructionDelegate; }
-namespace J9 { typedef J9::InstructionDelegate InstructionDelegateConnector; }
+namespace J9 {
+class InstructionDelegate;
+typedef J9::InstructionDelegate InstructionDelegateConnector;
+} // namespace J9
 #endif
 
 #include "codegen/OMRInstructionDelegate.hpp"
 #include "infra/Annotations.hpp"
 
-namespace J9
-{
+namespace J9 {
 
-class OMR_EXTENSIBLE InstructionDelegate : public OMR::InstructionDelegateConnector
-   {
+class OMR_EXTENSIBLE InstructionDelegate : public OMR::InstructionDelegateConnector {
 protected:
+    InstructionDelegate()
+        : OMR::InstructionDelegateConnector()
+    {}
+};
 
-   InstructionDelegate() : OMR::InstructionDelegateConnector() {}
-
-   };
-
-}
+} // namespace J9
 
 #endif

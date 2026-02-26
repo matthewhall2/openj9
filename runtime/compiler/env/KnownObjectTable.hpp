@@ -26,19 +26,19 @@
 #include "env/J9KnownObjectTable.hpp"
 #include "infra/Annotations.hpp"
 
-namespace TR { class Compilation; }
-
-namespace TR
-{
-
-class OMR_EXTENSIBLE KnownObjectTable : public J9::KnownObjectTableConnector
-   {
-public:
-
-   KnownObjectTable(TR::Compilation *comp) : J9::KnownObjectTableConnector(comp) {}
-
-   };
-
+namespace TR {
+class Compilation;
 }
+
+namespace TR {
+
+class OMR_EXTENSIBLE KnownObjectTable : public J9::KnownObjectTableConnector {
+public:
+    KnownObjectTable(TR::Compilation *comp)
+        : J9::KnownObjectTableConnector(comp)
+    {}
+};
+
+} // namespace TR
 
 #endif

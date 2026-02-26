@@ -22,11 +22,14 @@
 #ifndef PREESCAPEANALYSIS_INCL
 #define PREESCAPEANALYSIS_INCL
 
-#include <stdint.h>                           // for int32_t
-#include "optimizer/Optimization.hpp"         // for Optimization
-#include "optimizer/OptimizationManager.hpp"  // for OptimizationManager
+#include <stdint.h> // for int32_t
+#include "optimizer/Optimization.hpp" // for Optimization
+#include "optimizer/OptimizationManager.hpp" // for OptimizationManager
 
-namespace TR { class Block; class Node; }
+namespace TR {
+class Block;
+class Node;
+} // namespace TR
 
 // TODO:  Bring Doxygen comments up to date
 /**
@@ -46,19 +49,19 @@ namespace TR { class Block; class Node; }
  *
  * \see TR_EscapeAnalysis,TR_PostEscapeAnalysis
  */
-class TR_PreEscapeAnalysis : public TR::Optimization
-   {
-   public:
-   TR_PreEscapeAnalysis(TR::OptimizationManager *manager)
-      : TR::Optimization(manager)
-      {}
-   static TR::Optimization *create(TR::OptimizationManager *manager)
-      {
-      return new (manager->allocator()) TR_PreEscapeAnalysis(manager);
-      }
+class TR_PreEscapeAnalysis : public TR::Optimization {
+public:
+    TR_PreEscapeAnalysis(TR::OptimizationManager *manager)
+        : TR::Optimization(manager)
+    {}
 
-   virtual int32_t perform();
-   virtual const char * optDetailString() const throw();
-   };
+    static TR::Optimization *create(TR::OptimizationManager *manager)
+    {
+        return new (manager->allocator()) TR_PreEscapeAnalysis(manager);
+    }
+
+    virtual int32_t perform();
+    virtual const char *optDetailString() const throw();
+};
 
 #endif

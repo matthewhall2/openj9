@@ -25,19 +25,19 @@
 
 #include "optimizer/J9Simplifier.hpp"
 
-namespace TR { class OptimizationManager; }
-
-namespace TR
-{
-
-class Simplifier : public J9::Simplifier
-   {
-   public:
-
-   Simplifier(TR::OptimizationManager *manager) :
-      J9::Simplifier(manager) {}
-   };
-
+namespace TR {
+class OptimizationManager;
 }
+
+namespace TR {
+
+class Simplifier : public J9::Simplifier {
+public:
+    Simplifier(TR::OptimizationManager *manager)
+        : J9::Simplifier(manager)
+    {}
+};
+
+} // namespace TR
 
 #endif

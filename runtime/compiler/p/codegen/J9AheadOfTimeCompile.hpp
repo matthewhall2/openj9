@@ -25,15 +25,23 @@
 
 #ifndef J9_AHEADOFTIMECOMPILE_CONNECTOR
 #define J9_AHEADOFTIMECOMPILE_CONNECTOR
-namespace J9 { namespace Power { class AheadOfTimeCompile; } }
-namespace J9 { typedef J9::Power::AheadOfTimeCompile AheadOfTimeCompileConnector; }
+
+namespace J9 {
+namespace Power {
+class AheadOfTimeCompile;
+}
+
+typedef J9::Power::AheadOfTimeCompile AheadOfTimeCompileConnector;
+} // namespace J9
 #endif // J9_AHEADOFTIMECOMPILE_CONNECTOR
 
 #include "compiler/codegen/J9AheadOfTimeCompile.hpp"
 #include "compile/SymbolReferenceTable.hpp"
 #include "p/codegen/PPCAOTRelocation.hpp"
 
-namespace TR { class CodeGenerator; }
+namespace TR {
+class CodeGenerator;
+}
 
 /*************************************************************************
  *  Change on this numbering scheme (even only value change) has to be   *
@@ -41,32 +49,26 @@ namespace TR { class CodeGenerator; }
  *  on the trampoline setup and PicBuilder requests.                     *
  *************************************************************************/
 
-namespace J9
-{
+namespace J9 { namespace Power {
 
-namespace Power
-{ 
+class OMR_EXTENSIBLE AheadOfTimeCompile : public J9::AheadOfTimeCompile {
+public:
+    AheadOfTimeCompile(TR::CodeGenerator *cg);
 
-class OMR_EXTENSIBLE AheadOfTimeCompile : public J9::AheadOfTimeCompile
-   {
-   public:
-   AheadOfTimeCompile(TR::CodeGenerator *cg);
+    virtual void processRelocations();
 
-   virtual void     processRelocations();
+    /**
+     * @brief Refer to J9::AheadOfTimeCompile::initializePlatformSpecificAOTRelocationHeader
+     */
+    bool initializePlatformSpecificAOTRelocationHeader(TR::IteratedExternalRelocation *relocation,
+        TR_RelocationTarget *reloTarget, TR_RelocationRecord *reloRecord, uint8_t targetKind);
 
-   /**
-    * @brief Refer to J9::AheadOfTimeCompile::initializePlatformSpecificAOTRelocationHeader
-    */
-   bool initializePlatformSpecificAOTRelocationHeader(TR::IteratedExternalRelocation *relocation, TR_RelocationTarget *reloTarget, TR_RelocationRecord *reloRecord, uint8_t targetKind);
+    static bool classAddressUsesReloRecordInfo() { return true; }
 
-   static bool classAddressUsesReloRecordInfo() { return true; }
+private:
+    TR::CodeGenerator *_cg;
+};
 
-   private:
-   TR::CodeGenerator *_cg;
-   };
-
-} // namespace Power
-
-} // namespace J9
+}} // namespace J9::Power
 
 #endif

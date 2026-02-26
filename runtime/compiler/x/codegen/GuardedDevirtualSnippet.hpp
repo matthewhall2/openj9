@@ -28,53 +28,49 @@
 #include "codegen/Snippet.hpp"
 #include "x/codegen/RestartSnippet.hpp"
 
-namespace TR { class Block; }
-namespace TR { class CodeGenerator; }
-namespace TR { class LabelSymbol; }
-namespace TR { class MethodSymbol; }
-namespace TR { class Node; }
-namespace TR { class Register; }
-namespace TR { class SymbolReference; }
+namespace TR {
+class Block;
+class CodeGenerator;
+class LabelSymbol;
+class MethodSymbol;
+class Node;
+class Register;
+class SymbolReference;
+} // namespace TR
 
 namespace TR {
 
-class X86GuardedDevirtualSnippet  : public TR::X86RestartSnippet
-   {
-   TR::Block    *_currentBlock;
-   TR::Register *_classObjectRegister;
-   int32_t      _vtableOffset;
+class X86GuardedDevirtualSnippet : public TR::X86RestartSnippet {
+    TR::Block *_currentBlock;
+    TR::Register *_classObjectRegister;
+    int32_t _vtableOffset;
 
-   public:
+public:
+    X86GuardedDevirtualSnippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *restartlab,
+        TR::LabelSymbol *snippetlab, int32_t vftoffset, TR::Block *currentBlock, TR::Register *classRegister);
 
-   X86GuardedDevirtualSnippet(TR::CodeGenerator * cg,
-                              TR::Node *          node,
-                              TR::LabelSymbol     *restartlab,
-                              TR::LabelSymbol     *snippetlab,
-                              int32_t            vftoffset,
-                              TR::Block          *currentBlock,
-                              TR::Register       *classRegister);
+    virtual Kind getKind() { return IsGuardedDevirtual; }
 
-   virtual Kind getKind() { return IsGuardedDevirtual; }
+    int32_t getVTableOffset() { return _vtableOffset; }
 
-   int32_t getVTableOffset()             {return _vtableOffset;}
-   int32_t setVTableOffset(int32_t vfto) {return (_vtableOffset = vfto);}
+    int32_t setVTableOffset(int32_t vfto) { return (_vtableOffset = vfto); }
 
-   TR::Register *getClassObjectRegister()                 {return _classObjectRegister;}
-   TR::Register *setClassObjectRegister(TR::Register *reg) {return (_classObjectRegister = reg);}
-   
-   virtual bool isLoadArgumentsNecessary(TR::MethodSymbol *methodSymbol) {return false;}
-   
-   // Only implemented by AMD64GuardedDevirtualSnippet
-   virtual TR::SymbolReference* getRealMethodSymbolReference() {return NULL;}
+    TR::Register *getClassObjectRegister() { return _classObjectRegister; }
 
-   virtual TR::X86GuardedDevirtualSnippet  *getGuardedDevirtualSnippet();
+    TR::Register *setClassObjectRegister(TR::Register *reg) { return (_classObjectRegister = reg); }
 
-   virtual uint8_t *emitSnippetBody();
+    virtual bool isLoadArgumentsNecessary(TR::MethodSymbol *methodSymbol) { return false; }
 
-   virtual uint32_t getLength(int32_t estimatedSnippetStart);
+    // Only implemented by AMD64GuardedDevirtualSnippet
+    virtual TR::SymbolReference *getRealMethodSymbolReference() { return NULL; }
 
-   };
+    virtual TR::X86GuardedDevirtualSnippet *getGuardedDevirtualSnippet();
 
-}
+    virtual uint8_t *emitSnippetBody();
+
+    virtual uint32_t getLength(int32_t estimatedSnippetStart);
+};
+
+} // namespace TR
 
 #endif

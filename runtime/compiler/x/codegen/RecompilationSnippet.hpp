@@ -27,34 +27,32 @@
 
 #include <stdint.h>
 
-namespace TR { class CodeGenerator; }
-namespace TR { class LabelSymbol; }
-namespace TR { class Node; }
-namespace TR { class SymbolReference; }
+namespace TR {
+class CodeGenerator;
+class LabelSymbol;
+class Node;
+class SymbolReference;
+} // namespace TR
 
 namespace TR {
 
-class X86RecompilationSnippet : public TR::Snippet
-   {
-   TR::SymbolReference *_destination;
+class X86RecompilationSnippet : public TR::Snippet {
+    TR::SymbolReference *_destination;
 
-   public:
+public:
+    X86RecompilationSnippet(TR::LabelSymbol *lab, TR::Node *node, TR::CodeGenerator *cg);
 
-   X86RecompilationSnippet(TR::LabelSymbol    *lab,
-                               TR::Node          *node,
-                               TR::CodeGenerator *cg);
+    virtual Kind getKind() { return IsRecompilation; }
 
-   virtual Kind getKind() { return IsRecompilation; }
+    TR::SymbolReference *getDestination() { return _destination; }
 
-   TR::SymbolReference *getDestination()                      {return _destination;}
-   TR::SymbolReference *setDestination(TR::SymbolReference *s) {return (_destination = s);}
+    TR::SymbolReference *setDestination(TR::SymbolReference *s) { return (_destination = s); }
 
-   virtual uint8_t *emitSnippetBody();
+    virtual uint8_t *emitSnippetBody();
 
-   virtual uint32_t getLength(int32_t estimatedSnippetStart);
+    virtual uint32_t getLength(int32_t estimatedSnippetStart);
+};
 
-   };
-
-}
+} // namespace TR
 
 #endif

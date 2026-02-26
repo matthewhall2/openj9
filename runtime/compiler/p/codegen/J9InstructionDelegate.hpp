@@ -27,8 +27,14 @@
  */
 #ifndef J9_INSTRUCTIONDELEGATE_CONNECTOR
 #define J9_INSTRUCTIONDELEGATE_CONNECTOR
-namespace J9 { namespace Power { class InstructionDelegate; } }
-namespace J9 { typedef J9::Power::InstructionDelegate InstructionDelegateConnector; }
+
+namespace J9 {
+namespace Power {
+class InstructionDelegate;
+}
+
+typedef J9::Power::InstructionDelegate InstructionDelegateConnector;
+} // namespace J9
 #else
 #error J9::Power::InstructionDelegate expected to be a primary connector, but a J9 connector is already defined
 #endif
@@ -36,22 +42,13 @@ namespace J9 { typedef J9::Power::InstructionDelegate InstructionDelegateConnect
 #include "compiler/codegen/J9InstructionDelegate.hpp"
 #include "infra/Annotations.hpp"
 
-namespace J9
-{
+namespace J9 { namespace Power {
 
-namespace Power
-{
-
-class OMR_EXTENSIBLE InstructionDelegate : public J9::InstructionDelegate
-   {
+class OMR_EXTENSIBLE InstructionDelegate : public J9::InstructionDelegate {
 protected:
+    InstructionDelegate() {}
+};
 
-   InstructionDelegate() {}
-
-   };
-
-}
-
-}
+}} // namespace J9::Power
 
 #endif

@@ -28,10 +28,12 @@
  */
 #ifndef J9_METHODSYMBOL_CONNECTOR
 #define J9_METHODSYMBOL_CONNECTOR
-namespace J9 { class MethodSymbol; }
-namespace J9 { typedef J9::MethodSymbol MethodSymbolConnector; }
-#endif
 
+namespace J9 {
+class MethodSymbol;
+typedef J9::MethodSymbol MethodSymbolConnector;
+} // namespace J9
+#endif
 
 #include <stdint.h>
 #include "codegen/LinkageConventionsEnum.hpp"
@@ -40,41 +42,39 @@ namespace J9 { typedef J9::MethodSymbol MethodSymbolConnector; }
 #include "il/OMRMethodSymbol.hpp"
 #include "runtime/J9Runtime.hpp"
 
-namespace TR { class Compilation; }
+namespace TR {
+class Compilation;
+}
 
-namespace J9
-{
+namespace J9 {
 
 /**
  * Symbol for methods, along with information about the method
  */
-class OMR_EXTENSIBLE MethodSymbol : public OMR::MethodSymbolConnector
-   {
-
+class OMR_EXTENSIBLE MethodSymbol : public OMR::MethodSymbolConnector {
 protected:
-
-   MethodSymbol(TR_LinkageConventions lc = TR_Private, TR::Method * m = NULL) :
-      OMR::MethodSymbolConnector(lc, m) { }
+    MethodSymbol(TR_LinkageConventions lc = TR_Private, TR::Method *m = NULL)
+        : OMR::MethodSymbolConnector(lc, m)
+    {}
 
 public:
-   bool functionCallDoesNotYieldOSR();
-   bool isPureFunction();
+    bool functionCallDoesNotYieldOSR();
+    bool isPureFunction();
 
-   TR_RuntimeHelper getVMCallHelper() { return TR_j2iTransition; } // deprecated
+    TR_RuntimeHelper getVMCallHelper() { return TR_j2iTransition; } // deprecated
 
-   bool safeToSkipNullChecks();
-   bool safeToSkipBoundChecks();
-   bool safeToSkipDivChecks();
-   bool safeToSkipCheckCasts();
-   bool safeToSkipArrayStoreChecks();
-   bool safeToSkipNonNullableArrayNullStoreCheck();
-   bool safeToSkipFlattenableArrayElementNonHelperCall();
-   bool safeToSkipZeroInitializationOnNewarrays();
-   bool safeToSkipChecksOnArrayCopies();
+    bool safeToSkipNullChecks();
+    bool safeToSkipBoundChecks();
+    bool safeToSkipDivChecks();
+    bool safeToSkipCheckCasts();
+    bool safeToSkipArrayStoreChecks();
+    bool safeToSkipNonNullableArrayNullStoreCheck();
+    bool safeToSkipFlattenableArrayElementNonHelperCall();
+    bool safeToSkipZeroInitializationOnNewarrays();
+    bool safeToSkipChecksOnArrayCopies();
+};
 
-   };
-
-}
+} // namespace J9
 
 #endif
 

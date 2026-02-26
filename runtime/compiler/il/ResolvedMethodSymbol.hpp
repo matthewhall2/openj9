@@ -27,21 +27,21 @@
 #include "infra/Annotations.hpp"
 
 class TR_ResolvedMethod;
-namespace TR { class Compilation; }
 
-namespace TR
-{
-
-class OMR_EXTENSIBLE ResolvedMethodSymbol : public J9::ResolvedMethodSymbolConnector
-   {
-public:
-
-   ResolvedMethodSymbol(TR_ResolvedMethod *method, TR::Compilation *comp) :
-      J9::ResolvedMethodSymbolConnector(method, comp) {}
-
-   };
-
+namespace TR {
+class Compilation;
 }
+
+namespace TR {
+
+class OMR_EXTENSIBLE ResolvedMethodSymbol : public J9::ResolvedMethodSymbolConnector {
+public:
+    ResolvedMethodSymbol(TR_ResolvedMethod *method, TR::Compilation *comp)
+        : J9::ResolvedMethodSymbolConnector(method, comp)
+    {}
+};
+
+} // namespace TR
 
 #endif
 

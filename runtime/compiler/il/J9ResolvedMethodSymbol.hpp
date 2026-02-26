@@ -28,8 +28,11 @@
  */
 #ifndef J9_RESOLVEDMETHODSYMBOL_CONNECTOR
 #define J9_RESOLVEDMETHODSYMBOL_CONNECTOR
-namespace J9 { class ResolvedMethodSymbol; }
-namespace J9 { typedef J9::ResolvedMethodSymbol ResolvedMethodSymbolConnector; }
+
+namespace J9 {
+class ResolvedMethodSymbol;
+typedef J9::ResolvedMethodSymbol ResolvedMethodSymbolConnector;
+} // namespace J9
 #endif
 
 #include "il/OMRResolvedMethodSymbol.hpp"
@@ -38,27 +41,27 @@ namespace J9 { typedef J9::ResolvedMethodSymbol ResolvedMethodSymbolConnector; }
 #include "infra/Annotations.hpp"
 
 class TR_ResolvedMethod;
-namespace TR { class Compilation; }
 
-namespace J9
-{
+namespace TR {
+class Compilation;
+}
 
-class OMR_EXTENSIBLE ResolvedMethodSymbol : public OMR::ResolvedMethodSymbolConnector
-   {
+namespace J9 {
+
+class OMR_EXTENSIBLE ResolvedMethodSymbol : public OMR::ResolvedMethodSymbolConnector {
 public:
-   /*
-    * \brief Get known object index of a parameter if there is any known object information available
-    *
-    * \parm ordinal
-    *     the ordinal of a parameter starting from 0 for the first parameter of a method
-    */
-   TR::KnownObjectTable::Index getKnownObjectIndexForParm(int32_t ordinal);
+    /*
+     * \brief Get known object index of a parameter if there is any known object information available
+     *
+     * \parm ordinal
+     *     the ordinal of a parameter starting from 0 for the first parameter of a method
+     */
+    TR::KnownObjectTable::Index getKnownObjectIndexForParm(int32_t ordinal);
 
 protected:
+    ResolvedMethodSymbol(TR_ResolvedMethod *method, TR::Compilation *comp);
+};
 
-   ResolvedMethodSymbol(TR_ResolvedMethod *method, TR::Compilation *comp);
-   };
-
-}
+} // namespace J9
 
 #endif

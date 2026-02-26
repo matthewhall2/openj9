@@ -25,18 +25,19 @@
 
 #include "optimizer/J9Optimization.hpp"
 
-namespace TR { class OptimizationManager; }
-
-namespace TR
-{
-
-class OMR_EXTENSIBLE Optimization : public J9::OptimizationConnector
-   {
-   public:
-
-   Optimization(TR::OptimizationManager *manager) : J9::OptimizationConnector(manager) {}
-   };
-
+namespace TR {
+class OptimizationManager;
 }
+
+namespace TR {
+
+class OMR_EXTENSIBLE Optimization : public J9::OptimizationConnector {
+public:
+    Optimization(TR::OptimizationManager *manager)
+        : J9::OptimizationConnector(manager)
+    {}
+};
+
+} // namespace TR
 
 #endif

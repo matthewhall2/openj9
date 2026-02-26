@@ -26,52 +26,47 @@
 #include "codegen/X86PrivateLinkage.hpp"
 #include "env/jittypes.h"
 
-namespace TR { class UnresolvedDataSnippet; }
-
-namespace J9
-{
-
-namespace X86
-{
-
-namespace I386
-{
-
-class PrivateLinkage : public J9::X86::PrivateLinkage
-   {
-   public:
-
-   PrivateLinkage(TR::CodeGenerator *cg);
-
-   TR::Register *pushThis(TR::Node *child);
-   TR::Register *pushIntegerWordArg(TR::Node *child);
-
-   TR::UnresolvedDataSnippet *generateX86UnresolvedDataSnippetWithCPIndex(TR::Node *child, TR::SymbolReference *symRef, int32_t cpIndex);
-
-   /**
-    * @brief J9 private linkage override of OMR function
-    */
-   virtual intptr_t entryPointFromCompiledMethod();
-
-   protected:
-
-   virtual TR::Instruction *savePreservedRegisters(TR::Instruction *cursor);
-   virtual TR::Instruction *restorePreservedRegisters(TR::Instruction *cursor);
-   virtual int32_t buildCallArguments(TR::Node *callNode, TR::RegisterDependencyConditions *dependencies){ return buildArgs(callNode, dependencies); }
-
-   virtual int32_t buildArgs(TR::Node *callNode, TR::RegisterDependencyConditions *dependencies);
-
-   virtual void buildVirtualOrComputedCall(TR::X86CallSite &site, TR::LabelSymbol *entryLabel, TR::LabelSymbol *doneLabel, uint8_t *thunk);
-   virtual TR::Instruction *buildPICSlot(TR::X86PICSlot picSlot, TR::LabelSymbol *mismatchLabel, TR::LabelSymbol *doneLabel, TR::X86CallSite &site);
-   virtual void buildIPIC(TR::X86CallSite &site, TR::LabelSymbol *entryLabel, TR::LabelSymbol *doneLabel, uint8_t *thunk);
-   };
-
+namespace TR {
+class UnresolvedDataSnippet;
 }
 
-}
+namespace J9 { namespace X86 { namespace I386 {
 
-}
+class PrivateLinkage : public J9::X86::PrivateLinkage {
+public:
+    PrivateLinkage(TR::CodeGenerator *cg);
 
+    TR::Register *pushThis(TR::Node *child);
+    TR::Register *pushIntegerWordArg(TR::Node *child);
+
+    TR::UnresolvedDataSnippet *generateX86UnresolvedDataSnippetWithCPIndex(TR::Node *child, TR::SymbolReference *symRef,
+        int32_t cpIndex);
+
+    /**
+     * @brief J9 private linkage override of OMR function
+     */
+    virtual intptr_t entryPointFromCompiledMethod();
+
+protected:
+    virtual TR::Instruction *savePreservedRegisters(TR::Instruction *cursor);
+    virtual TR::Instruction *restorePreservedRegisters(TR::Instruction *cursor);
+
+    virtual int32_t buildCallArguments(TR::Node *callNode, TR::RegisterDependencyConditions *dependencies)
+    {
+        return buildArgs(callNode, dependencies);
+    }
+
+    virtual int32_t buildArgs(TR::Node *callNode, TR::RegisterDependencyConditions *dependencies);
+
+    virtual void buildVirtualOrComputedCall(TR::X86CallSite &site, TR::LabelSymbol *entryLabel,
+        TR::LabelSymbol *doneLabel, uint8_t *thunk);
+    virtual TR::Instruction *buildPICSlot(TR::X86PICSlot picSlot, TR::LabelSymbol *mismatchLabel,
+        TR::LabelSymbol *doneLabel, TR::X86CallSite &site);
+    virtual void buildIPIC(TR::X86CallSite &site, TR::LabelSymbol *entryLabel, TR::LabelSymbol *doneLabel,
+        uint8_t *thunk);
+};
+
+}}} // namespace J9::X86::I386
 
 /**
  * The following is only required to assist with refactoring because they are
@@ -79,8 +74,7 @@ class PrivateLinkage : public J9::X86::PrivateLinkage
  * class moves into the J9 namespace they can be easily removed in OMR and will
  * be subsequently deleted here.
  */
-namespace J9
-{
+namespace J9 {
 
 typedef J9::X86::I386::PrivateLinkage IA32PrivateLinkage;
 

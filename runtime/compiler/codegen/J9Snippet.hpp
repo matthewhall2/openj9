@@ -28,34 +28,34 @@
  */
 #ifndef J9_SNIPPET_CONNECTOR
 #define J9_SNIPPET_CONNECTOR
-namespace J9 { class Snippet; }
-namespace J9 { typedef J9::Snippet SnippetConnector; }
+
+namespace J9 {
+class Snippet;
+typedef J9::Snippet SnippetConnector;
+} // namespace J9
 #endif
 
 #include "codegen/OMRSnippet.hpp"
 
-namespace TR { class CodeGenerator; }
-namespace TR { class LabelSymbol; }
-namespace TR { class Node; }
+namespace TR {
+class CodeGenerator;
+class LabelSymbol;
+class Node;
+} // namespace TR
 
-namespace J9
-{
-   class OMR_EXTENSIBLE Snippet : public OMR::SnippetConnector
-      {
-      public:
+namespace J9 {
+class OMR_EXTENSIBLE Snippet : public OMR::SnippetConnector {
+public:
+    Snippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *label, bool isGCSafePoint)
+        : OMR::SnippetConnector(cg, node, label, isGCSafePoint)
+    {}
 
-      Snippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *label, bool isGCSafePoint) :
-         OMR::SnippetConnector(cg, node, label, isGCSafePoint)
-         {
-         }
+    Snippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *label)
+        : OMR::SnippetConnector(cg, node, label)
+    {}
 
-      Snippet(TR::CodeGenerator *cg, TR::Node *node, TR::LabelSymbol *label) :
-         OMR::SnippetConnector(cg, node, label)
-         {
-         }
-
-      virtual uint8_t *emitSnippet();
-      };
-}
+    virtual uint8_t *emitSnippet();
+};
+} // namespace J9
 
 #endif

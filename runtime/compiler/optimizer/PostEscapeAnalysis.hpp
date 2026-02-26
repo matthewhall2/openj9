@@ -22,11 +22,13 @@
 #ifndef VIRTUALGUARDHEADMERGER_INCL
 #define VIRTUALGUARDHEADMERGER_INCL
 
-#include <stdint.h>                           // for int32_t
-#include "optimizer/Optimization.hpp"         // for Optimization
-#include "optimizer/OptimizationManager.hpp"  // for OptimizationManager
+#include <stdint.h> // for int32_t
+#include "optimizer/Optimization.hpp" // for Optimization
+#include "optimizer/OptimizationManager.hpp" // for OptimizationManager
 
-namespace TR { class Block; }
+namespace TR {
+class Block;
+}
 
 /**
  * The \c TR_PostEscapeAnalysis optimization performs a simple
@@ -35,21 +37,21 @@ namespace TR { class Block; }
  *
  * \see TR_PreEscapeAnalysis,TR_EscapeAnalysis
  */
-class TR_PostEscapeAnalysis : public TR::Optimization
-   {
-   public:
-   TR_PostEscapeAnalysis(TR::OptimizationManager *manager)
-      : TR::Optimization(manager)
-      {}
-   static TR::Optimization *create(TR::OptimizationManager *manager)
-      {
-      return new (manager->allocator()) TR_PostEscapeAnalysis(manager);
-      }
+class TR_PostEscapeAnalysis : public TR::Optimization {
+public:
+    TR_PostEscapeAnalysis(TR::OptimizationManager *manager)
+        : TR::Optimization(manager)
+    {}
 
-   virtual int32_t perform();
-   virtual const char * optDetailString() const throw();
+    static TR::Optimization *create(TR::OptimizationManager *manager)
+    {
+        return new (manager->allocator()) TR_PostEscapeAnalysis(manager);
+    }
 
-   private:
-   };
+    virtual int32_t perform();
+    virtual const char *optDetailString() const throw();
+
+private:
+};
 
 #endif

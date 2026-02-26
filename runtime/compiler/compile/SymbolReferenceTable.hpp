@@ -25,19 +25,17 @@
 
 #include "compile/J9SymbolReferenceTable.hpp"
 
-namespace TR { class Compilation; }
+namespace TR {
+class Compilation;
+}
 
-namespace TR
-   {
-   class SymbolReferenceTable : public J9::SymbolReferenceTableConnector
-      {
-      public:
-
-      SymbolReferenceTable(size_t s, TR::Compilation *c) :
-         J9::SymbolReferenceTableConnector(s, c)
-         {
-         }
-      };
-   }
+namespace TR {
+class SymbolReferenceTable : public J9::SymbolReferenceTableConnector {
+public:
+    SymbolReferenceTable(size_t s, TR::Compilation *c)
+        : J9::SymbolReferenceTableConnector(s, c)
+    {}
+};
+} // namespace TR
 
 #endif

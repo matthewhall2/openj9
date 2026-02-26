@@ -29,24 +29,24 @@
 #ifndef J9_SNIPPETDELEGATE_CONNECTOR
 #define J9_SNIPPETDELEGATE_CONNECTOR
 
-namespace J9 { class SnippetDelegate; }
-namespace J9 { typedef J9::SnippetDelegate SnippetDelegateConnector; }
+namespace J9 {
+class SnippetDelegate;
+typedef J9::SnippetDelegate SnippetDelegateConnector;
+} // namespace J9
 #endif
 
 #include "codegen/OMRSnippetDelegate.hpp"
 #include "infra/Annotations.hpp"
 
-namespace J9
-{
+namespace J9 {
 
-class OMR_EXTENSIBLE SnippetDelegate : public OMR::SnippetDelegateConnector
-   {
+class OMR_EXTENSIBLE SnippetDelegate : public OMR::SnippetDelegateConnector {
 protected:
+    SnippetDelegate()
+        : OMR::SnippetDelegateConnector()
+    {}
+};
 
-   SnippetDelegate() : OMR::SnippetDelegateConnector() {}
-
-   };
-
-}
+} // namespace J9
 
 #endif

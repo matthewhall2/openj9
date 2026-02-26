@@ -29,12 +29,14 @@ class J9Method;
 class J9VMThread;
 class TR_ResolvedMethod;
 
-namespace TR { class Compilation; }
-namespace TR { class CompilationInfoPerThreadBase; }
-namespace TR { class IlGeneratorMethodDetails; }
+namespace TR {
+class Compilation;
+class CompilationInfoPerThreadBase;
+class IlGeneratorMethodDetails;
+} // namespace TR
 
 // Method executed by the JITClient to schedule a remote compilation
-TR_MethodMetaData *remoteCompile(J9VMThread *, TR::Compilation *, TR_ResolvedMethod *,
-                                 J9Method *, TR::IlGeneratorMethodDetails &, TR::CompilationInfoPerThreadBase *);
+TR_MethodMetaData *remoteCompile(J9VMThread *, TR::Compilation *, TR_ResolvedMethod *, J9Method *,
+    TR::IlGeneratorMethodDetails &, TR::CompilationInfoPerThreadBase *);
 
 #endif // defined(JITCLIENT_COMPILATION_THREAD_H)

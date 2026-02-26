@@ -25,17 +25,17 @@
 
 #include "codegen/J9CodeGenerator.hpp"
 
-namespace TR { class Compilation; }
-
-namespace TR
-{
-class OMR_EXTENSIBLE CodeGenerator : public J9::CodeGeneratorConnector
-   {
-   public:
-
-   CodeGenerator(TR::Compilation *comp) :
-      J9::CodeGeneratorConnector(comp) {}
-   };
+namespace TR {
+class Compilation;
 }
+
+namespace TR {
+class OMR_EXTENSIBLE CodeGenerator : public J9::CodeGeneratorConnector {
+public:
+    CodeGenerator(TR::Compilation *comp)
+        : J9::CodeGeneratorConnector(comp)
+    {}
+};
+} // namespace TR
 
 #endif
