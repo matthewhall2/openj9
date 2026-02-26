@@ -329,10 +329,16 @@ Eclipse OpenJ9 is dual-licensed under the Eclipse Public License v2.0 and the
 Apache License v2.0. Any previously unlicensed contribution should be released
 under the same license.
 
-* If you wish to contribute code under a different license, you must consult
-  with a project lead before contributing.
-* For any scenario not covered by this document, please discuss the copyright
-  notice and licensing requirements with a project before contributing.
+If you wish to contribute code under a different license, you must consult with
+a project lead before contributing. For any scenario not covered by this
+document, please discuss the copyright notice and licensing requirements with a
+project lead before contributing.
+
+The copyright date reported in the copyright template to appear in each file is
+the 4-digit year in which the file was first authored. Note that this may be
+different from the year it is actually merged into the repository. If
+subsequent contributions are made to an existing file the copyright date must
+not be changed.
 
 The template for the copyright notice and dual-license is as follows:
 ```
