@@ -79,7 +79,6 @@ public final class CheckBase
 	public static final int J9MODRON_GCCHK_MISC_ALWAYS_DUMP_STACK = 0x00004000;
 	public static final int J9MODRON_GCCHK_MISC_DARKMATTER = 0x00008000;
 	public static final int J9MODRON_GCCHK_MISC_MIDSCAVENGE = 0x00010000;
-	public static final int J9MODRON_GCCHK_MISC_OWNABLESYNCHRONIZER_CONSISTENCY = 0x00020000;
 	public static final int J9MODRON_GCCHK_VALID_INDEXABLE_DATA_ADDRESS = 0x00040000;
 
 	/*
@@ -157,11 +156,6 @@ public final class CheckBase
 
 	/* Error codes applicable for scopes */
 	public static final int J9MODRON_GCCHK_RC_INTERNAL_POINTER_NOT_IN_SCOPE = 28;
-
-	/* Error codes for instances of java.util.concurrent.locks.AbstractOwnableSynchronizer */
-	public static final int J9MODRON_GCCHK_RC_OWNABLE_SYNCHRONIZER_INVALID_CLASS = 38;
-	public static final int J9MODRON_GCCHK_OWNABLE_SYNCHRONIZER_OBJECT_IS_NOT_ATTACHED_TO_THE_LIST = 42;
-	public static final int J9MODRON_GCCHK_OWNABLE_SYNCHRONIZER_LIST_HAS_CIRCULAR_REFERENCE = 43;
 
 	/* This is a special code for DDR */
 	public static final int J9MODRON_GCCHK_RC_CORRUPT_DATA_EXCEPTION = Integer.MAX_VALUE;

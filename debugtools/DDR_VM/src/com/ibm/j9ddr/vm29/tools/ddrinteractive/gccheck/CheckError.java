@@ -28,7 +28,6 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
-import com.ibm.j9ddr.vm29.pointer.generated.MM_OwnableSynchronizerObjectListPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_SublistPuddlePointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_UnfinalizedObjectListPointer;
 
@@ -41,7 +40,6 @@ public class CheckError
 	public static final int check_type_puddle = 4;
 	public static final int check_type_unfinalized = 5;
 	public static final int check_type_finalizable = 6;
-	public static final int check_type_ownable_synchronizer = 7;
 	
 	public VoidPointer _object;
 	public VoidPointer _slot;
@@ -106,10 +104,5 @@ public class CheckError
 	public CheckError(MM_UnfinalizedObjectListPointer object, J9ObjectPointer slot, CheckCycle cycle, Check check, int errorCode, int errorNumber)
 	{
 		this(object, VoidPointer.cast(slot), null, cycle, check, "", errorCode, errorNumber, check_type_unfinalized);
-	}
-	
-	public CheckError(MM_OwnableSynchronizerObjectListPointer object, J9ObjectPointer slot, CheckCycle cycle, Check check, int errorCode, int errorNumber)
-	{
-		this(object, VoidPointer.cast(slot), null, cycle, check, "", errorCode, errorNumber, check_type_ownable_synchronizer);
 	}
 }

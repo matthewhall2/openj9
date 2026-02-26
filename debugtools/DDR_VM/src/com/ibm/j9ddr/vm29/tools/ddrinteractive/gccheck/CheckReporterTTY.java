@@ -83,12 +83,12 @@ public class CheckReporterTTY extends CheckReporter
 		"obsolete code 35", /* obsolete code (35) */
 		"obsolete code 36", /* obsolete code (36) */
 		"obsolete code 37", /* obsolete code (37) */
-		"class object not a subclass of java.util.concurrent.locks.AbstractOwnableSynchronizer", /* J9MODRON_GCCHK_RC_OWNABLE_SYNCHRONIZER_INVALID_CLASS (38) */
+		"obsolete code 38", /* obsolete code (38) */
 		"array class can not be hot swapped", /* J9MODRON_GCCHK_RC_CLASS_HOT_SWAPPED_FOR_ARRAY (39) */
 		"replaced class has no hot swapped out flag set", /* J9MODRON_GCCHK_RC_REPLACED_CLASS_HAS_NO_HOTSWAP_FLAG (40) */
 		"object slot appears to contain a J9Class pointer", /* J9MODRON_GCCHK_RC_OBJECT_SLOT_POINTS_TO_J9CLASS (41) */
-		"Ownable Synchronizer Object is not attached to the list", /* J9MODRON_GCCHK_OWNABLE_SYNCHRONIZER_OBJECT_IS_NOT_ATTACHED_TO_THE_LIST (42) */
-		"Ownable Synchronizer List has a circular reference", /* J9MODRON_GCCHK_OWNABLE_SYNCHRONIZER_LIST_HAS_CIRCULAR_REFERENCE (43) */
+		"obsolete code 42", /* obsolete code (42) */
+		"obsolete code 43", /* obsolete code (43) */
 		"hole size is not aligned", /* J9MODRON_GCCHK_RC_DEAD_OBJECT_SIZE_NOT_ALIGNED (44) */
 		"hole next is not a hole", /* J9MODRON_GCCHK_RC_DEAD_OBJECT_NEXT_IS_NOT_HOLE (45) */
 		"hole next is outside of current region", /* J9MODRON_GCCHK_RC_DEAD_OBJECT_NEXT_IS_NOT_IN_REGION (46) */

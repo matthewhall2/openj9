@@ -69,21 +69,6 @@ public abstract class MMObjectAccessBarrier extends GCBase
 	public abstract J9ObjectPointer getFinalizeLink(J9ObjectPointer object) throws CorruptDataException;
 
 	/**
-	 * Fetch the ownableSynchronizer link field of object.
-	 * @param object[in] the object to read
-	 * @return the value stored in the object's ownableSynchronizerLink field
-	 */
-	public abstract J9ObjectPointer getOwnableSynchronizerLink(J9ObjectPointer object) throws CorruptDataException;
-
- 	/**
-	 * check if the object in one of OwnableSynchronizerLists
-	 * @param object[in] the object pointer
-	 * @return the value stored in the object's reference link field
-	 * 		   if reference link field == J9ObjectPointer.NULL, it means the object isn't in the list
-	 */
-	public abstract J9ObjectPointer isObjectInOwnableSynchronizerList(J9ObjectPointer object) throws CorruptDataException;
-	
-	/**
 	 * Fetch the reference link field of the specified reference object.
 	 * @param object the object to read
 	 * @return the value stored in the object's reference link field
