@@ -971,7 +971,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
    if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(desiredMTIndex) && !knot->isNull(desiredMTIndex))
       {
       logprintf(trace(), comp()->log(), "Have known object info - checking exact compatibility\n");
-      bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, mtInddesiredMTIndexex);
+      bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, desiredMTIndex);
       if (typesMatch)
          {
          logprintf(trace(), comp()->log(), "Method types are the object\n");
