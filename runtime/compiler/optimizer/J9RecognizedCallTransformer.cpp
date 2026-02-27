@@ -1902,6 +1902,8 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
                 if (_processedINLCalls->get(node->getGlobalIndex())
                     || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod()) {
                      logprintf(trace(), comp()->log(), "not inlining lts\n");
+                     logprintf(trace(), comp()->log(), "not inlining lts: processed %d, dummy %d\n", _processedINLCalls->get(node->getGlobalIndex()), node->getSymbolReference()->getSymbol()->isDummyResolvedMethod());
+
                     return false;
                     }
                 else {
