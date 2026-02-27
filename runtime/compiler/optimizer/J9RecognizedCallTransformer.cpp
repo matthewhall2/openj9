@@ -1471,6 +1471,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
         node->setChild(0, j9m);
         return;
     }
+   // TR_ASSERT_FATAL(false, "could not transform invokeBasic to jitDispatchJ9Method\n");
 
     TR::Node *inlCallNode = node->duplicateTree(false);
     TR::list<TR::SymbolReference *> *argsList = new (comp()->trStackMemory())
@@ -1514,6 +1515,9 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
     TR::SymbolReference *vmTargetSymRef = comp()->getSymRefTab()->findOrFabricateMemberNameVmTargetShadow();
 
     if (comp()->cg()->enableJitDispatchJ9Method()) {
+      printf("processing linkToStatic\n");
+      logprintf(trace(), comp()->log(), "processing lts\n");
+
         if (isLinkToSpecial) {
             // Null check the receiver
             TR::SymbolReference *nullCheckSymRef
@@ -1540,6 +1544,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
         memberName->decReferenceCount();
         return;
     }
+  //  TR_ASSERT_FATAL(false, "could not transform LTS to jitDispatch\n");
 
     TR::TransformUtil::separateNullCheck(comp(), treetop, trace());
 
