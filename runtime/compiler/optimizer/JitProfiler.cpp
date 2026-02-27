@@ -214,7 +214,7 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     // Check to see if there is enough space left in the buffer
     TR::Node *endNode = TR::Node::createWithSymRef(profilingNode, TR::aload, 0,
         getSymRefTab()->findOrCreateProfilingBufferEndSymbolRef());
-    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, callBlock->getEntry());
+    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, profBlock->getEntry());
     ifBlock->append(TR::TreeTop::create(comp(), ifNode));
 
     // Call block:
@@ -235,6 +235,23 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
 
     TR::Node *parserNode = TR::Node::create(TR::treetop, 1, parserCall);
     callBlock->append(TR::TreeTop::create(comp(), parserNode));
+    
+     TR::Node *vmThread2 = TR::Node::createWithSymRef(profilingNode, TR::loadaddr, 0,
+        new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
+            TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "vmThread")));
+
+    TR::SymbolReference *parser2
+        = getSymRefTab()->findOrCreateRuntimeHelper(TR_jitProfileParseBuffer, false, false, true);
+#ifndef TR_TARGET_X86
+    parser2->getSymbol()->castToMethodSymbol()->setPreservesAllRegisters();
+#endif
+    parser2->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
+
+    TR::Node *parserCall2 = TR::Node::createWithSymRef(profilingNode, TR::call, 1, parser2);
+    parserCall2->setAndIncChild(0, vmThread2);
+
+    TR::Node *parserNode2 = TR::Node::create(TR::treetop, 1, parserCall2);
+    profBlock->append(TR::TreeTop::create(comp(), parserNode2));
 
     // Fix the CFG
     _cfg->addNode(callBlock);
