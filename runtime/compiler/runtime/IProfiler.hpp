@@ -911,7 +911,7 @@ public:
     void incrementNumRequests() { _numRequests++; }
 
     // this is registered as the BufferFullEvent handler
-    UDATA parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDATA size, bool verboseReparse = false);
+    UDATA parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDATA size, bool verboseReparse = false, bool isFromJit = false);
 
     void printAllocationReport(); // Called by HookedByTheJIT
 
