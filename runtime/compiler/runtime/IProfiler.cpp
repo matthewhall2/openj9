@@ -3749,7 +3749,7 @@ UDATA TR_IProfiler::parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDAT
                 receiverClass = *(J9Class **)cursor;
                 cursor += sizeof(receiverClass);
 
-                data = (intptr_t)receiverClass;
+                data = (intptr_t)0x3;
 
                 addSample = true;
                 // bytecodeType = CHECKCAST_BYTECODE;
