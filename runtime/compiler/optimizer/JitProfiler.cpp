@@ -236,23 +236,6 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     TR::Node *parserNode = TR::Node::create(TR::treetop, 1, parserCall);
     callBlock->append(TR::TreeTop::create(comp(), parserNode));
     
-     TR::Node *vmThread2 = TR::Node::createWithSymRef(profilingNode, TR::loadaddr, 0,
-        new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
-            TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "vmThread")));
-
-    TR::SymbolReference *parser2
-        = getSymRefTab()->findOrCreateRuntimeHelper(TR_jitProfileParseBuffer, false, false, true);
-#ifndef TR_TARGET_X86
-    parser2->getSymbol()->castToMethodSymbol()->setPreservesAllRegisters();
-#endif
-    parser2->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
-
-    TR::Node *parserCall2 = TR::Node::createWithSymRef(profilingNode, TR::call, 1, parser2);
-    parserCall2->setAndIncChild(0, vmThread2);
-
-    TR::Node *parserNode2 = TR::Node::create(TR::treetop, 1, parserCall2);
-    profBlock->append(TR::TreeTop::create(comp(), parserNode2));
-
     // Fix the CFG
     _cfg->addNode(callBlock);
     _cfg->addNode(profBlock);
@@ -406,7 +389,24 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR::Node *vftNode
         = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
     falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
+    
 
+    TR::Node *vmThread = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
+        new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
+            TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "vmThread")));
+
+    TR::SymbolReference *parser
+        = getSymRefTab()->findOrCreateRuntimeHelper(TR_jitProfileParseBuffer, false, false, true);
+#ifndef TR_TARGET_X86
+    parser->getSymbol()->castToMethodSymbol()->setPreservesAllRegisters();
+#endif
+    parser->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
+
+    TR::Node *parserCall = TR::Node::createWithSymRef(instanceNode, TR::call, 1, parser);
+    parserCall->setAndIncChild(0, vmThread);
+
+    TR::Node *parserNode = TR::Node::create(TR::treetop, 1, parserCall);
+    profilingBlock->append(TR::TreeTop::create(comp(), parserNode));
     logprintf(trace(), comp()->log(), "Populated block_%d to profile instanceof/checkcast node [%p]\n",
         profilingBlock->getNumber(), instanceNode);
 
