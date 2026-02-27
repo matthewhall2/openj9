@@ -1900,10 +1900,14 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
                 // linkToStatic calls are also used for unresolved invokedynamic/invokehandle, which we can not
                 // bypass as we may push null appendix object that we can not check at compile time
                 if (_processedINLCalls->get(node->getGlobalIndex())
-                    || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
+                    || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod()) {
+                     logprintf(trace(), comp()->log(), "not inlining lts\n");
                     return false;
-                else
+                    }
+                else {
+                     logprintf(trace(), comp()->log(), "inlining lts\n");
                     return true;
+                }
             case TR::java_lang_invoke_MethodHandle_linkToVirtual:
             case TR::java_lang_invoke_MethodHandle_linkToInterface:
                 return true;
