@@ -3619,7 +3619,7 @@ static inline uint16_t readU16(U_8 *_offset) { return (*(U_16 *)(_offset)); }
 // If verboseReparse==true, then we print information about the content
 // of the buffer without updating the hash table or any other globals
 //---------------------------------------------------------------------
-UDATA TR_IProfiler::parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDATA size, bool verboseReparse)
+UDATA TR_IProfiler::parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDATA size, bool verboseReparse, bool isFromJit)
 {
     if (TR::Options::getCmdLineOptions()->getOption(TR_DisableIProfilerDataCollection)
         || TR::Options::getAOTCmdLineOptions()->getOption(TR_DisableIProfilerDataCollection)) {
@@ -3748,8 +3748,9 @@ UDATA TR_IProfiler::parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDAT
             case JBinstanceof:
                 receiverClass = *(J9Class **)cursor;
                 cursor += sizeof(receiverClass);
-
-                data = (intptr_t)0x3;
+                data = (intptr_t)receiverClass;
+                if (isFromJit)
+                     data = (intptr_t)0x48;
 
                 addSample = true;
                 // bytecodeType = CHECKCAST_BYTECODE;
@@ -3923,7 +3924,7 @@ void TR_IProfiler::jitProfileParseBuffer(J9VMThread *currentThread)
     }
 
     // Okay, so last possible option, we are going to process the buffer for ourselves
-    parseBuffer(currentThread, dataStart, size);
+    parseBuffer(currentThread, dataStart, size, false, true);
     currentThread->profilingBufferCursor = dataStart;
 }
 
