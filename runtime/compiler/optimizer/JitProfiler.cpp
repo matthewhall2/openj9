@@ -79,7 +79,7 @@ int32_t TR_JitProfiler::perform()
         logprints(trace(), comp()->log(), "JIT Profiling disabled, returning\n");
         return 0;
     }
-
+        printf("performing jit prof\n");
     logprintf(trace(), comp()->log(), "Processing method: %s\n", comp()->signature());
 
     _cfg = comp()->getFlowGraph();
@@ -338,7 +338,7 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     if (!performTransformation(comp(), "%sAdding profiling trees for instanceof/checkcast node [%p]\n",
             optDetailString(), instanceNode))
         return;
-
+    printf("adding instance prof\n");
     // Lookup the bytecode associated with the instanceNode
     U_8 *byteCode
         = (U_8 *)comp()->fej9()->getBytecodePC(instanceNode->getOwningMethod(), instanceNode->getByteCodeInfo());
