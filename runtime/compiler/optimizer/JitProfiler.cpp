@@ -364,6 +364,9 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
         = createProfilingBlocks(instanceNode, ifBlock, 2 * TR::Compiler->om.sizeofReferenceAddress());
     ProfileBlockCreator blockCreator(this, profilingBlock, nextBlock, instanceNode);
 
+    TR::Block *flushBlock = TR::Block::createEmptyBlock(instanceNode, comp(), nextBlock->getFrequency());
+   _cfg->addNode(flushBlock);
+
     // Adding to profiling block:
 
     // Record bytecode address
@@ -377,13 +380,13 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR_JitProfiler::ProfileBlockPair blockPair = blockCreator.addConditionTree(TR::ifacmpeq, classLoadNode, nullNode);
 
     // Store null on true side...
-    ProfileBlockCreator trueCreator(this, blockPair.trueBlock, nextBlock, instanceNode,
+    ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushBlock, instanceNode,
         TR::Compiler->om.sizeofReferenceAddress());
     TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
     trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
 
     // Record class pointer
-    ProfileBlockCreator falseCreator(this, blockPair.falseBlock, nextBlock, instanceNode,
+    ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushBlock, instanceNode,
         TR::Compiler->om.sizeofReferenceAddress());
     TR::Node *classLoadPtrNode = instanceNode->getFirstChild()->duplicateTree();
     TR::Node *vftNode
@@ -405,8 +408,18 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR::Node *parserCall = TR::Node::createWithSymRef(instanceNode, TR::call, 1, parser);
     parserCall->setAndIncChild(0, vmThread);
 
-    TR::Node *parserNode = TR::Node::create(TR::treetop, 1, parserCall);
-    profilingBlock->append(TR::TreeTop::create(comp(), parserNode));
+     flushBlock->append(TR::TreeTop::create(comp(), TR::Node::create(TR::treetop, 1, parserCall)));
+   _checklist->add(parserCall);
+
+   TR::Node *flushGoto = TR::Node::create(instanceNode, TR::Goto, 0, nextBlock->getEntry());
+   flushBlock->append(TR::TreeTop::create(comp(), flushGoto));
+   _cfg->addEdge(flushBlock, nextBlock);
+
+   // Insert flushBlock into the tree chain
+   _lastTreeTop->join(flushBlock->getEntry());
+   _lastTreeTop = flushBlock->getExit();
+
+
     logprintf(trace(), comp()->log(), "Populated block_%d to profile instanceof/checkcast node [%p]\n",
         profilingBlock->getNumber(), instanceNode);
 
