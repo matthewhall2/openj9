@@ -328,7 +328,7 @@ void J9FASTCALL _jitProfileParseBuffer(uintptr_t vmThread)
     J9VMThread *currentThread = (J9VMThread *)vmThread;
     J9JITConfig *jitConfg = currentThread->javaVM->jitConfig;
     TR_J9VMBase *fe = NULL;
-
+    printf("start of calling jit profile parse buffer\n");
     if (jitConfig)
         fe = TR_J9VMBase::get(jitConfig, currentThread);
     else
@@ -337,7 +337,7 @@ void J9FASTCALL _jitProfileParseBuffer(uintptr_t vmThread)
 
     TR_IProfiler *iProfiler = fe->getIProfiler();
     TR_ASSERT(iProfiler, "iProfiler must exist\n");
-
+    printf("right before calling jit profile parse buffer\n");
     iProfiler->jitProfileParseBuffer(currentThread);
 }
 }
