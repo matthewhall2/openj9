@@ -214,7 +214,7 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     // Check to see if there is enough space left in the buffer
     TR::Node *endNode = TR::Node::createWithSymRef(profilingNode, TR::aload, 0,
         getSymRefTab()->findOrCreateProfilingBufferEndSymbolRef());
-    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, profBlock->getEntry());
+    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, callBlock->getEntry());
     ifBlock->append(TR::TreeTop::create(comp(), ifNode));
 
     // Call block:
