@@ -197,6 +197,7 @@ TR::Block *TR_JitProfiler::appendBranchTree(TR::Node *profilingNode, TR::Block *
 TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Block *ifBlock,
     int32_t bufferSizeRequired)
 {
+    printf("creating profling blocks\n");
     // Create the blocks first
     TR::Block *profBlock = TR::Block::createEmptyBlock(profilingNode, comp(), ifBlock->getFrequency());
 

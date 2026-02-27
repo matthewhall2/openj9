@@ -3888,7 +3888,7 @@ UDATA TR_IProfiler::parseBuffer(J9VMThread *vmThread, const U_8 *dataStart, UDAT
 void TR_IProfiler::jitProfileParseBuffer(J9VMThread *currentThread)
 {
     PORT_ACCESS_FROM_PORT(_portLib);
-
+   printf("jit has full buffer\n");
     // First thing, the current thread's buffer could be null, in which case our job is easy
     if (!currentThread->profilingBufferEnd) {
         U_8 *newBuffer = (U_8 *)j9mem_allocate_memory(_iprofilerBufferSize, J9MEM_CATEGORY_JIT);
