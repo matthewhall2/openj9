@@ -197,12 +197,11 @@ TR::Block *TR_JitProfiler::appendBranchTree(TR::Node *profilingNode, TR::Block *
 TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Block *ifBlock,
     int32_t bufferSizeRequired)
 {
-    printf("creating profling blocks\n");
     // Create the blocks first
     TR::Block *profBlock = TR::Block::createEmptyBlock(profilingNode, comp(), ifBlock->getFrequency());
 
-    TR::Block *callBlock = TR::Block::createEmptyBlock(profilingNode, comp(), ifBlock->getFrequency());
-   // callBlock->setIsCold();
+    TR::Block *callBlock = TR::Block::createEmptyBlock(profilingNode, comp(), VERSIONED_COLD_BLOCK_COUNT);
+    callBlock->setIsCold();
 
     // If block:
     // Compute buffer cursor + size required
@@ -214,11 +213,8 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     // Check to see if there is enough space left in the buffer
     TR::Node *endNode = TR::Node::createWithSymRef(profilingNode, TR::aload, 0,
         getSymRefTab()->findOrCreateProfilingBufferEndSymbolRef());
-    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, callBlock->getEntry());
-    TR::Node *ifNode2 = TR::Node::createif(TR::ificmpge, aiAddNode, endNode, callBlock->getEntry());
+    TR::Node *ifNode = TR::Node::createif(TR::ificmple, aiAddNode, endNode, profBlock->getEntry());
     ifBlock->append(TR::TreeTop::create(comp(), ifNode));
-    ifBlock->append(TR::TreeTop::create(comp(), ifNode2));
-
 
     // Call block:
     // If there is no room left, call runtime helper first to process buffer
@@ -238,7 +234,7 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
 
     TR::Node *parserNode = TR::Node::create(TR::treetop, 1, parserCall);
     callBlock->append(TR::TreeTop::create(comp(), parserNode));
-    
+
     // Fix the CFG
     _cfg->addNode(callBlock);
     _cfg->addNode(profBlock);
