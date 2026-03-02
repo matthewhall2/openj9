@@ -379,9 +379,11 @@ if (breakOnHelperCall)
     {
         printf("Helper name is: %s\n", helperName);
         // Generate BRCL instruction (unconditional trap) for Z architecture
-        generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
+        //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
         // Or use debug breakpoint:
         // TR::Compiler->debug.breakPoint();
+                   generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode, cursor);
+
     }
 }
 
