@@ -201,8 +201,8 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     // Create the blocks first
     TR::Block *profBlock = TR::Block::createEmptyBlock(profilingNode, comp(), ifBlock->getFrequency());
 
-    TR::Block *callBlock = TR::Block::createEmptyBlock(profilingNode, comp(), VERSIONED_COLD_BLOCK_COUNT);
-    callBlock->setIsCold();
+    TR::Block *callBlock = TR::Block::createEmptyBlock(profilingNode, comp(), ifBlock->getFrequency());
+   // callBlock->setIsCold();
 
     // If block:
     // Compute buffer cursor + size required
