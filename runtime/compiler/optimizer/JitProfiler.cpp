@@ -247,7 +247,7 @@ TR::Block *TR_JitProfiler::createProfilingBlocks(TR::Node *profilingNode, TR::Bl
     callBlock->getExit()->join(profBlock->getEntry());
     profBlock->getExit()->setNextTreeTop(NULL);
 
-    _cfg->addEdge(ifBlock, profBlock);
+   // _cfg->addEdge(ifBlock, profBlock);
     _cfg->addEdge(ifBlock, callBlock);
     _cfg->addEdge(callBlock, profBlock);
 
