@@ -364,8 +364,7 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
         = createProfilingBlocks(instanceNode, ifBlock, 2 * TR::Compiler->om.sizeofReferenceAddress());
     ProfileBlockCreator blockCreator(this, profilingBlock, nextBlock, instanceNode);
 
-    TR::Block *flushBlock = TR::Block::createEmptyBlock(instanceNode, comp(), nextBlock->getFrequency());
-   _cfg->addNode(flushBlock);
+  
 
     // Adding to profiling block:
 
@@ -378,6 +377,9 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR::Node *classLoadNode = instanceNode->getFirstChild()->duplicateTree();
     TR::Node *nullNode = TR::Node::aconst(instanceNode, 0);
     TR_JitProfiler::ProfileBlockPair blockPair = blockCreator.addConditionTree(TR::ifacmpeq, classLoadNode, nullNode);
+
+      TR::Block *flushBlock = TR::Block::createEmptyBlock(instanceNode, comp(), nextBlock->getFrequency());
+   _cfg->addNode(flushBlock);
 
      TR::Node *vmThread = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
         new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
@@ -400,16 +402,16 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
    flushBlock->append(TR::TreeTop::create(comp(), flushGoto));
    _cfg->addEdge(flushBlock, nextBlock);
 
-   // Insert flushBlock into the tree chain
-   _lastTreeTop->join(flushBlock->getEntry());
-   _lastTreeTop = flushBlock->getExit();
-
+  
+   {
     // Store null on true side...
     ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushBlock, instanceNode,
         TR::Compiler->om.sizeofReferenceAddress());
     TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
     trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
+   }
 
+   {
     // Record class pointer
     ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushBlock, instanceNode,
         TR::Compiler->om.sizeofReferenceAddress());
@@ -417,9 +419,12 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR::Node *vftNode
         = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
     falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
-    
+   }
 
-   
+    // Insert flushBlock into the tree chain
+   _lastTreeTop->join(flushBlock->getEntry());
+   _lastTreeTop = flushBlock->getExit();
+ 
 
 
     logprintf(trace(), comp()->log(), "Populated block_%d to profile instanceof/checkcast node [%p]\n",
