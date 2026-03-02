@@ -376,54 +376,52 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     // Check object is non-null
     TR::Node *classLoadNode = instanceNode->getFirstChild()->duplicateTree();
     TR::Node *nullNode = TR::Node::aconst(instanceNode, 0);
-    TR_JitProfiler::ProfileBlockPair blockPair = blockCreator.addConditionTree(TR::ifacmpeq, classLoadNode, nullNode);
+      TR_JitProfiler::ProfileBlockPair blockPair = blockCreator.addConditionTree(TR::ifacmpeq, classLoadNode, nullNode);
 
-      TR::Block *flushBlock = TR::Block::createEmptyBlock(instanceNode, comp(), nextBlock->getFrequency());
-   _cfg->addNode(flushBlock);
-
-     TR::Node *vmThread = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
-        new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
+   // Helper to build a flush block targeting a given successor
+   auto makeFlushBlock = [&](TR::Block *successor) -> TR::Block* {
+      TR::Block *fb = TR::Block::createEmptyBlock(instanceNode, comp(), successor->getFrequency());
+      _cfg->addNode(fb);
+      TR::Node *vmt = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
+         new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
             TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "vmThread")));
-
-    TR::SymbolReference *parser
-        = getSymRefTab()->findOrCreateRuntimeHelper(TR_jitProfileParseBuffer, false, false, true);
+      TR::SymbolReference *parser = getSymRefTab()->findOrCreateRuntimeHelper(TR_jitProfileParseBuffer, false, false, true);
 #ifndef TR_TARGET_X86
-    parser->getSymbol()->castToMethodSymbol()->setPreservesAllRegisters();
+      parser->getSymbol()->castToMethodSymbol()->setPreservesAllRegisters();
 #endif
-    parser->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
+      parser->getSymbol()->castToMethodSymbol()->setSystemLinkageDispatch();
+      TR::Node *call = TR::Node::createWithSymRef(instanceNode, TR::call, 1, parser);
+      call->setAndIncChild(0, vmt);
+      fb->append(TR::TreeTop::create(comp(), TR::Node::create(TR::treetop, 1, call)));
+      _checklist->add(call);
+      TR::Node *gt = TR::Node::create(instanceNode, TR::Goto, 0, successor->getEntry());
+      fb->append(TR::TreeTop::create(comp(), gt));
+      _cfg->addEdge(fb, successor);
+      return fb;
+   };
 
-    TR::Node *parserCall = TR::Node::createWithSymRef(instanceNode, TR::call, 1, parser);
-    parserCall->setAndIncChild(0, vmThread);
-
-     flushBlock->append(TR::TreeTop::create(comp(), TR::Node::create(TR::treetop, 1, parserCall)));
-   _checklist->add(parserCall);
-
-   TR::Node *flushGoto = TR::Node::create(instanceNode, TR::Goto, 0, nextBlock->getEntry());
-   flushBlock->append(TR::TreeTop::create(comp(), flushGoto));
-   _cfg->addEdge(flushBlock, nextBlock);
-
-  
-   {
-    // Store null on true side...
-    ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushBlock, instanceNode,
-        TR::Compiler->om.sizeofReferenceAddress());
-    TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
-    trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
-   }
+   TR::Block *flushTrue  = makeFlushBlock(nextBlock);
+   TR::Block *flushFalse = makeFlushBlock(nextBlock);
 
    {
-    // Record class pointer
-    ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushBlock, instanceNode,
-        TR::Compiler->om.sizeofReferenceAddress());
-    TR::Node *classLoadPtrNode = instanceNode->getFirstChild()->duplicateTree();
-    TR::Node *vftNode
-        = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
-    falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
-   }
+   ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushTrue, instanceNode, TR::Compiler->om.sizeofReferenceAddress());
+   TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
+   trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
+   } // destructor: astore cursor, goto flushTrue
 
-    // Insert flushBlock into the tree chain
-   _lastTreeTop->join(flushBlock->getEntry());
-   _lastTreeTop = flushBlock->getExit();
+   {
+   ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushFalse, instanceNode, TR::Compiler->om.sizeofReferenceAddress());
+   TR::Node *classLoadPtrNode = instanceNode->getFirstChild()->duplicateTree();
+   TR::Node *vftNode = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
+   falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
+   } // destructor: astore cursor, goto flushFalse
+
+   // Join both flush blocks into the tree chain after _lastTreeTop
+   // (_lastTreeTop == trueBlock->getExit() after addConditionTree)
+   _lastTreeTop->join(flushTrue->getEntry());
+   flushTrue->getExit()->join(flushFalse->getEntry());
+   _lastTreeTop = flushFalse->getExit();
+
  
 
 
