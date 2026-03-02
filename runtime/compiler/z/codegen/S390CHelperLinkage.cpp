@@ -24,6 +24,8 @@
 #include "codegen/S390PrivateLinkage.hpp"
 
 #include "codegen/CodeGenerator.hpp"
+#include "infra/SimpleRegex.hpp"
+
 #include "codegen/GCStackAtlas.hpp"
 #include "codegen/Linkage_inlines.hpp"
 #include "codegen/Snippet.hpp"
@@ -368,10 +370,27 @@ TR::Register *J9::Z::CHelperLinkage::buildDirectDispatch(TR::Node *callNode, TR:
 #endif
     }
     TR::SymbolReference *callSymRef = callNode->getSymbolReference();
+
+    TR::SimpleRegex *breakOnHelperCall = comp()->getOptions()->getBreakOnHelperCall();
+if (breakOnHelperCall)
+{
+    const char *helperName = callSymRef->getName(comp()->getDebug());
+    if (helperName && TR::SimpleRegex::match(breakOnHelperCall, helperName))
+    {
+        printf("Helper name is: %s\n", helperName);
+        // Generate BRCL instruction (unconditional trap) for Z architecture
+        generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
+        // Or use debug breakpoint:
+        // TR::Compiler->debug.breakPoint();
+    }
+}
+
     void *destAddr = callNode->getSymbolReference()->getSymbol()->castToMethodSymbol()->getMethodAddress();
     cursor = new (cg()->trHeapMemory())
         TR::S390RILInstruction(TR::InstOpCode::BRASL, callNode, regRA, destAddr, callSymRef, cg());
     cursor->setDependencyConditions(preDeps);
+
+  
     if (isFastPathOnly) {
 #if defined(J9ZOS390)
         /**
