@@ -379,22 +379,7 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
     TR::Node *nullNode = TR::Node::aconst(instanceNode, 0);
     TR_JitProfiler::ProfileBlockPair blockPair = blockCreator.addConditionTree(TR::ifacmpeq, classLoadNode, nullNode);
 
-    // Store null on true side...
-    ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushBlock, instanceNode,
-        TR::Compiler->om.sizeofReferenceAddress());
-    TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
-    trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
-
-    // Record class pointer
-    ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushBlock, instanceNode,
-        TR::Compiler->om.sizeofReferenceAddress());
-    TR::Node *classLoadPtrNode = instanceNode->getFirstChild()->duplicateTree();
-    TR::Node *vftNode
-        = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
-    falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
-    
-
-    TR::Node *vmThread = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
+     TR::Node *vmThread = TR::Node::createWithSymRef(instanceNode, TR::loadaddr, 0,
         new (trHeapMemory()) TR::SymbolReference(getSymRefTab(),
             TR::RegisterMappedSymbol::createMethodMetaDataSymbol(trHeapMemory(), "vmThread")));
 
@@ -418,6 +403,23 @@ void TR_JitProfiler::addInstanceProfiling(TR::Node *instanceNode, TR::TreeTop *t
    // Insert flushBlock into the tree chain
    _lastTreeTop->join(flushBlock->getEntry());
    _lastTreeTop = flushBlock->getExit();
+
+    // Store null on true side...
+    ProfileBlockCreator trueCreator(this, blockPair.trueBlock, flushBlock, instanceNode,
+        TR::Compiler->om.sizeofReferenceAddress());
+    TR::Node *trueSideNullNode = TR::Node::aconst(instanceNode, 0);
+    trueCreator.addProfilingTree(TR::astorei, trueSideNullNode, TR::Compiler->om.sizeofReferenceAddress());
+
+    // Record class pointer
+    ProfileBlockCreator falseCreator(this, blockPair.falseBlock, flushBlock, instanceNode,
+        TR::Compiler->om.sizeofReferenceAddress());
+    TR::Node *classLoadPtrNode = instanceNode->getFirstChild()->duplicateTree();
+    TR::Node *vftNode
+        = TR::Node::createWithSymRef(TR::aloadi, 1, 1, classLoadPtrNode, getSymRefTab()->findOrCreateVftSymbolRef());
+    falseCreator.addProfilingTree(TR::astorei, vftNode, TR::Compiler->om.sizeofReferenceAddress());
+    
+
+   
 
 
     logprintf(trace(), comp()->log(), "Populated block_%d to profile instanceof/checkcast node [%p]\n",
