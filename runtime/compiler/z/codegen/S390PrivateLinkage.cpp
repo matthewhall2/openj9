@@ -2435,8 +2435,9 @@ if (breakOnHelperCall)
         while (cursor && !cursor->isCompare()) {
             cursor = cursor->getPrev();
         }
-        TR::Instruction *b = generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode);
-        b->move(cursor);
+        cursor = cursor->getPrev();
+        TR::Instruction *b = generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode, cursor);
+       // b->move(cursor);
 
     }
 }
