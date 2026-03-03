@@ -2431,7 +2431,12 @@ if (breakOnHelperCall)
         //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
         // Or use debug breakpoint:
         // TR::Compiler->debug.breakPoint();
-                   generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode);
+        TR::Instruction *cursor = cg()->getAppendInstruction();
+        while (cursor && !cursor->isCompare()) {
+            cursor = cursor->getPrev();
+        }
+        TR::Instruction *b = generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode, cursor);
+        
 
     }
 }
