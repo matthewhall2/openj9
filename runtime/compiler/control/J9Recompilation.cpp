@@ -214,7 +214,8 @@ void J9::Recompilation::beforeOptimization()
 
     // Create profilers
     //
-    if (self()->couldBeCompiledAgain()) {
+    static bool forceCompile = feGetEnv("alwaysProf") != NULL;
+    if (self()->couldBeCompiledAgain() || forceCompile) {
         if (_compilation->getProfilingMode() == JProfiling)
             self()->createProfilers();
         else if (!self()->useSampling()) {
