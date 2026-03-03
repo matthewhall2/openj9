@@ -2417,6 +2417,26 @@ J9::Z::PrivateLinkage::buildDirectCall(TR::Node * callNode, TR::SymbolReference 
         return gcPoint;
     }
 
+    if (callSymbol->isHelper()) {
+
+    TR::SimpleRegex *breakOnHelperCall = comp()->getOptions()->getBreakOnHelperCall();
+if (breakOnHelperCall)
+{
+    const char *helperName = callSymRef->getName(comp()->getDebug());
+    printf("Helper name is: %s\n", helperName);
+    if (helperName && TR::SimpleRegex::match(breakOnHelperCall, helperName))
+    {
+        printf("match: %s\n", helperName);
+        // Generate BRCL instruction (unconditional trap) for Z architecture
+        //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
+        // Or use debug breakpoint:
+        // TR::Compiler->debug.breakPoint();
+                   generateS390EInstruction(cg(), TR::InstOpCode::BREAK, callNode, cursor);
+
+    }
+}
+    }
+
     if (isJitDispatchJ9Method)
       {
       TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getJ9MethodArgumentRegister());

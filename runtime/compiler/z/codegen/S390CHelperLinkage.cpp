@@ -375,9 +375,12 @@ TR::Register *J9::Z::CHelperLinkage::buildDirectDispatch(TR::Node *callNode, TR:
 if (breakOnHelperCall)
 {
     const char *helperName = callSymRef->getName(comp()->getDebug());
+            printf("Helper name is: %s\n", helperName);
+
     if (helperName && TR::SimpleRegex::match(breakOnHelperCall, helperName))
     {
-        printf("Helper name is: %s\n", helperName);
+                    printf("match: %s\n", helperName);
+
         // Generate BRCL instruction (unconditional trap) for Z architecture
         //generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, callNode);
         // Or use debug breakpoint:
