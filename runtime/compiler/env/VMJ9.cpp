@@ -1350,6 +1350,10 @@ TR::DataType TR_J9VMBase::getClassPrimitiveDataType(TR_OpaqueClassBlock *clazz)
         return TR::NoType;
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
 
+    // if (j9class == vm->booleanReflectClass)
+    //     return TR::Int8;
+    // else if (j9class == vm->charReflectClass)
+    //     return TR::Int8;
     if (j9class == vm->floatReflectClass)
         return TR::Float;
     else if (j9class == vm->doubleReflectClass)
@@ -5016,6 +5020,10 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
 
     J9Class *test = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod()));
     J9Class *testI = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("I", 1, comp->getCurrentMethod()));
+    J9JavaVM *vm = getJ9JITConfig()->javaVM;
+    testI = vm->intReflectClass;
+    printf("enum of Integer: %d\n", getClassPrimitiveDataType(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod())));
+    printf("enum of Boolean: %d\n", getClassPrimitiveDataType(getClassFromSignature("java/lang/Boolean", 17, comp->getCurrentMethod())));
     TR_ASSERT_FATAL(test != NULL, "test class is null\n");
     TR_ASSERT_FATAL(testI != NULL, "teastI is null");
     printf("subtype Interger int: %d\n", instanceOfOrCheckCast(test, testI));
