@@ -5016,6 +5016,8 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
 
     J9Class *test = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod()));
     J9Class *testI = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("I", 1, comp->getCurrentMethod()));
+    TR_ASSERT_FATAL(test != NULL, "test class is null\n");
+    TR_ASSERT_FATAL(testI != NULL, "teastI is null");
     printf("subtype Interger int: %d\n", instanceOfOrCheckCast(test, testI));
     
     if ((isToClassPrimitive && isFromClassPrimitive))
