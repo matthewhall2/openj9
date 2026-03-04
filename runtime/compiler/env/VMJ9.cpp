@@ -5013,6 +5013,10 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
             isToClassPrimitive = false;
             }
         }
+
+    J9Class *test = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod()));
+    J9Class *testI = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("I", 1, comp->getCurrentMethod()));
+    printf("subtype Interger int: %d\n", instanceOfOrCheckCast(test, testI));
     
     if ((isToClassPrimitive && isFromClassPrimitive))
         return canPassPrimitiveType(getClassPrimitiveDataType(fromClass), getClassPrimitiveDataType(toClass));
@@ -5143,7 +5147,7 @@ TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wra
 
 
 // Check if srcType can be passed to a parameter of dstType
-bool canPassPrimitiveType(TR::DataType srcType, TR::DataType dstType)
+bool TR_J9VMBase::canPassPrimitiveType(TR::DataType srcType, TR::DataType dstType)
 {
     // Same type always works
     if (srcType == dstType)
