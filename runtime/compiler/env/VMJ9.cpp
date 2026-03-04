@@ -5023,8 +5023,8 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
     testI = vm->intReflectClass;
     test = vm->longReflectClass;
-    printf("enum of Integer: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod()))));
-    printf("enum of Boolean: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(getClassFromSignature("java/lang/Boolean", 17, comp->getCurrentMethod()))));
+    printf("enum of Integer: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(testI)));
+    printf("enum of long: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(testI)));
     TR_ASSERT_FATAL(test != NULL, "test class is null\n");
     TR_ASSERT_FATAL(testI != NULL, "teastI is null");
     printf("int -> long: %d\n", instanceOfOrCheckCast(testI, test));
