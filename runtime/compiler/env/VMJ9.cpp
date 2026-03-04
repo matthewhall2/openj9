@@ -1350,10 +1350,8 @@ TR::DataType TR_J9VMBase::getClassPrimitiveDataType(TR_OpaqueClassBlock *clazz)
         return TR::NoType;
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
 
-    // if (j9class == vm->booleanReflectClass)
-    //     return TR::Int8;
-    // else if (j9class == vm->charReflectClass)
-    //     return TR::Int8;
+    if (j9class == vm->charReflectClass)
+        return TR::Int16;
     if (j9class == vm->floatReflectClass)
         return TR::Float;
     else if (j9class == vm->doubleReflectClass)
@@ -5017,18 +5015,10 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
             isToClassPrimitive = false;
             }
         }
-
-    J9Class *test = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("java/lang/Integer", 17, comp->getCurrentMethod()));
-    J9Class *testI = TR::Compiler->cls.convertClassOffsetToClassPtr(getClassFromSignature("I", 1, comp->getCurrentMethod()));
-    J9JavaVM *vm = getJ9JITConfig()->javaVM;
-    testI = vm->intReflectClass;
-    test = vm->longReflectClass;
-    printf("enum of Integer: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(testI)));
-    printf("enum of long: %d\n", TR::DataType::getSize(getClassPrimitiveDataType(testI)));
-    TR_ASSERT_FATAL(test != NULL, "test class is null\n");
-    TR_ASSERT_FATAL(testI != NULL, "teastI is null");
-    printf("int -> long: %d\n", instanceOfOrCheckCast(testI, test));
     
+    
+
+    // instanceOfOrCheckCast does not give desired results for paramter passing
     if ((isToClassPrimitive && isFromClassPrimitive))
         return canPassPrimitiveType(getClassPrimitiveDataType(fromClass), getClassPrimitiveDataType(toClass));
     else if (!isToClassPrimitive && !isFromClassPrimitive)
