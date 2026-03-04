@@ -1348,7 +1348,6 @@ TR::DataType TR_J9VMBase::getClassPrimitiveDataType(TR_OpaqueClassBlock *clazz)
     J9Class *j9class = TR::Compiler->cls.convertClassOffsetToClassPtr(clazz);
     if (!j9class)
         return TR::NoType;
-
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
 
     if (j9class == vm->floatReflectClass)
@@ -4973,7 +4972,7 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
 }
 
 bool
-TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass)
+TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp)
    {
    J9Class *from   = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
    J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
@@ -4984,7 +4983,42 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
    if (!sameClassLoaders(fromClass, toClass))
       return false;
 
-   return instanceOfOrCheckCast(from, to);
+    TR_OpaqueClassBlock *tempClass = NULL;
+    bool isFromClassPrimitive = isPrimitiveClass(fromClass);
+    if (!isFromClassPrimitive) 
+        {
+        tempClass = getPrimitiveFromBox(comp, fromClass);
+        if (NULL != tempClass)
+            {
+            fromClass = tempClass;
+            isFromClassPrimitive = true;
+            }
+        else
+            {
+            isFromClassPrimitive = false;
+            }
+        }
+    
+    bool isToClassPrimitive = isPrimitiveClass(toClass);
+    if (!isToClassPrimitive)
+        {
+        tempClass = getPrimitiveFromBox(comp, toClass);
+        if (NULL != tempClass)
+            {
+            toClass = tempClass;
+            isToClassPrimitive = true;
+            }
+        else
+            {
+            isToClassPrimitive = false;
+            }
+        }
+    
+    if ((isToClassPrimitive && isFromClassPrimitive))
+        return canPassPrimitiveType(getClassPrimitiveDataType(fromClass), getClassPrimitiveDataType(toClass));
+    else if (!isToClassPrimitive && !isFromClassPrimitive)
+        return instanceOfOrCheckCast(from, to);
+    return false;
    }
 
 bool
@@ -5009,7 +5043,7 @@ TR_J9VMBase::isMethodHandleCompatibleType(
    TR_OpaqueClassBlock *mhReturnTypeClazz = getClassFromJavaLangClass(mhReturnType);
    TR_OpaqueClassBlock *desiredReturnTypeClazz = getClassFromJavaLangClass(desiredReturnType);
 
-   if (!isSubtypeOf(desiredReturnTypeClazz, mhReturnTypeClazz))
+   if (!isSubtypeOf(desiredReturnTypeClazz, mhReturnTypeClazz, comp))
       return false;
 
    uintptr_t mhParamTypes = getReferenceField(mtObject, "ptypes", "[Ljava/lang/Class;");
@@ -5029,7 +5063,7 @@ TR_J9VMBase::isMethodHandleCompatibleType(
       TR_OpaqueClassBlock *mhParamClazz = getClassFromJavaLangClass(getReferenceElement(mhParamTypes, i));
       TR_OpaqueClassBlock *dtParamclazz = getClassFromJavaLangClass(getReferenceElement(desiredParamTypes, i));
 
-      if (!isSubtypeOf(dtParamclazz, mhParamClazz))
+      if (!isSubtypeOf(dtParamclazz, mhParamClazz, comp))
          return false;
       }
       return true;
@@ -5049,6 +5083,101 @@ TR_J9VMBase::getMethodHandleAsTypeCache(
    uintptr_t mhObject = knot->getPointer(mhIndex);
    return getReferenceField(mhObject, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
    }
+
+TR_OpaqueClassBlock* 
+TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wrapperClass)
+{
+    if (isPrimitiveClass(wrapperClass))
+        return NULL;
+    
+    // Get wrapper class name
+    int32_t nameLen;
+    char *wrapperName = getClassNameChars(wrapperClass, nameLen);
+    
+    // Map wrapper class to primitive class signature
+    const char *primSig = NULL;
+    int32_t primSigLen = 0;
+    
+    if (nameLen == 17 && strncmp(wrapperName, "java/lang/Integer", 17) == 0) {
+        primSig = "I";
+        primSigLen = 1;
+    }
+    else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Long", 14) == 0) {
+        primSig = "J";
+        primSigLen = 1;
+    }
+    else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Byte", 14) == 0) {
+        primSig = "B";
+        primSigLen = 1;
+    }
+    else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Short", 15) == 0) {
+        primSig = "S";
+        primSigLen = 1;
+    }
+    else if (nameLen == 19 && strncmp(wrapperName, "java/lang/Character", 19) == 0) {
+        primSig = "C";
+        primSigLen = 1;
+    }
+    else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Float", 15) == 0) {
+        primSig = "F";
+        primSigLen = 1;
+    }
+    else if (nameLen == 16 && strncmp(wrapperName, "java/lang/Double", 16) == 0) {
+        primSig = "D";
+        primSigLen = 1;
+    }
+    else if (nameLen == 17 && strncmp(wrapperName, "java/lang/Boolean", 17) == 0) {
+        primSig = "Z";
+        primSigLen = 1;
+    }
+    else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Void", 14) == 0) {
+        primSig = "V";
+        primSigLen = 1;
+    }
+    else {
+        return NULL;
+    }
+    
+    return getClassFromSignature(primSig, primSigLen, comp->getCurrentMethod());
+}
+
+
+// Check if srcType can be passed to a parameter of dstType
+bool canPassPrimitiveType(TR::DataType srcType, TR::DataType dstType)
+{
+    // Same type always works
+    if (srcType == dstType)
+        return true;
+    
+    // Both must be primitives for this check
+    if (!srcType.isIntegral() && !srcType.isFloatingPoint())
+        return false;
+    if (!dstType.isIntegral() && !dstType.isFloatingPoint())
+        return false;
+    
+    // Widening conversions are safe (smaller to larger)
+    // int -> long is OK, long -> int is NOT
+    
+    if (srcType.isIntegral() && dstType.isIntegral()) {
+        // Integer widening: byte -> short -> int -> long
+        return TR::DataType::getSize(srcType) <= TR::DataType::getSize(dstType);
+    }
+    
+    if (srcType.isFloatingPoint() && dstType.isFloatingPoint()) {
+        // Float widening: float -> double
+        return TR::DataType::getSize(srcType) <= TR::DataType::getSize(dstType);
+    }
+    
+    // int -> float/double is allowed (with precision loss)
+    if (srcType.isIntegral() && dstType.isFloatingPoint()) {
+        return true;
+    }
+    
+    // float/double -> int requires explicit conversion (not safe)
+    return false;
+}
+
+
 
 /**
  * \brief
