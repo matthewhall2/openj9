@@ -987,7 +987,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
          {
          logprintf(trace(), comp()->log(), "Method types are the compatible%d\n");
          uintptr_t transFormedMH = fej9->getMethodHandleAsTypeCache(comp(), mhIndex);
-        if (NULL == transFormedMH) {
+        if (0 == transFormedMH) {
             logprintf(trace(), comp()->log(), "Null asType cache - cannot fold\n");
             return;
         }
