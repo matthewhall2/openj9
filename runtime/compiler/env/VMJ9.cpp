@@ -5000,7 +5000,7 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
         return instanceOfOrCheckCast(from, to);
     } else if (isToClassPrimitive && !isFromClassPrimitive) {
         TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, fromClass);
-        if (NULL == primitive)
+        if (NULL != primitive)
             return canPassPrimitiveType(primitive, toClass);
         else
             return false;
