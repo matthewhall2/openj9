@@ -1350,9 +1350,9 @@ TR::DataType TR_J9VMBase::getClassPrimitiveDataType(TR_OpaqueClassBlock *clazz)
         return TR::NoType;
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
 
-    if (j9class == vm->charReflectClass)
-        return TR::Int16;
-    if (j9class == vm->floatReflectClass)
+    if (j9class == vm->charArrayClass)
+       return TR::Int32; 
+    else if (j9class == vm->floatReflectClass)
         return TR::Float;
     else if (j9class == vm->doubleReflectClass)
         return TR::Double;
@@ -4976,54 +4976,33 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
 bool
 TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp)
    {
-   J9Class *from   = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
-   J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
-
+    J9Class *from;
+    J9Class *to;
    if (isAnonymousClass(fromClass) || isAnonymousClass(toClass))
       return false;
 
    if (!sameClassLoaders(fromClass, toClass))
       return false;
 
-    TR_OpaqueClassBlock *tempClass = NULL;
+    J9Class *tempClass = NULL;
     bool isFromClassPrimitive = isPrimitiveClass(fromClass);
-    if (!isFromClassPrimitive) 
-        {
-        tempClass = getPrimitiveFromBox(comp, fromClass);
-        if (NULL != tempClass)
-            {
-            fromClass = tempClass;
-            isFromClassPrimitive = true;
-            }
-        else
-            {
-            isFromClassPrimitive = false;
-            }
-        }
-    
     bool isToClassPrimitive = isPrimitiveClass(toClass);
-    if (!isToClassPrimitive)
-        {
-        tempClass = getPrimitiveFromBox(comp, toClass);
-        if (NULL != tempClass)
-            {
-            toClass = tempClass;
-            isToClassPrimitive = true;
-            }
-        else
-            {
-            isToClassPrimitive = false;
-            }
-        }
-    
-    
-
-    // instanceOfOrCheckCast does not give desired results for paramter passing
-    if ((isToClassPrimitive && isFromClassPrimitive))
-        return canPassPrimitiveType(getClassPrimitiveDataType(fromClass), getClassPrimitiveDataType(toClass));
+    if (isToClassPrimitive && isFromClassPrimitive)
+    {
+        return canPassPrimitiveType(fromClass, toClass);
+    }
     else if (!isToClassPrimitive && !isFromClassPrimitive)
+    {
+        from = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
+        to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
         return instanceOfOrCheckCast(from, to);
-    return false;
+    } else if (isToClassPrimitive && !isFromClassPrimitive) {
+        TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, fromClass);
+        if (NULL == primitive)
+        return canPassPrimitiveType(primitive, toClass);
+    } else {
+        return false;
+    }
    }
 
 bool
@@ -5089,7 +5068,7 @@ TR_J9VMBase::getMethodHandleAsTypeCache(
    return getReferenceField(mhObject, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
    }
 
-J9Class* 
+TR_OpaqueClassBlock* 
 TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wrapperClass)
 {
     if (isPrimitiveClass(wrapperClass))
@@ -5103,49 +5082,61 @@ TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wra
     const char *primSig = NULL;
     int32_t primSigLen = 0;
     J9JavaVM *vm = getJ9JITConfig()->javaVM;
+    J9Class *result = NULL;
     
     if (nameLen == 17 && strncmp(wrapperName, "java/lang/Integer", 17) == 0) {
-        return vm->intReflectClass;
+        result = vm->intReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Long", 14) == 0) {
-        return vm->longReflectClass;
+        result = vm->longReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Byte", 14) == 0) {
-        return vm->byteReflectClass;
+        result = vm->byteReflectClass;
     }
     else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Short", 15) == 0) {
-        return vm->shortReflectClass;
+        result = vm->shortReflectClass;
     }
     else if (nameLen == 19 && strncmp(wrapperName, "java/lang/Character", 19) == 0) {
-        return vm->charReflectClass;
+        result = vm->charReflectClass;
     }
     else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Float", 15) == 0) {
-        return vm->floatReflectClass;
+        result = vm->floatReflectClass;
     }
     else if (nameLen == 16 && strncmp(wrapperName, "java/lang/Double", 16) == 0) {
-        return vm->doubleReflectClass
+        result = vm->doubleReflectClass
     }
     else if (nameLen == 17 && strncmp(wrapperName, "java/lang/Boolean", 17) == 0) {
-        return vm->booleanReflectClass;
+        result = vm->booleanReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Void", 14) == 0) {
-        primSig = "V";
-        primSigLen = 1;
+        result = vm->voidReflectClass;
     }
     else {
         return NULL;
     }
-    
-    return getClassFromSignature(primSig, primSigLen, comp->getCurrentMethod());
+
+    return convertClassPtrToClassOffset(result);
 }
 
 
 // Check if srcType can be passed to a parameter of dstType
-bool TR_J9VMBase::canPassPrimitiveType(TR::DataType srcType, TR::DataType dstType)
+bool TR_J9VMBase::canPassPrimitiveType(TR_OpaqueClassBlock * src, TR_OpaqueClassBlock * dst)
 {
-    // Same type always works
-    if (srcType == dstType)
-        return true;
+    TR_ASSERT_FATAL(isPrimitiveClass(src), "Source class must be primitive\n");
+    TR_ASSERT_FATAL(isPrimitiveClass(dst), "Destination class must be primitive\n");
+    TR::DataType srcType = getClassPrimitiveDataType(src);
+    TR::DataType dstType = getClassPrimitiveDataType(dst);
+
+    J9Class *sourceClass = TR::Compiler->cls.convertClassOffsetToClassPtr(src);
+    J9Class *dstClass = TR::Compiler->cls.convertClassOffsetToClassPtr(dst);
+    J9JavaVM *vm = getJ9JITConfig()->javaVM;
+
+    // we must only passing in a char if the method accepts char
+    // if we are passing in a char, any type of size 32 or 64 is valid
+    if (dstClass == vm->charReflectClass && sourceClass != vm->charReflectClass)
+        return false;
+    else if (sourceClass == vm->charReflectClass)
+        srcType = TR::Int32;
     
     // Both must be primitives for this check
     if (!srcType.isIntegral() && !srcType.isFloatingPoint())
@@ -5166,7 +5157,8 @@ bool TR_J9VMBase::canPassPrimitiveType(TR::DataType srcType, TR::DataType dstTyp
         return TR::DataType::getSize(srcType) <= TR::DataType::getSize(dstType);
     }
     
-    // int -> float/double is allowed (with precision loss)
+    // long -> float is allowed with precision loss
+    // int -> float/double is fine
     if (srcType.isIntegral() && dstType.isFloatingPoint()) {
         return true;
     }

@@ -1169,10 +1169,10 @@ public:
 
    virtual uintptr_t getMethodHandleAsTypeCache(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex);
 
-   virtual J9Class* 
+   virtual TR_OpaqueClassBlock* 
    getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wrapperClass);
 
-virtual bool canPassPrimitiveType(TR::DataType srcType, TR::DataType dstType);
+virtual bool canPassPrimitiveType(TR_OpaqueClassBlock * srcType, TR_OpaqueClassBlock * dstType);
 
     /*
      * \brief
