@@ -5089,7 +5089,7 @@ TR_J9VMBase::getMethodHandleAsTypeCache(
    return getReferenceField(mhObject, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
    }
 
-TR_OpaqueClassBlock* 
+J9Class* 
 TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wrapperClass)
 {
     if (isPrimitiveClass(wrapperClass))
@@ -5102,38 +5102,31 @@ TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wra
     // Map wrapper class to primitive class signature
     const char *primSig = NULL;
     int32_t primSigLen = 0;
+    J9JavaVM *vm = getJ9JITConfig()->javaVM;
     
     if (nameLen == 17 && strncmp(wrapperName, "java/lang/Integer", 17) == 0) {
-        primSig = "I";
-        primSigLen = 1;
+        return vm->intReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Long", 14) == 0) {
-        primSig = "J";
-        primSigLen = 1;
+        return vm->longReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Byte", 14) == 0) {
-        primSig = "B";
-        primSigLen = 1;
+        return vm->byteReflectClass;
     }
     else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Short", 15) == 0) {
-        primSig = "S";
-        primSigLen = 1;
+        return vm->shortReflectClass;
     }
     else if (nameLen == 19 && strncmp(wrapperName, "java/lang/Character", 19) == 0) {
-        primSig = "C";
-        primSigLen = 1;
+        return vm->charReflectClass;
     }
     else if (nameLen == 15 && strncmp(wrapperName, "java/lang/Float", 15) == 0) {
-        primSig = "F";
-        primSigLen = 1;
+        return vm->floatReflectClass;
     }
     else if (nameLen == 16 && strncmp(wrapperName, "java/lang/Double", 16) == 0) {
-        primSig = "D";
-        primSigLen = 1;
+        return vm->doubleReflectClass
     }
     else if (nameLen == 17 && strncmp(wrapperName, "java/lang/Boolean", 17) == 0) {
-        primSig = "Z";
-        primSigLen = 1;
+        return vm->booleanReflectClass;
     }
     else if (nameLen == 14 && strncmp(wrapperName, "java/lang/Void", 14) == 0) {
         primSig = "V";
