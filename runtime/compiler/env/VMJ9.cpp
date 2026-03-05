@@ -4986,6 +4986,9 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
    if (!sameClassLoaders(fromClass, toClass))
       return false;
 
+    if (isJavaLangObject(toClass))
+        return true;
+
     J9Class *tempClass = NULL;
     bool isFromClassPrimitive = isPrimitiveClass(fromClass);
     bool isToClassPrimitive = isPrimitiveClass(toClass);
@@ -5004,7 +5007,7 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
             return canPassPrimitiveType(primitive, toClass);
         else
             return false;
-    } else {
+    } else { // !isToClassPrimitive && isFromClassPrimitive
         TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, toClass);
         return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
     }
