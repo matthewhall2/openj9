@@ -5004,7 +5004,7 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
         return canPassPrimitiveType(primitive, toClass);
     } else {
         TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, toClass);
-        return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass)
+        return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
     }
    }
 
