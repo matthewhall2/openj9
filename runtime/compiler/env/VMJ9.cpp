@@ -4976,8 +4976,10 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
 bool
 TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp)
    {
-    J9Class *from;
-    J9Class *to;
+    J9Class *from = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
+    J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
+    if (fromClass == toClass)
+        return true;
    if (isAnonymousClass(fromClass) || isAnonymousClass(toClass))
       return false;
 
@@ -5001,7 +5003,8 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
         if (NULL == primitive)
         return canPassPrimitiveType(primitive, toClass);
     } else {
-        return false;
+        TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, toClass);
+        return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass)
     }
    }
 
@@ -5103,7 +5106,7 @@ TR_J9VMBase::getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wra
         result = vm->floatReflectClass;
     }
     else if (nameLen == 16 && strncmp(wrapperName, "java/lang/Double", 16) == 0) {
-        result = vm->doubleReflectClass
+        result = vm->doubleReflectClass;
     }
     else if (nameLen == 17 && strncmp(wrapperName, "java/lang/Boolean", 17) == 0) {
         result = vm->booleanReflectClass;
