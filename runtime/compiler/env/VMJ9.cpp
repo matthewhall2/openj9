@@ -5008,6 +5008,7 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
         else
             return false;
     } else { // !isToClassPrimitive && isFromClassPrimitive
+        // case of toClass being java/lang/Object is covered above
         TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, toClass);
         return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
     }
