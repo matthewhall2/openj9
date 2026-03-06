@@ -5052,7 +5052,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     TR::Compilation *comp = cg->comp();
 
     bool isCheckCast = false;
-    static bool useNew = feGetEnv("useNew");
+    static bool useNew = feGetEnv("useNew") != NULL;
     switch (node->getOpCodeValue()) {
         case TR::checkcast:
         case TR::checkcastAndNULLCHK:
