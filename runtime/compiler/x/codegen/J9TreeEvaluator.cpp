@@ -4399,30 +4399,37 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     if (!fastFail && !fastPass) {
         TR::Node *helperCallNode = outlinedHelperCall->getCallNode();
         TR::Register *helperReg = NULL;
-        if (helperCallNode->getFirstChild() == node->getFirstChild()) {
-    helperReg = helperCallNode->getFirstChild()->getRegister();
-    if (NULL != helperReg) {
-        // Don't force it back into the same register!
-        // Let RA pick a new register for the post-call value
-        TR::Register *postCallReg = cg->allocateRegister();
-        deps->addPostCondition(postCallReg, TR::RealRegister::NoReg, cg);
-        // Update the node to use the new register
-        helperCallNode->getFirstChild()->setRegister(postCallReg);
-    }
-}
+//         if (helperCallNode->getFirstChild() == node->getFirstChild()) {
+//     helperReg = helperCallNode->getFirstChild()->getRegister();
+//     if (NULL != helperReg) {
+//         // Don't force it back into the same register!
+//         // Let RA pick a new register for the post-call value
+//         TR::Register *postCallReg = cg->allocateRegister();
+//         deps->addPostCondition(postCallReg, TR::RealRegister::NoReg, cg);
+//         // Update the node to use the new register
+//         helperCallNode->getFirstChild()->setRegister(postCallReg);
+//     }
+// }
 
-if (helperCallNode->getSecondChild() == node->getSecondChild()) {
-    helperReg = helperCallNode->getSecondChild()->getRegister();
-    if (NULL != helperReg) {
-        // Don't force it back into the same register!
-        // Let RA pick a new register for the post-call value
-        TR::Register *postCallReg = cg->allocateRegister();
-        deps->addPostCondition(postCallReg, TR::RealRegister::NoReg, cg);
-        // Update the node to use the new register
-        helperCallNode->getSecondChild()->setRegister(postCallReg);
-    }
+// if (helperCallNode->getSecondChild() == node->getSecondChild()) {
+//     helperReg = helperCallNode->getSecondChild()->getRegister();
+//     if (NULL != helperReg) {
+//         // Don't force it back into the same register!
+//         // Let RA pick a new register for the post-call value
+//         TR::Register *postCallReg = cg->allocateRegister();
+//         deps->addPostCondition(postCallReg, TR::RealRegister::NoReg, cg);
+//         // Update the node to use the new register
+//         helperCallNode->getSecondChild()->setRegister(postCallReg);
+//     }
+// }
+helperReg = helperCallNode->getFirstChild()->getRegister();
+if (NULL != helperReg) {
+    deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
 }
-
+helperReg = helperCallNode->getSecondChild()->getRegister();
+if (NULL != helperReg) {
+    deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+}
 
         // if (helperCallNode->getFirstChild() == node->getFirstChild()) {
         //     helperReg = helperCallNode->getFirstChild()->getRegister();
