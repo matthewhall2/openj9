@@ -4281,19 +4281,19 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     TR::Register *fromClassReg = cg->evaluate(fromClass);
     TR::Register *toClassReg = cg->evaluate(toClass);
 
-    if (cg->comp()->getDebug()) {
-    const char *opcodeName = "fromClass";
-    char *fcdn = (char*)comp->trMemory()->allocateHeapMemory(10);
-    strcpy(fcdn, opcodeName);
-    comp->getToStringMap().Add((void*)fromClassReg, fcdn);
-}
+//     if (cg->comp()->getDebug()) {
+//     const char *opcodeName = "fromClass";
+//     char *fcdn = (char*)comp->trMemory()->allocateHeapMemory(10);
+//     strcpy(fcdn, opcodeName);
+//     comp->getToStringMap().Add((void*)fromClassReg, fcdn);
+// }
 
- if (cg->comp()->getDebug()) {
-    const char *opcodeName = "toClass";
-    char *tcdn = (char*)comp->trMemory()->allocateHeapMemory(8);
-    strcpy(tcdn, opcodeName);
-    comp->getToStringMap().Add((void*)toClassReg, tcdn);
-}
+//  if (cg->comp()->getDebug()) {
+//     const char *opcodeName = "toClass";
+//     char *tcdn = (char*)comp->trMemory()->allocateHeapMemory(8);
+//     strcpy(tcdn, opcodeName);
+//     comp->getToStringMap().Add((void*)toClassReg, tcdn);
+// }
 
     bool use64BitClasses = comp->target().is64Bit()
         && (!TR::Compiler->om.generateCompressedObjectHeaders()
