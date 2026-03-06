@@ -4281,10 +4281,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     TR::Register *fromClassReg = cg->evaluate(fromClass);
     TR::Register *toClassReg = cg->evaluate(toClass);
     const char *fc = "fromClass";
-comp()->getToStringMap().Add((void*)fromClassReg, fc);
+cg->comp()->getToStringMap().Add((void*)fromClassReg, fc);
 
 const char *tc = "toClass";
-comp()->getToStringMap().Add((void*)toClassReg, tc);
+cg->comp()->getToStringMap().Add((void*)toClassReg, tc);
 
     bool use64BitClasses = comp->target().is64Bit()
         && (!TR::Compiler->om.generateCompressedObjectHeaders()
