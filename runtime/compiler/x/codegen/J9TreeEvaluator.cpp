@@ -4422,14 +4422,14 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 //         helperCallNode->getSecondChild()->setRegister(postCallReg);
 //     }
 // }
-helperReg = helperCallNode->getFirstChild()->getRegister();
-if (NULL != helperReg) {
-    deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-}
-helperReg = helperCallNode->getSecondChild()->getRegister();
-if (NULL != helperReg) {
-    deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-}
+// helperReg = helperCallNode->getFirstChild()->getRegister();
+// if (NULL != helperReg) {
+//     deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+// }
+// helperReg = helperCallNode->getSecondChild()->getRegister();
+// if (NULL != helperReg) {
+//     deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+// }
 
         // if (helperCallNode->getFirstChild() == node->getFirstChild()) {
         //     helperReg = helperCallNode->getFirstChild()->getRegister();
