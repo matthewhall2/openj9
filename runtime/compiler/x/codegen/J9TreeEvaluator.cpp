@@ -4423,9 +4423,14 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     generateLabelInstruction(TR::InstOpCode::label, node, endLabel, deps, cg);
     node->setRegister(resultReg);
      static bool decCountEval = feGetEnv("decCountEval") != NULL;
-    if (decCountEval) {
+          static bool recDec = feGetEnv("recDec") != NULL;
+
+    if (decCountEval && !recDec) {
       cg->recursivelyDecReferenceCount(node->getChild(0));
     cg->recursivelyDecReferenceCount(node->getChild(1));
+    } else if (recDec && !decCountEval) {
+cg->decReferenceCount(node->getChild(0));
+cg->decReferenceCount(node->getChild(1));
     }
   
     return resultReg;

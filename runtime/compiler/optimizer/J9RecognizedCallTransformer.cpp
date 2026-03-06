@@ -80,6 +80,8 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
     treetop->insertBefore(TR::TreeTop::create(comp(),
         TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, fromClass), nullchk)));
 
+   //treetop->insertBefore(TR::TreeTop::create(comp(), TR::Node::createWithSymRef(TR::NULLCHK, 1, 1, TR::Node::create(node, TR::PassThrough, 1, toClass), nullchk)));
+
     prepareToReplaceNode(node);
     node->setNumChildren(2);
 
