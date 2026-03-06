@@ -612,7 +612,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 			</disable>
 		</disables>
 		<variations>
-			<variation>-Xdump:java -Xgcpolicy:gencon -Xjit:\"count=0,optLevel=hot,{*hw.testHw*}\(breakOnEntry\),{*hw.func*}\(breakOnEntry\)\"</variation>
+			<variation>-Xdump:java -Xgcpolicy:gencon -Xjit:count=0,optLevel=hot,{*hw.testHw*}\(breakOnEntry\),{*hw.func*}\(breakOnEntry\)</variation>
 			<variation>-Xdump:java -Xgcpolicy:optavgpause -Xjit:count=0</variation>
 			<variation>-Xdump:java -Xjit:enableHCR,enableOSR,count=0</variation>
 		</variations>
