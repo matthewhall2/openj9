@@ -5110,6 +5110,8 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
 
     bool isCheckCast = false;
     static bool useNew = feGetEnv("useNew") != NULL;
+        static bool justHelper = feGetEnv("justHelper") != NULL;
+
     switch (node->getOpCodeValue()) {
         case TR::checkcast:
         case TR::checkcastAndNULLCHK:
@@ -5119,6 +5121,9 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
             break;
         case TR::icall: // TR_checkAssignable
             // disabled if TR_disableInliningOfIsAssignableFrom is set
+            if (justHelper) {
+                return TR::TreeEvaluator::performCall(node, false, false, cg);
+            }
             if (cg->supportsInliningOfIsAssignableFrom() && useNew) {
                 return generateInlinedIsAssignableFrom(node, cg);
             }
