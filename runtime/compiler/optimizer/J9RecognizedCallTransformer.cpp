@@ -91,6 +91,9 @@ void J9::RecognizedCallTransformer::process_java_lang_Class_IsAssignableFrom(TR:
 
     node->setAndIncChild(0, TR::Node::createWithSymRef(TR::aloadi, 1, 1, fromClass, classFromJavaLangClassSR));
     node->setAndIncChild(1, TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClass, classFromJavaLangClassSR));
+
+    toClass->recursivelyDecReferenceCount();
+    fromClass->recursivelyDecReferenceCount();
 }
 
 static void substituteNode(TR::NodeChecklist &visited, TR::Node *subOld, TR::Node *subNew, TR::Node *node)
