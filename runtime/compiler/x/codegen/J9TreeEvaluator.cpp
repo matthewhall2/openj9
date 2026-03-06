@@ -4327,13 +4327,15 @@ cg->comp()->getToStringMap().Add((void*)toClassReg, tc);
 
     TR_X86ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
     TR_OutlinedInstructions *outlinedHelperCall = NULL;
+    if (!fastFail)
+        generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
     generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
     if (!fastFail && !fastPass) {
         outlinedHelperCall = new (cg->trHeapMemory())
             TR_OutlinedInstructions(node, TR::icall, resultReg, outlinedCallLabel, endLabel, cg);
         cg->getOutlinedInstructionsList().push_front(outlinedHelperCall);
         // load with initial result of true
-        generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
+       
 
         if (isToClassKnownArray) {
             generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
