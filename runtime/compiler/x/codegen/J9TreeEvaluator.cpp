@@ -4193,7 +4193,7 @@ inline void generateInlineSuperclassTest(TR::Node *node, TR::CodeGenerator *cg, 
         generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, toClassDepthReg,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
         cursor = generateLabelInstruction(TR::InstOpCode::JAE4, node, failLabel, cg);
-    } else {
+    } else if (toClassDepth >= comp->getOptions()->_minimumSuperclassArraySize) {
         TR::Register *fromClassDepthReg = srm->findOrCreateScratchRegister();
         // cast class depth >= obj class depth, return false
         cursor = generateRegMemInstruction(
@@ -4386,14 +4386,16 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     }
 
     TR::RegisterDependencyConditions *deps
-        = generateRegisterDependencyConditions((uint8_t)0, 6 + srm->numAvailableRegisters(), cg);
+        = generateRegisterDependencyConditions((uint8_t)2, 6 + srm->numAvailableRegisters(), cg);
     srm->addScratchRegistersToDependencyList(deps);
     srm->stopUsingRegisters();
     deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
     deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+    deps->addPreCondition(fromClassReg, TR::RealRegister::NoReg, cg);
     if (fromClassReg != toClassReg) {
         deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
-    }
+        deps->addPreCondition(toClassReg, TR::RealRegister::NoReg, cg);
+    }    
 
     // no helper call used for fast fail/pass cases
     if (!fastFail && !fastPass) {
