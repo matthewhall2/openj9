@@ -4193,7 +4193,7 @@ inline void generateInlineSuperclassTest(TR::Node *node, TR::CodeGenerator *cg, 
         generateRegMemInstruction(TR::InstOpCode::CMP2RegMem, node, toClassDepthReg,
             generateX86MemoryReference(fromClassReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
         cursor = generateLabelInstruction(TR::InstOpCode::JAE4, node, failLabel, cg);
-    } else if (toClassDepth >= comp->getOptions()->_minimumSuperclassArraySize) {
+    } else if (toClassDepth >= cg->comp()->getOptions()->_minimumSuperclassArraySize) {
         TR::Register *fromClassDepthReg = srm->findOrCreateScratchRegister();
         // cast class depth >= obj class depth, return false
         cursor = generateRegMemInstruction(
