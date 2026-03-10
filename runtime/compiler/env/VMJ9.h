@@ -1165,10 +1165,14 @@ public:
     */
    virtual bool isMethodHandleCompatibleType(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex, TR::KnownObjectTable::Index expectedTypeIndex);
 
-   virtual bool isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp);
+   virtual bool canPassType(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp);
 
    virtual uintptr_t getMethodHandleAsTypeCache(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex);
 
+   /** 
+    * \brief fetches the underlying primitive type for a class. If the given class is not one of the 
+    * primitive boxes, returns null
+    */
    virtual TR_OpaqueClassBlock* 
    getPrimitiveFromBox(TR::Compilation *comp, TR_OpaqueClassBlock *wrapperClass);
 

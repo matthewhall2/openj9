@@ -1097,6 +1097,12 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             }
             break;
         }
+        // case TR::java_lang_invoke_Invokers_checkGenericType: {
+        //     Operand *targetMH = topn(0);
+        //     Operand *srcMH = topn(1);
+
+        //     break;
+        // }
         case TR::jdk_internal_foreign_layout_ValueLayouts_AbstractValueLayout_accessHandle: {
             Operand *layoutOperand = top();
             TR::KnownObjectTable::Index layoutIndex = layoutOperand->getKnownObjectIndex();

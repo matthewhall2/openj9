@@ -3520,7 +3520,6 @@ void TR_ResolvedJ9Method::construct()
          "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;") },
         { x(TR::java_lang_invoke_MethodHandle_asType_instance, "asType",
          "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;") },
-        {x(TR::java_lang_invoke_Invokers_checkGenericType, "checkGenericType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
         { TR::java_lang_invoke_MethodHandle_invokeBasic, 11, "invokeBasic", (int16_t)-1, "*" },
         { TR::java_lang_invoke_MethodHandle_linkToStatic, 12, "linkToStatic", (int16_t)-1, "*" },
         { TR::java_lang_invoke_MethodHandle_linkToSpecial, 13, "linkToSpecial", (int16_t)-1, "*" },
@@ -3640,6 +3639,7 @@ void TR_ResolvedJ9Method::construct()
     static X InvokersMethods[] = {
         { TR::java_lang_invoke_Invokers_checkCustomized, 15, "checkCustomized", (int16_t)-1, "*" },
         { TR::java_lang_invoke_Invokers_checkExactType, 14, "checkExactType", (int16_t)-1, "*" },
+        {x(TR::java_lang_invoke_Invokers_checkGenericType, "checkGenericType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
         { TR::java_lang_invoke_Invokers_getCallSiteTarget, 17, "getCallSiteTarget", (int16_t)-1, "*" },
         { x(TR::java_lang_invoke_Invokers_checkVarHandleGenericType, "checkVarHandleGenericType",
          "(Ljava/lang/invoke/VarHandle;Ljava/lang/invoke/VarHandle$AccessDescriptor;)Ljava/lang/invoke/"

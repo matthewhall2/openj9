@@ -4974,10 +4974,8 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
 }
 
 bool
-TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp)
+TR_J9VMBase::canPassType(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *toClass, TR::Compilation *comp)
    {
-    J9Class *from = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
-    J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
     if (fromClass == toClass)
         return true;
    if (isAnonymousClass(fromClass) || isAnonymousClass(toClass))
@@ -4998,19 +4996,20 @@ TR_J9VMBase::isSubtypeOf(TR_OpaqueClassBlock *fromClass, TR_OpaqueClassBlock *to
     }
     else if (!isToClassPrimitive && !isFromClassPrimitive)
     {
-        from = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
-        to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
+        J9Class *from = TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
+        J9Class *to = TR::Compiler->cls.convertClassOffsetToClassPtr(toClass);
         return instanceOfOrCheckCast(from, to);
     } else if (isToClassPrimitive && !isFromClassPrimitive) {
-        TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, fromClass);
-        if (NULL != primitive)
-            return canPassPrimitiveType(primitive, toClass);
+        TR_OpaqueClassBlock *fromPrimitive = getPrimitiveFromBox(comp, fromClass);
+        if (NULL != fromPrimitive)
+            return canPassPrimitiveType(fromPrimitive, toClass);
         else
             return false;
     } else { // !isToClassPrimitive && isFromClassPrimitive
+        // when the toClass is not primitive and the fromClass is, you can only pass if toClass is the box of fromClass
         // case of toClass being java/lang/Object is covered above
-        TR_OpaqueClassBlock *primitive = getPrimitiveFromBox(comp, toClass);
-        return TR::Compiler->cls.convertClassOffsetToClassPtr(primitive) == TR::Compiler->cls.convertClassOffsetToClassPtr(fromClass);
+        TR_OpaqueClassBlock *toPrimitive = getPrimitiveFromBox(comp, toClass);
+        return toPrimitive == fromClass;
     }
    }
 
@@ -5036,7 +5035,7 @@ TR_J9VMBase::isMethodHandleCompatibleType(
    TR_OpaqueClassBlock *mhReturnTypeClazz = getClassFromJavaLangClass(mhReturnType);
    TR_OpaqueClassBlock *desiredReturnTypeClazz = getClassFromJavaLangClass(desiredReturnType);
 
-   if (!isSubtypeOf(desiredReturnTypeClazz, mhReturnTypeClazz, comp))
+   if (!canPassType(desiredReturnTypeClazz, mhReturnTypeClazz, comp))
       return false;
 
    uintptr_t mhParamTypes = getReferenceField(mtObject, "ptypes", "[Ljava/lang/Class;");
@@ -5056,7 +5055,7 @@ TR_J9VMBase::isMethodHandleCompatibleType(
       TR_OpaqueClassBlock *mhParamClazz = getClassFromJavaLangClass(getReferenceElement(mhParamTypes, i));
       TR_OpaqueClassBlock *dtParamclazz = getClassFromJavaLangClass(getReferenceElement(desiredParamTypes, i));
 
-      if (!isSubtypeOf(dtParamclazz, mhParamClazz, comp))
+      if (!canPassType(dtParamclazz, mhParamClazz, comp))
          return false;
       }
       return true;
@@ -5142,20 +5141,15 @@ bool TR_J9VMBase::canPassPrimitiveType(TR_OpaqueClassBlock * src, TR_OpaqueClass
 
     // we must only passing in a char if the method accepts char
     // if we are passing in a char, any type of size 32 or 64 is valid
+    //
+    // We don't want to add a case for char to getClassPrimitiveDataType, since other methods might rely on that returning
+    // TR::NoType for char.
     if (dstClass == vm->charReflectClass && sourceClass != vm->charReflectClass)
         return false;
     else if (sourceClass == vm->charReflectClass)
         srcType = TR::Int32;
-    
-    // Both must be primitives for this check
-    if (!srcType.isIntegral() && !srcType.isFloatingPoint())
-        return false;
-    if (!dstType.isIntegral() && !dstType.isFloatingPoint())
-        return false;
-    
-    // Widening conversions are safe (smaller to larger)
-    // int -> long is OK, long -> int is NOT
-    
+
+    // Widening conversions are safe
     if (srcType.isIntegral() && dstType.isIntegral()) {
         // Integer widening: byte -> short -> int -> long
         return TR::DataType::getSize(srcType) <= TR::DataType::getSize(dstType);
@@ -5165,7 +5159,7 @@ bool TR_J9VMBase::canPassPrimitiveType(TR_OpaqueClassBlock * src, TR_OpaqueClass
         // Float widening: float -> double
         return TR::DataType::getSize(srcType) <= TR::DataType::getSize(dstType);
     }
-    
+
     // long -> float is allowed with precision loss
     // int -> float/double is fine
     if (srcType.isIntegral() && dstType.isFloatingPoint()) {
