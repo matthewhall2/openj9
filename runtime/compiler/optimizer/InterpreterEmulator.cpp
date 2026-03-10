@@ -1097,6 +1097,35 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             }
             break;
         }
+        case TR::java_lang_invoke_Invokers_checkGenericType: {
+            Operand *targetMH = topn(1);
+            Operand *srcMT = topn(0);
+            TR::KnownObjectTable::Index mhIndex = targetMH->getKnownObjectIndex();
+            TR::KnownObjectTable::Index mtIndex = srcMT->getKnownObjectIndex();
+            debugTrace(tracer(), "Known MethodHandle koi %d\n", mhIndex);
+            debugTrace(tracer(), "Known MethodType koi %d\n", mhIndex);
+            printf("Interpreter Emulator: MH.checkGenericType\n");
+            TR::KnownObjectTable *knot = comp()->getKnownObjectTable();
+            if (knot && mhIndex != TR::KnownObjectTable::UNKNOWN && mtIndex != TR::KnownObjectTable::UNKNOWN
+                && !knot->isNull(mhIndex) && !knot->isNull(mtIndex)) {
+
+                if (comp()->fej9()->isMethodHandleExpectedType(comp(), mhIndex, mtIndex)) {
+                    result = new (trStackMemory()) KnownObjOperand(mhIndex);
+                    debugTrace(tracer(), "MH.asType: exact match\n", mhIndex);
+                    printf("MH.asType: exact match\n");
+                    break;
+                }
+
+                uintptr_t convertedMH = comp()->fej9()->getConvertedMethodhandle(comp(), mhIndex, mtIndex);
+                if (0 != convertedMH) {
+                    TR::KnownObjectTable::Index convertedMHIndex = knot->getOrCreateIndex(convertedMH);
+                    result = new (trStackMemory()) KnownObjOperand(convertedMHIndex);
+                    debugTrace(tracer(), "MH.asType: subtype match\n", mhIndex);
+                    printf("MH.asType: subtype match\n");
+                }
+            }
+            break;
+        }
         case TR::jdk_internal_foreign_layout_ValueLayouts_AbstractValueLayout_accessHandle: {
             Operand *layoutOperand = top();
             TR::KnownObjectTable::Index layoutIndex = layoutOperand->getKnownObjectIndex();
