@@ -4438,7 +4438,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             helperReg = helperCallNode->getFirstChild()->getRegister();
             if (NULL != helperReg) {
                 deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg)
+                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg);
             }
         }
 
@@ -4446,7 +4446,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
             helperReg = helperCallNode->getSecondChild()->getRegister();
             if (NULL != helperReg) {
                 deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg)
+                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg);
             }
         }
 
