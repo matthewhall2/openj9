@@ -4911,8 +4911,26 @@ TR::KnownObjectTable::Index TR_J9VMBase::getMethodHandleTableEntryIndex(TR::Comp
     uintptr_t methodTypeObj = getReferenceField(methodHandleObj, "type", "Ljava/lang/invoke/MethodType;");
     uintptr_t symbolicMTInvokerObj
         = getReferenceField(accessDescriptorObj, "symbolicMethodTypeInvoker", "Ljava/lang/invoke/MethodType;");
-    if (methodTypeObj != symbolicMTInvokerObj)
+
+    // the cached methodhandle will not be in the table; MethodHandleTransformer's processing of
+    // checkVarHandleGenericType may not work properly if TR_ALLOW_NON_CONST_KNOWN_OBJECTS is defined.
+#ifdef TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+    if (methodTypeObj != symbolicMTInvokerObj) {
         return result;
+    }
+#else // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+    if (methodTypeObj != symbolicMTInvokerObj) {
+        uintptr_t cachedMT = 0;
+        uintptr_t cachedMH = getReferenceField(methodHandleObj, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
+        if (cachedMH != 0)
+            cachedMT = getReferenceField(cachedMH, "type", "Ljava/lang/invoke/MethodType;");
+
+        if (cachedMT != 0 && symbolicMTInvokerObj == cachedMT)
+            methodHandleObj = cachedMH;
+        else
+            return result;
+    }
+#endif // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
 
     result = knot->getOrCreateIndex(methodHandleObj);
 
@@ -4934,6 +4952,40 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
     uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
     uintptr_t etObject = knot->getPointer(expectedTypeIndex);
     return mtObject == etObject;
+}
+
+OMR::KnownObjectTable::Index TR_J9VMBase::getConvertedMethodHandle(TR::Compilation *comp,
+    TR::KnownObjectTable::Index mhIndex, TR::KnownObjectTable::Index desiredTypeIndex)
+{
+    /* Individual type compatibility checks on each type in the MT are not needed. Since we only fold
+     * when we have a populated cache, and a call to asType would make <desiredType> and the asType result's
+     * MT match, we only need to check for MT pointer equality.
+     */
+    TR::KnownObjectTable *knot = comp->getKnownObjectTable();
+    if (!knot)
+        return TR::KnownObjectTable::UNKNOWN;
+
+    TR::VMAccessCriticalSection vmAccess(this);
+
+    /* We shouldn't need to check for anonymous classes or for same class loaders for the Hard Cache case.
+     * The java.lang.invoke infrastructure only sets this cache when it is safe to do so.
+     *
+     * If we find that the normal asTypeCache doesn't get many hits, we should look into adding SoftCache checks.
+     */
+    uintptr_t mhObject = knot->getPointer(mhIndex);
+    uintptr_t cachedMT = 0;
+    uintptr_t cachedMH = getReferenceField(mhObject, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
+    if (cachedMH != 0) {
+        cachedMT = getReferenceField(cachedMH, "type", "Ljava/lang/invoke/MethodType;");
+    }
+
+    uintptr_t desiredMTObject = knot->getPointer(desiredTypeIndex);
+    // there is only one MT instance per unique signature, so this check is valid
+    if (desiredMTObject == cachedMT) {
+        logprintf(comp->getOption(TR_TraceOptDetails), comp->log(), "(Hard) cache match\n");
+        return knot->getOrCreateIndex(cachedMH);
+    }
+    return TR::KnownObjectTable::UNKNOWN;
 }
 
 /**
