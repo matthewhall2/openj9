@@ -4335,6 +4335,8 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     }
 
        TR_OutlinedInstructionsGenerator og(outlinedCallLabel, node, cg);
+       cg->incReferenceCount(node->getChild(0));
+        cg->incReferenceCount(node->getChild(1));
     TR::Register *resultReg = TR::TreeEvaluator::performHelperCall(node, NULL, TR::icall, false, cg);
                     generateLabelInstruction(TR::InstOpCode::JMP4, node, endLabel, cg);
 
