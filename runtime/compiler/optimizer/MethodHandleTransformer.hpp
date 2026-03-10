@@ -168,6 +168,19 @@ public:
      */
     void process_java_lang_invoke_Invokers_checkVarHandleGenericType(TR::TreeTop *tt, TR::Node *node);
 
+    /** 
+     * \brief
+     *    Eliminates calls to Invokers.checkGeneric type when:
+     *       1. Both the MethodHandle and the MethodType are known objects, and
+     *       2. The MethodType exactly matches MethodType of the asTypeCache of the MethodHandle
+     * 
+     * \param tt
+     *    The treetop of the call node
+     * \param node
+     *    The call node representing the call to java/lang/invoke/Invokers.checkGenericType
+     */
+    void process_java_lang_invoke_Invokers_MethodHandle_checkGenericType(TR::TreeTop *tt, TR::Node *node);
+
 private:
     int32_t _numLocals; // Number of parms, autos and temps
     ObjectInfo *_currentObjectInfo; // Object info for current block being processed
