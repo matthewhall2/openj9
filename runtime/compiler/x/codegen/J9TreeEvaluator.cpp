@@ -4278,8 +4278,12 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     TR::Node *fromClass = node->getFirstChild();
     TR::Node *toClass = node->getSecondChild();
 
-    TR::Register *fromClassReg = cg->evaluate(fromClass);
-    TR::Register *toClassReg = cg->evaluate(toClass);
+    TR::Register *fromClassRegTemp = cg->evaluate(fromClass);
+    TR::Register *toClassRegTemp = cg->evaluate(toClass);
+
+    TR::Register *fromClassReg = cg->allocateRegister();
+    TR::Register *toClassReg = cg->allocateRegister();
+
 
 //     if (cg->comp()->getDebug()) {
 //     const char *opcodeName = "fromClass";
@@ -4346,7 +4350,9 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     TR_OutlinedInstructions *outlinedHelperCall = NULL;
     if (!fastFail)
         generateRegImmInstruction(TR::InstOpCode::MOV4RegImm4, node, resultReg, 1, cg);
-    
+            generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, fromClassReg, node->getChild(0)->getRegister(), cg);
+            generateRegRegInstruction(TR::InstOpCode::MOVRegReg(), node, toClassReg, node->getChild(1)->getRegister(), cg);
+
     generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
     if (!fastFail && !fastPass) {
         // outlinedHelperCall = new (cg->trHeapMemory())
