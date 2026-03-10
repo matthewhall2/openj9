@@ -4397,6 +4397,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     TR::RegisterDependencyConditions *deps
         = generateRegisterDependencyConditions((uint8_t)2, 6 + srm->numAvailableRegisters(), cg);
     srm->addScratchRegistersToDependencyList(deps);
+    srm->addScratchRegistersToPreDependencyList(deps);
     srm->stopUsingRegisters();
     deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
     deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
