@@ -1155,6 +1155,18 @@ public:
     virtual bool isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex,
         TR::KnownObjectTable::Index expectedTypeIndex);
 
+    /**
+     * \brief
+     *   Tell whether a method handle type at a given known object table index matches the compatable type.
+     *
+     * \param comp the compilation object
+     * \param mhIndex known object index of the java/lang/invoke/MethodHandle object
+     * \param expectedTypeIndex known object index of  java/lang/invoke/MethodType object
+     * \return the converted method handle, or 0 if a conversion cannot be made
+     */
+    virtual uintptr_t getConvertedMethodhandle(TR::Compilation *comp, TR::KnownObjectTable::Index mhIndex,
+        TR::KnownObjectTable::Index expectedTypeIndex);
+
     /*
      * \brief
      *    tell whether it's possible to dereference a field given the field symbol reference at compile time

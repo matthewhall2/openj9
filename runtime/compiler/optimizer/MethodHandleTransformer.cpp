@@ -33,6 +33,7 @@
 #include "env/CompilerEnv.hpp"
 #include "env/IO.hpp"
 #include "env/VMJ9.h"
+#include "env/J9ConstProvenanceGraph.hpp"
 #include "env/j9method.h"
 #include "il/ILOpCodes.hpp"
 #include "il/ILOps.hpp"
@@ -556,7 +557,9 @@ void TR_MethodHandleTransformer::visitCall(TR::TreeTop *tt, TR::Node *node)
         case TR::java_lang_invoke_Invokers_checkVarHandleGenericType:
             process_java_lang_invoke_Invokers_checkVarHandleGenericType(tt, node);
             break;
-
+        case TR::java_lang_invoke_Invokers_checkGenericType:
+            process_java_lang_invoke_MethodHandle_asType(tt, node);
+            break;
         default:
             break;
     }
@@ -948,4 +951,43 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_Invokers_checkVarHandl
         tt->insertBefore(TR::TreeTop::create(comp(), TR::Node::createCompressedRefsAnchor(node)));
     }
 #endif // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+}
+
+void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::TreeTop *tt, TR::Node *node)
+{
+    auto mhNode = node->getChild(0);
+    auto desiredMTNode = node->getChild(1);
+    TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);
+    TR::KnownObjectTable::Index desiredMTIndex = getObjectInfoOfNode(desiredMTNode);
+    logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
+    logprintf(trace(), comp()->log(), "MethodType is obj%d\n", desiredMTIndex);
+    J9::ConstProvenanceGraph *cpg = comp()->constProvenanceGraph();
+    // cpg->addEdge(cpg->knownObject(idx), clazz);
+    auto knot = comp()->getKnownObjectTable();
+    bool transformed = false;
+    TR_J9VMBase *fej9 = static_cast<TR_J9VMBase *>(comp()->fe());
+    if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(desiredMTIndex)
+        && !knot->isNull(desiredMTIndex)) {
+        logprintf(trace(), comp()->log(), "Checking exact compatibility\n");
+        if (fej9->isMethodHandleExpectedType(comp(), mhIndex, desiredMTIndex)) {
+            logprintf(trace(), comp()->log(), "Got exact MethodType match\n");
+            anchorAllChildren(node, tt);
+            node->removeAllChildren();
+            TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(mhIndex));
+            return;
+        }
+
+        logprintf(trace(), comp()->log(), "Exact compatibilty check failed - checking subtype compatibility\n");
+        uintptr_t convertedMH = fej9->getConvertedMethodhandle(comp(), mhIndex, desiredMTIndex);
+        if (0 != convertedMH) {
+            logprintf(trace(), comp()->log(), "Method types are the compatible%d\n");
+            TR::KnownObjectTable::Index convertedMHIndex = knot->getOrCreateIndex(convertedMH);
+            cpg->addEdge(cpg->knownObject(mhIndex), cpg->knownObject(convertedMHIndex));
+            anchorAllChildren(node, tt);
+            node->removeAllChildren();
+            TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(convertedMHIndex));
+            return;
+        }
+        logprintf(trace(), comp()->log(), "MethodTypes are not compatible\n");
+    }
 }
