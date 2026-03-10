@@ -4392,6 +4392,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
     deps->addPostCondition(resultReg, TR::RealRegister::NoReg, cg);
     deps->addPostCondition(fromClassReg, TR::RealRegister::NoReg, cg);
     deps->addPreCondition(fromClassReg, TR::RealRegister::NoReg, cg);
+
     if (fromClassReg != toClassReg) {
         deps->addPostCondition(toClassReg, TR::RealRegister::NoReg, cg);
         deps->addPreCondition(toClassReg, TR::RealRegister::NoReg, cg);
@@ -4433,24 +4434,28 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
 //     deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
 // }
 
-        // if (helperCallNode->getFirstChild() == node->getFirstChild()) {
-        //     helperReg = helperCallNode->getFirstChild()->getRegister();
-        //     if (NULL != helperReg) {
-        //         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-        //     }
-        // }
+        if (helperCallNode->getFirstChild() == node->getFirstChild()) {
+            helperReg = helperCallNode->getFirstChild()->getRegister();
+            if (NULL != helperReg) {
+                deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg)
+            }
+        }
 
-        // if (helperCallNode->getSecondChild() == node->getSecondChild()) {
-        //     helperReg = helperCallNode->getSecondChild()->getRegister();
-        //     if (NULL != helperReg) {
-        //         deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-        //     }
-        // }
+        if (helperCallNode->getSecondChild() == node->getSecondChild()) {
+            helperReg = helperCallNode->getSecondChild()->getRegister();
+            if (NULL != helperReg) {
+                deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+                deps->unionPreCondition(helperReg, TR::RealRegister::NoReg, cg)
+            }
+        }
 
-        // helperReg = helperCallNode->getRegister();
-        // if (resultReg != helperReg) {
-        //     deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
-        // }
+        helperReg = helperCallNode->getRegister();
+        if (resultReg != helperReg) {
+            deps->addPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+        } else {
+            deps->unionPostCondition(helperReg, TR::RealRegister::NoReg, cg);
+        }
     }
 
     deps->stopAddingConditions();
