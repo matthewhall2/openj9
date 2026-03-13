@@ -970,18 +970,18 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
    TR_J9VMBase* fej9 = static_cast<TR_J9VMBase*>(comp()->fe());
    if (knot && isKnownObject(mhIndex) && !knot->isNull(mhIndex) && isKnownObject(desiredMTIndex) && !knot->isNull(desiredMTIndex))
       {
-      logprintf(trace(), comp()->log(), "Have known object info - checking exact compatibility\n");
+      logprintf(trace(), comp()->log(), "Checking exact compatibility\n");
       bool typesMatch = fej9->isMethodHandleExpectedType(comp(), mhIndex, desiredMTIndex);
       if (typesMatch)
          {
-         logprintf(trace(), comp()->log(), "Method types are the object\n");
+         logprintf(trace(), comp()->log(), "Got exact MethodType match\n");
          anchorAllChildren(node, tt);
          node->removeAllChildren();
          TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(mhIndex));
          return;
          }
 
-      logprintf(trace(), comp()->log(), "Have known object info - checking subtype compatibility\n");
+      logprintf(trace(), comp()->log(), "Exact compatibilty check failed - checking subtype compatibility\n");
       bool compatible = fej9->isMethodHandleCompatibleType(comp(), mhIndex, desiredMTIndex);
       if (compatible)
          {
@@ -989,6 +989,9 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
          uintptr_t transFormedMH = fej9->getMethodHandleAsTypeCache(comp(), mhIndex);
         if (0 == transFormedMH) {
             logprintf(trace(), comp()->log(), "Null asType cache - cannot fold\n");
+            TR::DebugCounter::incStaticDebugCounter(comp(),
+                TR::DebugCounter::debugCounterName(comp(), "mh.compatibleAsType.nullCache/(%s)/%s", comp()->signature(),
+                    comp()->getHotnessName(comp()->getMethodHotness())));
             return;
         }
          TR::KnownObjectTable::Index transformedMHIndex = knot->getOrCreateIndex(transFormedMH);
@@ -998,6 +1001,7 @@ TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_asType(TR::Tre
          TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(transformedMHIndex));
          return;
          }
+         logprintf(trace(), comp()->log(), "MethodTypes are not compatible\n");
 
       }
    }

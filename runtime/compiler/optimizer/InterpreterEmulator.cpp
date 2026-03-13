@@ -1122,13 +1122,16 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
                         result = new (trStackMemory()) KnownObjOperand(transformedMHIndex);
                     } else {
                         debugTrace(tracer(), "MethodHandle asTypeCache is null\n");
+                        TR::DebugCounter::incStaticDebugCounter(comp(),
+                            TR::DebugCounter::debugCounterName(comp(),
+                            "InterpreterEmulator.null_MH_asTypeCache/(root=%s)/(%s)", comp()->signature(),
+                            _calltarget->_calleeMethod->signature(comp()->trMemory())));
                     }
                 } else {
                     debugTrace(tracer(), "MethodTypes are not compatible\n");
                 }
             } else {
-                debugTrace(tracer(), "Not enough known object info\n");
-                printf("Not enough known object info\n");
+                debugTrace(tracer(), "No known object info for MH.checkGenericType args MethodHandle and/or MethodTpe\n");
             }
             break;
         }
