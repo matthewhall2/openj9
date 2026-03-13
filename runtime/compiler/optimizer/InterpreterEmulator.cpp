@@ -1097,12 +1097,38 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             }
             break;
         }
-        // case TR::java_lang_invoke_Invokers_checkGenericType: {
-        //     Operand *targetMH = topn(0);
-        //     Operand *srcMH = topn(1);
+        case TR::java_lang_invoke_Invokers_checkGenericType: {
+            Operand *targetMH = topn(0);
+            Operand *srcMT = topn(1);
+            TR::KnownObjectTable::Index mhIndex = targetMH->getKnownObjectIndex();
+            TR::KnownObjectTable::Index mtIndex = srcMT->getKnownObjectIndex();
+            debugTrace(tracer(), "Known MethodHandle koi %d\n", mhIndex);
+            debugTrace(tracer(), "Known MethodType koi %d\n", mhIndex);
+            TR::KnownObjectTable *knot = comp()->getKnownObjectTable();
+            if (knot && mhIndex != TR::KnownObjectTable::UNKNOWN && mtIndex != TR::KnownObjectTable::UNKNOWN
+                && !knot->isNull(mhIndex) && !knot->isNull(mtIndex)) {
 
-        //     break;
-        // }
+                bool typesMatch = comp()->fej9()->isMethodHandleExpectedType(comp(), mhIndex, mtIndex);
+                if (typesMatch) {
+                    result = new (trStackMemory()) KnownObjOperand(mhIndex);
+                } else {
+                    debugTrace(tracer(), "Exact type check failed\n");
+                }
+                typesMatch = comp()->fej9()->isMethodHandleCompatibleType(comp(), mhIndex, mtIndex);
+                if (typesMatch) {
+                    uintptr_t transFormedMH = comp()->fej9()->getMethodHandleAsTypeCache(comp(), mhIndex);
+                    if (0 != transFormedMH) {
+                        TR::KnownObjectTable::Index transformedMHIndex = knot->getOrCreateIndex(transFormedMH);
+                        result = new (trStackMemory()) KnownObjOperand(transformedMHIndex);
+                    } else {
+                        debugTrace(tracer(), "MethodHandle asTypeCache is null\n");
+                    }
+                } else {
+                    debugTrace(tracer(), "MethodTypes are not compatible\n");
+                }
+            }
+            break;
+        }
         case TR::jdk_internal_foreign_layout_ValueLayouts_AbstractValueLayout_accessHandle: {
             Operand *layoutOperand = top();
             TR::KnownObjectTable::Index layoutIndex = layoutOperand->getKnownObjectIndex();
