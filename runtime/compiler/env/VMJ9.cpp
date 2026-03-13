@@ -4968,7 +4968,9 @@ bool TR_J9VMBase::isMethodHandleExpectedType(TR::Compilation *comp, TR::KnownObj
 
     TR::VMAccessCriticalSection vmAccess(this);
     uintptr_t mhObject = knot->getPointer(mhIndex);
+    logprintf(comp->getOption(TR_TraceILGen), comp->log(), "mh object: %p\n", (void*)mhObject);
     uintptr_t mtObject = getReferenceField(mhObject, "type", "Ljava/lang/invoke/MethodType;");
+    logprintf(comp->getOption(TR_TraceILGen), comp->log(), "mt object: %p\n", (void*)mtObject);
     uintptr_t etObject = knot->getPointer(expectedTypeIndex);
     return mtObject == etObject;
 }
