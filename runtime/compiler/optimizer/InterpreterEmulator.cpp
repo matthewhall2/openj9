@@ -1915,6 +1915,8 @@ TR_PrexArgInfo *InterpreterEmulator::computePrexInfo(TR_CallSite *callsite, TR::
         numOfArgs = callsite->_initialCalleeMethod->numberOfParameters();
     }
 
+    alwaysTrace(tracer(), "callsite has %d args\n", numOfArgs);
+
     if (numOfArgs == 0)
         return NULL;
 
