@@ -1126,6 +1126,9 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
                 } else {
                     debugTrace(tracer(), "MethodTypes are not compatible\n");
                 }
+            } else {
+                debugTrace(tracer(), "Not enough known object info\n");
+                printf("Not enough known object info\n");
             }
             break;
         }
