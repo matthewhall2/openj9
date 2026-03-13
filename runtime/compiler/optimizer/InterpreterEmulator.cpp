@@ -1098,8 +1098,8 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             break;
         }
         case TR::java_lang_invoke_Invokers_checkGenericType: {
-            Operand *targetMH = topn(0);
-            Operand *srcMT = topn(1);
+            Operand *targetMH = topn(1);
+            Operand *srcMT = topn(0);
             TR::KnownObjectTable::Index mhIndex = targetMH->getKnownObjectIndex();
             TR::KnownObjectTable::Index mtIndex = srcMT->getKnownObjectIndex();
             debugTrace(tracer(), "Known MethodHandle koi %d\n", mhIndex);
