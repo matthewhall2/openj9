@@ -250,7 +250,8 @@ uint8_t *TR::S390J9CallSnippet::S390flushArgumentsToStack(uint8_t *buffer, TR::N
     bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(cg->comp());
     int32_t argStart = callNode->getFirstArgumentIndex();
     // we want the arguments for induceOSR to be passed from left to right as in any other non-helper call
-    bool rightToLeft = linkage->getRightToLeft() && !callNode->getSymbolReference()->isOSRInductionHelper() && !isJitDispatchJ9Method;
+    bool rightToLeft = linkage->getRightToLeft() && !callNode->getSymbolReference()->isOSRInductionHelper()
+        && !isJitDispatchJ9Method;
 
     if (isJitDispatchJ9Method) {
         argStart++;
@@ -1717,8 +1718,8 @@ void TR::S390J9HelperCallSnippet::print(OMR::Logger *log, TR_Debug *debug)
         argStart, cg()->machine(), privateLinkage);
     if (getNode()->isJitDispatchJ9MethodCall(comp())) {
         debug->printPrefix(log, NULL, bufferPos, comp()->target().is64Bit() ? 4 : 2);
-        log->printf("%s  \t%s,%s \t %s", comp()->target().is64Bit() ? "LGR" : "LR", "R1", comp()->target().isLinux() ? "R4" : "R15",
-            "move j9method pointer to R1 for interpreter");
+        log->printf("%s  \t%s,%s \t %s", comp()->target().is64Bit() ? "LGR" : "LR", "R1",
+            comp()->target().isLinux() ? "R4" : "R15", "move j9method pointer to R1 for interpreter");
         bufferPos += comp()->target().is64Bit() ? 4 : 2;
     }
     printInner(log, debug, bufferPos);
