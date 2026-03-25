@@ -722,7 +722,7 @@ void J9::Power::CodeGenerator::insertPrefetchIfNecessary(TR::Node *node, TR::Reg
 bool J9::Power::CodeGenerator::supportsNonHelper(TR::SymbolReferenceTable::CommonNonhelperSymbol symbol)
 {
     if (symbol == TR::SymbolReferenceTable::jitDispatchJ9MethodSymbol) {
-        return feGetEnv("enableNewDispatchOnP") != NULL;
+        return true;
     }
     return J9::CodeGenerator::supportsNonHelper(symbol);
 }
