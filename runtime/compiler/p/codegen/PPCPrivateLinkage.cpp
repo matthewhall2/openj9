@@ -2806,7 +2806,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
        // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-        generateSrc1Instruction(cg, TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
+        generateSrc1Instruction(cg(), TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
 
        
 
