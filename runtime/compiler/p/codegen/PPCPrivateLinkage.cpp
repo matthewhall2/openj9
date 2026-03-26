@@ -1438,6 +1438,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         specialArgReg = getProperties().getJ9MethodArgumentRegister();
         TR::Register *cnd7Reg = cg()->allocateRegister(TR_CCR);
         TR::addDependency(dependencies, cnd7Reg, TR::RealRegister::cr7, TR_CCR, cg());
+        TR::addDependency(dependencies, NULL, TR::RealRegister::gr31, TR_CCR, cg());
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
@@ -2765,7 +2766,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         auto regMapMask = pp.getPreservedRegisterMapForGC();
 
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
-        //TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
+        TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr31);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
         TR::Register *cnd7Reg = dependencies->searchPreConditionRegister(TR::RealRegister::cr7);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
@@ -2805,19 +2806,19 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, scratchReg,
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
-       // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-        generateSrc1Instruction(cg(), TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
+        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
+        //generateSrc1Instruction(cg(), TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
 
        
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
             gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
         } else {
-            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bt, callNode, oolLabel, cnd7Reg);
+            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cnd7Reg);
         }
         gcPoint->PPCNeedsGCMap(regMapMask);
-        generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
-         cg()->stopUsingRegister(cnd7Reg);
+       // generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
+         cg()->stopUsingRegister(scratchReg2);
 
 
         // compiled - jump to jit entry point
