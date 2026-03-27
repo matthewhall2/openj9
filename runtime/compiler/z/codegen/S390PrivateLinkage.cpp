@@ -2488,7 +2488,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
