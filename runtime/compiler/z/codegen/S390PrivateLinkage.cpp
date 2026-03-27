@@ -2430,8 +2430,8 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-        TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+        // TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+        //     NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2483,9 +2483,9 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
         TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
-        //TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
-        //generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
-        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+        TR::Register *regEP = dependencies->searchPostConditionRegister(getEntryPointRegister());
+        generateRRInstruction(cg(), TR::InstOpCode::getLoadRegOpCode(), callNode, regEP, scratchReg);
+        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, regEP);
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
