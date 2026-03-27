@@ -2430,12 +2430,12 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-        TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
-            dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-        TR::RegisterDependencyConditions *postDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 1, 4, cg());
+        // TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
+        //     dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+        // TR::RegisterDependencyConditions *postDeps
+        //     = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 1, 4, cg());
         
-        postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+        // postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
@@ -2494,7 +2494,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
@@ -3307,8 +3307,8 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
         if (specialArg->getRegisterPair())
             specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
         dependencies->addPreCondition(specialArg, specialArgReg);
-        if (isJitDispatchJ9Method)
-            dependencies->addPostCondition(specialArg, specialArgReg);
+        // if (isJitDispatchJ9Method)
+        //     dependencies->addPostCondition(specialArg, specialArgReg);
 
         cg()->decReferenceCount(child);
 
