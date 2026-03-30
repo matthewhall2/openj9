@@ -2771,7 +2771,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         auto regMapMask = pp.getPreservedRegisterMapForGC();
 
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
-        TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr31);
+        TR::Register *scratchReg2 = dependencies->searchPostConditionRegister(TR::RealRegister::gr31);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       //  TR::Register *cnd7Reg = dependencies->searchPreConditionRegister(TR::RealRegister::cr7);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
