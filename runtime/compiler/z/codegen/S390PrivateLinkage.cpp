@@ -2427,14 +2427,20 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+        TR::RegisterDependencyConditions *preDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies->getPreConditions(),
+            NULL, dependencies->getAddCursorForPre(), 0, cg());
+        TR::RegisterDependencyConditions *preDeps
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(preDepsTemp, 1, 0, cg());
+        preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+
+        // TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+        //     dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
         // TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
         //     dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-        // TR::RegisterDependencyConditions *postDeps
-        //     = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 1, 4, cg());
-        
+        TR::RegisterDependencyConditions *postDeps
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 0, cg());
+
         // postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
 
@@ -3297,7 +3303,7 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
 
     bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
     if (isJitDispatchJ9Method) {
-        specialArgReg = getJ9MethodArgumentRegister();
+        specialArgReg = TR::RealRegister::NoReg;//getJ9MethodArgumentRegister();
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
