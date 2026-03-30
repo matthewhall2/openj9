@@ -2439,7 +2439,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
             dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
         TR::RegisterDependencyConditions *postDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 1, cg());
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 1, 0, cg());
 
 
         postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
