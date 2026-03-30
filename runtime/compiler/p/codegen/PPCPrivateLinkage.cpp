@@ -1556,7 +1556,10 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPreCondition(argRegister, specialArgReg);
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
-                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        if (isJitDispatchJ9Method)
+                            dependencies->addPreCondition(argRegister, specialArgReg);
+                        else
+                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress();
