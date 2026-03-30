@@ -2427,14 +2427,14 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        TR::RegisterDependencyConditions *preDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies->getPreConditions(),
-            NULL, dependencies->getAddCursorForPre(), 0, cg());
-        TR::RegisterDependencyConditions *preDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(preDepsTemp, 1, 0, cg());
-        preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+        // TR::RegisterDependencyConditions *preDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies->getPreConditions(),
+        //     NULL, dependencies->getAddCursorForPre(), 0, cg());
+        // TR::RegisterDependencyConditions *preDeps
+        //     = new (trHeapMemory()) TR::RegisterDependencyConditions(preDepsTemp, 1, 0, cg());
+        // preDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
-        // TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-        //     dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+        TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
         // TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
         //     dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
