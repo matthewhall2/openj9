@@ -2442,7 +2442,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
             = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 1, cg());
 
 
-        postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
+        postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
