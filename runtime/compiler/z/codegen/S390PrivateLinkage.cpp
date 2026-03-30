@@ -2436,10 +2436,10 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-        // TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
-        //     dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+        TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
+            dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
         TR::RegisterDependencyConditions *postDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(dependencies, 0, 1, cg());
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 1, cg());
 
 
         postDeps->addPostCondition(j9MethodReg, getJ9MethodArgumentRegister());
@@ -3304,7 +3304,7 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
 
     bool isJitDispatchJ9Method = callNode->isJitDispatchJ9MethodCall(comp());
     if (isJitDispatchJ9Method) {
-        specialArgReg = TR::RealRegister::NoReg;//getJ9MethodArgumentRegister();
+        specialArgReg = getJ9MethodArgumentRegister();
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
