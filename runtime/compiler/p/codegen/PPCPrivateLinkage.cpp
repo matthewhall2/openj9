@@ -1541,12 +1541,14 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                 // first child holds the J9MethodPointer for jitDispatchJ9Method, want to pushAddressArg
                 if (i == firstArgumentChild && callNode->getOpCode().isIndirect() && !isJitDispatchJ9Method) {
                     argRegister = pushThis(child);
-                } else {
+                } else if (!isJitDispatchJ9Method) {
                     if (child->getDataType() == TR::Address) {
                         argRegister = pushAddressArg(child);
                     } else {
                         argRegister = pushIntegerWordArg(child);
                     }
+                } else if (isSpecialArg && isJitDispatchJ9Method) {
+                    argRegister = cg()->evaluate(child);
                 }
                 if (isSpecialArg) {
                     if (specialArgReg == properties.getIntegerReturnRegister(0)) {
@@ -1558,10 +1560,12 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPreCondition(argRegister, specialArgReg);
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
-                        if (isJitDispatchJ9Method)
+                        if (isJitDispatchJ9Method) {
                             dependencies->addPreCondition(argRegister, specialArgReg);
-                        else
+                            cg()->decReferenceCount(child);
+                        } else {
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        }
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress();
