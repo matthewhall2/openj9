@@ -1096,11 +1096,10 @@ TR_OpaqueClassBlock *TR_J9VMBase::getObjectClassFromKnownObjectIndex(TR::Compila
     TR::KnownObjectTable::Index idx)
 {
     // Get and cache the desired information
+    // Note: getObjClassInfoFromKnotIndex() adds the const provenance edge from the
+    // known object to its class.
     TR::KnownObjectTable::ObjectInfo objInfo = getObjClassInfoFromKnotIndex(comp, idx);
     return objInfo._isFixedJavaLangClass ? objInfo._jlClass : objInfo._clazz;
-
-    // Note: We don't need to add an edge to comp->constProvenanceGraph() because
-    // this is done in getObjClassInfoFromKnotIndexNoCaching()
 }
 
 TR_OpaqueClassBlock *TR_J9VMBase::getObjectClassFromKnownObjectIndex(TR::Compilation *comp,
@@ -1110,11 +1109,10 @@ TR_OpaqueClassBlock *TR_J9VMBase::getObjectClassFromKnownObjectIndex(TR::Compila
     if (!knot)
         return NULL;
 
+    // Note: getObjClassInfoFromKnotIndex() adds the const provenance edge from the
+    // known object to its class.
     TR::KnownObjectTable::ObjectInfo objInfo = getObjClassInfoFromKnotIndex(comp, idx);
     *isJavaLangClass = objInfo._isFixedJavaLangClass;
-
-    // Note: We don't need to add an edge to comp->constProvenanceGraph() because
-    // this is done in getObjClassInfoFromKnotIndexNoCaching()
 
     return objInfo._clazz;
 }
@@ -1150,8 +1148,10 @@ TR::KnownObjectTable::ObjectInfo TR_J9VMBase::getObjClassInfoFromKnotIndexNoCach
         // the java/lang/Class object represents.
         retrievedObjInfo._clazz = getClassFromJavaLangClass(objectReference);
     }
-    J9::ConstProvenanceGraph *cpg = comp->constProvenanceGraph();
-    cpg->addEdge(cpg->knownObject(knotIndex), retrievedObjInfo._clazz);
+    // Note: the const provenance edge from the known object to its class is added
+    // by the caller, getObjClassInfoFromKnotIndex(), so that it is added on every
+    // path. This function is skipped on a cache hit, and the JITServer override of
+    // this function has no access to the class with which to add the edge.
     return retrievedObjInfo;
 }
 
@@ -1188,8 +1188,14 @@ TR::KnownObjectTable::ObjectInfo TR_J9VMBase::getObjClassInfoFromKnotIndex(TR::C
             answerObjInfo = existingObjInfo;
         }
     }
-    // Note: We don't need to add an edge to comp->constProvenanceGraph() because
-    // this is done in getObjClassInfoFromKnotIndexNoCaching()
+    // Add a const provenance edge from the known object to its class. This is done
+    // here rather than in getObjClassInfoFromKnotIndexNoCaching() because the class
+    // info is populated eagerly when a known object is created (see
+    // J9::KnownObjectTable::getOrCreateIndex()), so the NoCaching path is typically
+    // skipped due to a cache hit. Additionally, the JITServer override of
+    // getObjClassInfoFromKnotIndexNoCaching() does not add the edge at all.
+    J9::ConstProvenanceGraph *cpg = comp->constProvenanceGraph();
+    cpg->addEdge(cpg->knownObject(knotIndex), answerObjInfo._clazz);
     return answerObjInfo;
 }
 
@@ -4903,8 +4909,26 @@ TR::KnownObjectTable::Index TR_J9VMBase::getMethodHandleTableEntryIndex(TR::Comp
     uintptr_t methodTypeObj = getReferenceField(methodHandleObj, "type", "Ljava/lang/invoke/MethodType;");
     uintptr_t symbolicMTInvokerObj
         = getReferenceField(accessDescriptorObj, "symbolicMethodTypeInvoker", "Ljava/lang/invoke/MethodType;");
-    if (methodTypeObj != symbolicMTInvokerObj)
+
+    // the cached methodhandle will not be in the table; MethodHandleTransformer's processing of
+    // checkVarHandleGenericType may not work properly if TR_ALLOW_NON_CONST_KNOWN_OBJECTS is defined.
+#ifdef TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+    if (methodTypeObj != symbolicMTInvokerObj) {
         return result;
+    }
+#else // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+    if (methodTypeObj != symbolicMTInvokerObj) {
+        uintptr_t cachedMT = 0;
+        uintptr_t cachedMH = getReferenceField(methodHandleObj, "asTypeCache", "Ljava/lang/invoke/MethodHandle;");
+        if (cachedMH != 0)
+            cachedMT = getReferenceField(cachedMH, "type", "Ljava/lang/invoke/MethodType;");
+
+        if (cachedMT != 0 && symbolicMTInvokerObj == cachedMT)
+            methodHandleObj = cachedMH;
+        else
+            return result;
+    }
+#endif // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
 
     result = knot->getOrCreateIndex(methodHandleObj);
 
