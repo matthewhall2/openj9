@@ -947,5 +947,22 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_Invokers_checkVarHandl
     if (comp()->useCompressedPointers()) {
         tt->insertBefore(TR::TreeTop::create(comp(), TR::Node::createCompressedRefsAnchor(node)));
     }
+#else // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
+    TR::KnownObjectTable::Index vhIndex = getObjectInfoOfNode(node->getFirstArgument());
+    TR::KnownObjectTable::Index adIndex = getObjectInfoOfNode(node->getLastChild());
+    auto knot = comp()->getKnownObjectTable();
+    if (knot == NULL || !isKnownObject(adIndex) || !isKnownObject(vhIndex) || knot->isNull(vhIndex)
+        || knot->isNull(adIndex)) {
+        return;
+    }
+
+    TR::KnownObjectTable::Index mhIndex = comp()->fej9()->getMethodHandleTableEntryIndex(comp(), vhIndex, adIndex);
+    if (TR::KnownObjectTable::UNKNOWN == mhIndex)
+        return;
+
+    anchorAllChildren(node, tt);
+    node->removeAllChildren();
+    TR::Node::recreateWithSymRef(node, TR::aload, knot->constSymRef(mhIndex));
+    return;
 #endif // TR_ALLOW_NON_CONST_KNOWN_OBJECTS
 }
