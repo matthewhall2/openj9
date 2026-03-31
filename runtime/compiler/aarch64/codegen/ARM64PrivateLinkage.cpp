@@ -1086,6 +1086,7 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
             case TR::Address:
                 if (isJitDispatchJ9Method && isSpecialArg) {
                     argRegister = cg()->evaluate(child);
+
                 } else if (childType == TR::Address) {
                     argRegister = pushAddressArg(child);
                 } else if (childType == TR::Int64) {
@@ -1104,11 +1105,11 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
                         if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
+                           // dependencies->addPreCondition(argRegister, specialArgReg);
                             cg()->decReferenceCount(child);
-                        } else {
+                        //} else {
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        }
+                       // }
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress() * ((childType == TR::Int64) ? 2 : 1);
