@@ -1539,9 +1539,11 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
             case TR::Int32:
             case TR::Address: // have to do something for GC maps here
                 // first child holds the J9MethodPointer for jitDispatchJ9Method, want to pushAddressArg
-                if (i == firstArgumentChild && callNode->getOpCode().isIndirect() && !isJitDispatchJ9Method) {
+                if (isSpecialArg && isJitDispatchJ9Method) {
+                    argRegister = cg()->evaluate(child);
+                } else if (i == firstArgumentChild && callNode->getOpCode().isIndirect()) {
                     argRegister = pushThis(child);
-                } else {
+                } else if (!isJitDispatchJ9Method) {
                     if (child->getDataType() == TR::Address) {
                         argRegister = pushAddressArg(child);
                     } else {
@@ -1558,7 +1560,12 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPreCondition(argRegister, specialArgReg);
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
-                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        if (isJitDispatchJ9Method) {
+                            dependencies->addPreCondition(argRegister, specialArgReg);
+                            cg()->decReferenceCount(child);
+                        } else {
+                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        }
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress();
@@ -2770,7 +2777,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
         TR::Register *scratchReg2 = dependencies->searchPostConditionRegister(TR::RealRegister::gr31);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
-        //TR::Register *cnd7Reg = dependencies->searchPreConditionRegister(TR::RealRegister::cr7);
+      //  TR::Register *cnd7Reg = dependencies->searchPreConditionRegister(TR::RealRegister::cr7);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
@@ -2796,8 +2803,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
         slowCallOOL->swapInstructionListsWithCompilation();
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        // generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
+       //  generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+        cg()->generateNop(callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
         generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
         slowCallOOL->swapInstructionListsWithCompilation();
@@ -2809,7 +2817,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-       // generateSrc1Instruction(cg(), TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
+        //generateSrc1Instruction(cg(), TR::InstOpCode::mtocrf, callNode, scratchReg, 0x01);
 
        
 
@@ -2819,9 +2827,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
         }
         gcPoint->PPCNeedsGCMap(regMapMask);
-        //generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
+       // generateTrg1Src2Instruction(cg(), TR::InstOpCode::crxor, callNode, cnd7Reg, cnd7Reg, cnd7Reg);
          cg()->stopUsingRegister(scratchReg2);
-
 
 
         // compiled - jump to jit entry point
