@@ -1539,7 +1539,9 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
             case TR::Int32:
             case TR::Address: // have to do something for GC maps here
                 // first child holds the J9MethodPointer for jitDispatchJ9Method, want to pushAddressArg
-                if (i == firstArgumentChild && callNode->getOpCode().isIndirect() && !isJitDispatchJ9Method) {
+                if (isSpecialArg && isJitDispatchJ9Method) {
+                    argRegister = cg()->evaluate(child);
+                } else if (i == firstArgumentChild && callNode->getOpCode().isIndirect()) {
                     argRegister = pushThis(child);
                 } else if (!isJitDispatchJ9Method) {
                     if (child->getDataType() == TR::Address) {
@@ -1547,8 +1549,6 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                     } else {
                         argRegister = pushIntegerWordArg(child);
                     }
-                } else if (isSpecialArg && isJitDispatchJ9Method) {
-                    argRegister = cg()->evaluate(child);
                 }
                 if (isSpecialArg) {
                     if (specialArgReg == properties.getIntegerReturnRegister(0)) {
