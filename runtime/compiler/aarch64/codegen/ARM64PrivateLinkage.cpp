@@ -1104,13 +1104,18 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
                        // TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
+                        //if (isJitDispatchJ9Method) {
+                           // dependencies->addPreCondition(argRegister, specialArgReg);
                            //} else {
-                            cg()->decReferenceCount(child);
-                        } else {
+                         //   cg()->decReferenceCount(child);
+                      //  } else {
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        }
+                     //   }
+                     if (isJitDispatchJ9Method) {
+                        TR::addDependency(dependencies, NULL, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
+cg()->decReferenceCount(child);
+                     }
+
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress() * ((childType == TR::Int64) ? 2 : 1);
@@ -1192,6 +1197,8 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
             continue;
         if (realReg == specialArgReg)
             continue; // already added deps above.  No need to add them here.
+        if (isJitDispatchJ9Method && realReg == getProperties().getVTableIndexArgumentRegister())
+            continue;
         if (callSymbol->isComputed() && i == getProperties().getComputedCallTargetRegister())
             continue;
         if (!dependencies->searchPreConditionRegister(realReg)) {
