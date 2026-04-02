@@ -1439,8 +1439,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
        // TR::Register *cnd7Reg = cg()->allocateRegister(TR_CCR);
         TR::Register *scratch = cg()->allocateRegister(TR_GPR);
      //   TR::addDependency(dependencies, cnd7Reg, TR::RealRegister::cr7, TR_CCR, cg());
-     dependencies->addPostCondition(scratch, TR::RealRegister::gr31);
-       // TR::addDependency(dependencies, NULL, TR::RealRegister::gr31, TR_GPR, cg());
+ //    dependencies->addPostCondition(scratch, TR::RealRegister::gr31);
+        TR::addDependency(dependencies, NULL, TR::RealRegister::gr31, TR_GPR, cg());
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
@@ -2776,7 +2776,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
     } else if (isJitDispatchJ9Method) {
         auto regMapMask = pp.getPreservedRegisterMapForGC();
 
-        TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
+        TR::Register *scratchReg = dependencies->searchPreConditionRegister(pp.getVTableIndexArgumentRegister());
         TR::Register *scratchReg2 = dependencies->searchPostConditionRegister(TR::RealRegister::gr31);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
       //  TR::Register *cnd7Reg = dependencies->searchPreConditionRegister(TR::RealRegister::cr7);
