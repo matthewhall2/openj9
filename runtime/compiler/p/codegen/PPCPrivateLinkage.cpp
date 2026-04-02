@@ -1560,12 +1560,14 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPreCondition(argRegister, specialArgReg);
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
-                        if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
-                            cg()->decReferenceCount(child);
-                        } else {
+                        // if (isJitDispatchJ9Method) {
+                        //     dependencies->addPreCondition(argRegister, specialArgReg);
+                        //     cg()->decReferenceCount(child);
+                        // } else {
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        }
+                            if (isJitDispatchJ9Method)
+                                cg()->decReferenceCount(child);
+                      //  }
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress();
