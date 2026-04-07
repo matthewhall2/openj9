@@ -1564,7 +1564,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         //     dependencies->addPreCondition(argRegister, specialArgReg);
                         //     cg()->decReferenceCount(child);
                         // } else {
-                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                            dependencies->addPreCondition(argRegister, specialArgReg);
+                            //TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                             if (isJitDispatchJ9Method)
                                 cg()->decReferenceCount(child);
                       //  }
