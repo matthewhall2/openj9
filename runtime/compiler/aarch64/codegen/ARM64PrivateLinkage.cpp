@@ -1109,15 +1109,17 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                            //} else {
                          //   cg()->decReferenceCount(child);
                       //  } else {
-                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                            
                      //   }
                      if (isJitDispatchJ9Method) {
+                        dependencies->addPreCondition(argRegister, specialArgReg);
                         TR::Register *scratchReg = cg()->allocateRegister();
                         dependencies->addPostCondition(scratchReg, getProperties().getVTableIndexArgumentRegister());
 //                         TR::addDependency(dependencies, scratchReg, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
 // cg()->decReferenceCount(child);
+                     } else {
+                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                      }
-
                     }
                 } else {
                     argSize += TR::Compiler->om.sizeofReferenceAddress() * ((childType == TR::Int64) ? 2 : 1);
