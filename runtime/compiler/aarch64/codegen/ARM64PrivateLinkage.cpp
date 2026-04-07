@@ -1112,8 +1112,10 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                      //   }
                      if (isJitDispatchJ9Method) {
-                        TR::addDependency(dependencies, NULL, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
-cg()->decReferenceCount(child);
+                        TR::Register *scratchReg = cg()->allocateRegister();
+                        dependencies->addPostCondition(scratchReg, getProperties().getVTableIndexArgumentRegister());
+//                         TR::addDependency(dependencies, scratchReg, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
+// cg()->decReferenceCount(child);
                      }
 
                     }
