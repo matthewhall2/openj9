@@ -1437,10 +1437,10 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     if (isJitDispatchJ9Method) {
         specialArgReg = getProperties().getJ9MethodArgumentRegister();
        // TR::Register *cnd7Reg = cg()->allocateRegister(TR_CCR);
-        TR::Register *scratch = cg()->allocateRegister(TR_GPR);
+       // TR::Register *scratch = cg()->allocateRegister(TR_GPR);
      //   TR::addDependency(dependencies, cnd7Reg, TR::RealRegister::cr7, TR_CCR, cg());
    //  dependencies->addPostCondition(scratch, TR::RealRegister::gr31);
-        TR::addDependency(dependencies, scratch, TR::RealRegister::gr31, TR_GPR, cg());
+       TR::addDependency(dependencies, NULL, TR::RealRegister::gr31, TR_GPR, cg());
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
@@ -1565,13 +1565,13 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         //     cg()->decReferenceCount(child);
                         // } else {
                         
-                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        //dependencies->addPreCondition(argRegister, specialArgReg);
-                        if (isJitDispatchJ9Method) //{
+                        //TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        if (isJitDispatchJ9Method) {
+                            dependencies->addPreCondition(argRegister, specialArgReg);
                             cg()->decReferenceCount(child);
-                        // } else {
-                        //     TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
-                        // }
+                        } else {
+                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        }
                       //  }
                     }
                 } else {
