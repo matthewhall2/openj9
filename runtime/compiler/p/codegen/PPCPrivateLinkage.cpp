@@ -1543,7 +1543,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                     argRegister = cg()->evaluate(child);
                 } else if (i == firstArgumentChild && callNode->getOpCode().isIndirect()) {
                     argRegister = pushThis(child);
-                } else if (!isJitDispatchJ9Method) {
+                } else {
                     if (child->getDataType() == TR::Address) {
                         argRegister = pushAddressArg(child);
                     } else {
