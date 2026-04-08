@@ -1565,12 +1565,12 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         //     cg()->decReferenceCount(child);
                         // } else {
                         
-                        //TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                         if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
+                          //  dependencies->addPreCondition(argRegister, specialArgReg);
                             cg()->decReferenceCount(child);
                         } else {
-                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                         //   TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                         }
                       //  }
                     }
