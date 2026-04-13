@@ -2774,7 +2774,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
         TR::Register *gr2Reg = NULL;
         if (aix_style_linkage) {
-            gr2Reg = deps->searchPreConditionRegister(TR::RealRegister::gr2);
+            gr2Reg = dependencies->searchPreConditionRegister(TR::RealRegister::gr2);
         }
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
@@ -2834,9 +2834,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         if (aix_style_linkage
             && !(comp()->target().is64Bit() && (comp()->target().isLinux()) && comp()->target().cpu.isLittleEndian())) {
             // load the toc register
-            generateTrg1MemInstruction(cg, TR::InstOpCode::Op_load, callNode, gr2Reg,
-                TR::MemoryReference::createWithDisplacement(cg, gr12Reg, TR::Compiler->om.sizeofReferenceAddress(),
-                    TR::Compiler->om.sizeofReferenceAddress()));
+            generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr2Reg,
+                TR::MemoryReference::createWithDisplacement(cg(), cg()->getMethodMetaDataRegister(),
+                    offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
             }
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
