@@ -2766,11 +2766,16 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             callSymRef ? callSymRef : callNode->getSymbolReference());
     } else if (isJitDispatchJ9Method) {
         auto regMapMask = pp.getPreservedRegisterMapForGC();
+        bool aix_style_linkage = comp()->target().isAIX() || (comp()->target().is64Bit() && comp()->target().isLinux());
 
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
         TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
+        TR::Register *gr2Reg = NULL;
+        if (aix_style_linkage) {
+            gr2Reg = deps->searchPreConditionRegister(TR::RealRegister::gr2);
+        }
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2787,7 +2792,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
         TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory())
             TR::PPCJ9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
-        interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
+        //interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
         TR_PPCOutOfLineCodeSection *slowCallOOL
@@ -2825,9 +2830,19 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             generateTrg1Src1Instruction(cg(), TR::InstOpCode::extsw, callNode, j9MethodReg, j9MethodReg);
         }
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
+
+        if (aix_style_linkage
+            && !(comp()->target().is64Bit() && (comp()->target().isLinux()) && comp()->target().cpu.isLittleEndian())) {
+            // load the toc register
+            generateTrg1MemInstruction(cg, TR::InstOpCode::Op_load, callNode, gr2Reg,
+                TR::MemoryReference::createWithDisplacement(cg, gr12Reg, TR::Compiler->om.sizeofReferenceAddress(),
+                    TR::Compiler->om.sizeofReferenceAddress()));
+            }
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
+
+        interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
 
         generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
         return;
