@@ -2804,7 +2804,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
         gcPoint->PPCNeedsGCMap(regMapMask);
-        cg()->generateNOP(callNode);
+        cg()->generateNop(callNode);
         generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
         slowCallOOL->swapInstructionListsWithCompilation();
 
