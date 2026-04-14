@@ -1788,6 +1788,8 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         TR::addDependency(dependencies, NULL, TR::RealRegister::gr11, TR_GPR, cg());
     if (!dependencies->searchPreConditionRegister(TR::RealRegister::gr12))
         TR::addDependency(dependencies, NULL, TR::RealRegister::gr12, TR_GPR, cg());
+    if (isJitDispatchJ9Method && !dependencies->searchPreConditionRegister(TR::RealRegister::gr2))
+        TR::addDependency(dependencies, NULL, TR::RealRegister::gr2, TR_GPR, cg());
 
     for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i) {
         TR::RealRegister::RegNum realReg = (TR::RealRegister::RegNum)i;
@@ -2831,20 +2833,27 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         }
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
 
-        if (aix_style_linkage
-            && !(comp()->target().is64Bit() && (comp()->target().isLinux()) && comp()->target().cpu.isLittleEndian())) {
-            // load the toc register
-            generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, gr2Reg,
-                TR::MemoryReference::createWithDisplacement(cg(), cg()->getMethodMetaDataRegister(),
-                    offsetof(J9VMThread, jitTOC), TR::Compiler->om.sizeofReferenceAddress()));
-            }
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
 
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
+        auto cursor = gcPoint;
 
-        generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+        cursor = generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+
+        TR::Instruction *lastInstr = cursor;
+            TR::Instruction *currInstr = lastInstr;
+            while (true) {
+                if (currInstr->getOpCode().getFormat()
+                    == FORMAT_NONE) // skips pseudo instructions (label/vgdnop/assocreg)
+                    currInstr = currInstr->getPrev();
+                else
+                    break;
+            }
+            if (currInstr->getGCMap()) {
+                cg()->generateNop(NULL, lastInstr);
+            }
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
