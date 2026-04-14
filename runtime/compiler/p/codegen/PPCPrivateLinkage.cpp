@@ -2836,24 +2836,25 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
+        cg()->generateNop(callNode);
 
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         auto cursor = gcPoint;
 
         cursor = generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
 
-        TR::Instruction *lastInstr = cursor;
-            TR::Instruction *currInstr = lastInstr;
-            while (true) {
-                if (currInstr->getOpCode().getFormat()
-                    == FORMAT_NONE) // skips pseudo instructions (label/vgdnop/assocreg)
-                    currInstr = currInstr->getPrev();
-                else
-                    break;
-            }
-            if (currInstr->getGCMap()) {
-                cg()->generateNop(NULL, lastInstr);
-            }
+        // TR::Instruction *lastInstr = cursor;
+        //     TR::Instruction *currInstr = lastInstr;
+        //     while (true) {
+        //         if (currInstr->getOpCode().getFormat()
+        //             == FORMAT_NONE) // skips pseudo instructions (label/vgdnop/assocreg)
+        //             currInstr = currInstr->getPrev();
+        //         else
+        //             break;
+        //     }
+        //     if (currInstr->getGCMap()) {
+        //         cg()->generateNop(NULL, lastInstr);
+        //     }
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
