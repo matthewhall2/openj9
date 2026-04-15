@@ -6370,6 +6370,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     TR::Compilation *comp = cg->comp();
 
    bool isCheckCast = false;
+   bool isIsAssignableFrom = false;
    static bool useOld = feGetEnv("useOldAssignableFrom") != NULL;
    static bool evalBeforeHelper = feGetEnv("evalBeforeHelper") != NULL;
     TR::SymbolReference * ref = node->getSymbolReference();
@@ -6384,6 +6385,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       //   printf("instanceof\n");
          break;
       case TR::icall: // TR_checkAssignable
+        isIsAssignableFrom = true;
        //  TR::SymbolReference * ref = node->getSymbolReference();
          TR_ASSERT_FATAL(ref == cg->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable), "must be checkAssignable\n");
          // disabled if TR_disableInliningOfIsAssignableFrom is set
@@ -6410,7 +6412,22 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          TR_ASSERT(false, "Incorrect Op Code %d.", node->getOpCodeValue());
          break;
       }
+
+    int32_t toClassDepth = -1;
+   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
    TR_OpaqueClassBlock *clazz = TR::TreeEvaluator::getCastClassAddress(node->getChild(1));
+
+   if ((clazz == NULL) && isIsAssignableFrom) {\
+    printf("isAssignableFrom: old - null symref\n");
+    TR::Node *toClass = node->getChild(1);
+    int32_t toClassDepth = -1;
+   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   if (toClassSymRef != NULL) {
+    printf("new method: not null\n");
+   }
+   }
    if (isCheckCast && !clazz && !comp->getOption(TR_DisableInlineCheckCast) && (!comp->compileRelocatableCode() || comp->getOption(TR_UseSymbolValidationManager)))
       {
       generateInlinedCheckCastForDynamicCastClass(node, cg);
