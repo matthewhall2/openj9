@@ -4379,7 +4379,10 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    int32_t toClassDepth = -1;
    TR_OpaqueClassBlock *toClassClazz = NULL;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, toClassClazz);
-
+   
+   if (toClassSymRef != NULL) {
+    printf("inlinedAssignableFrom: known castclass\n");
+   }
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
    bool isToClassUnknown = toClassSymRef == NULL || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
@@ -6152,6 +6155,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     TR::Compilation *comp = cg->comp();
 
    bool isCheckCast = false;
+   bool isIsAssignableFrom = false;
    static bool useOld = feGetEnv("useOldAssignableFrom") != NULL;
    switch (node->getOpCodeValue())
       {
@@ -6162,6 +6166,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
       case TR::instanceof:
          break;
       case TR::icall: // TR_checkAssignable
+        isIsAssignableFrom = true;
          // disabled if TR_disableInliningOfIsAssignableFrom is set
          if (useOld) {
             break;
@@ -6176,8 +6181,13 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       }
    TR_OpaqueClassBlock *clazz = TR::TreeEvaluator::getCastClassAddress(node->getChild(1));
-   if (isCheckCast && !clazz && !comp->getOption(TR_DisableInlineCheckCast) && (!comp->compileRelocatableCode() || comp->getOption(TR_UseSymbolValidationManager)))
+   if (!clazz && isIsAssignableFrom) {
+            printf("isAssignableFrom unknown cast class\n");
+    return generateInlinedIsAssignableFrom(node, cg);
+   }
+   else if ((isCheckCast) && !clazz && !comp->getOption(TR_DisableInlineCheckCast) && (!comp->compileRelocatableCode() || comp->getOption(TR_UseSymbolValidationManager)))
       {
+
       generateInlinedCheckCastForDynamicCastClass(node, cg);
       }
    else if (clazz &&
