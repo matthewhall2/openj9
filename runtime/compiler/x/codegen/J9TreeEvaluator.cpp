@@ -6413,9 +6413,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       }
 
-    int32_t toClassDepth = -1;
-   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+  
    TR_OpaqueClassBlock *clazz = TR::TreeEvaluator::getCastClassAddress(node->getChild(1));
 
    if ((clazz == NULL) && isIsAssignableFrom) {\
