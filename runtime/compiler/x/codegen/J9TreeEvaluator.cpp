@@ -4387,7 +4387,8 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    TR::SymbolReference *classSymRef = NULL;
    const TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = opcode == TR::loadaddr;
-
+bool trace = comp->getOption(TR_TraceCG);
+   OMR::Logger *log = comp->log();
    // transformation guarentees either loadaddr or aloadi
    if (isClassNodeLoadAddr)
       {
@@ -4411,9 +4412,10 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
       }
    
    if (classNode->getOpCodeValue() != TR::loadaddr && classNode->getOpCodeValue() != TR::aload) {
+    logprintf(trace, log, "node is neither loadaddr nor aload\n");
       return NULL;
    }
-
+ logprintf(trace, log, "node is loadaddr or aload\n");
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
 
