@@ -4380,7 +4380,7 @@ inline TR::Register *generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGen
    TR_OpaqueClassBlock *toClassClazz = NULL;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, toClassClazz);
    
-   if (toClassSymRef != NULL) {
+   if (toClassClazz != NULL) {
     printf("inlinedAssignableFrom: known castclass\n");
    }
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
