@@ -6181,7 +6181,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       }
    TR_OpaqueClassBlock *clazz = TR::TreeEvaluator::getCastClassAddress(node->getChild(1));
-   if (!clazz && isIsAssignableFrom) {
+   if ((clazz == NULL) && isIsAssignableFrom) {
             printf("isAssignableFrom unknown cast class\n");
     return generateInlinedIsAssignableFrom(node, cg);
    }
