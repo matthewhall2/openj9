@@ -4514,7 +4514,7 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
    //printf("evalugin isAssignableFrom\n");
-   TR::TR_OpaqueClassBlock *dummy = NULL;
+   TR_OpaqueClassBlock *dummy = NULL;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
@@ -4728,7 +4728,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::TR_OpaqueClassBlock *dummy;
+   TR_OpaqueClassBlock *dummy;
    TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
