@@ -4440,7 +4440,7 @@ printf("opcodeValue: %d\n", classNode->getOpCodeValue());
       clazz = (TR_OpaqueClassBlock *)classSymRef->getSymbol()->castToStaticSymbol()->getStaticAddress();
       if (clazz != NULL) {
         printf("clazz non null\n");
-         classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+         classDepth = classSymRef->classDepth(comp);
          printf("depth is %d\n", classDepth);
       }
          return classSymRef;
