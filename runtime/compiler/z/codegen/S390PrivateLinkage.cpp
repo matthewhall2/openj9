@@ -2417,7 +2417,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
     }
 
     if (isJitDispatchJ9Method) {
-        TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getJ9MethodArgumentRegister());
+        TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(getJ9MethodArgumentRegister());
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
         TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
@@ -2430,10 +2430,10 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-      //     TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
-      //       dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-      //   TR::RegisterDependencyConditions *postDeps
-      //       = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 0, cg());
+          TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
+            dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+        TR::RegisterDependencyConditions *postDeps
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 0, cg());
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2490,7 +2490,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
@@ -3301,7 +3301,10 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
             cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
         if (specialArg->getRegisterPair())
             specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-         dependencies->addPreCondition(specialArg, specialArgReg);
+         if (!callNode->isJitDispatchJ9MethodCall(comp()))
+            dependencies->addPreCondition(specialArg, specialArgReg);
+         else
+            dependencies->addPostCondition(specialArg, specialArgReg);
         
 
         cg()->decReferenceCount(child);
