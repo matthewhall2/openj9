@@ -4381,7 +4381,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
-static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, const char * test = NULL, TR_OpaqueClassBlock *&clazz = NULL)
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, TR_OpaqueClassBlock *&clazz = NULL, const char * test = NULL)
    {
    classDepth = -1;
    if (test != NULL) {
@@ -4514,7 +4514,8 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
    //printf("evalugin isAssignableFrom\n");
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   TR::TR_OpaqueClassBlock *dummy = NULL;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
@@ -4727,7 +4728,8 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
 
    int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   TR::TR_OpaqueClassBlock *dummy;
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
 
    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
@@ -4737,7 +4739,7 @@ inline TR::Register* generateInlinedIsAssignableFrom(TR::Node* node, TR::CodeGen
    TR::SymbolReference *fromClassSymRef = NULL;
    if (NULL != toClassSymRef)
       {
-      fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+      fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth, dummy);
       }
 
    if (fromClassSymRef != NULL && fromClassSymRef->isClassInterface(comp) && isToClassKnownInterface)
@@ -6436,7 +6438,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     int32_t toClassDepth = -1;
     TR_OpaqueClassBlock *clazz2 = NULL;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, "checking new method", clazz2);
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, clazz2, "checking new method");
    if (toClassSymRef != NULL) {
     printf("new method: not null\n");
    }
