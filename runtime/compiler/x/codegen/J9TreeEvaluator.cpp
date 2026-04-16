@@ -4390,7 +4390,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    TR::SymbolReference *classSymRef = NULL;
    const TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = (opcode == TR::loadaddr);
-   printf("loadaddr: %d, aloadi: %d", TR::loadaddr, TR::aloadi);
+   printf("loadaddr: %d, aloadi: %d\n", TR::loadaddr, TR::aloadi);
 bool trace = comp->getOption(TR_TraceCG);
 printf("opcodeValue: %d\n", classNode->getOpCodeValue());
    OMR::Logger *log = comp->log();
