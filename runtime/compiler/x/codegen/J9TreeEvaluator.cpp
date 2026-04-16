@@ -4389,7 +4389,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    }
    TR::SymbolReference *classSymRef = NULL;
    const TR::ILOpCodes opcode = classNode->getOpCodeValue();
-   bool isClassNodeLoadAddr = opcode == TR::loadaddr;
+   bool isClassNodeLoadAddr = (opcode == TR::loadaddr);
 bool trace = comp->getOption(TR_TraceCG);
    OMR::Logger *log = comp->log();
    // transformation guarentees either loadaddr or aloadi
@@ -4425,7 +4425,7 @@ bool trace = comp->getOption(TR_TraceCG);
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
    if (!classNode->getOpCode().hasSymbolReference())
     printf("no sym ref\n");
-   TR::SymbolReference *symRef = classNode->getOpCode().hasSymbolReference() ? classNode->getSymbolReference() : NULL;
+   classSymRef = classNode->getOpCode().hasSymbolReference() ? classNode->getSymbolReference() : NULL;
    if (classNode->getOpCode().hasSymbolReference() && NULL == symRef)
     printf("null symref\n");
     if (symRef->isUnresolved())
@@ -6432,7 +6432,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
   
    TR_OpaqueClassBlock *clazz = TR::TreeEvaluator::getCastClassAddress(node->getChild(1));
 
-   if ((clazz == NULL) && isIsAssignableFrom) {\
+   if ((clazz == NULL) && isIsAssignableFrom) {
     printf("isAssignableFrom: old - null symref\n");
     TR::Node *toClass = node->getChild(1);
     int32_t toClassDepth = -1;
@@ -6442,7 +6442,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
    if (toClassSymRef != NULL) {
     printf("new method: not null\n");
    }
-   if (clazz != NULL) {
+   if (clazz2 != NULL) {
     printf("isAssignableFrom: non null clazz\n");
    }
    }
