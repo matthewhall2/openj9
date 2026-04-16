@@ -6441,7 +6441,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     printf("new method: not null\n");
    }
    if (clazz != NULL) {
-    printf("isAssignableFrom: non null clazz\n")
+    printf("isAssignableFrom: non null clazz\n");
    }
    }
    if (isCheckCast && !clazz && !comp->getOption(TR_DisableInlineCheckCast) && (!comp->compileRelocatableCode() || comp->getOption(TR_UseSymbolValidationManager)))
