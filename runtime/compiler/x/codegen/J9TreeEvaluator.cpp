@@ -6406,6 +6406,8 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
          break;
       case TR::icall: // TR_checkAssignable
         isIsAssignableFrom = true;
+        printf("node child 0: %p, child 1: %p\n", node->getChild(0), node->getChild(1));
+        printf("child opcodes - child 0: %d, child 2: %d\n", node->getChild(0)->getOpCodeValue(), node->getChild(1)->getOpCodeValue());
        //  TR::SymbolReference * ref = node->getSymbolReference();
          TR_ASSERT_FATAL(ref == cg->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable), "must be checkAssignable\n");
          // disabled if TR_disableInliningOfIsAssignableFrom is set
