@@ -4441,6 +4441,7 @@ printf("opcodeValue: %d\n", classNode->getOpCodeValue());
       if (clazz != NULL) {
         printf("clazz non null\n");
          classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+         printf("depth is %d\n", classDepth);
       }
          return classSymRef;
       }
