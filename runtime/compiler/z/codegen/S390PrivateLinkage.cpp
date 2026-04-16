@@ -2417,7 +2417,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
     }
 
     if (isJitDispatchJ9Method) {
-        TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getJ9MethodArgumentRegister());
+        TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(getJ9MethodArgumentRegister());
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
         TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
