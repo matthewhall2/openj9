@@ -4436,7 +4436,7 @@ printf("opcodeValue: %d\n", classNode->getOpCodeValue());
       {
     printf("resolved\n");
       TR::StaticSymbol *classSym = classSymRef->getSymbol()->getStaticSymbol();
-      clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *)classSym->castToStaticSymbol()->getStaticAddress(); : NULL;
+      clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *)classSym->castToStaticSymbol()->getStaticAddress() : NULL;
       if (clazz != NULL) {
         printf("clazz non null\n");
          classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
