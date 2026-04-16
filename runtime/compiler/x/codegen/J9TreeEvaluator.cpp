@@ -4426,14 +4426,14 @@ bool trace = comp->getOption(TR_TraceCG);
    if (!classNode->getOpCode().hasSymbolReference())
     printf("no sym ref\n");
    classSymRef = classNode->getOpCode().hasSymbolReference() ? classNode->getSymbolReference() : NULL;
-   if (classNode->getOpCode().hasSymbolReference() && NULL == symRef)
+   if (classNode->getOpCode().hasSymbolReference() && NULL == classSymRef)
     printf("null symref\n");
-    if (symRef->isUnresolved())
+    if (classSymRef->isUnresolved())
         printf("unresolved sym ref\n");
-   if (symRef != NULL && !symRef->isUnresolved())
+   if (classSymRef != NULL && !classSymRef->isUnresolved())
       {
     printf("resolved\n");
-      TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
+      TR::StaticSymbol *classSym = classSymRef->getSymbol()->getStaticSymbol();
       clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
       if (clazz != NULL) {
         printf("clazz non null\n");
