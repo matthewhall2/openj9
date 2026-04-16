@@ -4391,6 +4391,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
    const TR::ILOpCodes opcode = classNode->getOpCodeValue();
    bool isClassNodeLoadAddr = (opcode == TR::loadaddr);
 bool trace = comp->getOption(TR_TraceCG);
+printf("opcodeValue: %d\n", classNode->getOpCodeValue());
    OMR::Logger *log = comp->log();
    // transformation guarentees either loadaddr or aloadi
    if (isClassNodeLoadAddr)
