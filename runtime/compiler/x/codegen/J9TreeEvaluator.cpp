@@ -4381,7 +4381,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
-static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, TR_OpaqueClassBlock *&clazz = NULL, const char * test)
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, TR_OpaqueClassBlock *&clazz, const char * test = NULL)
    {
    classDepth = -1;
    if (test != NULL) {
