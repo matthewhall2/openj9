@@ -4395,6 +4395,7 @@ bool trace = comp->getOption(TR_TraceCG);
    // transformation guarentees either loadaddr or aloadi
    if (isClassNodeLoadAddr)
       {
+    printf("loadaddr\n");
       classSymRef = classNode->getSymbolReference();
       }
    else if (opcode == TR::aloadi)
@@ -4418,14 +4419,20 @@ bool trace = comp->getOption(TR_TraceCG);
     logprintf(trace, log, "node is neither loadaddr nor aload\n");
       return NULL;
    }
+   printf("here\n");
  logprintf(trace, log, "node is loadaddr or aload\n");
    // the class node being <loadaddr> is an edge case - likely will not happen since we shouldn't see
    // Class.isAssignableFrom on classes known at compile (javac) time, but still possible.
-
+   if (!classNode->getOpCode().hasSymbolReference())
+    printf("no sym ref\n");
    TR::SymbolReference *symRef = classNode->getOpCode().hasSymbolReference() ? classNode->getSymbolReference() : NULL;
-
+   if (classNode->getOpCode().hasSymbolReference() && NULL == symRef)
+    printf("null symref\n");
+    if (symRef->isUnresolved())
+        printf("unresolved sym ref\n");
    if (symRef != NULL && !symRef->isUnresolved())
       {
+    
       TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
       TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
       if (clazz != NULL)
@@ -6426,7 +6433,7 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     TR::Node *toClass = node->getChild(1);
     int32_t toClassDepth = -1;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, "checking new method");
    if (toClassSymRef != NULL) {
     printf("new method: not null\n");
    }
