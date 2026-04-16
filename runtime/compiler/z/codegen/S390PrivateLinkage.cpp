@@ -2417,7 +2417,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
     }
 
     if (isJitDispatchJ9Method) {
-        TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(getJ9MethodArgumentRegister());
+        TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getJ9MethodArgumentRegister());
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
         TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
@@ -2430,10 +2430,10 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
             dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
 
-          TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
-            dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
-        TR::RegisterDependencyConditions *postDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 0, cg());
+      //     TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
+      //       dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
+      //   TR::RegisterDependencyConditions *postDeps
+      //       = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 0, cg());
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2442,23 +2442,23 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
             TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize, true);
         snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
         cg()->addSnippet(snippet);
-        TR::SymbolReference *labelSymRef
-            = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
+      //   TR::SymbolReference *labelSymRef
+      //       = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
-        TR_S390OutOfLineCodeSection *snippetCall
-            = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-        cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
-        snippetCall->swapInstructionListsWithCompilation();
-        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode,
-            snippetLabel);
-        gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-        gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
-        gcPoint
-            = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
+      //   TR_S390OutOfLineCodeSection *snippetCall
+      //       = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+      //   cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+      //   snippetCall->swapInstructionListsWithCompilation();
+      //   generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+      //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode,
+      //       snippetLabel);
+      //   gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      //   gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
+      //   gcPoint
+      //       = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
-        gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-        snippetCall->swapInstructionListsWithCompilation();
+      //   gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+      //   snippetCall->swapInstructionListsWithCompilation();
 
         generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
         // fetch J9Method::extra field
@@ -2471,8 +2471,9 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::InstOpCode::S390BranchCondition oolBranchOp
             = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
 
-        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+        gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
 
         // find target address
         gcPoint = generateRXInstruction(cg(), TR::InstOpCode::LY, callNode, j9MethodReg,
@@ -2489,7 +2490,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
@@ -3300,10 +3301,8 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
             cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
         if (specialArg->getRegisterPair())
             specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-        if (!callNode->isJitDispatchJ9MethodCall(comp()))
-            dependencies->addPreCondition(specialArg, specialArgReg);
-        else
-            dependencies->addPostCondition(specialArg, specialArgReg);
+         dependencies->addPreCondition(specialArg, specialArgReg);
+        
 
         cg()->decReferenceCount(child);
 
