@@ -4381,7 +4381,7 @@ inline void generateInlineSuperclassTest(TR::Node* node, TR::CodeGenerator *cg, 
    srm->reclaimScratchRegister(superclassArrayReg);
    }
 
-static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, const char * test = NULL)
+static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Compilation *comp, int32_t &classDepth, const char * test = NULL, TR_OpaqueClassBlock *&clazz = NULL)
    {
    classDepth = -1;
    if (test != NULL) {
@@ -4432,11 +4432,13 @@ bool trace = comp->getOption(TR_TraceCG);
         printf("unresolved sym ref\n");
    if (symRef != NULL && !symRef->isUnresolved())
       {
-    
+    printf("resolved\n");
       TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
-      TR_OpaqueClassBlock *clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
-      if (clazz != NULL)
+      clazz = (classSym != NULL) ? (TR_OpaqueClassBlock *) classSym->getStaticAddress() : NULL;
+      if (clazz != NULL) {
+        printf("clazz non null\n");
          classDepth = static_cast<int32_t>(TR::Compiler->cls.classDepthOf(clazz));
+      }
          return classSymRef;
       }
 
@@ -6432,10 +6434,14 @@ TR::Register *J9::X86::TreeEvaluator::checkcastinstanceofEvaluator(TR::Node *nod
     printf("isAssignableFrom: old - null symref\n");
     TR::Node *toClass = node->getChild(1);
     int32_t toClassDepth = -1;
+    TR_OpaqueClassBlock *clazz2 = NULL;
    static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, "checking new method");
+   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, "checking new method", clazz2);
    if (toClassSymRef != NULL) {
     printf("new method: not null\n");
+   }
+   if (clazz != NULL) {
+    printf("isAssignableFrom: non null clazz\n")
    }
    }
    if (isCheckCast && !clazz && !comp->getOption(TR_DisableInlineCheckCast) && (!comp->compileRelocatableCode() || comp->getOption(TR_UseSymbolValidationManager)))
