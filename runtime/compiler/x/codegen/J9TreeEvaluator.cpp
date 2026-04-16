@@ -4515,16 +4515,16 @@ inline TR::Register *testAssignableFrom(TR::Node *node, TR::CodeGenerator *cg)
                (comp->compileRelocatableCode() && comp->getOption(TR_UseSymbolValidationManager)));
 
 
-   int32_t toClassDepth = -1;
-   static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
+  // int32_t toClassDepth = -1;
+  // static bool dynamicToClassDepth = feGetEnv("disableDynamicToClassDepth") == NULL;
    //printf("evalugin isAssignableFrom\n");
-   TR_OpaqueClassBlock *dummy = NULL;
-   TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
+  // TR_OpaqueClassBlock *dummy = NULL;
+  // TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth, dummy);
 
-   bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
-   bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
-   bool isToClassUnknown = (toClassSymRef == NULL);// || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
-   bool isToClassNormal = (toClassSymRef != NULL) && (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+//    bool isToClassKnownInterface = (toClassSymRef != NULL) && toClassSymRef->isClassInterface(comp);
+//    bool isToClassKnownArray = (toClassSymRef != NULL) && toClassSymRef->isClassArray(comp);
+//    bool isToClassUnknown = (toClassSymRef == NULL);// || (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
+//    bool isToClassNormal = (toClassSymRef != NULL) && (!toClassSymRef->isClassArray(comp) && !toClassSymRef->isClassInterface(comp));
 
    TR_X86ScratchRegisterManager* srm = cg->generateScratchRegisterManager(2);
    generateLabelInstruction(TR::InstOpCode::label, node, startLabel, cg);
@@ -4592,7 +4592,7 @@ generateRegRegInstruction(TR::InstOpCode::CMPRegReg(use64BitClasses), node, toCl
 //    srm->reclaimScratchRegister(cacheReg);
 //    }
    
-   generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, dynamicToClassDepth ? toClassDepth : -1);
+   generateInlineSuperclassTest(node, cg, toClassReg, fromClassReg, srm, falseLabel, use64BitClasses, -1);
    generateLabelInstruction(TR::InstOpCode::JE4, node, endLabel, cg);
    
    //generateLabelInstruction(TR::InstOpCode::JMP4, node, outlinedCallLabel, cg);
