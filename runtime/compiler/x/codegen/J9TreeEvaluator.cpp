@@ -4993,7 +4993,7 @@ static void inlineCheckCastOrInstanceOfKnownArrayCastClass(TR::Node *node, TR_Op
 
 #if defined(J9VM_OPT_VALHALLA_FLATTENABLE_VALUE_TYPES)
         J9Class *castClassJ9Class = TR::Compiler->cls.convertClassOffsetToClassPtr(clazz);
-        if (TR::Compiler->cls.isArrayNullRestricted(castClassJ9Class)) {
+        if (TR::Compiler->cls.isArrayNullRestricted(cg->comp(), (TR_OpaqueClassBlock *)castClassJ9Class)) {
             static_assert(J9ClassArrayIsNullRestricted == 0x2000000,
                 "J9ClassArrayIsNullRestricted must be 0x2000000 for simple bit test");
 
