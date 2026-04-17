@@ -2445,20 +2445,20 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
       //   TR::SymbolReference *labelSymRef
       //       = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
-      //   TR_S390OutOfLineCodeSection *snippetCall
-      //       = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
-      //   cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
-      //   snippetCall->swapInstructionListsWithCompilation();
-      //   generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
-      //   gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode,
-      //       snippetLabel);
-      //   gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      //   gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
+        TR_S390OutOfLineCodeSection *snippetCall
+            = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
+        cg()->getS390OutOfLineCodeSectionList().push_front(snippetCall);
+        snippetCall->swapInstructionListsWithCompilation();
+        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, interpreterCallLabel);
+        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode,
+            snippetLabel);
+        gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
+        gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
       //   gcPoint
       //       = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, callNode, doneLabel);
 
       //   gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-      //   snippetCall->swapInstructionListsWithCompilation();
+        snippetCall->swapInstructionListsWithCompilation();
 
         generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
         // fetch J9Method::extra field
@@ -2471,7 +2471,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::InstOpCode::S390BranchCondition oolBranchOp
             = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
 
-        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
+        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
        // gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
 
