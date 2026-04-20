@@ -4939,10 +4939,21 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
     if (isCheckCastAndNullCheck)
         generateLoadJ9Class(node, objClassReg, ObjReg, cg);
 
+     // objClassReg holds object class
+    if (!isCheckCastAndNullCheck) {
+        generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, ObjReg, ObjReg, cg);
+        generateLabelInstruction(TR::InstOpCode::JE4, node, fallThruLabel, cg);
+        generateLoadJ9Class(node, objClassReg, ObjReg, cg);
+    }
+
    TR::Register* modifierReg = srm->findOrCreateScratchRegister();
    // get romClass of cast class, for testing array, interface class type
    generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(castClassReg, offsetof(J9Class, romClass), cg), cg);
  generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, modifierReg, generateX86MemoryReference(modifierReg, offsetof(J9ROMClass, modifiers), cg), cg);
+
+ generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccClassArray | J9AccInterface, cg);
+    generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
+
          // If toClass is array, call out of line helper
       //   generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
    // If cast class is array, call out of line helper
@@ -4951,19 +4962,14 @@ inline void generateInlinedCheckCastForDynamicCastClass(TR::Node* node, TR::Code
 //        generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccClassArray, cg);
    generateLabelInstruction(TR::InstOpCode::JNE4, node, outlinedCallLabel, cg);
 
-    // objClassReg holds object class
-    if (!isCheckCastAndNullCheck) {
-        generateRegRegInstruction(TR::InstOpCode::TESTRegReg(), node, ObjReg, ObjReg, cg);
-        generateLabelInstruction(TR::InstOpCode::JE4, node, fallThruLabel, cg);
-        generateLoadJ9Class(node, objClassReg, ObjReg, cg);
-    }
+   
 
    // Object not array, inline checks
    // Check cast class is interface
 //    generateMemImmInstruction(TR::InstOpCode::TEST4MemImm4, node,
 //        generateX86MemoryReference(castClassRomClassReg, offsetof(J9ROMClass, modifiers), cg), J9AccInterface, cg);
- generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
-   generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
+//  generateRegImmInstruction(TR::InstOpCode::TEST4RegImm4, node, modifierReg, J9AccInterface, cg);
+//    generateLabelInstruction(TR::InstOpCode::JE4, node, isClassLabel, cg);
    srm->reclaimScratchRegister(modifierReg);
 
    generateInlineInterfaceTest(node, cg, castClassReg, objClassReg, srm, fallThruLabel, throwLabel, false);
