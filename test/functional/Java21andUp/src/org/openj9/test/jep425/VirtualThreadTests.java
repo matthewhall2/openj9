@@ -194,27 +194,22 @@ public class VirtualThreadTests {
 				Thread.sleep(10);
 			}
 
-			/* Incrementally wait for 10000 ms to let the virtual thread park. */
+			/* Wait up to 10 seconds for the virtual thread to park. */
 			incrementalWait(t);
 
 			StackTraceElement[] ste = t.getStackTrace();
 
-			/* If the stacktrace doesn't match the expected result, then print out the stacktrace
-			 * for debuggging.
+			/* Print the stack trace for debugging if it's not empty
+			 * and the top frame isn't as expected.
 			 */
-			if ((expectedFrames != ste.length) || !ste[0].getMethodName().equals(expectedMethodName)) {
+			if ((ste.length != 0) && !expectedMethodName.equals(ste[0].getMethodName())) {
 				for (StackTraceElement st : ste) {
 					System.out.println(st);
 				}
 			}
 
-			AssertJUnit.assertTrue(
-					"Expected " + expectedFrames + " frames, got " + ste.length,
-					(expectedFrames == ste.length));
-
-			AssertJUnit.assertTrue(
-					"Expected top frame to be " + expectedMethodName + ", got " + ste[0].getMethodName(),
-					ste[0].getMethodName().equals(expectedMethodName));
+			Assert.assertEquals(ste.length, expectedFrames);
+			Assert.assertEquals(ste[0].getMethodName(), expectedMethodName);
 
 			LockSupport.unpark(t);
 			t.join();
@@ -245,10 +240,10 @@ public class VirtualThreadTests {
 
 			StackTraceElement[] ste = t.getStackTrace();
 
-			/* If the stacktrace doesn't match the expected result, then print out the stacktrace
-			 * for debuggging.
+			/* Print the stack trace for debugging if it's not empty
+			 * and the top frame isn't as expected.
 			 */
-			if ((expectedFrames != ste.length) || !ste[0].getClassName().equals(expectedClassName)) {
+			if ((ste.length != 0) && !expectedClassName.equals(ste[0].getClassName())) {
 				for (StackTraceElement st : ste) {
 					System.out.println(st);
 				}
