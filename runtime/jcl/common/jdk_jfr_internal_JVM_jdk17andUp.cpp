@@ -22,6 +22,7 @@
 
 #include "j9.h"
 #include "jni.h"
+#include "jclprots.h"
 
 extern "C" {
 
@@ -34,8 +35,7 @@ Java_jdk_jfr_internal_JVM_markChunkFinal(JNIEnv *env, jobject obj)
 jboolean JNICALL
 Java_jdk_jfr_internal_JVM_isRecording(JNIEnv *env, jobject obj)
 {
-	// TODO: implementation
-	return JNI_FALSE;
+	return Java_com_ibm_oti_vm_VM_isJFRRecordingStarted(env, NULL);
 }
 
 void JNICALL
