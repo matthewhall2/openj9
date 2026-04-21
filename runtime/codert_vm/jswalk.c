@@ -275,9 +275,10 @@ resumeNonInline:
 				goto i2jTransition;
 			}
 		}
-		/* Before determining its an invalidJITReturnAddress, try loading jitInfo again synchronized */
-		if ((J9_ARE_NO_BITS_SET(walkState->currentThread->privateFlags2, J9_PRIVATE_FLAGS2_ASYNC_GET_CALL_TRACE)) &&
-			((walkState->jitInfo = jitGetExceptionTableFromPCSync(walkState->walkThread, (UDATA)walkState->pc, TRUE)) != NULL)) {
+		/* Before determining it's an invalidJITReturnAddress, try loading jitInfo again synchronized. */
+		if (J9_ARE_NO_BITS_SET(walkState->currentThread->privateFlags2, J9_PRIVATE_FLAGS2_ASYNC_GET_CALL_TRACE)
+			&& ((walkState->jitInfo = jitGetExceptionTableFromPCSync(walkState->walkThread, (UDATA)walkState->pc, TRUE)) != NULL)
+		) {
 			goto jitInfoSecondTryMatch;
 		}
 		/* Only report errors if the stack walk caller has allowed it.
@@ -1428,12 +1429,16 @@ static J9JITExceptionTable * jitGetExceptionTable(J9StackWalkState * walkState)
 #endif
 	J9JITExceptionTable * result = jitGetExceptionTableFromPC(walkState->walkThread, (UDATA) walkState->pc);
 
-	if (result) return result;
+	if (result) {
+		return result;
+	}
 
-	// Try loading jitInfo again with synchronization
+	/* Try loading jitInfo again with synchronization. */
 	result = jitGetExceptionTableFromPCSync(walkState->walkThread, (UDATA)walkState->pc, TRUE);
 
-	if (result) return result;
+	if (result) {
+		return result;
+	}
 
 	/* Check to see if the PC is a decompilation return point and if so, use the real PC for finding the metaData */
 
