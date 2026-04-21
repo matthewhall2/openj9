@@ -2417,7 +2417,8 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
     }
 
     if (isJitDispatchJ9Method) {
-        TR::Register *j9MethodReg = dependencies->searchPostConditionRegister(getJ9MethodArgumentRegister());
+      
+        TR::Register *j9MethodReg = (feGetEnv("onlyPost") != NULL) ? dependencies->searchPostConditionRegister(getJ9MethodArgumentRegister()) : dependencies->searchPreConditionRegister(getJ9MethodArgumentRegister());
         TR::Register *scratchReg = dependencies->searchPostConditionRegister(getVTableIndexArgumentRegister());
 
         TR::LabelSymbol *interpreterCallLabel = generateLabelSymbol(cg());
@@ -2490,7 +2491,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, (feGetEnv("onlyPost") != NULL) ? postDeps : dependencies);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
@@ -3301,11 +3302,14 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
             cg()->evaluate(child)); // TODO:JSR292: We don't need a copy of the highOrder reg on 31-bit
         if (specialArg->getRegisterPair())
             specialArg = specialArg->getLowOrder(); // on 31-bit, the top half doesn't matter, so discard it
-         if (!callNode->isJitDispatchJ9MethodCall(comp()))
+         if (!callNode->isJitDispatchJ9MethodCall(comp())) {
             dependencies->addPreCondition(specialArg, specialArgReg);
-         else
-            dependencies->addPostCondition(specialArg, specialArgReg);
-        
+         } else {
+            if (feGetEnv("onlyPost") != NULL)
+               dependencies->addPostCondition(specialArg, specialArgReg);
+            else
+               dependencies->addPreCondition(specialArg, specialArgReg);
+         }
 
         cg()->decReferenceCount(child);
 
