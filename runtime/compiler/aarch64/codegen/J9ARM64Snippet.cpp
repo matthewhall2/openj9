@@ -286,5 +286,5 @@ void TR::ARM64J9HelperCallSnippet::print(OMR::Logger *log, TR_Debug *debug)
     debug->printPrefix(log, NULL, bufferPos, 4);
     log->printf("%s \t\t\t; %s", "mov x0 x10", "move j9method pointer to x0 for interpreter");
     bufferPos += ARM64_INSTRUCTION_LENGTH;
-    TR::ARM64HelperCallSnippet::printInner(log, debug, bufferPos, getRestartLabel());
+    TR::ARM64HelperCallSnippet::printInner(log, debug, bufferPos);
 }
