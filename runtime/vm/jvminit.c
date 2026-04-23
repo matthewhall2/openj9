@@ -4602,10 +4602,10 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 	{
 		IDATA startFlightRecordingIndex = FIND_AND_CONSUME_VMARG(STARTSWITH_MATCH, VMOPT_XXSTARTFLIGHTRECORDING, NULL);
 		if (0 <= startFlightRecordingIndex) {
-			PORT_ACCESS_FROM_JAVAVM(vm);
-			vm->extendedRuntimeFlags3 |= J9_EXTENDED_RUNTIME3_START_FLIGHT_RECORDING;
-
 			char *optionBuffer = NULL;
+			PORT_ACCESS_FROM_JAVAVM(vm);
+
+			vm->extendedRuntimeFlags3 |= J9_EXTENDED_RUNTIME3_START_FLIGHT_RECORDING;
 			GET_OPTION_VALUE(startFlightRecordingIndex, '=', &optionBuffer);
 
 			if (NULL != optionBuffer) {
@@ -4616,6 +4616,8 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 
 					while ('\0' != *scan_start) {
 						char **targetPtr = NULL;
+						char *comma = NULL;
+						UDATA valueLen = 0;
 						try_scan(&scan_start, ",");
 
 						if ('\0' == *scan_start) {
@@ -4633,8 +4635,8 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 							return JNI_ERR;
 						}
 
-						char *comma = strchr(scan_start, ',');
-						UDATA valueLen = (NULL != comma) ? (UDATA)(comma - scan_start) : strlen(scan_start);
+						comma = strchr(scan_start, ',');
+						valueLen = (NULL != comma) ? (UDATA)(comma - scan_start) : strlen(scan_start);
 						if (0 < valueLen) {
 							char *valueCopy = (char *)j9mem_allocate_memory(valueLen + 1, OMRMEM_CATEGORY_VM);
 							if (NULL != valueCopy) {
