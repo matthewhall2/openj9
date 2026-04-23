@@ -1103,11 +1103,11 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPreCondition(argRegister, specialArgReg);
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
+                        TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
                         if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
-                            cg()->decReferenceCount(child);
-                        } else {
-                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                            TR::Register *scratchReg = cg()->allocateRegister();
+                            dependencies->addPostCondition(scratchReg, getProperties().getVTableIndexArgumentRegister());
+                            cg()->decReferenceCount(child);                      
                         }
                     }
                 } else {
