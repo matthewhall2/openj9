@@ -4302,7 +4302,6 @@ static void generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGenerator *c
 
     TR::LabelSymbol *startLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *endLabel = generateLabelSymbol(cg);
-    TR::LabelSymbol *arrayLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *falseLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *outlinedCallLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
@@ -4377,17 +4376,6 @@ static void generateInlinedIsAssignableFrom(TR::Node *node, TR::CodeGenerator *c
       reg = callNode->getSecondChild()->getRegister();
       if (reg)
         deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
-    }
-
-    if (callNode == node)
-        {
-        reg = callNode->getRegister();
-        if (reg) {
-        deps->unionPostCondition(reg, TR::RealRegister::NoReg, cg);
-        }
-        }
-    else {
-        deps->addPostCondition(callNode->getRegister(), TR::RealRegister::NoReg, cg);
     }
 
     deps->stopAddingConditions();
