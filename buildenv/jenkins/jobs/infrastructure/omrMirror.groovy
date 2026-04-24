@@ -34,15 +34,14 @@ timestamps {
                         try {
                             //Clone/update
                             if (!fileExists('HEAD')) {
-                                sh "git clone --mirror ${HTTP}${SRC_REPO} ."
+                                sh "git clone --bare --no-tags --single-branch --branch master ${HTTP}${SRC_REPO} ."
                             } else {
                                 sh 'git remote update --prune'
                             }
 
                             // Push
                             withCredentials([usernamePassword(credentialsId: 'github-bot', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                                sh "git push ${HTTP}${USERNAME}:${PASSWORD}@${TARGET_REPO} --all"
-                                sh "git push ${HTTP}${USERNAME}:${PASSWORD}@${TARGET_REPO} --tags"
+                                sh "git push ${HTTP}${USERNAME}:${PASSWORD}@${TARGET_REPO} master"
                             }
 
                             // Set the build description
