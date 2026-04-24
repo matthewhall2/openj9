@@ -4282,6 +4282,36 @@ static bool genInstanceOfOrCheckCastNullTest(TR::Node *node, TR::CodeGenerator *
     }
 }
 
+static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
+   {
+   OMR::Logger *log = comp->log();
+bool trace = comp->getOption(TR_TraceCG);
+
+   TR::Register *iTableReg = srm->findOrCreateScratchRegister();
+   // load Itable
+   TR::Instruction *cursor = generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+            generateS390MemoryReference(fromClassReg, offsetof(J9Class, iTable), cg));
+
+   TR_Debug * debugObj = cg->getDebug();
+   TR::LabelSymbol *startLoop = generateLabelSymbol(cg);
+   cursor = generateS390LabelInstruction(cg, TR::InstOpCode::label, node, startLoop);
+   logprintf(trace, log, "--> start of itableWalk\n");
+
+   generateRRInstruction(cg, TR::InstOpCode::getLoadTestRegOpCode(), node, iTableReg, iTableReg);
+   generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, failLabel);
+   generateRXInstruction(cg, TR::InstOpCode::getCmpLogicalOpCode(), node, toClassReg,
+        generateS390MemoryReference(iTableReg, offsetof(J9ITable, interfaceClass), cg));
+generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
+generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
+generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, startLoop);
+
+generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, successLabel); 
+
+           
+
+   srm->reclaimScratchRegister(iTableReg);
+   }
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //  checkcastEvaluator - checkcast
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -4332,6 +4362,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
     TR::LabelSymbol *helperReturnOOLLabel = NULL;
     TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
+    TR::LabelSymbol *throwLabel = callLabel;
     TR::LabelSymbol *resultLabel = doneLabel;
 
     TR_Debug *debugObj = cg->getDebug();
@@ -4505,6 +4536,9 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 srm->reclaimScratchRegister(castClassCacheReg);
                 break;
             }
+            case InterfaceTest:
+                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, throwLabel);
+                break;
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
                 break;
@@ -8967,6 +9001,9 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                     node->getOpCode().getName());
                 break;
             }
+            case InterfaceTest:
+                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+                break;
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
                 break;
