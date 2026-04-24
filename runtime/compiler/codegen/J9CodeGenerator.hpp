@@ -455,8 +455,8 @@ public:
     bool supportsInliningOfIsAssignableFrom() { return false; } // no virt, default
 
     /** \brief
-    *    Determines whether code generators support an inline iTable walk for checkcast
-    */
+     *    Determines whether code generators support an inline iTable walk for checkcast
+     */
    bool supportsInlineItableWalk() { return false; } // no virt, default
 
     /** \brief
