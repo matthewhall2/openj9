@@ -57,6 +57,7 @@ public:
         CastClassCacheTest, // Needs object class: y, needs cast class: y
         DynamicCacheObjectClassTest, // Needs object class: y, needs cast class: n
         DynamicCacheDynamicCastClassTest, // Needs object class: y, needs cast class: y
+        InterfaceTest, // Needs object class: y, needs cast class: y
         HelperCall, // Needs object class: n, needs cast class: y
 
         InstanceOfOrCheckCastMaxSequences
