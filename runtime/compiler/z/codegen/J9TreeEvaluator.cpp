@@ -4284,8 +4284,8 @@ static bool genInstanceOfOrCheckCastNullTest(TR::Node *node, TR::CodeGenerator *
 
 static void genInterfaceTest(TR::Node *node, TR::CodeGenerator *cg, TR_S390ScratchRegisterManager *srm, TR::Register *fromClassReg, TR::Register *toClassReg, TR::LabelSymbol *successLabel, TR::LabelSymbol *failLabel)
    {
-   OMR::Logger *log = comp->log();
-bool trace = comp->getOption(TR_TraceCG);
+   OMR::Logger *log = cg->comp()->log();
+bool trace = cg->comp()->getOption(TR_TraceCG);
 
    TR::Register *iTableReg = srm->findOrCreateScratchRegister();
    // load Itable
@@ -4536,6 +4536,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 srm->reclaimScratchRegister(castClassCacheReg);
                 break;
             }
+
             case InterfaceTest:
                 genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, throwLabel);
                 break;
