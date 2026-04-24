@@ -36,11 +36,11 @@
 				<version>19+</version>
 				<variation>Mode108</variation>
 			</disable>
-			<disable>
+			<!-- <disable>
 				<comment>https://github.com/eclipse-openj9/openj9/issues/15152</comment>
 				<version>19+</version>
 				<variation>Mode116</variation>
-			</disable>
+			</disable> -->
 			<disable>
 				<comment>https://github.com/eclipse-openj9/openj9/issues/15152</comment>
 				<version>19+</version>
@@ -53,19 +53,19 @@
 			</disable>
 		</disables>
 		<variations>
-			<variation>NoOptions</variation>
+			<!-- <variation>NoOptions</variation>
 			<variation>Mode108</variation>
-			<variation>Mode109</variation>
+			<variation>Mode109</variation> -->
 			<variation>Mode116</variation>
-			<variation>Mode608</variation>
+			<!-- <variation>Mode608</variation>
 			<variation>Mode609</variation>
 			<variation>Mode616</variation>
 			<variation>Mode500</variation>
 			<variation>Mode501</variation>
 			<variation>Mode551</variation>
-			<variation>Mode550</variation>
+			<variation>Mode550</variation> -->
 		</variations>
-		<command>$(JAVA_COMMAND) $(CMDLINETESTER_JVM_OPTIONS) \
+		<command>$(JAVA_COMMAND) -XX:+MergeCompilerOptions  $(CMDLINETESTER_JVM_OPTIONS) "-Xjit:verbose,vlog=compLog" \
 	-DJARPATH=$(Q)$(LIB_DIR)$(D)jython-standalone.jar$(P)$(TEST_RESROOT)$(D)cmdLineTester_jython.jar$(Q) \
 	-DEXE=$(SQ)$(JAVA_COMMAND) $(JVM_OPTIONS)$(SQ) \
 	-jar $(CMDLINETESTER_JAR) -config $(Q)$(TEST_RESROOT)$(D)jython.xml$(Q) \

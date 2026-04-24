@@ -127,6 +127,13 @@ public:
 
     bool supportsTrapsInTMRegion();
     bool supportsInliningOfIsAssignableFrom();
+    bool supportsInlineItableWalkForCheckCast();
+    bool supportsInlineItableWalkForInstanceOf();
+    bool supportsInlineCheckCastForDynamicCastClass();
+    bool supportsInlineInstanceOfForDynamicCastClass();
+    bool supportsInlineItableWalkForIsAssignableFrom();
+    bool supportsDynamicCacheForIsAssignableFrom();
+
 
     using J9::CodeGenerator::addAllocatedRegister;
     void addAllocatedRegister(TR_PseudoRegister *temp);

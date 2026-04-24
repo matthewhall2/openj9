@@ -1212,8 +1212,18 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         // There is a possibility of attempt to cast object to another class and having cache on that object updated by
         // helper. Before going to helper checking the cache.
         sequences[i++] = CastClassCacheTest;
-        if (createDynamicCacheTests)
+        if ((isInstanceOf && cg->supportsInlineInstanceOfForDynamicCastClass() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg)) || 
+            (!isInstanceOf && cg->supportsInlineCheckCastForDynamicCastClass() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg))) {
+            sequences[i++] = SuperClassTest;
+        }
+
+       if ((isInstanceOf && cg->supportsInlineInstanceOfForDynamicCastClass() && cg->supportsInlineItableWalkForInstanceOf() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg)) || 
+            (!isInstanceOf && cg->supportsInlineCheckCastForDynamicCastClass() && cg->supportsInlineItableWalkForCheckCast() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg))) {
+            sequences[i++] = InterfaceTest;
+        }
+         if (createDynamicCacheTests) {
             sequences[i++] = DynamicCacheObjectClassTest;
+        }
         sequences[i++] = HelperCall;
     }
     // Cast class is a runtime variable, still not a lot of room to be fancy.
@@ -1226,11 +1236,19 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         sequences[i++] = CastClassCacheTest;
         // On Z, We were having support for Super Class Test for dynamic Cast Class so adding it here. It can be guarded
         // if Power/X do not need it.
-        if ((cg->supportsInliningOfIsInstance() || instanceOfOrCheckCastNode->getOpCodeValue() == TR::checkcast)
-            && instanceOfOrCheckCastNode->getSecondChild()->getOpCodeValue() != TR::loadaddr)
+        if ((isInstanceOf && cg->supportsInlineInstanceOfForDynamicCastClass() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg)) || 
+            (!isInstanceOf && cg->supportsInlineCheckCastForDynamicCastClass() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg))) {
             sequences[i++] = SuperClassTest;
-        if (createDynamicCacheTests)
+        }
+
+       if ((isInstanceOf && cg->supportsInlineInstanceOfForDynamicCastClass() && cg->supportsInlineItableWalkForInstanceOf() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg)) || 
+            (!isInstanceOf && cg->supportsInlineCheckCastForDynamicCastClass() && cg->supportsInlineItableWalkForCheckCast() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg))) {
+            sequences[i++] = InterfaceTest;
+        }
+        else if (createDynamicCacheTests) {
             sequences[i++] = DynamicCacheDynamicCastClassTest;
+        }
+        // always generate helper call for unknown case
         sequences[i++] = HelperCall;
     }
 
@@ -1379,8 +1397,15 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                 } else {
                     sequences[i++] = CastClassCacheTest;
                 }
-                if (createDynamicCacheTests)
+
+                if ((isInstanceOf && cg->supportsInlineItableWalkForInstanceOf() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg)) ||
+                    (!isInstanceOf && cg->supportsInlineItableWalkForCheckCast() && instanceOfOrCheckCastNeedSuperTest(instanceOfOrCheckCastNode, cg))) {
+                    sequences[i++] = InterfaceTest;
+                }
+                else if (createDynamicCacheTests) {
                     sequences[i++] = DynamicCacheObjectClassTest;
+                }
+
                 sequences[i++] = HelperCall;
             }
             // Cast class is an abstract class, we can skip the class equality test, a superclass test is enough.
@@ -1441,7 +1466,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
             objectClassLoaded = true;
         } else {
             if (s == ProfiledClassTest || s == CompileTimeGuessClassTest || s == ArrayOfJavaLangObjectTest
-                || s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest) {
+                || s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest || s == InterfaceTest) {
                 if (!objectClassLoaded) {
                     memmove(&sequences[j + 1], &sequences[j], (i - j) * sizeof(InstanceOfOrCheckCastSequences));
                     sequences[j] = LoadObjectClass;
@@ -1453,7 +1478,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
             // and can load it there. Here we just want to know whether the cast class is needed in the main line
             // sequence.
             //
-            if (s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest) {
+            if (s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest || s == InterfaceTest) {
                 if (!castClassEvaluated) {
                     // Ideally we would insert EvaluateCastClass at sequences[j], however
                     // if the cast class needs to be evaluated it needs to be done before carrying out any tests

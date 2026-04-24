@@ -4012,3 +4012,39 @@ bool J9::Z::CodeGenerator::supportsInliningOfIsAssignableFrom()
     static const bool disableInliningOfIsAssignableFrom = feGetEnv("TR_disableInlineIsAssignableFrom") != NULL;
     return !disableInliningOfIsAssignableFrom;
 }
+
+bool 
+J9::Z::CodeGenerator::supportsInlineItableWalkForCheckCast()
+   {
+   static const bool disableCheckcastItableWalk = feGetEnv("TR_disableCheckcastItableWalkForCheckCast") != NULL;
+   return !disableCheckcastItableWalk;
+   }
+
+bool 
+J9::Z::CodeGenerator::supportsInlineItableWalkForInstanceOf()
+   {
+   static const bool disableCheckcastItableWalk = feGetEnv("TR_disableCheckcastItableWalkForInstanceOf") != NULL;
+   return !disableCheckcastItableWalk;
+   }
+
+bool J9::Z::CodeGenerator::supportsInlineCheckCastForDynamicCastClass() {
+    static const bool disableInlineCheckCastForDynamicCastClass = feGetEnv("TR_disableInlineCheckCastForDynamicCastClass") != NULL;
+   return !disableInlineCheckCastForDynamicCastClass;
+}
+
+bool J9::Z::CodeGenerator::supportsInlineInstanceOfForDynamicCastClass() {
+     static const bool disableInlineInstanceOfForDynamicCastClass = feGetEnv("TR_disableInlineInstanceOfForDynamicCastClass") != NULL;
+     return !disableInlineInstanceOfForDynamicCastClass;
+}
+
+
+
+bool J9::Z::CodeGenerator::supportsInlineItableWalkForIsAssignableFrom() {
+     static const bool disableInlineITableWalkForIsAssignableFrom = feGetEnv("TR_disableInlineITableWalkForIsAssignableFrom") != NULL;
+     return !disableInlineITableWalkForIsAssignableFrom;
+}
+
+bool J9::Z::CodeGenerator::supportsDynamicCacheForIsAssignableFrom() {
+     static const bool enableDynamicCacheForIsAssignableFrom = feGetEnv("TR_enableDynamicCacheForIsAssignableFrom") != NULL;
+     return enableDynamicCacheForIsAssignableFrom;
+}
