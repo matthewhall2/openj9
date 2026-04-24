@@ -127,6 +127,7 @@ public:
 
     bool supportsTrapsInTMRegion();
     bool supportsInliningOfIsAssignableFrom();
+    bool supportsInlineItableWalk();
 
     using J9::CodeGenerator::addAllocatedRegister;
     void addAllocatedRegister(TR_PseudoRegister *temp);
