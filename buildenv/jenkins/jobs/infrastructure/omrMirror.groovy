@@ -32,11 +32,11 @@ timestamps {
                 try {
                     retry(2) {
                         try {
-                            //Clone/update
-                            if (!fileExists('HEAD')) {
-                                sh "git clone --bare --no-tags --single-branch --branch master ${HTTP}${SRC_REPO} ."
-                            } else {
+                            // Clone/update
+                            if (fileExists('HEAD')) {
                                 sh 'git remote update --prune'
+                            } else {
+                                sh "git clone --bare --no-tags --single-branch --branch master ${HTTP}${SRC_REPO} ."
                             }
 
                             // Push
@@ -45,13 +45,16 @@ timestamps {
                             }
 
                             // Set the build description
-                            LAST_COMMIT = sh (
+                            def LAST_COMMIT = sh (
                                     script: 'git log --oneline -1',
                                     returnStdout: true
                                 ).trim()
                             currentBuild.description = "${LAST_COMMIT}"
 
-                            current_sha = LAST_COMMIT.take(7)
+                            def current_sha = sh (
+                                    script: 'git rev-parse --short HEAD',
+                                    returnStdout: true
+                                ).trim()
 
                             // if there were changes, launch an acceptance build
                             copyArtifacts optional: true, projectName: JOB_NAME, selector: lastSuccessful()
