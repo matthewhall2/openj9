@@ -1379,9 +1379,16 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                 } else {
                     sequences[i++] = CastClassCacheTest;
                 }
-                if (createDynamicCacheTests)
+
+                if (cg->supportsInlineItableWalk()) {
+                    sequences[i++] = InterfaceTest;
+                }
+                else if (createDynamicCacheTests) {
                     sequences[i++] = DynamicCacheObjectClassTest;
-                sequences[i++] = HelperCall;
+                }
+
+                if (!cg->supportsInlineItableWalk())
+                    sequences[i++] = HelperCall;
             }
             // Cast class is an abstract class, we can skip the class equality test, a superclass test is enough.
             //
@@ -1441,7 +1448,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
             objectClassLoaded = true;
         } else {
             if (s == ProfiledClassTest || s == CompileTimeGuessClassTest || s == ArrayOfJavaLangObjectTest
-                || s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest) {
+                || s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest || s == InterfaceTest) {
                 if (!objectClassLoaded) {
                     memmove(&sequences[j + 1], &sequences[j], (i - j) * sizeof(InstanceOfOrCheckCastSequences));
                     sequences[j] = LoadObjectClass;
@@ -1453,7 +1460,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
             // and can load it there. Here we just want to know whether the cast class is needed in the main line
             // sequence.
             //
-            if (s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest) {
+            if (s == ClassEqualityTest || s == SuperClassTest || s == CastClassCacheTest || s == InterfaceTest) {
                 if (!castClassEvaluated) {
                     // Ideally we would insert EvaluateCastClass at sequences[j], however
                     // if the cast class needs to be evaluated it needs to be done before carrying out any tests
