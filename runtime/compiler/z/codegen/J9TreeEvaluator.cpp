@@ -11739,7 +11739,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
 
          genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
                     dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
-         } else if (shouldGenInterfaceTest)
+         } else if (shouldGenInterfaceTest) {
                          generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
 
                                 genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
