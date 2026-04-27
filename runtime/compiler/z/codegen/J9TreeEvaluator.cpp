@@ -11721,8 +11721,10 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
                                          "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
+            if (cg->supportsInlineItableWalk()) {
             generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
             genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+            }
         } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && cg->supportsInlineItableWalk()) {
             genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
         }
