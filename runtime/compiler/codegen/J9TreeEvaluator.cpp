@@ -1221,8 +1221,7 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         else if (createDynamicCacheTests) {
             sequences[i++] = DynamicCacheObjectClassTest;
         }
-        if (createDynamicCacheTests || !cg->supportsInlineCheckCastForDynamicCastClass() || (cg->supportsInlineCheckCastForDynamicCastClass() && !cg->supportsInlineItableWalk()))
-            sequences[i++] = HelperCall;
+        sequences[i++] = HelperCall;
     }
     // Cast class is a runtime variable, still not a lot of room to be fancy.
     //
@@ -1243,8 +1242,8 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         else if (createDynamicCacheTests) {
             sequences[i++] = DynamicCacheObjectClassTest;
         }
-        if (createDynamicCacheTests || !cg->supportsInlineCheckCastForDynamicCastClass() || (cg->supportsInlineCheckCastForDynamicCastClass() && !cg->supportsInlineItableWalk()))
-            sequences[i++] = HelperCall;
+        // always generate helper call for unknown case
+        sequences[i++] = HelperCall;
     }
 
     // Cast class is a compile-time constant, we can generate better code in this case.
