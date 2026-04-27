@@ -1212,9 +1212,17 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         // There is a possibility of attempt to cast object to another class and having cache on that object updated by
         // helper. Before going to helper checking the cache.
         sequences[i++] = CastClassCacheTest;
-        if (createDynamicCacheTests)
+        if (cg->supportsInlineCheckCastForDynamicCastClass()) {
+            sequences[i++] = SuperClassTest;
+        }
+        if (cg->supportsInlineCheckCastForDynamicCastClass() && cg->supportsInlineItableWalk()) {
+            sequences[i++] = InterfaceTest;
+        }
+        else if (createDynamicCacheTests) {
             sequences[i++] = DynamicCacheObjectClassTest;
-        sequences[i++] = HelperCall;
+        }
+        if (createDynamicCacheTests || !cg->supportsInlineCheckCastForDynamicCastClass() || (cg->supportsInlineCheckCastForDynamicCastClass() && !cg->supportsInlineItableWalk()))
+            sequences[i++] = HelperCall;
     }
     // Cast class is a runtime variable, still not a lot of room to be fancy.
     //
@@ -1226,12 +1234,17 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
         sequences[i++] = CastClassCacheTest;
         // On Z, We were having support for Super Class Test for dynamic Cast Class so adding it here. It can be guarded
         // if Power/X do not need it.
-        if ((cg->supportsInliningOfIsInstance() || instanceOfOrCheckCastNode->getOpCodeValue() == TR::checkcast)
-            && instanceOfOrCheckCastNode->getSecondChild()->getOpCodeValue() != TR::loadaddr)
+        if (cg->supportsInlineCheckCastForDynamicCastClass()) {
             sequences[i++] = SuperClassTest;
-        if (createDynamicCacheTests)
-            sequences[i++] = DynamicCacheDynamicCastClassTest;
-        sequences[i++] = HelperCall;
+        }
+        if (cg->supportsInlineCheckCastForDynamicCastClass() && cg->supportsInlineItableWalk()) {
+            sequences[i++] = InterfaceTest;
+        }
+        else if (createDynamicCacheTests) {
+            sequences[i++] = DynamicCacheObjectClassTest;
+        }
+        if (createDynamicCacheTests || !cg->supportsInlineCheckCastForDynamicCastClass() || (cg->supportsInlineCheckCastForDynamicCastClass() && !cg->supportsInlineItableWalk()))
+            sequences[i++] = HelperCall;
     }
 
     // Cast class is a compile-time constant, we can generate better code in this case.
