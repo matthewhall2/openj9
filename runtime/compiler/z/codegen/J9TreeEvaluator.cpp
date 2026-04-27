@@ -11737,7 +11737,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
         
         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
     }
-
+ TR::RegisterDependencyConditions *deps
+        = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
     if (shouldGenInterfaceTest && usecache) {
         generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
         genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
@@ -11749,8 +11750,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
               genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
         }
 
-    TR::RegisterDependencyConditions *deps
-        = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+   
 
     
     srm->stopUsingRegisters();
