@@ -8907,7 +8907,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                     = (*(iter + 1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
                 if (castClassDepth == -1) {
-                    genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, flags);
+                    genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
                 //     TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 // generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
                 // generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
