@@ -4463,7 +4463,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 if (castClassDepth == -1) {
                     TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
-                generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+                generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
                 generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
                 generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
@@ -8910,7 +8910,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 if (castClassDepth == -1) {
                     TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
-                generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+                generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
                 generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
                 generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
