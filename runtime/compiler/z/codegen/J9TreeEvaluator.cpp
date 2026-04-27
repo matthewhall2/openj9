@@ -4469,7 +4469,6 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
                 srm->reclaimScratchRegister(modReg);
-                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
                 }
 
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm);
