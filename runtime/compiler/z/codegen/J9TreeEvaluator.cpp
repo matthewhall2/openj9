@@ -4366,6 +4366,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
     TR::LabelSymbol *callLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *throwLabel = callLabel;
     TR::LabelSymbol *resultLabel = doneLabel;
+    TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
 
     TR_Debug *debugObj = cg->getDebug();
     objectReg = cg->evaluate(objectNode);
@@ -4455,14 +4456,24 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 logprintf(trace, log, "%s: Emitting Super Class Test, Cast Class Depth=%d\n",
                     node->getOpCode().getName(), castClassDepth);
 
-                const int32_t flags = J9AccInterface | J9AccClassArray;
+                //const int32_t flags = J9AccInterface | J9AccClassArray;
                 TR_ASSERT(flags < UINT_MAX && flags > 0,
                     "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
-
-                if (castClassDepth == -1)
-                    genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
+            
+                if (castClassDepth == -1) {
+                    TR::Register *modReg =  srm->findOrCreateScratchRegister();
+                generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
+                generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+                generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
+                generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
+                srm->reclaimScratchRegister(modReg);
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
+                }
 
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, callLabel, srm);
+
                 cursor = generateS390BranchInstruction(cg, TR::InstOpCode::BRC,
                     outlinedSlowPath != NULL ? TR::InstOpCode::COND_BE : TR::InstOpCode::COND_BNE, node,
                     outlinedSlowPath ? resultLabel : callLabel);
@@ -4540,6 +4551,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
             }
 
             case InterfaceTest:
+                generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
                 genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, throwLabel);
                 break;
             case HelperCall:
@@ -8801,6 +8813,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
     InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
     TR::LabelSymbol *startICFLabel = NULL;
+    TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
     while (numSequencesRemaining > 1 || (numSequencesRemaining == 1 && *iter != HelperCall)) {
         switch (*iter) {
             case EvaluateCastClass:
@@ -8894,8 +8907,17 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 TR::LabelSymbol *callHelperLabel
                     = (*(iter + 1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
-                if (castClassDepth == -1)
-                    genTestModifierFlags(cg, node, castClassReg, castClassDepth, callHelperLabel, srm, flags);
+                if (castClassDepth == -1) {
+                    TR::Register *modReg =  srm->findOrCreateScratchRegister();
+                generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
+                generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+                generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
+                generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
+                srm->reclaimScratchRegister(modReg);
+                genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
+                }
 
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
                 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, branchCond, node, branchLabel);
@@ -9005,6 +9027,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 break;
             }
             case InterfaceTest:
+                generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
                 genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
                 break;
             case HelperCall:

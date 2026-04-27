@@ -128,6 +128,8 @@ public:
     bool supportsTrapsInTMRegion();
     bool supportsInliningOfIsAssignableFrom();
     bool supportsInlineItableWalk();
+    bool supportsInlineCheckCastForDynamicCastClass();
+
 
     using J9::CodeGenerator::addAllocatedRegister;
     void addAllocatedRegister(TR_PseudoRegister *temp);
