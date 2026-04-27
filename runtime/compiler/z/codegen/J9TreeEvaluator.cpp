@@ -11612,6 +11612,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     TR::LabelSymbol *successLabel = doneLabel;
     TR::LabelSymbol *cFlowRegionStart = generateLabelSymbol(cg);
     TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
+    TR::LabelSymbol *dynLabel = generateLabelSymbol(cg);
 
     TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
@@ -11696,7 +11697,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                 TR::DebugCounter::Undetermined);
             srm->reclaimScratchRegister(castClassCacheReg);
         }
-
+        static bool useDynamicCacheForIsAssignableFrom = feGetEnv("useDynamicCacheForIsAssignableFrom") != NULL;
+        TR::RegisterDependencyConditions *deps = NULL;
+        bool shouldGenInterfaceTest = false;
         // superclass test
         if ((NULL == toClassSymRef) || (!toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp))) {
             const int32_t flags = (J9AccInterface | J9AccClassArray);
@@ -11704,7 +11707,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                                          "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
             if (toClassDepth == -1) {
-                if (cg->supportsInlineItableWalk()) {
+                if (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom) {
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
             generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
@@ -11722,12 +11725,24 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
                                          "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
-            if (cg->supportsInlineItableWalk()) {
-            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+            
+            if (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom) {
+                shouldGenInterfaceTest = true;
             genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
             }
-        } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && cg->supportsInlineItableWalk()) {
-            genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+        } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom)) {
+            shouldGenInterfaceTest = true;
+        }
+
+        if (shouldGenInterfaceTest && useDynamicCacheForIsAssignableFrom) {
+                generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+
+         genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
+                    dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
+         } else if (shouldGenInterfaceTest)
+                         generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+
+                                genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
         }
         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
     }
