@@ -4304,6 +4304,8 @@ bool trace = cg->comp()->getOption(TR_TraceCG);
 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, iTableReg,
 generateS390MemoryReference(iTableReg, offsetof(J9ITable, next), cg));
 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, startLoop);
+   logprintf(trace, log, "--> back to start\n");
+
 
 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, successLabel); 
 
@@ -11587,6 +11589,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *successLabel = doneLabel;
     TR::LabelSymbol *cFlowRegionStart = generateLabelSymbol(cg);
+    TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
 
     TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
@@ -11673,19 +11676,30 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
         }
 
         // superclass test
-        if ((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp)) {
-            const int32_t flags = (J9AccInterface | J9AccClassArray);
+        if ((NULL == toClassSymRef) || (!toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp))) {
+            //const int32_t flags = (J9AccInterface | J9AccClassArray);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
                                          "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
             if (toClassDepth == -1) {
-                genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+                TR::Register *modReg =  srm->findOrCreateScratchRegister();
+                generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
+            generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+            generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
+            generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
+            genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modReg);
+            genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
+            srm->reclaimScratchRegister(modReg);
             }
             genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
             cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
                                          "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+            genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+        } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp)) {
+            genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
         }
         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
     }
