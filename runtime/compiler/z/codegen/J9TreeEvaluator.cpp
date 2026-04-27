@@ -11674,7 +11674,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             }
         }
     }
-
+    bool shouldGenInterfaceTest = false;
+     static bool useItableWalk = feGetEnv("useItableWalk") != NULL;
     if (!fastFail) {
         // castClassCache test
         if (NULL != toClassSymRef)
@@ -11697,9 +11698,8 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                 TR::DebugCounter::Undetermined);
             srm->reclaimScratchRegister(castClassCacheReg);
         }
-        static bool useDynamicCacheForIsAssignableFrom = feGetEnv("useDynamicCacheForIsAssignableFrom") != NULL;
+       
         TR::RegisterDependencyConditions *deps = NULL;
-        bool shouldGenInterfaceTest = false;
         // superclass test
         if ((NULL == toClassSymRef) || (!toClassSymRef->isClassInterface(comp) && !toClassSymRef->isClassArray(comp))) {
             const int32_t flags = (J9AccInterface | J9AccClassArray);
@@ -11707,7 +11707,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                                          "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
             if (toClassDepth == -1) {
-                if (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom) {
+                if (cg->supportsInlineItableWalk() || useItableWalk) {
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
             generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
@@ -11726,33 +11726,37 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                                          "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),
                 1, TR::DebugCounter::Undetermined);
             
-            if (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom) {
+            if (cg->supportsInlineItableWalk() || useItableWalk) {
                 shouldGenInterfaceTest = true;
             genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
             }
-        } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && (cg->supportsInlineItableWalk() || useDynamicCacheForIsAssignableFrom)) {
+        } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && (cg->supportsInlineItableWalk() || useItableWalk)) {
             shouldGenInterfaceTest = true;
         }
 
-        if (shouldGenInterfaceTest && useDynamicCacheForIsAssignableFrom) {
-                generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
-
-         genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
-                    dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
-         } else if (shouldGenInterfaceTest) {
-                         generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
-
-                                genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
-        }
+        
         generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
     }
 
+    if (shouldGenInterfaceTest && useItableWalk) {
+        generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+        genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+        
+         } else if (shouldGenInterfaceTest) {
+            generateS390LabelInstruction(cg, TR::InstOpCode::label, node, interfaceLabel);
+            genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
+                    dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);   
+        }
+
+    TR::RegisterDependencyConditions *deps
+        = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+
+    
     srm->stopUsingRegisters();
     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
     generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
-    TR::RegisterDependencyConditions *deps
-        = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3 + srm->numAvailableRegisters(), cg);
+    
     srm->addScratchRegistersToDependencyList(deps);
     deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
     deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
