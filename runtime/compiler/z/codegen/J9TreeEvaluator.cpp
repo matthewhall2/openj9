@@ -4467,9 +4467,9 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
                     generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray >> 16);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, callLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, callLabel);
                 generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, interfaceLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, interfaceLabel);
                 // genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
                 // genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
                 srm->reclaimScratchRegister(modReg);
@@ -8921,9 +8921,9 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
                 generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray >> 16);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, callLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, callLabel);
                 generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, interfaceLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, interfaceLabel);
 
                // genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
                // genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
@@ -11728,9 +11728,9 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
             generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray >> 16);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, helperCallLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, helperCallLabel);
                 generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK7, node, interfaceLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, interfaceLabel);
 
             //genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, J9AccClassArray, modReg);
             //genTestModifierFlags(cg, node, toClassReg, toClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
