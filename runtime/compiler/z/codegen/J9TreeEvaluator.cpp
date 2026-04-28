@@ -4380,6 +4380,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
     InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
     bool delaySuperClassTestGeneration = false;
+    int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
     while (numSequencesRemaining > 1) {
         switch (*iter) {
             case EvaluateCastClass:
@@ -4447,7 +4448,6 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 }
                 break;
             case SuperClassTest: {
-                int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
                 cg->generateDebugCounter(
                     TR::DebugCounter::debugCounterName(comp, "checkCastStats/(%s)/SuperClass", comp->signature()), 1,
                     TR::DebugCounter::Undetermined);
@@ -8830,6 +8830,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
 
     TR::LabelSymbol *startICFLabel = NULL;
     TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
+    int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
     while (numSequencesRemaining > 1 || (numSequencesRemaining == 1 && *iter != HelperCall)) {
         switch (*iter) {
             case EvaluateCastClass:
@@ -8905,7 +8906,6 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                  * instanceof , initial Result = true: BRC 0x6, doneLabel case-3 ifInstanceOf , trueLabel == branchLabel
                  * : BRC 0x8, branchLabel case-4 ifInstanceOf , falseLabel == branchLabel : BRC 0x6, branchLabel
                  */
-                int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
                 dynamicCacheTestLabel = generateLabelSymbol(cg);
                 logprintf(trace, log, "%s: Emitting Super Class Test, Cast Class Depth = %d\n",
                     node->getOpCode().getName(), castClassDepth);
