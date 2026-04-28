@@ -11712,6 +11712,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     }
 
     static bool usecache = feGetEnv("usecache") != NULL;
+    TR::RegisterDependencyConditions *deps = NULL;
     if (!fastFail) {
         // castClassCache test
         if (NULL != toClassSymRef)
@@ -11735,7 +11736,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             srm->reclaimScratchRegister(castClassCacheReg);
         }
        
-        TR::RegisterDependencyConditions *deps = NULL;
+        
         if (NULL == toClassSymRef) {
             if (cg->supportsInlineItableWalk() || usecache) {
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
