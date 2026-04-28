@@ -9053,10 +9053,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             }
             case InterfaceTest:
                logprintf(trace, log, "%s: Emitting Interface Test\n", node->getOpCode().getName());
-                break;
-            }
-            default:
-                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
                 if (delaySuperClassTestGeneration) {
                 generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
@@ -9066,6 +9063,9 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                     generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BC, node, jmpLabel);
                 generateGoToFalseBRC = false;
                 }
+                break;
+            default:
+                
                 break;
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
