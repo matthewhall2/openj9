@@ -9064,9 +9064,6 @@ genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel
                 generateGoToFalseBRC = false;
                 }
                 break;
-            default:
-                
-                break;
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
                 break;
