@@ -11725,7 +11725,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
             generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
 generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray);
-                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, callLabel);
+                generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, helperCallLabel);
                 generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
                 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BNE, node, interfaceLabel);
 
