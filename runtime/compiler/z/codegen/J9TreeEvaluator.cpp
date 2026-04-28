@@ -4474,6 +4474,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 // genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
                 srm->reclaimScratchRegister(modReg);
                 } else if (castClassDepth == -1) {
+                                    const int32_t flags = (J9AccInterface | J9AccClassArray);
                     genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
                 }
 
