@@ -4463,9 +4463,9 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 if (castClassDepth == -1) {
                     TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
-                generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
+                    generateS390MemoryReference(castClassReg, offsetof(J9Class, romClass), cg));
                 generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
-                generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
+                    generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, J9AccClassArray, modReg);
                 genTestModifierFlags(cg, node, castClassReg, castClassDepth, interfaceLabel, srm, J9AccInterface, modReg);
                 srm->reclaimScratchRegister(modReg);
@@ -4591,7 +4591,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
             srm->addScratchRegistersToDependencyList(conditions);
             // As SuperClassTest is the costliest test and is guaranteed to give results for checkCast node. Hence it
             // will always be second last test in iter array followed by GoToFalse as last test for checkCastNode
-            if (*(iter - 1) != SuperClassTest)
+            if (*(iter - 1) != SuperClassTest && *(iter - 1) != InterfaceTest)
                 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, callLabel);
             doneOOLLabel = doneLabel;
             helperReturnOOLLabel = generateLabelSymbol(cg);
@@ -11728,7 +11728,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
             
             if (cg->supportsInlineItableWalk() || usecache) {
                 shouldGenInterfaceTest = true;
-            genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+          //  genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
             }
         } else if ((NULL != toClassSymRef) && toClassSymRef->isClassInterface(comp) && (cg->supportsInlineItableWalk() || usecache)) {
             shouldGenInterfaceTest = true;
