@@ -633,7 +633,7 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBas
     if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex)) {
         transformed = TR::TransformUtil::refineMethodHandleInvokeBasic(comp(), tt, node, objIndex, trace());
     } else {
-        logprintf(trace(), comp()->log(), "MHT: unable to refine linkTo call\n");
+        logprintf(trace(), comp()->log(), "MHT: unable to refine invokeBasic call (%s %s)\n", comp()->signature(), comp()->getHotnessName(comp()->getMethodHotness()));
     }
 
     if (!transformed) {
@@ -655,7 +655,7 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_linkTo(TR
     if (knot && isKnownObject(objIndex) && !knot->isNull(objIndex)) {
         transformed = TR::TransformUtil::refineMethodHandleLinkTo(comp(), tt, node, objIndex, trace());
     } else {
-        logprintf(trace(), comp()->log(), "MHT: unable to refine linkTo call\n");
+        logprintf(trace(), comp()->log(), "MHT: unable to refine linkTo call (%s %s)\n", comp()->signature(), comp()->getHotnessName(comp()->getMethodHotness()));
     }
 
     if (!transformed) {
