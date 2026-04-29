@@ -1430,7 +1430,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
      bool enableTrace = trace();
     OMR::Logger *log = comp()->log();
     TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
-    logprintf(trace, log, "RCT: Processing invokeBasic\n");
+    logprintf(enableTrace, log, "RCT: Processing invokeBasic\n");
     TR::DebugCounter::prependDebugCounter(comp(),
         TR::DebugCounter::debugCounterName(comp(), "mh.unrefined/invokeBasic/(%s)/%s", comp()->signature(),
             comp()->getHotnessName()),
@@ -1507,7 +1507,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
     bool enableTrace = trace();
     OMR::Logger *log = comp()->log();
     TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
-    logprintf(trace, log, "RCT: Processing linkToStatic/special\n");
+    logprintf(enableTrace, log, "RCT: Processing linkToStatic/special\n");
 
     bool isLinkToSpecial = rm == TR::java_lang_invoke_MethodHandle_linkToSpecial;
 
@@ -1660,7 +1660,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
      bool enableTrace = trace();
     OMR::Logger *log = comp()->log();
     TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
-    logprintf(trace, log, "RCT: Processing linkToVirtual\n");
+    logprintf(enableTrace, log, "RCT: Processing linkToVirtual\n");
     TR::DebugCounter::prependDebugCounter(comp(),
         TR::DebugCounter::debugCounterName(comp(), "mh.unrefined/linkToVirtual/(%s)/%s", comp()->signature(),
             comp()->getHotnessName()),
@@ -1760,7 +1760,7 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
      bool enableTrace = trace();
     OMR::Logger *log = comp()->log();
     TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
-    logprintf(trace, log, "RCT: Processing linkToInterface\n");
+    logprintf(enableTrace, log, "RCT: Processing linkToInterface\n");
     // This counter isn't very informative yet. Every linkToInterface() call
     // should come through here until/unless we come up with a representation for
     // resolved interface calls without constant pool entries.
