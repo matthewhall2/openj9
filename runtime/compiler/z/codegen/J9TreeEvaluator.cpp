@@ -8802,7 +8802,9 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BE;
             jmpLabel = falseLabel;
             trueFallThrough = false;
-
+            interfacePassLabel = branchLabel;
+            interfaceFailLabel = jmpLabel;
+            
             // interface
             // want to go to -->label when instanceof succeeds
             // if we itable goes null, its false, and we go to jmp label = falselabel = fallthrough = good
