@@ -8784,6 +8784,8 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
     TR::LabelSymbol *dynamicCacheTestLabel = NULL;
     TR::LabelSymbol *branchLabel = NULL;
     TR::LabelSymbol *jmpLabel = NULL;
+    TR::LabelSymbol *interfaceFailLabel = NULL;
+    TR::LabelSymbol *interfacePassLabel = NULL;
 
     TR::InstOpCode::S390BranchCondition branchCond;
     TR_Debug *debugObj = cg->getDebug();
@@ -8792,6 +8794,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
     bool generateGoToFalseBRC = true;
 
     if (ifInstanceOf) {
+        // go to branch (from ificmp) when instanceof is true
         if (trueLabel) {
             logprints(trace, log, "IfInstanceOf Node : Branch True\n");
             falseLabel = (needResult) ? oppositeResultLabel : doneLabel;
@@ -8799,13 +8802,36 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BE;
             jmpLabel = falseLabel;
             trueFallThrough = false;
+
+            // interface
+            // want to go to -->label when instanceof succeeds
+            // if we itable goes null, its false, and we go to jmp label = falselabel = fallthrough = good
+            // if we get a match, its true, and we branch to the branch label
+
+            //normal
+            // if match, goes to branchLabel = trueLabel = ificmp goto label = good
+            // if no matcg, goes to jmpLabel = falseLabel = fallthrough = good
+
         } else {
+            // go to branch (from ificmp) when instanceof is false
             logprints(trace, log, "IfInstanceOf Node : Branch False\n");
             trueLabel = (needResult) ? oppositeResultLabel : doneLabel;
             branchLabel = falseLabel;
             branchCond = TR::InstOpCode::COND_BNE;
             jmpLabel = trueLabel;
             trueFallThrough = true;
+            interfaceFailLabel = branchLabel;
+            interfacePassLabel = trueLabel;
+
+            // interface
+            // ifcmpeq --> go somewhere if false
+                // instanceof
+                // 0
+            // if itable goes null, its false, and we go to jmpLabel = trueLabel = fallthrough = WRONG!
+            // if itabe gets match, its true, and we go to branchlabel = falselabel = -->label = WRONG!
+
+            // if match, BNE fails, and fall through to unconditional branch to jmpLabel = trueLabel = fallthought good
+            // if no match, BNE succeeds, and goes to branchLabel = falseLabel = ificmplabel = good 
         }
     } else {
         if (initialResult) {
@@ -8821,6 +8847,8 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
         }
         branchLabel = trueLabel;
         jmpLabel = falseLabel;
+        interfacePassLabel = trueLabel;
+        interfaceFailLabel = falseLabel;
     }
 
     bool generateDynamicCache = false;
@@ -9053,7 +9081,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             }
             case InterfaceTest:
                logprintf(trace, log, "%s: Emitting Interface Test\n", node->getOpCode().getName());
-                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, interfacePassLabel, interfaceFailLabel);
                 if (delaySuperClassTestGeneration) {
                 generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
