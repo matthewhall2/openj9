@@ -630,8 +630,11 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBas
 
     auto knot = comp()->getKnownObjectTable();
     bool transformed = false;
-    if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex))
+    if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex)) {
         transformed = TR::TransformUtil::refineMethodHandleInvokeBasic(comp(), tt, node, objIndex, trace());
+    } else {
+        logprintf(trace(), comp()->log(), "MHT: unable to refine linkTo call\n");
+    }
 
     if (!transformed) {
         TR::DebugCounter::prependDebugCounter(comp(),
@@ -649,8 +652,11 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_linkTo(TR
 
     auto knot = comp()->getKnownObjectTable();
     bool transformed = false;
-    if (knot && isKnownObject(objIndex) && !knot->isNull(objIndex))
+    if (knot && isKnownObject(objIndex) && !knot->isNull(objIndex)) {
         transformed = TR::TransformUtil::refineMethodHandleLinkTo(comp(), tt, node, objIndex, trace());
+    } else {
+        logprintf(trace(), comp()->log(), "MHT: unable to refine linkTo call\n");
+    }
 
     if (!transformed) {
         TR::DebugCounter::prependDebugCounter(comp(),
