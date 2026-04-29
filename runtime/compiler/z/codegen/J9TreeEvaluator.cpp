@@ -8819,8 +8819,8 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BNE;
             trueFallThrough = true;
         }
-        branchLabel = doneLabel;
-        jmpLabel = oppositeResultLabel;
+        branchLabel = trueLabel;
+        jmpLabel = falseLabel;
     }
 
     bool generateDynamicCache = false;
@@ -9053,7 +9053,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             }
             case InterfaceTest:
                logprintf(trace, log, "%s: Emitting Interface Test\n", node->getOpCode().getName());
-genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
+                genInterfaceTest(node, cg, srm, objClassReg, castClassReg, trueLabel, falseLabel);
                 if (delaySuperClassTestGeneration) {
                 generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
                 genSuperclassTest(cg, node, castClassReg, castClassDepth, objClassReg, falseLabel, srm);
