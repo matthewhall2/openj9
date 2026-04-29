@@ -4022,5 +4022,6 @@ J9::Z::CodeGenerator::supportsInlineItableWalk()
 
 bool J9::Z::CodeGenerator::supportsInlineCheckCastForDynamicCastClass() {
     static const bool disableInlineCheckCastForDynamicCastClass = feGetEnv("TR_disableInlineCheckCastForDynamicCastClass") != NULL;
-   return !disableInlineCheckCastForDynamicCastClass;
+   //return !disableInlineCheckCastForDynamicCastClass;
+   return false;
 }
