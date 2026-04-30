@@ -2461,7 +2461,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
       //   gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
       //   snippetCall->swapInstructionListsWithCompilation();
 
-        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
         // fetch J9Method::extra field
         generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
@@ -2472,7 +2472,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::InstOpCode::S390BranchCondition oolBranchOp
             = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
 
-        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel);
+        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, snippetLabel, preDeps);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
        // gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
 
@@ -2487,11 +2487,11 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
         TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
-        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, preDeps);
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, (feGetEnv("onlyPost") != NULL) ? postDeps : dependencies);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);// (feGetEnv("onlyPost") != NULL) ? postDeps : dependencies);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
