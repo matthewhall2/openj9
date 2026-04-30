@@ -624,14 +624,18 @@ const char *TR_MethodHandleTransformer::optDetailString() const throw() { return
 
 void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBasic(TR::TreeTop *tt, TR::Node *node)
 {
+    logprintf(trace(), comp()->log(), "attempting to transform invokeBasic\n");
     auto mhNode = node->getFirstArgument();
-    TR::KnownObjectTable::Index objIndex = getObjectInfoOfNode(mhNode);
-    logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", objIndex);
+    auto mnNode = node->getLastChild();
+    TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);
+    TR::KnownObjectTable::Index mnIndex = getObjectInfoOfNode(mnNode);
+    logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
+    logprintf(trace(), comp()->log(), "MemberName is obj%d\n", mnIndex);
 
     auto knot = comp()->getKnownObjectTable();
     bool transformed = false;
-    if (isKnownObject(objIndex) && knot && !knot->isNull(objIndex)) {
-        transformed = TR::TransformUtil::refineMethodHandleInvokeBasic(comp(), tt, node, objIndex, trace());
+    if (isKnownObject(mhIndex) && knot && !knot->isNull(mhIndex)) {
+        transformed = TR::TransformUtil::refineMethodHandleInvokeBasic(comp(), tt, node, mhIndex, trace());
     } else {
         logprintf(trace(), comp()->log(), "MHT: unable to refine invokeBasic call (%s %s)\n", comp()->signature(), comp()->getHotnessName(comp()->getMethodHotness()));
     }
@@ -646,6 +650,7 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBas
 
 void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_linkTo(TR::TreeTop *tt, TR::Node *node)
 {
+    logprintf(trace(), comp()->log(), "attempting to transform linkTo\n");
     auto mnNode = node->getLastChild();
     TR::KnownObjectTable::Index objIndex = getObjectInfoOfNode(mnNode);
     logprintf(trace(), comp()->log(), "MemberName is obj%d\n", objIndex);

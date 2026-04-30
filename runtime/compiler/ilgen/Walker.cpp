@@ -3756,6 +3756,8 @@ TR::Node *TR_J9ByteCodeIlGenerator::genInvokeHandle(int32_t cpIndex)
     bool isInvokeCacheAppendixNull = false;
     TR::SymbolReference *targetMethodSymRef = symRefTab()->findOrCreateHandleMethodSymbol(_methodSymbol, cpIndex,
         &isUnresolved, &isInvokeCacheAppendixNull);
+    logprintf(comp()->getOption(TR_TraceILGen), comp()->log(), "genInvokeHandle: %s\n", isUnresolved ? "unresolved" : "resolved");
+    logprintf(comp()->getOption(TR_TraceILGen), comp()->log(), "genInvokeHandle: isInvokeCacheAppendixNull: %s\n", isInvokeCacheAppendixNull ? "true" : "false");
     TR::SymbolReference *methodTypeTableEntrySymRef
         = symRefTab()->findOrCreateMethodTypeTableEntrySymbol(_methodSymbol, cpIndex);
     TR_ResolvedJ9Method *owningMethod = static_cast<TR_ResolvedJ9Method *>(_methodSymbol->getResolvedMethod());
