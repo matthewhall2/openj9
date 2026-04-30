@@ -8847,8 +8847,8 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BNE;
             trueFallThrough = true;
         }
-        branchLabel = doneLabel;
-        jmpLabel = oppositeResultLabel;
+        branchLabel = trueLabel;
+        jmpLabel = falseLabel;
         interfacePassLabel = trueLabel;
         interfaceFailLabel = falseLabel;
     }
