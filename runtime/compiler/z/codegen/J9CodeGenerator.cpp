@@ -4014,14 +4014,27 @@ bool J9::Z::CodeGenerator::supportsInliningOfIsAssignableFrom()
 }
 
 bool 
-J9::Z::CodeGenerator::supportsInlineItableWalk()
+J9::Z::CodeGenerator::supportsInlineItableWalkForCheckCast()
    {
-   static const bool disableCheckcastItableWalk = feGetEnv("TR_disableCheckcastItableWalk") != NULL;
+   static const bool disableCheckcastItableWalk = feGetEnv("TR_disableCheckcastItableWalkForCheckCast") != NULL;
+   return false;
+   }
+
+bool 
+J9::Z::CodeGenerator::supportsInlineItableWalkForInstanceOf()
+   {
+   static const bool disableCheckcastItableWalk = feGetEnv("TR_disableCheckcastItableWalkForInstanceOf") != NULL;
    return false;
    }
 
 bool J9::Z::CodeGenerator::supportsInlineCheckCastForDynamicCastClass() {
     static const bool disableInlineCheckCastForDynamicCastClass = feGetEnv("TR_disableInlineCheckCastForDynamicCastClass") != NULL;
    //return !disableInlineCheckCastForDynamicCastClass;
+   return false;
+}
+
+bool J9::Z::CodeGenerator::supportsInlineInstanceOfForDynamicCastClass() {
+     static const bool disableInlineInstanceOfForDynamicCastClass = feGetEnv("TR_disableInlineInstanceOfForDynamicCastClass") != NULL;
+   //return !disableInlineInstanceOfForDynamicCastClass;
    return false;
 }

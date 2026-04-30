@@ -457,12 +457,17 @@ public:
     /** \brief
      *    Determines whether code generators support an inline iTable walk for checkcast
      */
-   bool supportsInlineItableWalk() { return false; } // no virt, default
+   bool supportsInlineItableWalkForCheckCast() { return false; } // no virt, default
+
+    bool supportsInlineItableWalkForInstanceOf() { return false; } // no virt, default
+
 
     /** \brief
      *    Determines whether code generators support an inline iTable walk for checkcast
      */
    bool supportsInlineCheckCastForDynamicCastClass() { return false; } // no virt, default
+
+   bool supportsInlineInstanceOfForDynamicCastClass() { return false; } // no virt, default
 
     /** \brief
      *     Determines whether the code generator must generate the switch to interpreter snippet in the preprologue.
