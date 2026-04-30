@@ -9186,8 +9186,9 @@ TR::Register *J9::Z::TreeEvaluator::VMifInstanceOfEvaluator(TR::Node *node, TR::
     }
     bool initialResult = trueLabel != NULL;
 
-    node->setRegister(VMgenCoreInstanceofEvaluator(instanceOfNode, cg, trueLabel, falseLabel, initialResult, needResult, graDeps, true));
+    VMgenCoreInstanceofEvaluator(instanceOfNode, cg, trueLabel, falseLabel, initialResult, needResult, graDeps, true);
     cg->decReferenceCount(instanceOfNode);
+    node->setRegister(NULL);
 
     return NULL;
 }
