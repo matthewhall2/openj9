@@ -4380,7 +4380,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
     InstanceOfOrCheckCastSequences *iter = &sequences[0];
 
     bool delaySuperClassTestGeneration = false;
-    int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+    int32_t castClassDepth = -1;
     while (numSequencesRemaining > 1) {
         switch (*iter) {
             case EvaluateCastClass:
@@ -4460,7 +4460,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 //const int32_t flags = J9AccInterface | J9AccClassArray;
                 TR_ASSERT(flags < UINT_MAX && flags > 0,
                     "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
-            
+                castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
                 if (castClassDepth == -1 && cg->supportsInlineItableWalkForCheckCast()) {
                     delaySuperClassTestGeneration = true;
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
@@ -4558,7 +4558,13 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 break;
             }
 
-            case InterfaceTest:
+            case InterfaceTest: {
+                castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+            if (castClassDepth == -1) {
+                TR_ASSERT_FATAL(cg->supportsInlineInstanceOfForDynamicCastClass() && cg->supportsInlineItableWalkForInstanceOf(), "itable walk disabled - should not be here\n");
+            } else {
+                TR_ASSERT_FATAL(cg->supportsInlineItableWalkForInstanceOf(), "itable walk disabled - should not be here\n");
+            }
                 genInterfaceTest(node, cg, srm, objClassReg, castClassReg, doneLabel, throwLabel);
                 if (delaySuperClassTestGeneration) {
                     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
@@ -4569,6 +4575,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                     outlinedSlowPath ? resultLabel : callLabel);
                 }
                 break;
+            }
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
                 break;
@@ -8847,8 +8854,8 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BNE;
             trueFallThrough = true;
         }
-        branchLabel = trueLabel;
-        jmpLabel = falseLabel;
+        branchLabel = doneLabel;
+        jmpLabel = oppositeResultLabel;
         interfacePassLabel = trueLabel;
         interfaceFailLabel = falseLabel;
     }
@@ -8860,7 +8867,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
 
     TR::LabelSymbol *startICFLabel = NULL;
     TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
-    int32_t castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+    int32_t castClassDepth = -1;
     while (numSequencesRemaining > 1 || (numSequencesRemaining == 1 && *iter != HelperCall)) {
         switch (*iter) {
             case EvaluateCastClass:
@@ -8952,7 +8959,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 // depending on the next generated test.
                 TR::LabelSymbol *callHelperLabel
                     = (*(iter + 1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
-
+                castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
                 if (castClassDepth == -1 && cg->supportsInlineItableWalkForInstanceOf()) {
                     delaySuperClassTestGeneration = true;
                    // genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
@@ -9081,7 +9088,14 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                     node->getOpCode().getName());
                 break;
             }
-            case InterfaceTest:
+            case InterfaceTest: {
+               
+            castClassDepth = castClassNode->getSymbolReference()->classDepth(comp);
+            if (castClassDepth == -1) {
+                TR_ASSERT_FATAL(cg->supportsInlineInstanceOfForDynamicCastClass() && cg->supportsInlineItableWalkForInstanceOf(), "itable walk disabled - should not be here\n");
+            } else {
+                TR_ASSERT_FATAL(cg->supportsInlineItableWalkForInstanceOf(), "itable walk disabled - should not be here\n");
+            }
                logprintf(trace, log, "%s: Emitting Interface Test\n", node->getOpCode().getName());
                 genInterfaceTest(node, cg, srm, objClassReg, castClassReg, interfacePassLabel, interfaceFailLabel);
                 if (delaySuperClassTestGeneration) {
@@ -9093,6 +9107,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                     generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BC, node, jmpLabel);
                 generateGoToFalseBRC = false;
                 }
+            }
                 break;
             case HelperCall:
                 TR_ASSERT(false, "Doesn't make sense, HelperCall should be the terminal sequence");
