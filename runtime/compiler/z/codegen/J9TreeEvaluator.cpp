@@ -4461,7 +4461,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
                 TR_ASSERT(flags < UINT_MAX && flags > 0,
                     "superclass test::(J9AccInterface | J9AccClassArray) is not a 32-bit number\n");
             
-                if (castClassDepth == -1 && cg->supportsInlineItableWalk()) {
+                if (castClassDepth == -1 && cg->supportsInlineItableWalkForCheckCast()) {
                     delaySuperClassTestGeneration = true;
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
@@ -8953,7 +8953,7 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
                 TR::LabelSymbol *callHelperLabel
                     = (*(iter + 1) == DynamicCacheDynamicCastClassTest) ? dynamicCacheTestLabel : callLabel;
 
-                if (castClassDepth == -1 && cg->supportsInlineItableWalk()) {
+                if (castClassDepth == -1 && cg->supportsInlineItableWalkForInstanceOf()) {
                     delaySuperClassTestGeneration = true;
                    // genTestModifierFlags(cg, node, castClassReg, castClassDepth, callLabel, srm, flags);
                     TR::Register *modReg =  srm->findOrCreateScratchRegister();
