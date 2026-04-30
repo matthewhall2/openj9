@@ -626,11 +626,11 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_MethodHandle_invokeBas
 {
     logprintf(trace(), comp()->log(), "attempting to transform invokeBasic\n");
     auto mhNode = node->getFirstArgument();
-    auto mnNode = node->getLastChild();
+  //  auto mnNode = node->getLastChild();
     TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);
-    TR::KnownObjectTable::Index mnIndex = getObjectInfoOfNode(mnNode);
+   // TR::KnownObjectTable::Index mnIndex = getObjectInfoOfNode(mnNode);
     logprintf(trace(), comp()->log(), "MethodHandle is obj%d\n", mhIndex);
-    logprintf(trace(), comp()->log(), "MemberName is obj%d\n", mnIndex);
+   // logprintf(trace(), comp()->log(), "MemberName is obj%d\n", mnIndex);
 
     auto knot = comp()->getKnownObjectTable();
     bool transformed = false;
