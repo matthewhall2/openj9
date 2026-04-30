@@ -11766,7 +11766,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
        
         
         if (NULL == toClassSymRef) {
-            if (cg->supportsInlineItableWalk() || usecache) {
+            //if (cg->supportsInlineItableWalk() || usecache) {
                 TR::Register *modReg =  srm->findOrCreateScratchRegister();
                 generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
                     generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
@@ -11779,17 +11779,17 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                 generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
                 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, notInterfaceOrArrayLabel);
                 srm->reclaimScratchRegister(modReg);
-            } else {
-                const int32_t flags = (J9AccInterface | J9AccClassArray);
-                genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
-            }
-            if (usecache) {
-                deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
-                genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
-                    dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
-            } else if (cg->supportsInlineItableWalk()) {
+           // } else {
+            //    const int32_t flags = (J9AccInterface | J9AccClassArray);
+           //     genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+            //}
+           // if (usecache) {
+             //   deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+               // genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
+                 //   dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
+            //} else if (cg->supportsInlineItableWalk()) {
                 genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
-            }
+            //}
             generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
             genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
