@@ -11660,6 +11660,176 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
     return classSymRef;
 }
 
+// TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+// {
+//     TR::Compilation *comp = cg->comp();
+//     // recognizedCallTransformer swaps the args - caller class obj is the second argument after the transformation
+//     TR::Node *fromClass = node->getFirstChild();
+//     TR::Node *toClass = node->getSecondChild();
+//     TR::Register *fromClassReg = cg->evaluate(fromClass);
+//     TR::Register *toClassReg = cg->evaluate(toClass);
+
+//     TR::LabelSymbol *helperCallLabel = generateLabelSymbol(cg);
+//     TR::LabelSymbol *doneLabel = generateLabelSymbol(cg);
+//     TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
+//     TR::LabelSymbol *successLabel = doneLabel;
+//     TR::LabelSymbol *cFlowRegionStart = generateLabelSymbol(cg);
+//     TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
+//     TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
+//     TR::LabelSymbol *dynLabel = generateLabelSymbol(cg);
+
+//     TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
+
+//     // create OOL section here to have access to the result register to load initial result
+//     TR_S390OutOfLineCodeSection *outlinedSlowPath
+//         = new (cg->trHeapMemory()) TR_S390OutOfLineCodeSection(helperCallLabel, doneLabel, cg);
+//     cg->getS390OutOfLineCodeSectionList().push_front(outlinedSlowPath);
+//     outlinedSlowPath->swapInstructionListsWithCompilation();
+//     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, helperCallLabel);
+//     TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+//     generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node,
+//         doneLabel); // exit OOL section
+//     outlinedSlowPath->swapInstructionListsWithCompilation();
+
+//     // load with initial result of true
+//     generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 1);
+//     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, cFlowRegionStart);
+//     cFlowRegionStart->setStartInternalControlFlow();
+//     TR_Debug *debugObj = cg->getDebug();
+//     TR::Instruction *cursor = NULL;
+//     bool trace = comp->getOption(TR_TraceCG);
+//     OMR::Logger *log = comp->log();
+
+//     logprintf(trace, log, "%s: Emitting Class Equality Test\n", node->getOpCode().getName());
+//     // for isAssignableFrom we can always generate the class equality test since both arguments are classes
+//     cg->generateDebugCounter(
+//         TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/ClassEqualityTest", comp->signature()), 1,
+//         TR::DebugCounter::Undetermined);
+//     cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node, toClassReg,
+//         fromClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+//     if (debugObj)
+//         debugObj->addInstructionComment(cursor, "class equality test");
+//     cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
+//                                  "isAssignableFromStats/(%s)/ClassEqualityTest/Fail", comp->signature()),
+//         1, TR::DebugCounter::Undetermined);
+
+//     int32_t toClassDepth = -1;
+//     TR::SymbolReference *toClassSymRef = getClassSymRefAndDepth(toClass, comp, toClassDepth);
+//     bool fastFail = false;
+//     logprintf(trace, log, "%s: toClassSymRef is %s\n", node->getOpCode().getName(),
+//         NULL == toClassSymRef ? "null" : "non-null");
+//     if (NULL != toClassSymRef)
+//         logprintf(trace, log, "%s: toClass is %s\n", node->getOpCode().getName(),
+//             toClassSymRef->isClassInterface(comp) ? "an interface" : "not an interface");
+//     if ((NULL != toClassSymRef) && !toClassSymRef->isClassInterface(comp)) {
+//         int32_t fromClassDepth = -1;
+//         TR::SymbolReference *fromClassSymRef = getClassSymRefAndDepth(fromClass, comp, fromClassDepth);
+//         logprintf(trace, log, "%s: fromClassSymRef is %s\n", node->getOpCode().getName(),
+//             NULL == toClassSymRef ? "null" : "non-null");
+//         if ((NULL != fromClassSymRef) && !fromClassSymRef->isClassInterface(comp)) {
+//             if (toClassDepth > -1 && fromClassDepth > -1 && toClassDepth > fromClassDepth) {
+//                 cursor
+//                     = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, failLabel);
+//                 if (debugObj) {
+//                     debugObj->addInstructionComment(cursor,
+//                         "toclass depth > fromClass depth at compile time - fast fail");
+//                 }
+//                 fastFail = true;
+//             }
+//         }
+//     }
+
+//     static bool usecache = feGetEnv("usecache") != NULL;
+//     TR::RegisterDependencyConditions *deps = NULL;
+//     if (!fastFail) {
+//         // castClassCache test
+//         if (NULL != toClassSymRef)
+//             logprintf(trace, log, "%s: toclass is %s\n", node->getOpCode().getName(),
+//                 toClassSymRef->isClassAbstract(comp) ? "abstract" : "non-abstract");
+//         if ((NULL == toClassSymRef) || !toClassSymRef->isClassAbstract(comp)) {
+//             logprintf(trace, log, "%s: Emitting CastClassCacheTest\n", node->getOpCode().getName());
+//             TR::Register *castClassCacheReg = srm->findOrCreateScratchRegister();
+//             cg->generateDebugCounter(
+//                 TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache", comp->signature()), 1,
+//                 TR::DebugCounter::Undetermined);
+//             generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, castClassCacheReg,
+//                 generateS390MemoryReference(fromClassReg, offsetof(J9Class, castClassCache), cg));
+//             cursor = generateS390CompareAndBranchInstruction(cg, TR::InstOpCode::getCmpRegOpCode(), node,
+//                 castClassCacheReg, toClassReg, TR::InstOpCode::COND_BE, successLabel, false, false);
+//             if (debugObj)
+//                 debugObj->addInstructionComment(cursor, "castclass cache test");
+//             cg->generateDebugCounter(
+//                 TR::DebugCounter::debugCounterName(comp, "isAssignableFromStats/(%s)/Cache/Fail", comp->signature()), 1,
+//                 TR::DebugCounter::Undetermined);
+//             srm->reclaimScratchRegister(castClassCacheReg);
+//         }
+       
+        
+//         if (NULL == toClassSymRef) {
+//             //if (cg->supportsInlineItableWalk() || usecache) {
+//                 // TR::Register *modReg =  srm->findOrCreateScratchRegister();
+//                 // generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
+//                 //     generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
+//                 // generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
+//                 //     generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
+
+//                 // generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray >> 16);
+//                 // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, helperCallLabel);
+
+//                 // generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
+//                 // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, notInterfaceOrArrayLabel);
+//                 // srm->reclaimScratchRegister(modReg);
+//            // } else {
+//                const int32_t flags = (J9AccInterface | J9AccClassArray);
+//                 genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
+//             //}
+//            // if (usecache) {
+//              //   deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+//                // genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
+//                  //   dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
+//             //} else if (cg->supportsInlineItableWalk()) {
+//               //  genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+//             //}
+//            // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
+//             genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
+//             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+//         } else if (toClassSymRef->isClassInterface(comp)) {
+//             // if (usecache) {
+//             //     deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+//             //     genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
+//             //         dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
+//             // } else {
+//             //     genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
+//             // }
+//             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
+//         } else if (toClassSymRef->isClassArray(comp)) {
+//             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
+//         } else {
+//             // normal class
+//             genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
+//             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+//         }
+//     }
+    
+//     if (deps == NULL)
+//         deps =  new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
+
+//     srm->stopUsingRegisters();
+//     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
+//     generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
+
+    
+//     srm->addScratchRegistersToDependencyList(deps);
+//     deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
+//     deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
+//     deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
+//     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
+//     doneLabel->setEndInternalControlFlow();
+
+//     node->setRegister(resultReg);
+//     return resultReg;
+// }
+
 TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg)
 {
     TR::Compilation *comp = cg->comp();
@@ -11674,9 +11844,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     TR::LabelSymbol *failLabel = generateLabelSymbol(cg);
     TR::LabelSymbol *successLabel = doneLabel;
     TR::LabelSymbol *cFlowRegionStart = generateLabelSymbol(cg);
-    TR::LabelSymbol *interfaceLabel = generateLabelSymbol(cg);
-    TR::LabelSymbol *notInterfaceOrArrayLabel = generateLabelSymbol(cg);
-    TR::LabelSymbol *dynLabel = generateLabelSymbol(cg);
 
     TR_S390ScratchRegisterManager *srm = cg->generateScratchRegisterManager(2);
 
@@ -11739,8 +11906,6 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
         }
     }
 
-    static bool usecache = feGetEnv("usecache") != NULL;
-    TR::RegisterDependencyConditions *deps = NULL;
     if (!fastFail) {
         // castClassCache test
         if (NULL != toClassSymRef)
@@ -11763,62 +11928,31 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
                 TR::DebugCounter::Undetermined);
             srm->reclaimScratchRegister(castClassCacheReg);
         }
-       
-        
-        if (NULL == toClassSymRef) {
-            //if (cg->supportsInlineItableWalk() || usecache) {
-                // TR::Register *modReg =  srm->findOrCreateScratchRegister();
-                // generateRXInstruction(cg, TR::InstOpCode::getLoadOpCode(), node, modReg,
-                //     generateS390MemoryReference(toClassReg, offsetof(J9Class, romClass), cg));
-                // generateRXInstruction(cg, TR::InstOpCode::L, node, modReg,
-                //     generateS390MemoryReference(modReg, offsetof(J9ROMClass, modifiers), cg));
 
-                // generateRIInstruction(cg, TR::InstOpCode::TMLH, node, modReg, J9AccClassArray >> 16);
-                // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK1, node, helperCallLabel);
-
-                // generateRIInstruction(cg, TR::InstOpCode::TMLL, node, modReg, J9AccInterface);
-                // generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_MASK8, node, notInterfaceOrArrayLabel);
-                // srm->reclaimScratchRegister(modReg);
-           // } else {
-               const int32_t flags = (J9AccInterface | J9AccClassArray);
+        // superclass test
+        if ((NULL == toClassSymRef) || !toClassSymRef->isClassInterface(comp)) {
+            const int32_t flags = (J9AccInterface | J9AccClassArray);
+            cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
+                                         "isAssignableFromStats/(%s)/SuperclassTest", comp->signature()),
+                1, TR::DebugCounter::Undetermined);
+            if (toClassDepth == -1) {
                 genTestModifierFlags(cg, node, toClassReg, toClassDepth, helperCallLabel, srm, flags);
-            //}
-           // if (usecache) {
-             //   deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
-               // genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
-                 //   dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
-            //} else if (cg->supportsInlineItableWalk()) {
-              //  genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
-            //}
-           // generateS390LabelInstruction(cg, TR::InstOpCode::label, node, notInterfaceOrArrayLabel);
+            }
             genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
             generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
-        } else if (toClassSymRef->isClassInterface(comp)) {
-            // if (usecache) {
-            //     deps = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
-            //     genInstanceOfDynamicCacheAndHelperCall(node, cg, toClassReg, fromClassReg, resultReg, deps, srm, doneLabel, helperCallLabel, 
-            //         dynLabel, NULL, doneLabel, failLabel, true, true, true, false, false);
-            // } else {
-            //     genInterfaceTest(node, cg, srm, fromClassReg, toClassReg, successLabel, failLabel);
-            // }
-            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
-        } else if (toClassSymRef->isClassArray(comp)) {
-            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
-        } else {
-            // normal class
-            genSuperclassTest(cg, node, toClassReg, toClassDepth, fromClassReg, failLabel, srm);
-            generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BE, node, successLabel);
+            cg->generateDebugCounter(TR::DebugCounter::debugCounterName(comp,
+                                         "isAssignableFromStats/(%s)/SuperclassTest/Fail", comp->signature()),
+                1, TR::DebugCounter::Undetermined);
         }
+        generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, helperCallLabel);
     }
-    
-    if (deps == NULL)
-        deps =  new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 8 + srm->numAvailableRegisters(), cg);
 
     srm->stopUsingRegisters();
     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, failLabel);
     generateRIInstruction(cg, TR::InstOpCode::LHI, node, resultReg, 0);
 
-    
+    TR::RegisterDependencyConditions *deps
+        = new (cg->trHeapMemory()) TR::RegisterDependencyConditions(0, 3 + srm->numAvailableRegisters(), cg);
     srm->addScratchRegistersToDependencyList(deps);
     deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
     deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
