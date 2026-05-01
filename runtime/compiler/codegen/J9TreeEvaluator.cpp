@@ -1401,7 +1401,6 @@ uint32_t J9::TreeEvaluator::calculateInstanceOfOrCheckCastSequences(TR::Node *in
                 if ((isInstanceOf && cg->supportsInlineItableWalkForInstanceOf()) ||
                     (!isInstanceOf && cg->supportsInlineItableWalkForCheckCast())) {
                     sequences[i++] = InterfaceTest;
-                    sequences[i++] = GoToFalse;
                 }
                 else if (createDynamicCacheTests) {
                     sequences[i++] = DynamicCacheObjectClassTest;

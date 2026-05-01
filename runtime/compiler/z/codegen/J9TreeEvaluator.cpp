@@ -4614,7 +4614,7 @@ TR::Register *J9::Z::TreeEvaluator::checkcastEvaluator(TR::Node *node, TR::CodeG
             srm->addScratchRegistersToDependencyList(conditions);
             // As SuperClassTest is the costliest test and is guaranteed to give results for checkCast node. Hence it
             // will always be second last test in iter array followed by GoToFalse as last test for checkCastNode
-            if (*(iter - 1) != SuperClassTest && *(iter - 1) != InterfaceTest)
+            if (*(iter - 1) != SuperClassTest)
                 generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_BRC, node, callLabel);
             doneOOLLabel = doneLabel;
             helperReturnOOLLabel = generateLabelSymbol(cg);
