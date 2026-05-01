@@ -8809,8 +8809,13 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BE;
             jmpLabel = falseLabel;
             trueFallThrough = false;
+            if (feGetEnv("useNormalLabelsForInterface") != NULL) {
+                interfacePassLabel = branchLabel;
+            interfaceFailLabel = jmpLabel;
+            } else {
             interfacePassLabel = branchLabel;
             interfaceFailLabel = jmpLabel;
+            }
             
             // interface
             // want to go to -->label when instanceof succeeds
@@ -8829,8 +8834,13 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BNE;
             jmpLabel = trueLabel;
             trueFallThrough = true;
+            if (feGetEnv("useNormalLabelsForInterface") != NULL) {
+                interfaceFailLabel = jmpLabel;
+            interfacePassLabel = branchLabel;
+            } else {
             interfaceFailLabel = branchLabel;
             interfacePassLabel = trueLabel;
+            }
 
             // interface
             // ifcmpeq --> go somewhere if false
@@ -8854,8 +8864,13 @@ TR::Register *J9::Z::TreeEvaluator::VMgenCoreInstanceofEvaluator(TR::Node *node,
             branchCond = TR::InstOpCode::COND_BNE;
             trueFallThrough = true;
         }
-        branchLabel = doneLabel;
-        jmpLabel = oppositeResultLabel;
+        if (feGetEnv("useDoneOppLabels") != NULL) {
+            branchLabel = doneLabel;
+            jmpLabel = oppositeResultLabel;
+        } else {
+            branchLabel = trueLabel;
+            jmpLabel = falseLabel;
+        }
         interfacePassLabel = trueLabel;
         interfaceFailLabel = falseLabel;
     }
