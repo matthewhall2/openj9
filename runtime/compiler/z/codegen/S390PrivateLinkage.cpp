@@ -2434,9 +2434,9 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
           TR::RegisterDependencyConditions *postDepsTemp = new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
             dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
         TR::RegisterDependencyConditions *postDeps
-            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 1, 0, cg());
+            = new (trHeapMemory()) TR::RegisterDependencyConditions(postDepsTemp, 0, 0, cg());
 
-        postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
+        //postDeps->addPreCondition(j9MethodReg, getJ9MethodArgumentRegister());
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2463,7 +2463,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
         snippetCall->swapInstructionListsWithCompilation();
 
-        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
         // fetch J9Method::extra field
         generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
@@ -2474,7 +2474,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::InstOpCode::S390BranchCondition oolBranchOp
             = cg()->stressJitDispatchJ9MethodJ2I() ? TR::InstOpCode::COND_BRC : TR::InstOpCode::COND_MASK1;
 
-        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel);
+        gcPoint = generateS390BranchInstruction(cg(), TR::InstOpCode::BRC, oolBranchOp, callNode, interpreterCallLabel, preDeps);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
        // gcPoint = new (trHeapMemory()) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, callNode, cg());
 
@@ -2489,7 +2489,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
 
         generateRRInstruction(cg(), TR::InstOpCode::getAddRegOpCode(), callNode, scratchReg, j9MethodReg);
         TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
-        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
+        gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg, preDeps);
 
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
 
