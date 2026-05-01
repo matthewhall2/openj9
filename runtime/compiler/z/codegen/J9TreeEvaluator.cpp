@@ -11691,13 +11691,7 @@ static TR::SymbolReference *getClassSymRefAndDepth(TR::Node *classNode, TR::Comp
     return classSymRef;
 }
 
-TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg) {
-    static bool useOldIsAssignableFrom = feGetEnv("useOldIsAssignableFrom") != NULL;
-    if (useOldIsAssignableFrom)
-        return inlineCheckAssignableFromEvaluatorOld(node, cg);
-    return inlineCheckAssignableFromEvaluatorNew(node, cg);
 
-}
 
 static TR::Register *inlineCheckAssignableFromEvaluatorOld(TR::Node *node, TR::CodeGenerator *cg)
 {
@@ -12001,6 +11995,14 @@ static TR::Register *inlineCheckAssignableFromEvaluatorNew(TR::Node *node, TR::C
 
     node->setRegister(resultReg);
     return resultReg;
+}
+
+TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg) {
+    static bool useOldIsAssignableFrom = feGetEnv("useOldIsAssignableFrom") != NULL;
+    if (useOldIsAssignableFrom)
+        return inlineCheckAssignableFromEvaluatorOld(node, cg);
+    return inlineCheckAssignableFromEvaluatorNew(node, cg);
+
 }
 
 bool J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node *node, bool indirect, TR::CodeGenerator *cg)
