@@ -36,11 +36,11 @@
 				<version>19+</version>
 				<variation>Mode108</variation>
 			</disable>
-			<disable>
+			<!-- <disable>
 				<comment>https://github.com/eclipse-openj9/openj9/issues/15152</comment>
 				<version>19+</version>
 				<variation>Mode116</variation>
-			</disable>
+			</disable> -->
 			<disable>
 				<comment>https://github.com/eclipse-openj9/openj9/issues/15152</comment>
 				<version>19+</version>
