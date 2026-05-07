@@ -426,8 +426,11 @@ TR::Node *TR_LoopAliasRefiner::ArrayRangeLimits::createRangeTestExpr(TR::Compila
     TR::Node *addressTest = NULL;
     TR::Node *ifNode = NULL;
     if (isAliased) {
+        printf("aliased variables\n")
         addressTest = TR::Node::create(TR::acmpeq, 2, arrayA, arrayB);
         ifNode = TR::Node::createif(TR::ificmpne, addressTest, TR::Node::iconst(nodeInfo, 0), targetBlock->getEntry());
+    } else {
+        printf("not aliased\n";)
     }
     return ifNode;
 }
