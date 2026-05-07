@@ -8520,6 +8520,7 @@ bool CISCTransform2PtrArraySet(TR_CISCTransformer *trans)
 //*****************************************************************************************
 bool CISCTransform2ArraySet(TR_CISCTransformer *trans)
 {
+    printf("transforming to array set\n");
     TR_ASSERT(trans->getOffsetOperand1() == 0 && trans->getOffsetOperand2() == 0, "Not implemented yet");
     const bool disptrace = DISPTRACE(trans);
     TR::Node *trNode = NULL;
@@ -8603,6 +8604,7 @@ bool CISCTransform2ArraySet(TR_CISCTransformer *trans)
             logprints(disptrace, log, "Bailing CISCTransform2ArraySet due to unrecognized loop exit comparison.\n");
             return false;
     }
+
 
     if (disptrace)
         logprintf(disptrace, log,
