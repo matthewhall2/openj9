@@ -8541,6 +8541,8 @@ bool CISCTransform2ArraySet(TR_CISCTransformer *trans)
     if (!block)
         return false; // cannot find
 
+
+
     if (isLoopPreheaderLastBlockInMethod(comp, block, disptrace)) {
         logprints(disptrace, log,
             "Bailing CISCTransform2ArraySet due to null TT - might be a preheader in last block of method\n");
@@ -8690,7 +8692,13 @@ bool CISCTransform2ArraySet(TR_CISCTransformer *trans)
                 return false;
             }
         }
+
+        
+        logprintf(disptrace, log, "checking induction var store on node %p\n", inStoreNode);
+
     }
+
+
 
     List<TR::Node> listArraySet(comp->trMemory());
     TR::Node *computeIndex = NULL;
