@@ -1427,6 +1427,10 @@ static char *getSignatureForComputedCall(const char * const extraParamsBefore, c
 void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invokeBasic(TR::TreeTop *treetop,
     TR::Node *node)
 {
+     bool enableTrace = trace();
+    OMR::Logger *log = comp()->log();
+    TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
+    logprintf(enableTrace, log, "RCT: Processing invokeBasic\n");
     TR::DebugCounter::prependDebugCounter(comp(),
         TR::DebugCounter::debugCounterName(comp(), "mh.unrefined/invokeBasic/(%s)/%s", comp()->signature(),
             comp()->getHotnessName()),
@@ -1500,7 +1504,10 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_invoke
 void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkToStaticSpecial(TR::TreeTop *treetop,
     TR::Node *node)
 {
+    bool enableTrace = trace();
+    OMR::Logger *log = comp()->log();
     TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
+    logprintf(enableTrace, log, "RCT: Processing linkToStatic/special\n");
 
     bool isLinkToSpecial = rm == TR::java_lang_invoke_MethodHandle_linkToSpecial;
 
@@ -1650,6 +1657,10 @@ void J9::RecognizedCallTransformer::processVMInternalNativeFunction(TR::TreeTop 
 void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkToVirtual(TR::TreeTop *treetop,
     TR::Node *node)
 {
+     bool enableTrace = trace();
+    OMR::Logger *log = comp()->log();
+    TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
+    logprintf(enableTrace, log, "RCT: Processing linkToVirtual\n");
     TR::DebugCounter::prependDebugCounter(comp(),
         TR::DebugCounter::debugCounterName(comp(), "mh.unrefined/linkToVirtual/(%s)/%s", comp()->signature(),
             comp()->getHotnessName()),
@@ -1686,6 +1697,10 @@ void J9::RecognizedCallTransformer::process_java_lang_invoke_MethodHandle_linkTo
 void J9::RecognizedCallTransformer::makeIntoDispatchVirtualCall(TR::Node *node, TR::Node *vftOffset, TR::Node *vftNode,
     TR::Node *memberNameNode)
 {
+     bool enableTrace = trace();
+    OMR::Logger *log = comp()->log();
+    TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod();
+    logprintf(enableTrace, log, "RCT: Processing linkToInterface\n");
     // Construct a dummy "resolved method" for JITHelpers.dispatchVirtual()V to
     // dispatch through the VFT.
     TR_J9VMBase *fej9 = comp()->fej9();
@@ -1883,6 +1898,8 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
     }
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
     else {
+                bool enableTrace = trace();
+    OMR::Logger *log = comp()->log();
         // Post-inlining pass
         switch (rm) {
             case TR::java_lang_invoke_MethodHandle_invokeBasic:
@@ -1894,11 +1911,15 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
             case TR::java_lang_invoke_MethodHandle_linkToSpecial:
                 // linkToStatic calls are also used for unresolved invokedynamic/invokehandle, which we can not
                 // bypass as we may push null appendix object that we can not check at compile time
-                if (_processedINLCalls->get(node->getGlobalIndex())
-                    || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod())
+                if (_processedINLCalls->get(node->getGlobalIndex()) 
+                    || node->getSymbolReference()->getSymbol()->isDummyResolvedMethod()) {
+                        logprintf(enableTrace, log, "RCT: Cannot process LTS: unresvoled invokeDynamic or invokeHandle\n");
                     return false;
-                else
+                }
+                else {
+                    logprintf(enableTrace, log, "RCT: Able to process LTS\n");
                     return true;
+                }
             case TR::java_lang_invoke_MethodHandle_linkToVirtual:
             case TR::java_lang_invoke_MethodHandle_linkToInterface:
                 return true;
