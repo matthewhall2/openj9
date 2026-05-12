@@ -1923,6 +1923,10 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
             case TR::java_lang_invoke_MethodHandle_linkToVirtual:
             case TR::java_lang_invoke_MethodHandle_linkToInterface:
                 return true;
+            case TR::java_lang_invoke_LambdaForm_invokeVirtual:
+                printf("can inliner lf.invokevirtual\n");
+                logprintf(enableTrace, log, "RCT: found LF.invokeVirtual\n");
+                return true;
             default:
                 return false;
         }
@@ -2077,6 +2081,9 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop *treetop)
                 break;
             case TR::java_lang_invoke_MethodHandle_linkToInterface:
                 process_java_lang_invoke_MethodHandle_linkToInterface(treetop, node);
+                break;
+            case TR::java_lang_invoke_LambdaForm_invokeVirtual:
+                printf("found invoke virtual ref method\n");
                 break;
             default:
                 break;

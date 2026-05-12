@@ -4322,6 +4322,14 @@ void TR_ResolvedJ9Method::construct()
 
                 if (!strncmp(name, "invokeExactTargetAddress", 24))
                     setRecognizedMethodInfo(TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress);
+            } else if ((classNameLen == 27) && !strncmp(className, "java/lang/invoke/LambdaForm", 27)) {
+                printf("found Lambdaform classname\n");
+                if (!strncmp(name, "invokeVirtual", 13)) {
+        setRecognizedMethodInfo(TR::java_lang_invoke_LambdaForm_invokeVirtual);
+                } else {
+                    printf("name found was %s\n", name);
+                }
+
             } else if ((classNameLen == 29) && !strncmp(className, "java/lang/invoke/DirectHandle", 29)) {
                 if (!strncmp(name, "directCall_", 11))
                     setRecognizedMethodInfo(TR::java_lang_invoke_DirectHandle_directCall);
