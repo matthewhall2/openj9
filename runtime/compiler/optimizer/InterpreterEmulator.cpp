@@ -1624,6 +1624,10 @@ void InterpreterEmulator::visitInvokevirtual()
     bool ignoreRtResolve = _callerIsThunkArchetype;
     _currentCallMethod
         = calleeMethod->getResolvedPossiblyPrivateVirtualMethod(comp(), cpIndex, ignoreRtResolve, &isUnresolvedInCP);
+    if (_currentCallMethod) {
+    printf("EM: Visit invokeVirtual - Current call method: %s\n", 
+        _currentCallMethod->signature(trMemory(), stackAlloc));
+}
     _currentCallMethodUnrefined = _currentCallMethod;
     Operand *result = NULL;
     if (isCurrentCallUnresolvedOrCold(_currentCallMethod, isUnresolvedInCP)) {
