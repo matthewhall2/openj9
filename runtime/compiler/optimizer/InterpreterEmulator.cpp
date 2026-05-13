@@ -1580,6 +1580,13 @@ void InterpreterEmulator::refineResolvedCalleeForInvokevirtual(TR_ResolvedMethod
 
             TR_ResolvedMethod *refinedMethod
                 = fej9->createResolvedMethod(comp()->trMemory(), targetMethod, callee->owningMethod());
+
+            TR::DebugCounter::incStaticDebugCounter(comp(),
+                    TR::DebugCounter::debugCounterName(comp(),
+                        "InterpreterEmulator/MHInliningSuccess/invokeBasic/(root=%s)/(%s)/(%s)", comp()->signature(),
+                        _calltarget->_calleeMethod->signature(comp()->trMemory()), refinedMethod->signature(comp()->trMemory())));
+
+
             heuristicTrace(tracer(), "Pre-refinement invokebasic numargs: %d. Refined invokeBasic numArgs: %d\n",
                 argNum, refinedMethod->numberOfExplicitParameters());
             if (refinedMethod->numberOfExplicitParameters() != (argNum + 1)) {
