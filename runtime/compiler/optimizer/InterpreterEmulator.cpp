@@ -1617,6 +1617,8 @@ void InterpreterEmulator::refineResolvedCalleeForInvokevirtual(TR_ResolvedMethod
 
 void InterpreterEmulator::visitInvokevirtual()
 {
+    static int coldIBCount = 0;
+    static int totalIBCount = 0;
     int32_t cpIndex = next2Bytes();
     auto calleeMethod = (TR_ResolvedJ9Method *)_calltarget->_calleeMethod;
     bool isUnresolvedInCP;
@@ -1624,13 +1626,26 @@ void InterpreterEmulator::visitInvokevirtual()
     bool ignoreRtResolve = _callerIsThunkArchetype;
     _currentCallMethod
         = calleeMethod->getResolvedPossiblyPrivateVirtualMethod(comp(), cpIndex, ignoreRtResolve, &isUnresolvedInCP);
+    bool hasInvokeBasic = false;
     if (_currentCallMethod) {
-    printf("EM: Visit invokeVirtual - Current call method: %s\n", 
-        _currentCallMethod->signature(trMemory(), stackAlloc));
+        const char *sig = _currentCallMethod->signature(comp()->trMemory(), stackAlloc);
+       // printf("EM: Visit invokeVirtual - Current call method: %s\n", 
+      //  _currentCallMethod->signature(trMemory(), stackAlloc));
+      hasInvokeBasic = (strstr(sig, "invokeBasic") != NULL);
+      if (hasInvokeBasic) {
+        totalIBCount++;
+        printf("found ib: %s\n", sig);
+        printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
+      }
 }
     _currentCallMethodUnrefined = _currentCallMethod;
     Operand *result = NULL;
     if (isCurrentCallUnresolvedOrCold(_currentCallMethod, isUnresolvedInCP)) {
+        if (hasInvokeBasic) {
+            coldIBCount++;
+            printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
+        }
+            
         debugUnresolvedOrCold(_currentCallMethod);
     } else if (_currentCallMethod) {
         bool isIndirectCall = !_currentCallMethod->isFinal() && !_currentCallMethod->isPrivate();
