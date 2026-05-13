@@ -1619,6 +1619,7 @@ void InterpreterEmulator::visitInvokevirtual()
 {
     static int coldIBCount = 0;
     static int totalIBCount = 0;
+    static int totalRMCount = 0;
     int32_t cpIndex = next2Bytes();
     auto calleeMethod = (TR_ResolvedJ9Method *)_calltarget->_calleeMethod;
     bool isUnresolvedInCP;
@@ -1632,10 +1633,16 @@ void InterpreterEmulator::visitInvokevirtual()
        // printf("EM: Visit invokeVirtual - Current call method: %s\n", 
       //  _currentCallMethod->signature(trMemory(), stackAlloc));
       hasInvokeBasic = (strstr(sig, "invokeBasic") != NULL);
+      bool isRecognizedInvokeBasic = (_currentCallMethod->getRecognizedMethod() 
+                                    == TR::java_lang_invoke_MethodHandle_invokeBasic);
       if (hasInvokeBasic) {
         totalIBCount++;
         printf("found ib: %s\n", sig);
         printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
+      }
+      if (isRecognizedInvokeBasic) {
+        totalRMCount++;
+        printf("RMIB: total %d\n", totalRMCount);
       }
 }
     _currentCallMethodUnrefined = _currentCallMethod;
