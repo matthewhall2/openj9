@@ -2800,7 +2800,8 @@ bool J9::TransformUtil::refineMethodHandleInvokeBasic(TR::Compilation *comp, TR:
 
     // Preserve NULLCHK
     TR::TransformUtil::separateNullCheck(comp, treetop, trace);
-
+    logprintf(trace, log, "Refined method: %s\n", refinedMethod->signature(comp->trMemory()));
+    printf("Refined method: %s\n", refinedMethod->signature(comp->trMemory()));
     TR::SymbolReference *newSymRef = comp->getSymRefTab()->findOrCreateMethodSymbol(symRef->getOwningMethodIndex(), -1,
         refinedMethod, TR::MethodSymbol::Static);
 
