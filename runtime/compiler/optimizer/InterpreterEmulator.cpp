@@ -1563,6 +1563,7 @@ void InterpreterEmulator::refineResolvedCalleeForInvokevirtual(TR_ResolvedMethod
     switch (rm) {
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
         case TR::java_lang_invoke_MethodHandle_invokeBasic: {
+            printf("EM: attempting to refine invokeBasic\n");
             int argNum = callee->numberOfExplicitParameters();
             TR::KnownObjectTable::Index receiverIndex = topn(argNum)->getKnownObjectIndex();
             TR_J9VMBase *fej9 = comp()->fej9();
@@ -1585,6 +1586,9 @@ void InterpreterEmulator::refineResolvedCalleeForInvokevirtual(TR_ResolvedMethod
                     TR::DebugCounter::debugCounterName(comp(),
                         "InterpreterEmulator/MHInliningSuccess/invokeBasic/(root=%s)/(%s)/(%s)", comp()->signature(),
                         _calltarget->_calleeMethod->signature(comp()->trMemory()), refinedMethod->signature(comp()->trMemory())));
+
+            printf( "InterpreterEmulator/MHInliningSuccess/invokeBasic/(root=%s)/(%s)/(%s)\n", comp()->signature(),
+                        _calltarget->_calleeMethod->signature(comp()->trMemory()), refinedMethod->signature(comp()->trMemory()));
 
 
             heuristicTrace(tracer(), "Pre-refinement invokebasic numargs: %d. Refined invokeBasic numArgs: %d\n",
