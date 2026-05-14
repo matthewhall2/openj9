@@ -440,6 +440,8 @@ void InterpreterEmulator::initializeIteratorWithState()
 
     int32_t numParmSlots = method()->numberOfParameterSlots();
     _numSlots = numParmSlots + method()->numberOfTemps();
+    _numIBCallsites = 0;
+    _numUnresolvedIBCallsites = 0;
 
     genBBStart(0);
     setupBBStartContext(0);
@@ -1638,6 +1640,7 @@ void InterpreterEmulator::visitInvokevirtual()
       if (hasInvokeBasic) {
         totalIBCount++;
         printf("found ib: %s\n", sig);
+        printf("caller sig?: %s\n", calleeMethod->signature(comp()->trMemory(), stackAlloc));
         printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
       }
       if (isRecognizedInvokeBasic) {
