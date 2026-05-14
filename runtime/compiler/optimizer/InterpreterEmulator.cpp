@@ -1649,8 +1649,20 @@ void InterpreterEmulator::visitInvokevirtual()
     _currentCallMethodUnrefined = _currentCallMethod;
     Operand *result = NULL;
     if (isCurrentCallUnresolvedOrCold(_currentCallMethod, isUnresolvedInCP)) {
-        if (hasInvokeBasic) {
+        bool isIndirectCall = false;
+    if (current() == J9BCinvokevirtual)
+        isIndirectCall = true;
+
+    // Since bytecodes in a thunk archetype are never interpreted,
+    // most of the cp entries may appear unresolved, and we always
+    // compile-time resolve the cp entries. Thus ignore resolution
+    // status of cp entries of thunk arthetype
+    //
+
+        if (hasInvokeBasic && _currentCallMethod->isCold(comp(), isIndirectCall)) {
             coldIBCount++;
+            printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
+        } else if (hasInvokeBasic) {
             printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
         }
             
