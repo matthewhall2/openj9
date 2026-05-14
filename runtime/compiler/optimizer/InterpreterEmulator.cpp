@@ -1662,7 +1662,7 @@ void InterpreterEmulator::visitInvokevirtual()
         if (hasInvokeBasic && _currentCallMethod->isCold(comp(), isIndirectCall)) {
             coldIBCount++;
             printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
-        } else if (hasInvokeBasic && !_currentCallMethod) {
+        } else if (hasInvokeBasic && isUnresolvedInCP) {
             printf("not cold\n");
             printf("unresolved\n");
             printf("total: %d, cold: %d\n", totalIBCount, coldIBCount);
