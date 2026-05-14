@@ -440,8 +440,6 @@ void InterpreterEmulator::initializeIteratorWithState()
 
     int32_t numParmSlots = method()->numberOfParameterSlots();
     _numSlots = numParmSlots + method()->numberOfTemps();
-    _numIBCallsites = 0;
-    _numUnresolvedIBCallsites = 0;
 
     genBBStart(0);
     setupBBStartContext(0);
