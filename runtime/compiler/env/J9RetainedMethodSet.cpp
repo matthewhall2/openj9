@@ -189,7 +189,7 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     const char *instrName = "unknown instruction")
 {
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
-        "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
+        "bc index %u+%u out of range (%u) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
         (int32_t)sizeof(T), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
         m->signatureLength(), m->signatureChars());
 
