@@ -186,7 +186,7 @@ void J9::RetainedMethodSet::init()
 }
 
 template<typename T>
-static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0, TR::Compilation *comp,
+static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, TR::Compilation *comp, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
     logprintf(comp->getOption(TR_TraceRetainedMethods), comp()->log, "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
@@ -270,7 +270,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
 
             uintptr_t *invokeCacheArray = NULL;
             if (bcOp == J9BCinvokehandle) {
-                uint16_t cpIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, 1, comp(), "invokehandle");
+                uint16_t cpIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, comp(), 1, "invokehandle");
 
                 if (caller->isUnresolvedMethodTypeTableEntry(cpIndex)) {
                     break;
@@ -278,7 +278,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
 
                 invokeCacheArray = (uintptr_t *)caller->methodTypeTableEntryAddress(cpIndex);
             } else {
-                uint16_t callSiteIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, 1, comp(), "invokedynamic");
+                uint16_t callSiteIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, comp(), 1, "invokedynamic");
 
                 if (caller->isUnresolvedCallSiteTableEntry(callSiteIndex)) {
                     break;
