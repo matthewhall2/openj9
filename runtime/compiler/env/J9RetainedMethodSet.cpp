@@ -189,7 +189,7 @@ template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, TR::Compilation *comp, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
-    logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log, "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+    logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
         m->signatureLength(), m->signatureChars(), bcIndex);
 
     if (feGetEnv("breakInLoadBC") != NULL) {
