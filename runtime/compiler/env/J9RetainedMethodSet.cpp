@@ -37,6 +37,7 @@
 #include "infra/TRlist.hpp"
 #include "infra/vector.hpp"
 #include "runtime/MethodMetaData.h"
+#include <string.h>
 
 #if defined(J9VM_OPT_JITSERVER)
 #include "env/j9methodServer.hpp"
@@ -188,6 +189,31 @@ template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
+    logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex);
+
+    if (feGetEnv("breakInLoadBC") != NULL) {
+         const char* searchStr = "Properties.getProperty";
+    int32_t searchLen = strlen(searchStr);
+    int32_t sigLen = m->signatureLength();
+    const char* sigChars = m->signatureChars();
+    
+    bool found = false;
+    for (int32_t i = 0; i <= sigLen - searchLen; i++) {
+        if (strncmp(sigChars + i, searchStr, searchLen) == 0) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+printf("found getProperty\n");
+        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+    }
+    
+   
+    }
+    
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
         "bc index %u+%u out of range (%u) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
         (int32_t)sizeof(T), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
