@@ -191,28 +191,41 @@ template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, TR::Compilation *comp, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
-    logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-        m->signatureLength(), m->signatureChars(), bcIndex);
-
-    printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-        m->signatureLength(), m->signatureChars(), bcIndex);
+    // logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+    //     m->signatureLength(), m->signatureChars(), bcIndex);
 
     if (feGetEnv("breakInLoadBC") != NULL) {
          const char* searchStr = "Properties.getProperty";
+         const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
     int32_t sigLen = m->signatureLength();
     const char* sigChars = m->signatureChars();
     
-    bool found = false;
+    bool foundP = false;
+    bool foundS = false;
     for (int32_t i = 0; i <= sigLen - searchLen; i++) {
         if (strncmp(sigChars + i, searchStr, searchLen) == 0) {
-            found = true;
+            foundP = true;
+            break;
+        }
+        if (strncmp(sigChars + i, searchStr2, searchLen) == 0) {
+            foundS = true;
             break;
         }
     }
 
-    if (found) {
-        printf("found getProperty\n");
+    if (foundP) {
+        printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex);
+        printf("found Properties.getProperty\n");
+        __asm { int 3 }
+        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
+    }
+
+    if (foundS) {
+        printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex);
+        printf("found System.getProperty\n");
         __asm { int 3 }
         logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
     }
@@ -245,35 +258,49 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         return this;
     }
 
-    printf("RetainedMethodSet: withLinkedCallee %.*s.%.*s%.*s\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
-        caller->signatureLength(), caller->signatureChars());
+    uint8_t *bcStart = caller->bytecodeStart();
+    uint32_t bcSize = caller->maxBytecodeIndex();
+    uint32_t bcIndex = bci.getByteCodeIndex();
 
     if (feGetEnv("breakInLinkCallee") != NULL) {
-         const char* searchStr = "Properties.getProperty";
+        const char* searchStr = "Properties.getProperty";
+         const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
     int32_t sigLen = caller->signatureLength();
     const char* sigChars = caller->signatureChars();
     
-    bool found = false;
+    bool foundP = false;
+    bool foundS = false;
     for (int32_t i = 0; i <= sigLen - searchLen; i++) {
         if (strncmp(sigChars + i, searchStr, searchLen) == 0) {
-            found = true;
+            foundP = true;
+            break;
+        }
+        if (strncmp(sigChars + i, searchStr2, searchLen) == 0) {
+            foundS = true;
             break;
         }
     }
 
-    if (found) {
-        printf("found getProperty\n");
+    if (foundP) {
+        printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
+        printf("found Properties.getProperty\n");
         __asm { int 3 }
-        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
     }
-    
+
+    if (foundS) {
+        printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
+        printf("found System.getProperty\n");
+        __asm { int 3 }
+        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
+    }
    
     }
 
-    uint8_t *bcStart = caller->bytecodeStart();
-    uint32_t bcSize = caller->maxBytecodeIndex();
-    uint32_t bcIndex = bci.getByteCodeIndex();
+   
 
     logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "RetainedMethodSet: Depth %d\n", bci.getCallerIndex());
     TR_J9ByteCode bcOp
