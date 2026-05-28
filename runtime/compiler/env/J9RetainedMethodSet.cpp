@@ -213,7 +213,7 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
 
     if (found) {
         printf("found getProperty\n");
-        __asm { int3 };
+        __asm { "int3" };
         logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
     }
     
