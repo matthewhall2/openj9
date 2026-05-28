@@ -192,6 +192,9 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
         m->signatureLength(), m->signatureChars(), bcIndex);
 
+    printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex);
+
     if (feGetEnv("breakInLoadBC") != NULL) {
          const char* searchStr = "Properties.getProperty";
     int32_t searchLen = strlen(searchStr);
@@ -207,7 +210,7 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     }
 
     if (found) {
-printf("found getProperty\n");
+        printf("found getProperty\n");
         logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
     }
     
@@ -243,6 +246,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     uint32_t bcSize = caller->maxBytecodeIndex();
     uint32_t bcIndex = bci.getByteCodeIndex();
 
+    logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "RetainedMethodSet: Depth %d\n", bci.getCallerIndex());
     TR_J9ByteCode bcOp
         = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex, comp()));
 
