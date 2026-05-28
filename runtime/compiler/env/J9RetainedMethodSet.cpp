@@ -287,7 +287,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
         __asm { int 3 }
-        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
+        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
 
     if (foundS) {
@@ -295,7 +295,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found System.getProperty\n");
         __asm { int 3 }
-        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "\t\tfound call\n");
+        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
    
     }
