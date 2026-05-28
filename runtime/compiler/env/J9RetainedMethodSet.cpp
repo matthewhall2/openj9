@@ -194,7 +194,8 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     // logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
     //     m->signatureLength(), m->signatureChars(), bcIndex);
 
-    if (feGetEnv("breakInLoadBC") != NULL) {
+    static bool stop = feGetEnv("breakInLoadBC") != NULL;
+    if (stop) {
          const char* searchStr = "Properties.getProperty";
          const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
@@ -262,7 +263,8 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     uint32_t bcSize = caller->maxBytecodeIndex();
     uint32_t bcIndex = bci.getByteCodeIndex();
 
-    if (feGetEnv("breakInLinkCallee") != NULL) {
+    static bool stop = feGetEnv("breakInLinkCallee") != NULL;
+    if (stop) {
         const char* searchStr = "Properties.getProperty";
          const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
