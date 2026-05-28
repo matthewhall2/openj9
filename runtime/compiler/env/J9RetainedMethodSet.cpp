@@ -245,6 +245,32 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         return this;
     }
 
+    printf("RetainedMethodSet: withLinkedCallee %.*s.%.*s%.*s\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars());
+
+    if (feGetEnv("breakInLinkCallee") != NULL) {
+         const char* searchStr = "Properties.getProperty";
+    int32_t searchLen = strlen(searchStr);
+    int32_t sigLen = caller->signatureLength();
+    const char* sigChars = caller->signatureChars();
+    
+    bool found = false;
+    for (int32_t i = 0; i <= sigLen - searchLen; i++) {
+        if (strncmp(sigChars + i, searchStr, searchLen) == 0) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        printf("found getProperty\n");
+        __asm { int 3 }
+        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+    }
+    
+   
+    }
+
     uint8_t *bcStart = caller->bytecodeStart();
     uint32_t bcSize = caller->maxBytecodeIndex();
     uint32_t bcIndex = bci.getByteCodeIndex();
