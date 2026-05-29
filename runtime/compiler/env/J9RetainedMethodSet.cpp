@@ -257,7 +257,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("found Properties.getProperty\n");
         TR_ASSERT_FATAL(false, "found sign p\n");
         if (stop)
-            __asm { int 3 }
+            TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
 
@@ -267,7 +267,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("found System.getProperty\n");
          TR_ASSERT_FATAL(false, "found sign s\n");
         if (stop)
-            __asm { int 3 }
+            TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
 }
