@@ -232,8 +232,8 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
          const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
     int32_t searchLen2 = strlen(searchStr2);
-    int32_t sigLen = caller->signatureLength();
-    const char* sigChars = caller->signatureChars();
+    int32_t sigLen = caller->nameLength();
+    const char* sigChars = caller->nameChars();
     
     bool foundP = false;
     bool foundS = false;
