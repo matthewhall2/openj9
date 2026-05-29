@@ -37,6 +37,8 @@
 #include "infra/TRlist.hpp"
 #include "infra/vector.hpp"
 #include "runtime/MethodMetaData.h"
+#include <intrin.h>
+
 
 #if defined(J9VM_OPT_JITSERVER)
 #include "env/j9methodServer.hpp"
