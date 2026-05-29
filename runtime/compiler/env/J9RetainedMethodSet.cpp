@@ -226,6 +226,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
 
      static bool stop = feGetEnv("breakInLinkCallee") != NULL;
      static bool printInLink = feGetEnv("printInLink") != NULL;
+
     if (printInLink) {
         const char* searchStr = "Properties.getProperty";
          const char* searchStr2 = "System.getProperty";
@@ -241,6 +242,9 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
             foundP = true;
             break;
         }
+    }
+
+    for (int32_t i = 0; i <= sigLen - searchLen2; i++) {
         if (strncmp(sigChars + i, searchStr2, searchLen2) == 0) {
             foundS = true;
             break;
@@ -251,6 +255,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
+        TR_ASSERT_FATAL(false, "found sign p\n");
         if (stop)
             __asm { int 3 }
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
@@ -260,12 +265,13 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found System.getProperty\n");
+         TR_ASSERT_FATAL(false, "found sign s\n");
         if (stop)
             __asm { int 3 }
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
+}
    
-    }
 
     // if (feGetEnv("printMethodWithLink") != NULL) {
     // printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d at bytecode index %u\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
