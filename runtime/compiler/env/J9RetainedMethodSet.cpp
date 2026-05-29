@@ -190,10 +190,10 @@ template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
-    if (feGetEnv("printMethodWithLink2") != NULL) {
-    printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-        m->signatureLength(), m->signatureChars(), bcIndex);
-    }
+    // if (feGetEnv("printMethodWithLink2") != NULL) {
+    // printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+    //     m->signatureLength(), m->signatureChars(), bcIndex);
+    // }
 
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
         "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
