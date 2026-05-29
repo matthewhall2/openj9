@@ -188,6 +188,11 @@ template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
+    if (feGetEnv("printMethodWithLink2") != NULL) {
+    printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bci.getCallerIndex(), bcIndex);
+    }
+
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
         "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
         (int32_t)sizeof(T), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
@@ -216,6 +221,11 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     uint8_t *bcStart = caller->bytecodeStart();
     uint32_t bcSize = caller->maxBytecodeIndex();
     uint32_t bcIndex = bci.getByteCodeIndex();
+
+    if (feGetEnv("printMethodWithLink") != NULL) {
+    printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d at bytecode index %u\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex(), bcIndex);
+    }
 
     TR_J9ByteCode bcOp
         = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex));
