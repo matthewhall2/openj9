@@ -189,8 +189,8 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     const char *instrName = "unknown instruction")
 {
     if (feGetEnv("printMethodWithLink2") != NULL) {
-    printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-        m->signatureLength(), m->signatureChars(), bci.getCallerIndex(), bcIndex);
+    printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex);
     }
 
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
