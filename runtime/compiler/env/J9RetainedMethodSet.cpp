@@ -268,6 +268,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         const char* searchStr = "Properties.getProperty";
          const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
+    int32_t searchLen2 = strlen(searchStr2);
     int32_t sigLen = caller->signatureLength();
     const char* sigChars = caller->signatureChars();
     
@@ -278,7 +279,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
             foundP = true;
             break;
         }
-        if (strncmp(sigChars + i, searchStr2, searchLen) == 0) {
+        if (strncmp(sigChars + i, searchStr2, searchLen2) == 0) {
             foundS = true;
             break;
         }
