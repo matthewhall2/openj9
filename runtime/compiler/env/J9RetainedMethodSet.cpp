@@ -225,7 +225,8 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     uint32_t bcIndex = bci.getByteCodeIndex();
 
      static bool stop = feGetEnv("breakInLinkCallee") != NULL;
-    if (stop) {
+     static bool printInLink = feGetEnv("printInLink") != NULL;
+    if (printInLink) {
         const char* searchStr = "Properties.getProperty";
          const char* searchStr2 = "System.getProperty";
     int32_t searchLen = strlen(searchStr);
@@ -250,7 +251,8 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
-        __asm { int 3 }
+        if (stop)
+            __asm { int 3 }
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
 
@@ -258,7 +260,8 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found System.getProperty\n");
-        __asm { int 3 }
+        if (stop)
+            __asm { int 3 }
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
    
