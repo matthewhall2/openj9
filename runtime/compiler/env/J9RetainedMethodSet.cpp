@@ -228,34 +228,46 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
      static bool printInLink = feGetEnv("printInLink") != NULL;
 
     if (printInLink) {
-        const char* searchStr = "Properties.getProperty";
-         const char* searchStr2 = "System.getProperty";
-    int32_t searchLen = strlen(searchStr);
-    int32_t searchLen2 = strlen(searchStr2);
+
+        const char* PropertiesClassString = "java/util/Properties";
+         const char* PropertiesMethodString = "getProperty";
+    int32_t PropertiesClassStringLen = strlen(PropertiesClassString);
+    int32_t PropertiesMethodStringLen = strlen(PropertiesMethodString);
+
+     const char* SystemClassString = "java/lang/System";
+         const char* SystemMethodString = "getProperty";
+    int32_t SystemClassStringLen = strlen(SystemClassString);
+    int32_t SystemMethodStringLen = strlen(SystemMethodString);
+
+
     int32_t sigLen = caller->nameLength();
     const char* sigChars = caller->nameChars();
     
     bool foundP = false;
     bool foundS = false;
-    for (int32_t i = 0; i <= sigLen - searchLen; i++) {
-        if (strncmp(sigChars + i, searchStr, searchLen) == 0) {
-            foundP = true;
-            break;
-        }
+    
+    if (caller->classNameLength() == PropertiesClassStringLen &&
+    caller->nameLength() == PropertiesMethodStringLen) {
+    if (strncmp(caller->classNameChars(), PropertiesClassString, PropertiesClassStringLen) == 0 &&
+        strncmp(caller->nameChars(), PropertiesMethodString, PropertiesMethodStringLen) == 0) {
+        foundP = true;
     }
+}
 
-    for (int32_t i = 0; i <= sigLen - searchLen2; i++) {
-        if (strncmp(sigChars + i, searchStr2, searchLen2) == 0) {
-            foundS = true;
-            break;
-        }
+// Check for System.getProperty
+if (caller->classNameLength() == SystemClassStringLen &&
+    caller->nameLength() == SystemMethodStringLen) {
+    if (strncmp(caller->classNameChars(), SystemClassString, SystemClassStringLen) == 0 &&
+        strncmp(caller->nameChars(), SystemMethodString, SystemMethodStringLen) == 0) {
+        foundS = true;
     }
+}
 
     if (foundP) {
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
-        TR_ASSERT_FATAL(false, "found sign p\n");
+       // TR_ASSERT_FATAL(false, "found sign p\n");
         if (stop)
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
@@ -265,7 +277,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found System.getProperty\n");
-         TR_ASSERT_FATAL(false, "found sign s\n");
+       //  TR_ASSERT_FATAL(false, "found sign s\n");
         if (stop)
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
