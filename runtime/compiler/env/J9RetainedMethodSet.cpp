@@ -269,7 +269,7 @@ if (caller->classNameLength() == SystemClassStringLen &&
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
-        TR_ASSERT_FATAL(false, "found sign p\n");
+     //   TR_ASSERT_FATAL(false, "found sign p\n");
         if (stopForProp)
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
