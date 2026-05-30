@@ -1,4 +1,4 @@
-/*******************************************************************************
+ /*******************************************************************************
  * Copyright IBM Corp. and others 2025
  *
  * This program and the accompanying materials are made available under
@@ -224,7 +224,9 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     uint32_t bcSize = caller->maxBytecodeIndex();
     uint32_t bcIndex = bci.getByteCodeIndex();
 
-     static bool stop = feGetEnv("breakInLinkCallee") != NULL;
+     static bool stopForSystem = feGetEnv("stopForSystem") != NULL;
+          static bool stopForProp = feGetEnv("stopForProp") != NULL;
+
      static bool printInLink = feGetEnv("printInLink") != NULL;
 
     if (printInLink) {
@@ -267,8 +269,8 @@ if (caller->classNameLength() == SystemClassStringLen &&
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found Properties.getProperty\n");
-       // TR_ASSERT_FATAL(false, "found sign p\n");
-        if (stop)
+        TR_ASSERT_FATAL(false, "found sign p\n");
+        if (stopForProp)
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
@@ -277,8 +279,8 @@ if (caller->classNameLength() == SystemClassStringLen &&
         printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
         caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
         printf("found System.getProperty\n");
-       //  TR_ASSERT_FATAL(false, "found sign s\n");
-        if (stop)
+       // TR_ASSERT_FATAL(false, "found sign s\n");
+        if (stopForSystem)
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
     }
