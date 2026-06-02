@@ -187,13 +187,56 @@ void J9::RetainedMethodSet::init()
 }
 
 template<typename T>
-static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
+static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, int32_t callerIndex, TR::Compilation *comp, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
-    // if (feGetEnv("printMethodWithLink2") != NULL) {
-    // printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-    //     m->signatureLength(), m->signatureChars(), bcIndex);
-    // }
+       const char* PropertiesClassString = "java/util/Properties";
+         const char* PropertiesMethodString = "getProperty";
+    int32_t PropertiesClassStringLen = strlen(PropertiesClassString);
+    int32_t PropertiesMethodStringLen = strlen(PropertiesMethodString);
+
+     const char* SystemClassString = "java/lang/System";
+         const char* SystemMethodString = "getProperty";
+    int32_t SystemClassStringLen = strlen(SystemClassString);
+    int32_t SystemMethodStringLen = strlen(SystemMethodString);
+
+
+    int32_t sigLen = m->nameLength();
+    const char* sigChars = m->nameChars();
+    
+    bool foundP = false;
+    bool foundS = false;
+    
+    if (m->classNameLength() == PropertiesClassStringLen &&
+    m->nameLength() == PropertiesMethodStringLen) {
+    if (strncmp(m->classNameChars(), PropertiesClassString, PropertiesClassStringLen) == 0 &&
+        strncmp(m->nameChars(), PropertiesMethodString, PropertiesMethodStringLen) == 0) {
+        foundP = true;
+    }
+}
+
+// // Check for System.getProperty
+// if (caller->classNameLength() == SystemClassStringLen &&
+//     caller->nameLength() == SystemMethodStringLen) {
+//     if (strncmp(caller->classNameChars(), SystemClassString, SystemClassStringLen) == 0 &&
+//         strncmp(caller->nameChars(), SystemMethodString, SystemMethodStringLen) == 0) {
+//         foundS = true;
+//     }
+// }
+
+
+    static bool printInBC = feGetEnv("printInBC") != NULL;
+        static bool breakInBC = feGetEnv("breakInBC") != NULL;
+
+    if (foundP && printInBC) {
+        logprintf(comp->getOption(TR_TraceRetainedMethods), comp->log(), "RetainedMethodSet(loadBC): method %.*s.%.*s%.*s at bytecode index %u (caller index %d)\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex, callerIndex);
+    printf("RetainedMethodSet(loadbc): method %.*s.%.*s%.*s at bytecode index %u (caller index %d)\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+        m->signatureLength(), m->signatureChars(), bcIndex, callerIndex);
+        if (breakInBC) {
+            TR::Compiler->debug.breakPoint();
+        }
+    }
 
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
         "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
@@ -293,7 +336,7 @@ if (caller->classNameLength() == SystemClassStringLen &&
     // }
 
     TR_J9ByteCode bcOp
-        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex));
+        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex, bci.getCallerIndex(), comp()));
 
     switch (bcOp) {
         case J9BCinvokevirtual:
@@ -319,7 +362,7 @@ if (caller->classNameLength() == SystemClassStringLen &&
 
             uintptr_t *invokeCacheArray = NULL;
             if (bcOp == J9BCinvokehandle) {
-                uint16_t cpIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, 1, "invokehandle");
+                uint16_t cpIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, bci.getCallerIndex(), comp(), 1, "invokehandle");
 
                 if (caller->isUnresolvedMethodTypeTableEntry(cpIndex)) {
                     break;
@@ -327,7 +370,7 @@ if (caller->classNameLength() == SystemClassStringLen &&
 
                 invokeCacheArray = (uintptr_t *)caller->methodTypeTableEntryAddress(cpIndex);
             } else {
-                uint16_t callSiteIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, 1, "invokedynamic");
+                uint16_t callSiteIndex = loadBc<uint16_t>(caller, bcStart, bcSize, bcIndex, bci.getCallerIndex(), comp(), 1, "invokedynamic");
 
                 if (caller->isUnresolvedCallSiteTableEntry(callSiteIndex)) {
                     break;
