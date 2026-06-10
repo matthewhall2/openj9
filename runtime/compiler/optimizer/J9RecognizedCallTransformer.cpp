@@ -355,7 +355,7 @@ void J9::RecognizedCallTransformer::process_java_lang_StringLatin1_inflate_BIBII
     arrayTranslateNode->setAndIncChild(4, length);
     arrayTranslateNode->setAndIncChild(5, stoppingNode);
 
-    TR::Node *arraytranslateAnchorNode = TR::Node::create(TR::treetop, 1, arrayTranslateNode);
+    //TR::Node *arraytranslateAnchorNode = TR::Node::create(TR::treetop, 1, arrayTranslateNode);
 
     TR::CFG *cfg = comp()->getFlowGraph();
 
@@ -384,7 +384,7 @@ void J9::RecognizedCallTransformer::process_java_lang_StringLatin1_inflate_BIBII
     TR::Node *ifCmpNode5 = TR::Node::createif(TR::ificmplt, ishrNode, iaddNode2);
     TR::TreeTop *ifCmpTreeTop5 = TR::TreeTop::create(comp(), ifCmpTreeTop4, ifCmpNode5);
 
-    TR::TreeTop *arrayTranslateTreeTop = TR::TreeTop::create(comp(), ifCmpTreeTop5, arraytranslateAnchorNode);
+    TR::TreeTop *arrayTranslateTreeTop = TR::TreeTop::create(comp(), ifCmpTreeTop5, arrayTranslateNode);
     TR::Block *ifCmpBlock1 = ifCmpTreeTop1->getEnclosingBlock();
     TR::Block *ifCmpBlock2
         = ifCmpBlock1->split(ifCmpTreeTop2, cfg, true /* fixUpCommoning */, true /* copyExceptionSuccessors */);
@@ -403,7 +403,7 @@ void J9::RecognizedCallTransformer::process_java_lang_StringLatin1_inflate_BIBII
         true /* copyExceptionSuccessors */);
 
     TR::TransformUtil::removeTree(comp(), callCopyTT);
-    TR::TransformUtil::removeTree(comp(), arrayTranslateTreeTop);
+  //  TR::TransformUtil::removeTree(comp(), arrayTranslateTreeTop);
 
 
     // Go to the tail block from the fall-through block
