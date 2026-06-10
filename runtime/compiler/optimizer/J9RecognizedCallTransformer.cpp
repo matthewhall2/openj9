@@ -403,6 +403,8 @@ void J9::RecognizedCallTransformer::process_java_lang_StringLatin1_inflate_BIBII
         true /* copyExceptionSuccessors */);
 
     TR::TransformUtil::removeTree(comp(), callCopyTT);
+    TR::TransformUtil::removeTree(comp(), arrayTranslateTreeTop);
+
 
     // Go to the tail block from the fall-through block
     TR::Node *gotoNode = TR::Node::create(node, TR::Goto);
