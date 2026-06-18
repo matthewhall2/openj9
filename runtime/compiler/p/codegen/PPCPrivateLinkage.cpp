@@ -2790,15 +2790,15 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
-        TR_PPCOutOfLineCodeSection *slowCallOOL
-            = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
-        cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
-        slowCallOOL->swapInstructionListsWithCompilation();
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        gcPoint->PPCNeedsGCMap(regMapMask);
-        generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-        slowCallOOL->swapInstructionListsWithCompilation();
+        // TR_PPCOutOfLineCodeSection *slowCallOOL
+        //     = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
+        // cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
+        // slowCallOOL->swapInstructionListsWithCompilation();
+        // generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+        // gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+        // gcPoint->PPCNeedsGCMap(regMapMask);
+        // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+        // slowCallOOL->swapInstructionListsWithCompilation();
 
         generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2810,9 +2810,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         cg()->stopUsingRegister(scratchReg2);
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
-            gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
+            gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
         } else {
-            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetLabel, cndReg);
         }
         gcPoint->PPCNeedsGCMap(regMapMask);
 
