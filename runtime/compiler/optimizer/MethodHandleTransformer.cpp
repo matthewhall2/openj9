@@ -982,6 +982,11 @@ void TR_MethodHandleTransformer::process_java_lang_invoke_Invokers_checkGenericT
     if (!comp()->useConstRefs())
         return;
 
+    static const bool disableFoldingMHGenType = feGetEnv("TR_disableFoldingMHGenType") != NULL;
+    if (disableFoldingMHGenType) {
+        return;
+    }
+
     auto mhNode = node->getArgument(0);
     auto desiredMTNode = node->getArgument(1);
     TR::KnownObjectTable::Index mhIndex = getObjectInfoOfNode(mhNode);

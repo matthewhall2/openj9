@@ -729,6 +729,7 @@ void J9::ValuePropagation::processRefinedMethodHandleINLCall(TR::Node *node)
 void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 {
     OMR::Logger *log = comp()->log();
+    static const bool disableIsCompileConstantFolding = feGetEnv("disableIsCompileConstantFolding") != NULL;
 
     // IL Generation only uses the <objectInequalityComparison> non-helper today,
     // but we should be prepared for <objectEqualityComparisonSymbol> as well.
@@ -2235,6 +2236,8 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                 break;
             }
             case TR::java_lang_invoke_MethodHandleImpl_isCompileConstant: {
+                if (disableIsCompileConstantFolding)
+                    return;
                 TR::Node *mhNode = node->getFirstChild();
                 bool isGlobal;
                 logprintf(trace(), log, "Trying to fold MethodHandleImpl.isCompileConstant\n");

@@ -2044,7 +2044,10 @@ bool J9::TransformUtil::transformIndirectLoadChainImpl(TR::Compilation *comp, TR
                         // class won't be unloaded while this body is still valid, so
                         // the keepalive is redundant but harmless.
                         //
-                        comp->addKeepaliveClass(clazz);
+                        // todo: comment explaining why
+                        if (!comp->isPeekingMethod()) {
+                            comp->addKeepaliveClass(clazz);
+                        }
                     } else {
                         return false;
                     }
