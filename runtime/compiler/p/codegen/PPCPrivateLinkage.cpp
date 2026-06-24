@@ -2782,6 +2782,10 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         preDeps->setNumPostConditions(0, trMemory());
         preDeps->setAddCursorForPost(0);
 
+        TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
+        postDeps->setNumPreConditions(0, trMemory());
+        postDeps->setAddCursorForPre(0);
+
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
             = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
@@ -2790,15 +2794,15 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
-        // TR_PPCOutOfLineCodeSection *slowCallOOL
-        //     = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
-        // cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
-        // slowCallOOL->swapInstructionListsWithCompilation();
-        // generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        // gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        // gcPoint->PPCNeedsGCMap(regMapMask);
-        // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-        // slowCallOOL->swapInstructionListsWithCompilation();
+        TR_PPCOutOfLineCodeSection *slowCallOOL
+            = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
+        cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
+        slowCallOOL->swapInstructionListsWithCompilation();
+        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+        gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+        gcPoint->PPCNeedsGCMap(regMapMask);
+        generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+        slowCallOOL->swapInstructionListsWithCompilation();
 
         generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
 
@@ -2810,9 +2814,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         cg()->stopUsingRegister(scratchReg2);
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
-            gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+            gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
         } else {
-            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetLabel, cndReg);
+            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
         }
         gcPoint->PPCNeedsGCMap(regMapMask);
 
@@ -2820,10 +2824,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4,
                 TR::Compiler->om.sizeofReferenceAddress()));
-        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srawi, callNode, j9MethodReg, j9MethodReg, 16);
-        if (comp()->target().is64Bit()) {
-            generateTrg1Src1Instruction(cg(), TR::InstOpCode::extsw, callNode, j9MethodReg, j9MethodReg);
-        }
+        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srwi, callNode, j9MethodReg, j9MethodReg, 16);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
