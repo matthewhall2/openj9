@@ -2824,7 +2824,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4,
                 TR::Compiler->om.sizeofReferenceAddress()));
-        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::srwi, callNode, j9MethodReg, j9MethodReg, 16);
+        // srwi 16 = rlwinm rA, rS, 16, 16, 31  (unsigned shift right by 16, zeroing upper bits)
+        generateTrg1Src1Imm2Instruction(cg(), TR::InstOpCode::rlwinm, callNode, j9MethodReg, j9MethodReg, 16, 0x0000FFFF);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, j9MethodReg, scratchReg);
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
