@@ -2767,8 +2767,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
     } else if (isJitDispatchJ9Method) {
         auto regMapMask = pp.getPreservedRegisterMapForGC();
 
-        TR::Register *scratchReg2 = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
-        TR::Register *scratchReg = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
+        TR::Register *scratchReg = dependencies->searchPostConditionRegister(pp.getVTableIndexArgumentRegister());
+        TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
 
@@ -2811,7 +2811,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-        cg()->stopUsingRegister(scratchReg2);
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
             gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
@@ -2827,10 +2826,11 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // srwi 16 = rlwinm rA, rS, 16, 16, 31  (unsigned shift right by 16, zeroing upper bits)
         generateShiftRightLogicalImmediate(cg(), callNode, j9MethodReg, j9MethodReg, 16);
        // generateTrg1Src1Imm2Instruction(cg(), TR::InstOpCode::rlwinm, callNode, j9MethodReg, j9MethodReg, 16, 0x0000FFFF);
-        generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, scratchReg, j9MethodReg);
-        generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
+        generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg2, scratchReg, j9MethodReg);
+        generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg2);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
+        cg()->stopUsingRegister(scratchReg2);
 
         generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
         return;
