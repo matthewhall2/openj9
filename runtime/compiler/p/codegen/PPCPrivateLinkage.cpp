@@ -1437,7 +1437,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     if (isJitDispatchJ9Method) {
         specialArgReg = getProperties().getJ9MethodArgumentRegister();
         TR::addDependency(dependencies, NULL, TR::RealRegister::gr0, TR_GPR, cg());
-        TR::addDependency(dependencies, NULL, TR::RealRegister::gr2, TR_GPR, cg());
+       // TR::addDependency(dependencies, NULL, TR::RealRegister::gr2, TR_GPR, cg());
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
