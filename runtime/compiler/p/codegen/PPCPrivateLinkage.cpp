@@ -1437,6 +1437,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     if (isJitDispatchJ9Method) {
         specialArgReg = getProperties().getJ9MethodArgumentRegister();
         TR::addDependency(dependencies, NULL, TR::RealRegister::gr0, TR_GPR, cg());
+        TR::addDependency(dependencies, NULL, TR::RealRegister::gr2, TR_GPR, cg());
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
@@ -1866,7 +1867,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     R2 is added to the dependency only if we're not dealing with a linux 32 bit platform, where it's system reserved.
     Ultimately, we don't need an assert or NULL check when searching for these registers within the dependency.
     */
-    if (linkage == TR_CHelper) {
+    if (linkage == TR_CHelper || isJitDispatchJ9Method) {
         if (comp->target().isLinux() && comp->target().is64Bit() && comp->target().cpu.isLittleEndian()) {
             if (!comp->getOption(TR_DisableTOC) && !comp->compilePortableCode()) {
                 int32_t helperOffset = (callNode->getSymbolReference()->getReferenceNumber() - 1) * sizeof(intptr_t);
@@ -2771,6 +2772,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
+       // TR::Register *jitTOCReg = dependencies->searchPreConditionRegister(TR::RealRegister::gr2);
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
