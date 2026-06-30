@@ -1867,7 +1867,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     R2 is added to the dependency only if we're not dealing with a linux 32 bit platform, where it's system reserved.
     Ultimately, we don't need an assert or NULL check when searching for these registers within the dependency.
     */
-    if (linkage == TR_CHelper || isJitDispatchJ9Method) {
+    if (linkage == TR_CHelper) {
         if (comp->target().isLinux() && comp->target().is64Bit() && comp->target().cpu.isLittleEndian()) {
             if (!comp->getOption(TR_DisableTOC) && !comp->compilePortableCode()) {
                 int32_t helperOffset = (callNode->getSymbolReference()->getReferenceNumber() - 1) * sizeof(intptr_t);
@@ -2813,12 +2813,13 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-
-        if (cg()->stressJitDispatchJ9MethodJ2I()) {
             gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
-        } else {
-            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
-        }
+
+        // if (cg()->stressJitDispatchJ9MethodJ2I()) {
+        //     gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
+        // } else {
+        //     gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, oolLabel, cndReg);
+        // }
         gcPoint->PPCNeedsGCMap(regMapMask);
 
         // compiled - jump to jit entry point
