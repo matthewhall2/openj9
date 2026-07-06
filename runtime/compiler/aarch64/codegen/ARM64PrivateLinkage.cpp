@@ -1303,7 +1303,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         // compiled - jump to jit entry point
-        generateTrg1MemInstruction(cg(), TR::InstOpCode::ldrswimm, callNode, j9MethodReg,
+        generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurw, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4));
         generateLogicalShiftRightImmInstruction(cg(), callNode, j9MethodReg, j9MethodReg, 16, false);
         // sign extend
