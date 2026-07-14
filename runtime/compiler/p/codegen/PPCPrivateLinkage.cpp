@@ -2772,7 +2772,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::Register *scratchReg2 = dependencies->searchPreConditionRegister(TR::RealRegister::gr0);
         TR::Register *cndReg = dependencies->searchPreConditionRegister(TR::RealRegister::cr0);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(pp.getJ9MethodArgumentRegister());
-       // TR::Register *jitTOCReg = dependencies->searchPreConditionRegister(TR::RealRegister::gr2);
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -2783,10 +2782,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
         preDeps->setNumPostConditions(0, trMemory());
         preDeps->setAddCursorForPost(0);
-
-        TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
-        postDeps->setNumPreConditions(0, trMemory());
-        postDeps->setAddCursorForPre(0);
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2813,7 +2808,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra),
                 TR::Compiler->om.sizeofReferenceAddress()));
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
-           // gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
             gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, oolLabel);
@@ -2826,10 +2820,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::lwz, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4,
                 TR::Compiler->om.sizeofReferenceAddress()));
-        // srwi 16 = rlwinm rA, rS, 16, 16, 31  (unsigned shift right by 16, zeroing upper bits)
         generateShiftRightLogicalImmediate(cg(), callNode, j9MethodReg, j9MethodReg, 16);
         generateSignExtendInstruction(callNode, j9MethodReg, j9MethodReg, cg(), 4);
-       // generateTrg1Src1Imm2Instruction(cg(), TR::InstOpCode::rlwinm, callNode, j9MethodReg, j9MethodReg, 16, 0x0000FFFF);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg2, scratchReg, j9MethodReg);
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg2);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
