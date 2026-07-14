@@ -1313,9 +1313,9 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurw, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4));
         // extract offset (upper 2 bytes)
-        generateLogicalShiftRightImmInstruction(cg(), callNode, j9MethodReg, j9MethodReg, 16, true);
+        generateLogicalShiftRightImmInstruction(cg(), callNode, j9MethodReg, j9MethodReg, 16, false);
         // sign extend
-      //  generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
+        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
         gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
         gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
