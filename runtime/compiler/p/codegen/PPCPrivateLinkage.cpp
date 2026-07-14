@@ -2779,9 +2779,9 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
-        preDeps->setNumPostConditions(0, trMemory());
-        preDeps->setAddCursorForPost(0);
+        // TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
+        // preDeps->setNumPostConditions(0, trMemory());
+        // preDeps->setAddCursorForPost(0);
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
