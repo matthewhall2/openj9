@@ -188,12 +188,18 @@ void J9::RetainedMethodSet::init()
 
 template<typename T>
 static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
-    const char *instrName = "unknown instruction")
+    const char *instrName = "unknown instruction", bool printBCIndex=false)
 {
-    // if (feGetEnv("printMethodWithLink2") != NULL) {
-    // printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %u\n", m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
-    //     m->signatureLength(), m->signatureChars(), bcIndex);
+    // static bool guardVol = feGetEnv("guardVol") != NULL;
+    // volatile uint32_t tempBCIndex = 0;
+    // if (guardVol) {
+    //     tempBCIndex = bcIndex;
     // }
+
+//     static bool printInfo = feGetEnv("printInfo") != NULL;
+// if (printBCIndex && printInfo) {
+//     printf("in loadbc: bc index %d\n", tempBCIndex);
+// }
 
     TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(T) <= bcSize,
         "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
@@ -206,7 +212,11 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
 J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCodeInfo bci)
 {
     TR_ResolvedMethod *linkedCallee = NULL;
-
+     static int count = 0;
+    if (count == 0) {
+        printf("TR_ByteCodeInfo size is: %d\n", sizeof(TR_ByteCodeInfo));
+        count++;
+    }
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
     TR_ResolvedMethod *caller = bci.getCallerIndex() == -1
         ? comp()->getMethodBeingCompiled()
@@ -220,17 +230,17 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
         return this;
     }
 
-    uint8_t *bcStart = caller->bytecodeStart();
-    uint32_t bcSize = caller->maxBytecodeIndex();
-    uint32_t bcIndex = bci.getByteCodeIndex();
+  
 
      static bool stopForSystem = feGetEnv("stopForSystem") != NULL;
           static bool stopForProp = feGetEnv("stopForProp") != NULL;
 
      static bool printInLink = feGetEnv("printInLink") != NULL;
 
-    if (printInLink) {
+      bool foundP = false;
+    bool foundS = false;
 
+ //   if (printInLink) {
         const char* PropertiesClassString = "java/util/Properties";
          const char* PropertiesMethodString = "getProperty";
     int32_t PropertiesClassStringLen = strlen(PropertiesClassString);
@@ -241,12 +251,10 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
     int32_t SystemClassStringLen = strlen(SystemClassString);
     int32_t SystemMethodStringLen = strlen(SystemMethodString);
 
-
     int32_t sigLen = caller->nameLength();
     const char* sigChars = caller->nameChars();
     
-    bool foundP = false;
-    bool foundS = false;
+   
     
     if (caller->classNameLength() == PropertiesClassStringLen &&
     caller->nameLength() == PropertiesMethodStringLen) {
@@ -264,36 +272,95 @@ if (caller->classNameLength() == SystemClassStringLen &&
         foundS = true;
     }
 }
+    static bool printBCForProperties = feGetEnv("printBCForProperties");
 
-    if (foundP) {
-        printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
-        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
-        printf("found Properties.getProperty\n");
-     //   TR_ASSERT_FATAL(false, "found sign p\n");
-        if (stopForProp)
-            TR::Compiler->debug.breakPoint();
-        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+    if (foundP && printBCForProperties) {
+        count += 1;
+        printf("RetainedMethodSet Properties.getPropertyCount: %d\n", count);
+    //     printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+    //     caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
+         printf("found Properties.getProperty\n");
+         printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d (caller index %d)\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getByteCodeIndex(), bci.getCallerIndex());
+    // //    TR_ASSERT_FATAL(false, "found sign p\n");
+       
     }
 
-    if (foundS) {
-        printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
-        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex());
-        printf("found System.getProperty\n");
-       // TR_ASSERT_FATAL(false, "found sign s\n");
-        if (stopForSystem)
+     if (stopForProp && foundP) {
+                 printf("found Properties.getProperty\n");
             TR::Compiler->debug.breakPoint();
         logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+     }
+
+    static bool printBCForSystem = feGetEnv("printBCForSystem");
+    if (foundS && printBCForSystem) {
+         printf("found System.getProperty\n");
+        printf("RetainedMethodSet: method %.*s.%.*s%.*s at bytecode index %d (caller index %d)\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getByteCodeIndex(), bci.getCallerIndex());
+       
+     //   TR_ASSERT_FATAL(false, "found sign s\n");
+       
     }
-}
+
+     if (stopForSystem && foundS) {
+                 printf("found System.getProperty\n");
+
+            TR::Compiler->debug.breakPoint();
+        logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "\t\tfound call\n");
+     }
+//}
    
 
-    // if (feGetEnv("printMethodWithLink") != NULL) {
-    // printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d at bytecode index %u\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
-    //     caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex(), bcIndex);
-    // }
+    if (feGetEnv("printMethodWithLink") != NULL) {
+    printf("RetainedMethodSet: method %.*s.%.*s%.*s at caller index %d at bytecode index %u\n", caller->classNameLength(), caller->classNameChars(), caller->nameLength(), caller->nameChars(),
+        caller->signatureLength(), caller->signatureChars(), bci.getCallerIndex(), bci.getByteCodeIndex());
+    }
 
+        static bool printInLink2 = feGetEnv("printInLink2") != NULL;
+        static bool printRaw = feGetEnv("printRaw") != NULL;
+
+// uint32_t raw;
+// memcpy(&raw, &bci, sizeof(raw));
+
+//     if (printRaw && (raw >> 15) == (0x10002u)) {
+//          const unsigned char *bytes = (const unsigned char *)&bci;
+//          printf("found pattern 0x10002\n");
+
+//     for (size_t off = 0; off + 4 <= sizeof(bci); off += 4) {
+//         uint32_t word;
+//         memcpy(&word, bytes + off, sizeof(word));
+//         printf("%04zu: %08X\n", off, word);
+//     }
+//     TR_ASSERT_FATAL(false, "bc index > size\n");
+//     }
+
+//     if (printRaw && (foundP || foundS)) {
+//          const unsigned char *bytes = (const unsigned char *)&bci;
+//         printf("printing bci\n");
+//          for (size_t off = 0; off + 4 <= sizeof(bci); off += 4) {
+//         uint32_t word;
+//         memcpy(&word, bytes + off, sizeof(word));
+//         printf("%04zu: %08X\n", off, word);
+//     }
+//     }
+
+    if (printInLink2) {
+        TR_ASSERT_FATAL(false, "sanity assert\n");
+    }
+
+  uint8_t *bcStart = caller->bytecodeStart();
+    uint32_t bcSize = caller->maxBytecodeIndex();
+    uint32_t bcIndex = bci.getByteCodeIndex();
+
+     static bool earlyReturn = feGetEnv("earlyReturn") != NULL;
+
+// if (earlyReturn && bcIndex >= bcSize) {
+//    // TR_ASSERT_FATAL(false, "failed bcIndex >= bcSize\n");
+//      logprintf(comp()->getOption(TR_TraceRetainedMethods), comp()->log(), "bc index %d > bcSize %d, skipping\n", bcIndex, bcSize);
+//      return this;
+// }
     TR_J9ByteCode bcOp
-        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex));
+        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex, 0, "unknown instruction", foundP || foundS));
 
     switch (bcOp) {
         case J9BCinvokevirtual:

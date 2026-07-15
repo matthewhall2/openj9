@@ -586,6 +586,9 @@ TR::CFG &TR_J9EstimateCodeSize::processBytecodeAndGenerateCFG(TR_CallTarget *cal
     bool unresolvedSymbolsAreCold = comp()->notYetRunMeansCold();
 
     TR_ByteCodeInfo newBCInfo;
+    static bool zeroMem = feGetEnv("zeroMem") != NULL;
+    if (zeroMem)
+        memset(&newBCInfo, 0, sizeof(TR_ByteCodeInfo));
     newBCInfo.setDoNotProfile(0);
     if (_mayHaveVirtualCallProfileInfo)
         newBCInfo.setCallerIndex(comp()->getCurrentInlinedSiteIndex());
@@ -1297,6 +1300,9 @@ bool TR_J9EstimateCodeSize::realEstimateCodeSize(TR_CallTarget *calltarget, TR_C
         _recursionDepth, calltarget, callerName, _analyzedSize, _realSize, _sizeThreshold);
 
     TR_ByteCodeInfo newBCInfo;
+    static bool zeroMem = feGetEnv("zeroMem") != NULL;
+    if (zeroMem)
+        memset(&newBCInfo, 0, sizeof(TR_ByteCodeInfo));
     newBCInfo.setDoNotProfile(0);
     TR::ResolvedMethodSymbol *methodSymbol
         = TR::ResolvedMethodSymbol::create(comp()->trHeapMemory(), calltarget->_calleeMethod, comp());
