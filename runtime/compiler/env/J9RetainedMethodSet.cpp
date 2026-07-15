@@ -209,8 +209,8 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     return *(T *)(bcStart + (bcIndex + offset));
 }
 
-static uint8_t loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
-    const char *instrName = "unknown instruction", bool printBCIndex=false)
+static uint8_t loadBc2(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
+    const char *instrName = "unknown instruction")
 {
     // static bool guardVol = feGetEnv("guardVol") != NULL;
     // volatile uint32_t tempBCIndex = 0;
@@ -228,7 +228,7 @@ static uint8_t loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, u
         (int32_t)sizeof(uint8_t), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
         m->signatureLength(), m->signatureChars());
 
-    return *(uint8_t)(bcStart + (bcIndex + offset));
+    return *(uint8_t *)(bcStart + (bcIndex + offset));
 }
 
 J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCodeInfo bci)
@@ -382,7 +382,7 @@ J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCo
 //      return this;
 // }
     TR_J9ByteCode bcOp
-        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc<uint8_t>(caller, bcStart, bcSize, bcIndex, 0, "unknown instruction"));
+        = TR_J9ByteCodeIterator::convertOpCodeToByteCodeEnum(loadBc2(caller, bcStart, bcSize, bcIndex));
 
     switch (bcOp) {
         case J9BCinvokevirtual:
