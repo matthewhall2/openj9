@@ -1786,7 +1786,8 @@ void J9::X86::PrivateLinkage::buildDirectCall(TR::SymbolReference *methodSymRef,
             oolBranchOp = OP::JMP4; // go to J2I path unconditionally
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
-        Inst_Label(oolBranchOp, callNode, snippetLabel, cg());
+        TR::Instruction *interpreterCallInstr = Inst_Label(oolBranchOp, callNode, snippetLabel, cg());
+        interpreterCallInstr->setNeedsGCMap(site.getPreservedRegisterMask());
 
         // The method is compiled - call through register to JIT entry point
         Inst_RegMem(OP::L4RegMem, callNode,
