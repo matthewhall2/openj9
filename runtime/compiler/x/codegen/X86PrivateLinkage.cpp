@@ -1785,7 +1785,8 @@ void J9::X86::PrivateLinkage::buildDirectCall(TR::SymbolReference *methodSymRef,
         if (cg()->stressJitDispatchJ9MethodJ2I())
             oolBranchOp = OP::JMP4; // go to J2I path unconditionally
 
-        Inst_Label(oolBranchOp, callNode, interpreterCallLabel, cg());
+        TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
+        Inst_Label(oolBranchOp, callNode, snippetLabel, cg());
 
         // The method is compiled - call through register to JIT entry point
         Inst_RegMem(OP::L4RegMem, callNode,
@@ -1800,15 +1801,15 @@ void J9::X86::PrivateLinkage::buildDirectCall(TR::SymbolReference *methodSymRef,
 
         // But if the method is interpreted, call through a call snippet instead.
         // The snippet will store arguments to the stack and do a J2I transition.
-        TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
-        TR::SymbolReference *labelSymRef
-            = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
+        
+        // TR::SymbolReference *labelSymRef
+        //     = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
-        TR_OutlinedInstructionsGenerator og(interpreterCallLabel, callNode, cg());
-        TR::Instruction *interpreterCallInstr = Inst_ImmSym(OP::CALLImm4, callNode, 0, labelSymRef, cg());
-        interpreterCallInstr->setNeedsGCMap(site.getPreservedRegisterMask());
-        Inst_Label(OP::JMP4, callNode, doneLabel, cg());
-        og.endOutlinedInstructionSequence();
+        // TR_OutlinedInstructionsGenerator og(interpreterCallLabel, callNode, cg());
+        // TR::Instruction *interpreterCallInstr = Inst_ImmSym(OP::CALLImm4, callNode, 0, labelSymRef, cg());
+        // interpreterCallInstr->setNeedsGCMap(site.getPreservedRegisterMask());
+        // Inst_Label(OP::JMP4, callNode, doneLabel, cg());
+        // og.endOutlinedInstructionSequence();
 
         TR::Snippet *snippet = new (trHeapMemory()) TR::X86CallSnippet(cg(), callNode, snippetLabel, false);
 
