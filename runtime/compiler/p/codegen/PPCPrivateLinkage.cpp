@@ -2805,7 +2805,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
         // slowCallOOL->swapInstructionListsWithCompilation();
 
-        generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
         // test if compiled
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ld, callNode, scratchReg,
