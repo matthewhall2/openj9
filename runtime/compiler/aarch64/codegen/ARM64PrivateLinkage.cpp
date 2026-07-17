@@ -1097,7 +1097,8 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
                         dependencies->addPostCondition(resultReg, properties.getIntegerReturnRegister(0));
                     } else {
                         if (isJitDispatchJ9Method) {
-                            dependencies->addPreCondition(argRegister, specialArgReg);
+                            TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
+                            //dependencies->addPreCondition(argRegister, specialArgReg);
                             cg()->decReferenceCount(child);
                         } else {
                             TR::addDependency(dependencies, argRegister, specialArgReg, TR_GPR, cg());
@@ -1271,13 +1272,13 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
-        preDeps->setNumPostConditions(0, trMemory());
-        preDeps->setAddCursorForPost(0);
+        // TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
+        // preDeps->setNumPostConditions(0, trMemory());
+        // preDeps->setAddCursorForPost(0);
 
-        TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
-        postDeps->setNumPreConditions(0, trMemory());
-        postDeps->setAddCursorForPre(0);
+        // TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
+        // postDeps->setNumPreConditions(0, trMemory());
+        // postDeps->setAddCursorForPre(0);
 
 
 
@@ -1289,23 +1290,23 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
-        TR_ARM64OutOfLineCodeSection *slowCallOOL
-            = new (trHeapMemory()) TR_ARM64OutOfLineCodeSection(oolLabel, doneLabel, cg());
-        cg()->getARM64OutOfLineCodeSectionList().push_front(slowCallOOL);
-        slowCallOOL->swapInstructionListsWithCompilation();
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
-        generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-        slowCallOOL->swapInstructionListsWithCompilation();
+        // TR_ARM64OutOfLineCodeSection *slowCallOOL
+        //     = new (trHeapMemory()) TR_ARM64OutOfLineCodeSection(oolLabel, doneLabel, cg());
+        // cg()->getARM64OutOfLineCodeSectionList().push_front(slowCallOOL);
+        // slowCallOOL->swapInstructionListsWithCompilation();
+        // generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
+        // gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+        // gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
+        // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+        // slowCallOOL->swapInstructionListsWithCompilation();
 
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
         // test if compiled
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurx, callNode, scratchReg,
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
         // jump to snippet if interpreted (lsb of J9Method::extra is 1 if interpreted)
-        gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, oolLabel);
+        gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, snippetLabel);
         gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         // compiled - jump to jit entry point
