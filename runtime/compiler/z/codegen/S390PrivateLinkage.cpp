@@ -3284,7 +3284,7 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
 
     if (callNode->isJitDispatchJ9MethodCall(comp())) {
         specialArgReg = getJ9MethodArgumentRegister();
-        child =allNode->getChild(from);
+        child = callNode->getChild(from);
         TR::Register *specialArg = cg()->evaluate(child);
         dependencies->addPreCondition(specialArg, specialArgReg);
         dependencies->addPostCondition(specialArg, specialArgReg);
