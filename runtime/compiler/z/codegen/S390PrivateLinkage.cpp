@@ -2427,8 +2427,11 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        // TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
-        //     dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+        TR::RegisterDependencyConditions *preDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            dependencies->getPreConditions(), NULL, dependencies->getAddCursorForPre(), 0, cg());
+
+        TR::RegisterDependencyConditions *postDeps = new (trHeapMemory()) TR::RegisterDependencyConditions(
+            NULL, dependencies->getPostConditions(), 0, dependencies->getAddCursorForPost(), cg());
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2437,8 +2440,6 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
             TR::S390J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize, true);
         snippet->gcMap().setGCRegisterMask(getPreservedRegisterMapForGC());
         cg()->addSnippet(snippet);
-        TR::SymbolReference *labelSymRef
-            = new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel);
 
         // TR_S390OutOfLineCodeSection *snippetCall
         //     = new (cg()->trHeapMemory()) TR_S390OutOfLineCodeSection(interpreterCallLabel, doneLabel, cg());
@@ -2455,7 +2456,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
         // snippetCall->swapInstructionListsWithCompilation();
 
-        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
+        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
         // fetch J9Method::extra field
         generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
@@ -2481,7 +2482,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
@@ -3379,7 +3380,13 @@ TR::Register *J9::Z::PrivateLinkage::buildDirectDispatch(TR::Node *callNode)
 
     // setup arguments
     // force left to right for jitDispatchJ9Method
+    //killMask &= ~(0x1L << REGINDEX(i));
+    // int64_t killMask = -1;
+    // if (callNode->isJitDispatchJ9MethodCall(comp())) {
+    //     killMask &= ~(0x1L << REGINDEX(getJ9MethodArgumentRegister()));
+    // }
     bool passArgsRightToLeft = callNode->isJitDispatchJ9MethodCall(comp()) ? false : true;
+
     argSize = buildArgs(callNode, dependencies, false, -1, vftReg, true, passArgsRightToLeft);
     buildDirectCall(callNode, callSymRef, dependencies, argSize);
 
