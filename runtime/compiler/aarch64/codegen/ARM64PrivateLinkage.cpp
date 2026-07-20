@@ -1266,11 +1266,11 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             = dependencies->searchPostConditionRegister(getProperties().getVTableIndexArgumentRegister());
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getProperties().getJ9MethodArgumentRegister());
 
-        TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
+      //  TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
-        startICFLabel->setStartInternalControlFlow();
-        doneLabel->setEndInternalControlFlow();
+        // startICFLabel->setStartInternalControlFlow();
+        // doneLabel->setEndInternalControlFlow();
 
         // TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
         // preDeps->setNumPostConditions(0, trMemory());
@@ -1299,14 +1299,14 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
+     //   generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
         // test if compiled
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurx, callNode, scratchReg,
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
         // jump to snippet if interpreted (lsb of J9Method::extra is 1 if interpreted)
         gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, oolLabel);
-        //gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
+      //  gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
@@ -1317,10 +1317,10 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // sign extend
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
-        gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
+        gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg, dependencies);
+       // gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+      //  generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
