@@ -2456,7 +2456,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         // gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
         // snippetCall->swapInstructionListsWithCompilation();
 
-        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel, preDeps);
+        generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
         // fetch J9Method::extra field
         generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, scratchReg,
             generateS390MemoryReference(j9MethodReg, offsetof(J9Method, extra), cg()));
@@ -2482,7 +2482,7 @@ TR::Instruction *J9::Z::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::
         TR::Register *regRA = dependencies->searchPostConditionRegister(getReturnAddressRegister());
         gcPoint = generateRRInstruction(cg(), TR::InstOpCode::BASR, callNode, regRA, scratchReg);
         gcPoint->setNeedsGCMap(getPreservedRegisterMapForGC());
-        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, postDeps);
+        return generateS390LabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
     }
 
     if (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
