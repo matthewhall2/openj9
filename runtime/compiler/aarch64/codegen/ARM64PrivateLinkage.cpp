@@ -1178,6 +1178,9 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         }
     }
 
+    if (!dependencies->searchPreConditionRegister(getProperties().getVTableIndexArgumentRegister()) && isJitDispatchJ9Method)
+        TR::addDependency(dependencies, NULL, getProperties().getVTableIndexArgumentRegister(), TR_GPR, cg());
+
     for (int32_t i = TR::RealRegister::FirstGPR; i <= TR::RealRegister::LastGPR; ++i) {
         TR::RealRegister::RegNum realReg = (TR::RealRegister::RegNum)i;
         if (properties.getPreserved(realReg) || (properties.getRegisterFlags(realReg) & ARM64_Reserved))
@@ -1296,6 +1299,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         slowCallOOL->swapInstructionListsWithCompilation();
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
