@@ -1275,16 +1275,6 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
-        // TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
-        // preDeps->setNumPostConditions(0, trMemory());
-        // preDeps->setAddCursorForPost(0);
-
-        // TR::RegisterDependencyConditions *postDeps = dependencies->clone(cg());
-        // postDeps->setNumPreConditions(0, trMemory());
-        // postDeps->setAddCursorForPre(0);
-
-
-
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
             = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
@@ -1305,12 +1295,17 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
 
        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
+       TR_ASSERT_FATAL(!j9MethodReg->containsCollectedReference(), "j9 method reg contains collected reference\n");
+       TR_ASSERT_FATAL(!scratchReg->containsCollectedReference(), "scractReg contains collected reference\n");
+
+       TR_ASSERT_FATAL(!j9MethodReg->containsInternalPointer(), "j9 method reg contains internal pointer\n");
+       TR_ASSERT_FATAL(!scratchReg->containsInternalPointer(), "scractReg contains internal pointer\n");
         // test if compiled
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurx, callNode, scratchReg,
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
         // jump to snippet if interpreted (lsb of J9Method::extra is 1 if interpreted)
         gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, oolLabel);
-      //  gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
+        //gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
