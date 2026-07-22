@@ -3288,7 +3288,7 @@ void J9::Z::PrivateLinkage::addSpecialRegDepsForBuildArgs(TR::Node *callNode,
         child = callNode->getChild(from);
         TR::Register *specialArg = cg()->evaluate(child);
         dependencies->addPreCondition(specialArg, specialArgReg);
-//dependencies->addPostCondition(specialArg, specialArgReg);
+        dependencies->addPostCondition(specialArg, specialArgReg);
         cg()->decReferenceCount(child);
         from += step;
         return;
