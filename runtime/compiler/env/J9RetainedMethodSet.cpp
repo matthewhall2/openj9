@@ -209,6 +209,7 @@ static T loadBc(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_
     return *(T *)(bcStart + (bcIndex + offset));
 }
 
+#pragma optimize("", off )
 static uint8_t loadBc2(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, uint32_t bcIndex, uint32_t offset = 0,
     const char *instrName = "unknown instruction")
 {
@@ -217,19 +218,37 @@ static uint8_t loadBc2(TR_ResolvedMethod *m, uint8_t *bcStart, uint32_t bcSize, 
     // if (guardVol) {
     //     tempBCIndex = bcIndex;
     // }
-
+  //volatile uint32_t tempIndex = bcIndex;
+//static unsigned long count = 0;
+//static unsigned long count = 0;
+//unsigned long tempCount = 0;
+//count++;
 //     static bool printInfo = feGetEnv("printInfo") != NULL;
 // if (printBCIndex && printInfo) {
 //     printf("in loadbc: bc index %d\n", tempBCIndex);
 // }
 
-    TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(uint8_t) <= bcSize,
-        "bc index %d+%d out of range (%d) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcSize,
+   // if (bcIndex + offset < bcSize && bcIndex + offset + sizeof(uint8_t) <= bcSize) {
+        //do nothing
+   // } else {
+       // printf("run count: %lu\n", count);
+     //   tempCount = count;
+       // count = 0;
+        //TR::Compiler->debug.breakPoint();
+        TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(uint8_t) <= bcSize, "bc index %u+%u (0x%08x + %u) out of range (%u) for %d bytes in %s within %.*s.%.*s%.*s", bcIndex, offset, bcIndex, offset, bcSize,
         (int32_t)sizeof(uint8_t), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
         m->signatureLength(), m->signatureChars());
+  //  }
+
+    // TR_ASSERT_FATAL(bcIndex + offset < bcSize && bcIndex + offset + sizeof(uint8_t) <= bcSize,
+    //     "(run %lu) bc index %u+%u (0x%08x + %u) out of range (%u) for %d bytes in %s within %.*s.%.*s%.*s", count, bcIndex, offset, bcIndex, offset, bcSize,
+    //     (int32_t)sizeof(uint8_t), instrName, m->classNameLength(), m->classNameChars(), m->nameLength(), m->nameChars(),
+    //     m->signatureLength(), m->signatureChars());
 
     return *(uint8_t *)(bcStart + (bcIndex + offset));
 }
+#pragma optimize("", on )
+
 
 J9::RetainedMethodSet *J9::RetainedMethodSet::withLinkedCalleeAttested(TR_ByteCodeInfo bci)
 {
