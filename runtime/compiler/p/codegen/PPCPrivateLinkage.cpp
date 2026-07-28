@@ -2760,7 +2760,7 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
     if (!isJitDispatchJ9Method
         && (callSymbol->isJITInternalNative()
             || (!callSymRef->isUnresolved() && !callSymbol->isInterpreted()
-                && ((forceUnresolvedDispatch && callSymbol->isHelper()) || !forceUnresolvedDispatch)))) {
+                && (callSymbol->isHelper() || !forceUnresolvedDispatch)))) {
         gcPoint = generateDepImmSymInstruction(cg(), TR::InstOpCode::bl, callNode,
             myself ? 0 : (uintptr_t)callSymbol->getMethodAddress(), dependencies,
             callSymRef ? callSymRef : callNode->getSymbolReference());
@@ -2774,13 +2774,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
-        TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
-
-        // TR::RegisterDependencyConditions *preDeps = dependencies->clone(cg());
-        // preDeps->setNumPostConditions(0, trMemory());
-        // preDeps->setAddCursorForPost(0);
 
         TR::LabelSymbol *snippetLabel = generateLabelSymbol(cg());
         TR::SymbolReference *helperRef
@@ -2789,16 +2784,6 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::PPCArgFlushHelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
-
-        // TR_PPCOutOfLineCodeSection *slowCallOOL
-        //     = new (trHeapMemory()) TR_PPCOutOfLineCodeSection(oolLabel, doneLabel, cg());
-        // cg()->getPPCOutOfLineCodeSectionList().push_front(slowCallOOL);
-        // slowCallOOL->swapInstructionListsWithCompilation();
-        // generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        // gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        // gcPoint->PPCNeedsGCMap(regMapMask);
-        // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
-        // slowCallOOL->swapInstructionListsWithCompilation();
 
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
@@ -2809,23 +2794,19 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::andi_r, callNode, scratchReg2, scratchReg, 1);
 
         if (cg()->stressJitDispatchJ9MethodJ2I()) {
-            gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+            generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
         } else {
-            gcPoint = generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetLabel, cndReg);
+            generateConditionalBranchInstruction(cg(), TR::InstOpCode::bne, callNode, snippetLabel, cndReg);
         }
-        gcPoint->PPCNeedsGCMap(regMapMask);
 
         // compiled - jump to jit entry point
         generateTrg1MemInstruction(cg(), TR::InstOpCode::lwz, callNode, j9MethodReg,
-            TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4,
-                TR::Compiler->om.sizeofReferenceAddress()));
+            TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4, 4);
         generateShiftRightLogicalImmediate(cg(), callNode, j9MethodReg, j9MethodReg, 16);
-        generateSignExtendInstruction(callNode, j9MethodReg, j9MethodReg, cg(), 4);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg2, scratchReg, j9MethodReg);
         generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg2);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
-        cg()->stopUsingRegister(scratchReg2);
 
         generateDepLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
         return;

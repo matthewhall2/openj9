@@ -301,10 +301,20 @@ uint8_t *TR::PPCArgFlushHelperCallSnippet::emitSnippetBody()
     buffer = TR::PPCCallSnippet::flushArgumentsToStack(buffer, this->getNode(), this->getSizeOfArguments(), cg());
 
     if (this->getNode()->isJitDispatchJ9MethodCall(cg()->comp())) {
+        TR::RealRegister *j9MethodReg = cg()->machine()->getRealRegister(TR::RealRegister::gr11);
+        TR::RealRegister *interpreterReg = cg()->machine()->getRealRegister(TR::RealRegister::gr3);
+
+        TR::InstOpCode opcode;
+        opcode.setOpCodeValue(TR::InstOpCode::or_r);
+        buffer = opcode.copyBinaryToBuffer(buffer);
+        interpreterReg->setRegisterFieldRA((uint32_t *)buffer);
+        j9MethodReg->setRegisterFieldRS((uint32_t *)buffer);
+        j9MethodReg->setRegisterFieldRB((uint32_t *)buffer);
+
         // move value in r11 to r3 for the interpreter
         // or     r11   r3    r11    444        0
         // 011111 01011 00011 01011  0110111100 0
-        *(int32_t *)buffer = 0x7D635B78;
+       // *(int32_t *)buffer = 0x7D635B78;
         buffer += 4;
     }
 
