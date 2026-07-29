@@ -1260,7 +1260,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         auto regMapMask = getProperties().getPreservedRegisterMapForGC();
 
         TR::Register *scratchReg
-            = dependencies->searchPostConditionRegister(getProperties().getVTableIndexArgumentRegister());
+            = dependencies->searchPostConditionRegister(TR::RealRegister::x12);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getProperties().getJ9MethodArgumentRegister());
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
@@ -1289,11 +1289,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
 
        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, startICFLabel);
 
-       TR_ASSERT_FATAL(!j9MethodReg->containsCollectedReference(), "j9 method reg contains collected reference\n");
-       TR_ASSERT_FATAL(!scratchReg->containsCollectedReference(), "scractReg contains collected reference\n");
-
-       TR_ASSERT_FATAL(!j9MethodReg->containsInternalPointer(), "j9 method reg contains internal pointer\n");
-       TR_ASSERT_FATAL(!scratchReg->containsInternalPointer(), "scractReg contains internal pointer\n");
+      
         // test if compiled
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurx, callNode, scratchReg,
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
@@ -1308,12 +1304,18 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // extract offset (upper 2 bytes)
         generateLogicalShiftRightImmInstruction(cg(), callNode, j9MethodReg, j9MethodReg, 16, false);
         // sign extend
-        generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
+       // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
         gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
         gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
+
+         TR_ASSERT_FATAL(!j9MethodReg->containsCollectedReference(), "j9 method reg contains collected reference\n");
+       TR_ASSERT_FATAL(!scratchReg->containsCollectedReference(), "scractReg contains collected reference\n");
+
+       TR_ASSERT_FATAL(!j9MethodReg->containsInternalPointer(), "j9 method reg contains internal pointer\n");
+       TR_ASSERT_FATAL(!scratchReg->containsInternalPointer(), "scractReg contains internal pointer\n");
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
