@@ -1260,7 +1260,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         auto regMapMask = getProperties().getPreservedRegisterMapForGC();
 
         TR::Register *scratchReg
-            = dependencies->searchPostConditionRegister(TR::RealRegister::x12);
+            = dependencies->searchPreConditionRegister(TR::RealRegister::x12);
         TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getProperties().getJ9MethodArgumentRegister());
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
