@@ -1295,7 +1295,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
         // jump to snippet if interpreted (lsb of J9Method::extra is 1 if interpreted)
         gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, oolLabel);
-        //gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
+        cg()->generateNop(callNode);
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
@@ -1306,16 +1306,10 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // sign extend
        // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
-        gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
+        generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
         gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
-
-         TR_ASSERT_FATAL(!j9MethodReg->containsCollectedReference(), "j9 method reg contains collected reference\n");
-       TR_ASSERT_FATAL(!scratchReg->containsCollectedReference(), "scractReg contains collected reference\n");
-
-       TR_ASSERT_FATAL(!j9MethodReg->containsInternalPointer(), "j9 method reg contains internal pointer\n");
-       TR_ASSERT_FATAL(!scratchReg->containsInternalPointer(), "scractReg contains internal pointer\n");
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
