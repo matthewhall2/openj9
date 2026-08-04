@@ -1283,7 +1283,6 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         slowCallOOL->swapInstructionListsWithCompilation();
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
@@ -1295,7 +1294,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
             TR::MemoryReference::createWithDisplacement(cg(), j9MethodReg, offsetof(J9Method, extra)));
         // jump to snippet if interpreted (lsb of J9Method::extra is 1 if interpreted)
         gcPoint = generateTestBitBranchInstruction(cg(), TR::InstOpCode::tbnz, callNode, scratchReg, 0, oolLabel);
-        cg()->generateNop(callNode);
+        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
@@ -1307,7 +1306,6 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
        // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
         generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
         return;
