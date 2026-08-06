@@ -347,7 +347,7 @@ J9::Power::PrivateLinkage::PrivateLinkage(TR::CodeGenerator *cg)
     _properties._computedCallTargetRegister
         = TR::RealRegister::gr0; // gr11 = interface, gr12 = virtual, so we need something else for computed
     _properties._vtableIndexArgumentRegister = TR::RealRegister::gr12;
-    _properties._j9methodArgumentRegister = TR::RealRegister::gr11; // TODO:JSR292: Confirm
+    _properties._j9methodArgumentRegister = TR::RealRegister::gr3; // TODO:JSR292: Confirm
 }
 
 const TR::PPCLinkageProperties &J9::Power::PrivateLinkage::getProperties() { return _properties; }
@@ -1422,7 +1422,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     switch (callSymbol->getMandatoryRecognizedMethod()) {
         // Node: special long args are still only passed in one GPR
         case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method: // old MH implementation
-            specialArgReg = TR::RealRegister::gr11;
+            specialArgReg = TR::RealRegister::gr3;
             // Other args go in memory
             numIntArgRegs = 0;
             numFloatArgRegs = 0;
