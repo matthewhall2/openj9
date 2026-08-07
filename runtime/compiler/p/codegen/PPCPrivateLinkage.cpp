@@ -1442,7 +1442,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
 
     if (specialArgReg != TR::RealRegister::NoReg) {
         logprintf(trace, log, "Special arg %s in %s\n",
-            comp->getDebug()->getName(callNode->getChild(firstRealArgIndex)),
+            comp->getDebug()->getName(callNode->getChild(callNode->getChild(from))),
             comp->getDebug()->getName(cg()->machine()->getRealRegister(specialArgReg)));
 
         // Skip the special arg in the first loop
@@ -2811,8 +2811,8 @@ void J9::Power::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         generateTrg1MemInstruction(cg(), TR::InstOpCode::lwz, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4, 4));
         generateShiftRightLogicalImmediate(cg(), callNode, j9MethodReg, j9MethodReg, 16);
-        generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg, scratchReg, j9MethodReg);
-        generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg);
+        generateTrg1Src2Instruction(cg(), TR::InstOpCode::add, callNode, scratchReg2, scratchReg, j9MethodReg);
+        generateSrc1Instruction(cg(), TR::InstOpCode::mtctr, callNode, scratchReg2);
         gcPoint = generateInstruction(cg(), TR::InstOpCode::bctrl, callNode);
         gcPoint->PPCNeedsGCMap(regMapMask);
 
