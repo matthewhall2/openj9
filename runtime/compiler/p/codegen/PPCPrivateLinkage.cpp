@@ -1442,7 +1442,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
 
     if (specialArgReg != TR::RealRegister::NoReg) {
         logprintf(trace, log, "Special arg %s in %s\n",
-            comp->getDebug()->getName(callNode->getChild(callNode->getChild(from))),
+            comp->getDebug()->getName(callNode->getChild(from)),
             comp->getDebug()->getName(cg()->machine()->getRealRegister(specialArgReg)));
 
         // Skip the special arg in the first loop
