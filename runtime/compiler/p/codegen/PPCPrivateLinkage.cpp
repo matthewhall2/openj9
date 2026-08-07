@@ -1423,7 +1423,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         // Node: special long args are still only passed in one GPR
         case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method: // old MH implementation
             specialArgReg = TR::RealRegister::gr3;
-            // Other args go in memory
+            // Other args go in memory 
             numIntArgRegs = 0;
             numFloatArgRegs = 0;
             break;
