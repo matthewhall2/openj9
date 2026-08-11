@@ -590,7 +590,7 @@ def set_node(job_type) {
  */
 def set_release() {
     RELEASE = buildspec_manager.getSpec(SPEC).getScalarField("release", SDK_VERSION)
-    println("Realse is " + RELEASE)
+    echo "RELEASE:'${RELEASE}'"
 }
 
 /*
