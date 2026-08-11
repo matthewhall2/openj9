@@ -590,6 +590,7 @@ def set_node(job_type) {
  */
 def set_release() {
     RELEASE = buildspec_manager.getSpec(SPEC).getScalarField("release", SDK_VERSION)
+    println("Realse is " + RELEASE)
 }
 
 /*
@@ -620,8 +621,11 @@ def set_build_variables() {
     // used later (Java Version check, Archive stage, diagnostics) resolve to the
     // correct directory.
     def debugLevelMatcher = (EXTRA_CONFIGURE_OPTIONS =~ /--with-debug-level=(\S+)/)
-    if (debugLevelMatcher.find()) {          // explicitly call find(), returns boolean
-        def debugLevel = debugLevelMatcher.group(1)  // use .group() on the already-found match
+    if (debugLevelMatcher.find()) {
+        def debugLevel = debugLevelMatcher.group(1)
+        if (debugLevel != 'release') {
+            RELEASE = RELEASE.replaceAll(/-release$/, "-${debugLevel}")
+        }
     }
 
     // set variables for the build environment configuration
