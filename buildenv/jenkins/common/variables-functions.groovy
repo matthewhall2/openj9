@@ -620,13 +620,15 @@ def set_build_variables() {
     // that debug level instead of 'release'.  Adjust RELEASE so that the paths
     // used later (Java Version check, Archive stage, diagnostics) resolve to the
     // correct directory.
-    def debugLevelMatcher = (EXTRA_CONFIGURE_OPTIONS =~ /--with-debug-level=(\S+)/)
+    echo "EXTRA_CONFIGURE_OPTIONS:'${EXTRA_CONFIGURE_OPTIONS}'"
+    def debugLevelMatcher = ((EXTRA_CONFIGURE_OPTIONS ?: '') =~ /--with-debug-level=(\S+)/)
     if (debugLevelMatcher.find()) {
         def debugLevel = debugLevelMatcher.group(1)
         if (debugLevel != 'release') {
             RELEASE = RELEASE.replaceAll(/-release$/, "-${debugLevel}")
         }
     }
+    echo "RELEASE (after debug-level adjustment):'${RELEASE}'"
 
     // set variables for the build environment configuration
     // check job parameters, if not provided default to variables file
@@ -743,6 +745,8 @@ def set_sdk_versions() {
     echo "FULL_SDK_VERSION:'${FULL_SDK_VERSION}'"
     echo "JAVA_RELEASE:'${JAVA_RELEASE}'"
     echo "JAVA_SUB_RELEASE:'${JAVA_SUB_RELEASE}'"
+    echo "sanity echo"
+    echo "RELEASE:'${RELEASE}'"
 }
 
 def get_date() {
