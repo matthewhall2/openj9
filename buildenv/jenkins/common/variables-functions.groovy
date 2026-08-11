@@ -614,6 +614,19 @@ def set_build_variables() {
     set_build_extra_options()
     set_sdk_impl()
 
+    // If the configure options request a non-release debug level (e.g. fastdebug
+    // or slowdebug), the OpenJDK build system names the output directory using
+    // that debug level instead of 'release'.  Adjust RELEASE so that the paths
+    // used later (Java Version check, Archive stage, diagnostics) resolve to the
+    // correct directory.
+    def debugLevelMatch = (EXTRA_CONFIGURE_OPTIONS =~ /--with-debug-level=(\S+)/)
+    if (debugLevelMatch) {
+        def debugLevel = debugLevelMatch[0][1]
+        if (debugLevel != 'release') {
+            RELEASE = RELEASE.replaceAll(/-release$/, "-${debugLevel}")
+        }
+    }
+
     // set variables for the build environment configuration
     // check job parameters, if not provided default to variables file
     BUILD_ENV_VARS = params.BUILD_ENV_VARS
