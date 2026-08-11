@@ -619,12 +619,9 @@ def set_build_variables() {
     // that debug level instead of 'release'.  Adjust RELEASE so that the paths
     // used later (Java Version check, Archive stage, diagnostics) resolve to the
     // correct directory.
-    def debugLevelMatch = (EXTRA_CONFIGURE_OPTIONS =~ /--with-debug-level=(\S+)/)
-    if (debugLevelMatch) {
-        def debugLevel = debugLevelMatch[0][1]
-        if (debugLevel != 'release') {
-            RELEASE = RELEASE.replaceAll(/-release$/, "-${debugLevel}")
-        }
+    def debugLevelMatcher = (EXTRA_CONFIGURE_OPTIONS =~ /--with-debug-level=(\S+)/)
+    if (debugLevelMatcher.find()) {          // explicitly call find(), returns boolean
+        def debugLevel = debugLevelMatcher.group(1)  // use .group() on the already-found match
     }
 
     // set variables for the build environment configuration
