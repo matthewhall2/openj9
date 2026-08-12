@@ -320,9 +320,9 @@ x86-64_linux:
     arch: 'x64'
     os: 'linux'
   release:
-    default: 'linux-x86_64-server-release'
-    8: 'linux-x86_64-normal-server-release'
-    11: 'linux-x86_64-normal-server-release'
+    default: 'linux-x86_64-server-fastdebug'
+    8: 'linux-x86_64-normal-server-fastdebug'
+    11: 'linux-x86_64-normal-server-fastdebug'
   node_labels:
     build:
       default: 'ci.role.build && hw.arch.x86 && sw.tool.docker'
