@@ -1381,12 +1381,11 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     const TR::PPCLinkageProperties &properties = getProperties();
     TR::PPCMemoryArgument *pushToMemory = NULL;
     TR::Register *tempRegister;
-    int32_t argIndex = 0, memArgs = 0, from, to, step;
+    int32_t argIndex = 0, memArgs = 0, specialArgIndex = -1, firstRealArgIndex, lastArgIndex, step;
     int32_t argSize = -getOffsetToFirstParm(), totalSize = 0;
     uint32_t numIntegerArgs = 0;
     uint32_t numFloatArgs = 0;
     uint32_t firstExplicitArg = 0;
-    uint32_t firstArgumentChild = callNode->getFirstArgumentIndex();
     TR::Node *child;
     void *smark;
     TR::DataType resType = callNode->getType();
@@ -1402,12 +1401,12 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         !callNode->getSymbolReference()->isOSRInductionHelper() && !isJitDispatchJ9Method;
 
     if (rightToLeft) {
-        from = callNode->getNumChildren() - 1;
-        to = callNode->getFirstArgumentIndex();
+        firstRealArgIndex = callNode->getNumChildren() - 1;
+        lastArgIndex = callNode->getFirstArgumentIndex();
         step = -1;
     } else {
-        from = callNode->getFirstArgumentIndex();
-        to = callNode->getNumChildren() - 1;
+        firstRealArgIndex = callNode->getFirstArgumentIndex();
+        lastArgIndex = callNode->getNumChildren() - 1;
         step = 1;
     }
 
@@ -1442,11 +1441,12 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
 
     if (specialArgReg != TR::RealRegister::NoReg) {
         logprintf(trace, log, "Special arg %s in %s\n",
-            comp->getDebug()->getName(callNode->getChild(from)),
+            comp->getDebug()->getName(callNode->getChild(firstRealArgIndex)),
             comp->getDebug()->getName(cg()->machine()->getRealRegister(specialArgReg)));
 
         // Skip the special arg in the first loop
-        from += step;
+        specialArgIndex = firstRealArgIndex;
+        firstRealArgIndex += step;
     }
 
     // C helpers have an implicit first argument (the VM thread) that we have to account for
@@ -1458,7 +1458,7 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
 
     // if there is a special child, it will not be processed in this loop
     // special children are not arguments, but may be used for calling the J9Method
-    for (int32_t i = from; (rightToLeft && i >= to) || (!rightToLeft && i <= to);
+    for (int32_t i = firstRealArgIndex; (rightToLeft && i >= lastArgIndex) || (!rightToLeft && i <= lastArgIndex);
          i += step) {
         child = callNode->getChild(i);
         switch (child->getDataType()) {
@@ -1507,8 +1507,6 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
         pushToMemory = new (trStackMemory()) TR::PPCMemoryArgument[memArgs];
     }
 
-    if (specialArgReg)
-        from -= step; // we do want to process special args in the following loop
 
     numIntegerArgs = 0;
     numFloatArgs = 0;
@@ -1529,14 +1527,14 @@ int32_t J9::Power::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     TR::Register *j9MethodReg = NULL; // for jitDispatchJ9Method
     // Helper linkage preserves all argument registers except the return register
     // TODO: C helper linkage does not, this code needs to make sure argument registers are killed in post dependencies
-   // int32_t specialOrFirstArgIndex = (specialArgIndex != -1 ? specialArgIndex : firstRealArgIndex);
-   // int32_t firstArgumentChild = callNode->getFirstArgumentIndex();
-    for (int32_t i = from; (rightToLeft && i >= to) || (!rightToLeft && i <= to);
+   int32_t specialOrFirstArgIndex = (specialArgIndex != -1 ? specialArgIndex : firstRealArgIndex);
+   int32_t firstArgumentChild = callNode->getFirstArgumentIndex();
+    for (int32_t i = specialOrFirstArgIndex; (rightToLeft && i >= lastArgIndex) || (!rightToLeft && i <= lastArgIndex);
          i += step) {
         TR::MemoryReference *mref = NULL;
         TR::Register *argRegister;
         child = callNode->getChild(i);
-        bool isSpecialArg = (i == from && specialArgReg != TR::RealRegister::NoReg);
+        bool isSpecialArg = (i == specialArgIndex);
         switch (child->getDataType()) {
             case TR::Int8:
             case TR::Int16:
