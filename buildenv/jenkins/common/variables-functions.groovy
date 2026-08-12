@@ -593,6 +593,11 @@ def set_release() {
     echo "RELEASE:'${RELEASE}'"
 }
 
+def set_release_fastDebug() {
+    RELEASE = buildspec_manager.getSpec(SPEC).getScalarField("fastdebug", SDK_VERSION)
+    echo "RELEASE:'${RELEASE}'"
+}
+
 /*
  * Set the JDK_FOLDER variable with the value provided in the variables file.
  */
@@ -625,7 +630,7 @@ def set_build_variables() {
     if (debugLevelMatcher.find()) {
         def debugLevel = debugLevelMatcher.group(1)
         if (debugLevel != 'release') {
-            RELEASE = RELEASE.replaceAll(/-release$/, "-${debugLevel}")
+            set_release_fastDebug()
         }
     }
     echo "RELEASE (after debug-level adjustment):'${RELEASE}'"
