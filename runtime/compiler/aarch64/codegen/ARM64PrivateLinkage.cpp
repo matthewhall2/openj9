@@ -182,7 +182,7 @@ J9::ARM64::PrivateLinkage::PrivateLinkage(TR::CodeGenerator *cg)
     _properties._framePointerRegister = TR::RealRegister::x29;
     _properties._computedCallTargetRegister = TR::RealRegister::x8;
     _properties._vtableIndexArgumentRegister = TR::RealRegister::x9;
-    _properties._j9methodArgumentRegister = TR::RealRegister::x10;
+    _properties._j9methodArgumentRegister = TR::RealRegister::x0;
 
 #if defined(OSX)
     // Volatile GPR (0-15) + FPR (0-31) + VFT Reg
@@ -978,7 +978,7 @@ int32_t J9::ARM64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node *callNode,
     }
 
     if (isJitDispatchJ9Method) {
-        specialArgReg = getProperties().getJ9MethodArgumentRegister();
+        specialArgReg = TR::RealRegister::x10;
     }
 
     if (specialArgReg != TR::RealRegister::NoReg) {
@@ -1261,7 +1261,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
 
         TR::Register *scratchReg
             = dependencies->searchPreConditionRegister(TR::RealRegister::x12);
-        TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(getProperties().getJ9MethodArgumentRegister());
+        TR::Register *j9MethodReg = dependencies->searchPreConditionRegister(TR::RealRegister::x10);
 
         TR::LabelSymbol *startICFLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
@@ -1284,6 +1284,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         slowCallOOL->swapInstructionListsWithCompilation();
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+     //   gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
@@ -1299,7 +1300,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // generateTestImmInstruction(cg(), callNode, scratchReg, 1, true, true);
         // generateConditionalBranchInstruction(cg(), callNode, compiledLabel, TR::CC_EQ);
       //  gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
+        //gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
@@ -1311,10 +1312,10 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         // sign extend
        // generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::sbfmx, callNode, j9MethodReg, j9MethodReg, 0x1F);
         generateTrg1Src2Instruction(cg(), TR::InstOpCode::addx, callNode, scratchReg, scratchReg, j9MethodReg);
-        generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
+        gcPoint = generateRegBranchInstruction(cg(), TR::InstOpCode::blr, callNode, scratchReg);
+        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
 
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, doneLabel, dependencies);
-        gcPoint->ARM64NeedsGCMap(cg(), regMapMask);
         return;
     } else {
         TR::LabelSymbol *label = generateLabelSymbol(cg());
