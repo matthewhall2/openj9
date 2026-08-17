@@ -1267,6 +1267,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::LabelSymbol *doneLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *oolLabel = generateLabelSymbol(cg());
         TR::LabelSymbol *compiledLabel = generateLabelSymbol(cg());
+        TR::LabelSymbol *oolDone = generateLabelSymbol(cg());
         startICFLabel->setStartInternalControlFlow();
         doneLabel->setEndInternalControlFlow();
 
@@ -1274,7 +1275,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::SymbolReference *helperRef
             = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
         TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory())
-            TR::ARM64J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+            TR::ARM64J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, oolDone, argSize);
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
@@ -1286,7 +1287,8 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
       //  gcPoint = generateImmSymInstruction(cg(), TR::InstOpCode::bl, callNode, 0, dependencies, new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel), interpCallSnippet);
      //   gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
         gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-     // generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
+        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolDone);
+        generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
@@ -1306,7 +1308,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
 
         // compiled - jump to jit entry point
         // get metadata (4 bytes)
-        generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
+        //generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, compiledLabel);
         generateTrg1MemInstruction(cg(), TR::InstOpCode::ldurw, callNode, j9MethodReg,
             TR::MemoryReference::createWithDisplacement(cg(), scratchReg, -4));
         // extract offset (upper 2 bytes)
