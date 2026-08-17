@@ -1274,7 +1274,7 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         TR::SymbolReference *helperRef
             = cg()->symRefTab()->findOrCreateRuntimeHelper(TR_j2iTransition, true, true, false);
         TR::Snippet *interpCallSnippet = new (cg()->trHeapMemory())
-            TR::ARM64J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, doneLabel, argSize);
+            TR::ARM64J9HelperCallSnippet(cg(), callNode, snippetLabel, helperRef, NULL, argSize);
         interpCallSnippet->gcMap().setGCRegisterMask(regMapMask);
         cg()->addSnippet(interpCallSnippet);
 
@@ -1283,8 +1283,10 @@ void J9::ARM64::PrivateLinkage::buildDirectCall(TR::Node *callNode, TR::SymbolRe
         cg()->getARM64OutOfLineCodeSectionList().push_front(slowCallOOL);
         slowCallOOL->swapInstructionListsWithCompilation();
         generateLabelInstruction(cg(), TR::InstOpCode::label, callNode, oolLabel);
-        gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
-     //   gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
+        gcPoint = generateImmSymInstruction(cg(), OP::bl, callNode, 0, dependencies, new (trHeapMemory()) TR::SymbolReference(comp()->getSymRefTab(), snippetLabel), interpCallSnippet);
+        gcPoint->ARM64NeedsGCMap(cg(), regMapMask); 
+      //  gcPoint = generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, snippetLabel);
+      generateLabelInstruction(cg(), TR::InstOpCode::b, callNode, doneLabel);
         // snippet itself branches back to doneLabel, no need for it here
         slowCallOOL->swapInstructionListsWithCompilation();
 
