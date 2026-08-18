@@ -345,7 +345,7 @@ private:
      *     }
      *     \endcode
      */
-    void process_jdk_internal_util_ArraysSupport_vectorizedMismatch(TR::TreeTop *treetop, TR::Node *node);
+    void process_jdk_internal_util_ArraysSupport_vectorizedMismatchInternal(TR::TreeTop *treetop, TR::Node *node);
     /** \brief
      *     Transforms java/lang/StrictMath.sqrt(D)D and java/lang/Math.sqrt(D)D into a CodeGen inlined function with
      * equivalent semantics.

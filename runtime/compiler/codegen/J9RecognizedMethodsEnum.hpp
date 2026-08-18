@@ -323,7 +323,7 @@ FirstJ9Method = LastOMRMethod + 1,
     jdk_internal_misc_Unsafe_getLongUnaligned, jdk_internal_misc_Unsafe_putCharUnaligned,
     jdk_internal_misc_Unsafe_putShortUnaligned, jdk_internal_misc_Unsafe_putIntUnaligned,
     jdk_internal_misc_Unsafe_putLongUnaligned, jdk_internal_loader_NativeLibraries_load,
-    jdk_internal_util_ArraysSupport_vectorizedMismatch, jdk_internal_util_ArraysSupport_vectorizedHashCode,
+    jdk_internal_util_ArraysSupport_vectorizedMismatchInternal, jdk_internal_util_ArraysSupport_vectorizedHashCode,
     jdk_internal_util_Preconditions_checkIndex,
 
     FirstVectorMethod, jdk_internal_vm_vector_VectorSupport_load = FirstVectorMethod,

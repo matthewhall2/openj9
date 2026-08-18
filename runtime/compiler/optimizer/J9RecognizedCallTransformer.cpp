@@ -1542,7 +1542,7 @@ static TR::Node *insertVectorizedMisMatchArgumentChecksAndAdjustForOffHeap(TR::O
 }
 #endif /* defined(J9VM_GC_SPARSE_HEAP_ALLOCATION) */
 
-void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vectorizedMismatch(TR::TreeTop *treetop,
+void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vectorizedMismatchInternal(TR::TreeTop *treetop,
     TR::Node *node)
 {
     TR::Node *a = node->getChild(0);
@@ -2788,8 +2788,8 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop *treetop)
                 return (!disableStringIntrinsicBoundChk && cg()->getSupportsInlineStringIndexOfString()
                     && !node->isSafeForCGToInlineStringIntrinsic() && !node->isSkippedInRecognizedCallTransformation());
 #endif /* JAVA_SPEC_VERSION < 25 */
-            case TR::jdk_internal_util_ArraysSupport_vectorizedMismatch:
-                return cg()->getSupportsInlineVectorizedMismatch();
+            case TR::jdk_internal_util_ArraysSupport_vectorizedMismatchInternal:
+                return cg()->getSupportsInlineVectorizedMismatchInternal();
 #if JAVA_SPEC_VERSION >= 21
             case TR::java_lang_foreign_MemorySegment_get_OfByte:
             case TR::java_lang_foreign_MemorySegment_get_OfChar:
@@ -2988,8 +2988,8 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop *treetop)
             case TR::java_lang_Long_reverseBytes:
                 processIntrinsicFunction(treetop, node, TR::lbyteswap);
                 break;
-            case TR::jdk_internal_util_ArraysSupport_vectorizedMismatch:
-                process_jdk_internal_util_ArraysSupport_vectorizedMismatch(treetop, node);
+            case TR::jdk_internal_util_ArraysSupport_vectorizedMismatchInternal:
+                process_jdk_internal_util_ArraysSupport_vectorizedMismatchInternal(treetop, node);
                 break;
 #if JAVA_SPEC_VERSION >= 21
             case TR::java_lang_foreign_MemorySegment_get_OfByte:

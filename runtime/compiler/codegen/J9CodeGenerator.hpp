@@ -601,7 +601,7 @@ public:
     /** \brief
      *   Determines whether the code generator supports inlining of jdk/internal/util/ArraysSupport.vectorizedMismatch
      */
-    bool getSupportsInlineVectorizedMismatch() { return _j9Flags.testAny(SupportsInlineVectorizedMismatch); }
+    bool getSupportsInlineVectorizedMismatchInternal() { return _j9Flags.testAny(SupportsInlineVectorizedMismatch); }
 
     /** \brief
      *   The code generator supports inlining of jdk/internal/util/ArraysSupport.vectorizedMismatch
