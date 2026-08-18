@@ -1660,7 +1660,7 @@ void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vect
 
     mismatchByteIndex->setAndIncChild(0, TR::Node::create(node, TR::aladd, 2, a, aOffset));
     mismatchByteIndex->setAndIncChild(1, TR::Node::create(node, TR::aladd, 2, b, bOffset));
-    mismatchByteIndex->setAndIncChild(2, lengthToCompare);
+    mismatchByteIndex->setAndIncChild(2, lengthInBytes);
     mismatchByteIndex->setSymbolReference(getSymRefTab()->findOrCreateArrayCmpLenSymbol());
 
     // Mark arraycmplen as inlinedByCG as it is an intrinsic that should not be treated as a regular call by the
@@ -1677,16 +1677,18 @@ void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vect
                 log2ArrayIndexScale)),
         TR::Node::iconst(node, -1));
 
+    
+
     TR::Node *mismatchElementIndex = TR::Node::create(node, TR::l2i, 1,
         TR::Node::create(node, TR::lshr, 2, mismatchByteIndex, log2ArrayIndexScale));
-    TR::Node *noMismatchFound = TR::Node::create(node, TR::lcmpeq, 2, mismatchByteIndex, lengthToCompare);
+    TR::Node *noMismatchFound = TR::Node::create(node, TR::lcmpeq, 2, mismatchByteIndex, lengthInBytes);
 
     prepareToReplaceNode(node);
 
     TR::Node::recreate(node, TR::iselect);
     node->setNumChildren(3);
     node->setAndIncChild(0, noMismatchFound);
-    node->setAndIncChild(1, invertedRemainder);
+    node->setAndIncChild(1, TR::Node::iconst(node, -1));
     node->setAndIncChild(2, mismatchElementIndex);
 
     TR::TransformUtil::removeTree(comp(), treetop);
