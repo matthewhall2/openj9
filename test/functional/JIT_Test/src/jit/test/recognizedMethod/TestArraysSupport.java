@@ -28,265 +28,227 @@ import org.testng.annotations.Test;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.stream.IntStream;
+import jdk.internal.misc.Unsafe;
+import jdk.internal.util.ArraysSupport;
 
 public class TestArraysSupport {
 
-    private static final int MAX_TEST_ARRAY_SIZE = 140;
+    // Backing arrays are allocated with MAX_SKIP extra elements at the front
+    // so that starting at index aSkip or bSkip is always valid.
+    private static final int MAX_TEST_ARRAY_SIZE = 32;
+    private static final int MAX_SKIP            = 8;  // elements
+    private static final int BACKING_SIZE        = MAX_SKIP + MAX_TEST_ARRAY_SIZE;
+
+    // Element-index skips tried for aFromIndex and bFromIndex independently.
+    // Chosen to cover: zero, sub-word, word, and cross-word-boundary offsets.
+    private static final int[] SKIPS = { 0, 1, 3, 4, 7 };
 
     // =========================================================================
-    // Tests for ArraysSupport.vectorizedMismatch, exercised via Arrays.mismatch
+    // Tests for ArraysSupport.vectorizedMismatch
     //
-    // Each test runs with invocationCount=2 so the first call is typically
-    // interpreted and the second is JIT-compiled, allowing the compiler to
-    // recognise and lower the intrinsic.  Data providers cover:
-    //   - equal arrays (expect -1)
-    //   - mismatch at every possible index from 0 to length-1
-    //   - a variety of lengths to stress the scalar tail handling
+    // One @Test per element type. Each test sweeps over:
+    //   - aSkip, bSkip in SKIPS  (independent element-index start positions)
+    //   - len in 1..MAX_TEST_ARRAY_SIZE
+    //   - mismatch planted at every element position 0..len-1, plus equal case
+    // and asserts that vectorizedMismatch agrees with a pure scalar reference.
+    // Offsets are computed as BASE + fromIndex << log2Scale, matching exactly
+    // what the JDK's own ArraysSupport.mismatch() overloads do.
+    // invocationCount=2: first pass typically interpreted, second JIT-compiled.
     // =========================================================================
 
-    // ---- byte ---------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchByteProvider", invocationCount = 2)
-    public void testVectorizedMismatchByte(byte[] a, byte[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("byte mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchByte() {
+        byte[] a = new byte[BACKING_SIZE];
+        byte[] b = new byte[BACKING_SIZE];
+        Arrays.fill(a, (byte) 1);
+        Arrays.fill(b, (byte) 1);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_BYTE_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_BYTE_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_BYTE_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_BYTE_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_BYTE_INDEX_SCALE, "byte");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 2;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_BYTE_INDEX_SCALE, "byte");
+                        b[bSkip + pos] = 1;
+                    }
+                }
+            }
+        }
     }
 
-    @DataProvider(name = "mismatchByteProvider")
-    public static Object[][] mismatchByteProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE, MismatchArrayFactory.BYTE);
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchChar() {
+        char[] a = new char[BACKING_SIZE];
+        char[] b = new char[BACKING_SIZE];
+        Arrays.fill(a, 'a');
+        Arrays.fill(b, 'a');
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_CHAR_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_CHAR_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_CHAR_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_CHAR_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_CHAR_INDEX_SCALE, "char");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 'z';
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_CHAR_INDEX_SCALE, "char");
+                        b[bSkip + pos] = 'a';
+                    }
+                }
+            }
+        }
     }
 
-    // ---- char ---------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchCharProvider", invocationCount = 2)
-    public void testVectorizedMismatchChar(char[] a, char[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("char mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchShort() {
+        short[] a = new short[BACKING_SIZE];
+        short[] b = new short[BACKING_SIZE];
+        Arrays.fill(a, (short) 1);
+        Arrays.fill(b, (short) 1);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_SHORT_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_SHORT_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_SHORT_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_SHORT_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_SHORT_INDEX_SCALE, "short");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = (short) 2;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_SHORT_INDEX_SCALE, "short");
+                        b[bSkip + pos] = (short) 1;
+                    }
+                }
+            }
+        }
     }
 
-    @DataProvider(name = "mismatchCharProvider")
-    public static Object[][] mismatchCharProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 2, MismatchArrayFactory.CHAR);
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchInt() {
+        int[] a = new int[BACKING_SIZE];
+        int[] b = new int[BACKING_SIZE];
+        Arrays.fill(a, 1);
+        Arrays.fill(b, 1);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_INT_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_INT_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_INT_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_INT_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_INT_INDEX_SCALE, "int");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 2;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_INT_INDEX_SCALE, "int");
+                        b[bSkip + pos] = 1;
+                    }
+                }
+            }
+        }
     }
 
-    // ---- short --------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchShortProvider", invocationCount = 2)
-    public void testVectorizedMismatchShort(short[] a, short[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("short mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchLong() {
+        long[] a = new long[BACKING_SIZE];
+        long[] b = new long[BACKING_SIZE];
+        Arrays.fill(a, 1L);
+        Arrays.fill(b, 1L);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_LONG_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_LONG_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_LONG_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_LONG_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_LONG_INDEX_SCALE, "long");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 2L;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_LONG_INDEX_SCALE, "long");
+                        b[bSkip + pos] = 1L;
+                    }
+                }
+            }
+        }
     }
 
-    @DataProvider(name = "mismatchShortProvider")
-    public static Object[][] mismatchShortProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 2, MismatchArrayFactory.SHORT);
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchFloat() {
+        float[] a = new float[BACKING_SIZE];
+        float[] b = new float[BACKING_SIZE];
+        Arrays.fill(a, 1.0f);
+        Arrays.fill(b, 1.0f);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_FLOAT_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_FLOAT_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_FLOAT_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_FLOAT_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_FLOAT_INDEX_SCALE, "float");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 2.0f;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_FLOAT_INDEX_SCALE, "float");
+                        b[bSkip + pos] = 1.0f;
+                    }
+                }
+            }
+        }
     }
 
-    // ---- int ----------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchIntProvider", invocationCount = 2)
-    public void testVectorizedMismatchInt(int[] a, int[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("int mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
-    }
-
-    @DataProvider(name = "mismatchIntProvider")
-    public static Object[][] mismatchIntProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 4, MismatchArrayFactory.INT);
-    }
-
-    // ---- long ---------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchLongProvider", invocationCount = 2)
-    public void testVectorizedMismatchLong(long[] a, long[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("long mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
-    }
-
-    @DataProvider(name = "mismatchLongProvider")
-    public static Object[][] mismatchLongProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 8, MismatchArrayFactory.LONG);
-    }
-
-    // ---- float --------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchFloatProvider", invocationCount = 2)
-    public void testVectorizedMismatchFloat(float[] a, float[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("float mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
-    }
-
-    @DataProvider(name = "mismatchFloatProvider")
-    public static Object[][] mismatchFloatProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 4, MismatchArrayFactory.FLOAT);
-    }
-
-    // ---- double -------------------------------------------------------------
-
-    @Test(groups = "level.sanity", dataProvider = "mismatchDoubleProvider", invocationCount = 2)
-    public void testVectorizedMismatchDouble(double[] a, double[] b, int expectedMismatch) {
-        int result = Arrays.mismatch(a, b);
-        Assert.assertEquals(result, expectedMismatch,
-                String.format("double mismatch: length=%d expected=%d got=%d", a.length, expectedMismatch, result));
-    }
-
-    @DataProvider(name = "mismatchDoubleProvider")
-    public static Object[][] mismatchDoubleProvider() {
-        return buildMismatchCases(MAX_TEST_ARRAY_SIZE / 8, MismatchArrayFactory.DOUBLE);
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVectorizedMismatchDouble() {
+        double[] a = new double[BACKING_SIZE];
+        double[] b = new double[BACKING_SIZE];
+        Arrays.fill(a, 1.0);
+        Arrays.fill(b, 1.0);
+        for (int aSkip : SKIPS) {
+            for (int bSkip : SKIPS) {
+                long aOff = Unsafe.ARRAY_DOUBLE_BASE_OFFSET + ((long) aSkip << ArraysSupport.LOG2_ARRAY_DOUBLE_INDEX_SCALE);
+                long bOff = Unsafe.ARRAY_DOUBLE_BASE_OFFSET + ((long) bSkip << ArraysSupport.LOG2_ARRAY_DOUBLE_INDEX_SCALE);
+                for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
+                    checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_DOUBLE_INDEX_SCALE, "double");
+                    for (int pos = 0; pos < len; pos++) {
+                        b[bSkip + pos] = 2.0;
+                        checkVectorizedMismatch(a, aOff, b, bOff, len, ArraysSupport.LOG2_ARRAY_DOUBLE_INDEX_SCALE, "double");
+                        b[bSkip + pos] = 1.0;
+                    }
+                }
+            }
+        }
     }
 
     // ---- helpers ------------------------------------------------------------
 
     /**
-     * Builds test cases for a given element type and maximum array length.
-     * For each length L from 1 to maxLength, we produce:
-     *   - one equal-pair case   (expected mismatch index = -1)
-     *   - L cases with a single mismatch at each possible index 0..L-1
+     * Calls ArraysSupport.vectorizedMismatch and compares against a pure scalar
+     * reference. Fails if they disagree.
      */
-    private static Object[][] buildMismatchCases(int maxLength, MismatchArrayFactory factory) {
-        // Count total cases: for each L: 1 (equal) + L (one mismatch per index)
-        int total = 0;
-        for (int len = 1; len <= maxLength; len++) {
-            total += 1 + len;
-        }
-        Object[][] cases = new Object[total][];
-        int idx = 0;
-        for (int len = 1; len <= maxLength; len++) {
-            // equal arrays -> mismatch = -1
-            cases[idx++] = factory.equal(len);
-            // mismatch at position i
-            for (int mismatchAt = 0; mismatchAt < len; mismatchAt++) {
-                cases[idx++] = factory.withMismatchAt(len, mismatchAt);
-            }
-        }
-        return cases;
+    private static void checkVectorizedMismatch(Object a, long aOffset, Object b, long bOffset,
+                                                int length, int log2Scale, String type) {
+        int intrinsic = ArraysSupport.vectorizedMismatch(a, aOffset, b, bOffset, length, log2Scale);
+        int reference = referenceMismatch(a, aOffset, b, bOffset, length, log2Scale);
+        Assert.assertEquals(intrinsic, reference,
+                String.format("%s aOff=%d bOff=%d len=%d: vectorizedMismatch=%d reference=%d",
+                        type, aOffset, bOffset, length, intrinsic, reference));
     }
 
-    /** Strategy for building matched/mismatched array pairs of a given element type. */
-    private interface MismatchArrayFactory {
-        /** Returns { a, b, expectedMismatch } where a and b are identical. */
-        Object[] equal(int length);
-        /** Returns { a, b, expectedMismatch } where a[mismatchAt] != b[mismatchAt]. */
-        Object[] withMismatchAt(int length, int mismatchAt);
+    /**
+     * Pure-Java scalar mismatch — reads element-by-element using Unsafe so it
+     * is never itself intrinsified. aOffset and bOffset are independent byte
+     * offsets from their respective object headers, computed as
+     * BASE + fromIndex << log2Scale.
+     */
+    private static final Unsafe U = Unsafe.getUnsafe();
 
-        MismatchArrayFactory BYTE = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                byte[] a = new byte[length];
-                Arrays.fill(a, (byte) 42);
-                return new Object[]{ a, a.clone(), -1 };
+    private static int referenceMismatch(Object a, long aOffset, Object b, long bOffset,
+                                         int length, int log2Scale) {
+        int eSize = 1 << log2Scale;
+        for (int i = 0; i < length; i++) {
+            long aOff = aOffset + ((long) i << log2Scale);
+            long bOff = bOffset + ((long) i << log2Scale);
+            boolean equal;
+            switch (eSize) {
+                case 1:  equal = U.getByte(a, aOff)  == U.getByte(b, bOff);  break;
+                case 2:  equal = U.getShort(a, aOff) == U.getShort(b, bOff); break;
+                case 4:  equal = U.getInt(a, aOff)   == U.getInt(b, bOff);   break;
+                default: equal = U.getLong(a, aOff)  == U.getLong(b, bOff);  break;
             }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                byte[] a = new byte[length];
-                byte[] b = new byte[length];
-                Arrays.fill(a, (byte) 1);
-                Arrays.fill(b, (byte) 1);
-                b[mismatchAt] = 2;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory CHAR = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                char[] a = new char[length];
-                Arrays.fill(a, 'x');
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                char[] a = new char[length];
-                char[] b = new char[length];
-                Arrays.fill(a, 'a');
-                Arrays.fill(b, 'a');
-                b[mismatchAt] = 'z';
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory SHORT = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                short[] a = new short[length];
-                Arrays.fill(a, (short) 100);
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                short[] a = new short[length];
-                short[] b = new short[length];
-                Arrays.fill(a, (short) 1);
-                Arrays.fill(b, (short) 1);
-                b[mismatchAt] = (short) 2;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory INT = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                int[] a = new int[length];
-                Arrays.fill(a, 0xCAFEBABE);
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                int[] a = new int[length];
-                int[] b = new int[length];
-                Arrays.fill(a, 1);
-                Arrays.fill(b, 1);
-                b[mismatchAt] = 2;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory LONG = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                long[] a = new long[length];
-                Arrays.fill(a, 0xDEADBEEFCAFEBABEL);
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                long[] a = new long[length];
-                long[] b = new long[length];
-                Arrays.fill(a, 1L);
-                Arrays.fill(b, 1L);
-                b[mismatchAt] = 2L;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory FLOAT = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                float[] a = new float[length];
-                Arrays.fill(a, 1.0f);
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                float[] a = new float[length];
-                float[] b = new float[length];
-                Arrays.fill(a, 1.0f);
-                Arrays.fill(b, 1.0f);
-                b[mismatchAt] = 2.0f;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
-
-        MismatchArrayFactory DOUBLE = new MismatchArrayFactory() {
-            public Object[] equal(int length) {
-                double[] a = new double[length];
-                Arrays.fill(a, 1.0);
-                return new Object[]{ a, a.clone(), -1 };
-            }
-            public Object[] withMismatchAt(int length, int mismatchAt) {
-                double[] a = new double[length];
-                double[] b = new double[length];
-                Arrays.fill(a, 1.0);
-                Arrays.fill(b, 1.0);
-                b[mismatchAt] = 2.0;
-                return new Object[]{ a, b, mismatchAt };
-            }
-        };
+            if (!equal) return i;
+        }
+        return -1;
     }
 
 
