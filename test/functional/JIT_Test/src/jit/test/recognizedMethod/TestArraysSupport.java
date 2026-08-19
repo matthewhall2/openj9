@@ -69,6 +69,8 @@ public class TestArraysSupport {
     private int[] mismatchFloatResults;
     private int[] mismatchDoubleResults;
 
+    private int[] smallResults;
+
     @Test(groups = "level.sanity", invocationCount = 2)
     public void testVectorizedMismatchByte() {
         byte[] a = new byte[BACKING_SIZE];
@@ -195,6 +197,31 @@ public class TestArraysSupport {
         }
     }
 
+    @Test(groups = "level.sanity", invocationCount = 2)
+    public void testVecSmallChar() {
+
+        char[] a1 = {'a','b','c','d','e','f','g','h','X'};
+        char[] b1 = {'a','b','c','d','e','f','g','h','i'};
+
+        // Case 2: tail=2 (length=6, vectorized covers [0..3], tail=[4],[5])
+        // tail(2) >= wordTail(2) -> int-width handler fires, checks [4]+[5] as one int
+        // internal: detects mismatch at [4] -> 4
+        // public:   same -> 4
+        char[] a2 = {'a','b','c','d','e','f','g','h','X','j'};
+        char[] b2 = {'a','b','c','d','e','f','g','h','i','j'};
+
+        if (smallResults == null) {
+            smallResults = new int[2];
+            smallResults[0] = ArraysSupport.vectorizedMismatch(a1, Unsafe.ARRAY_CHAR_BASE_OFFSET, b1, Unsafe.ARRAY_CHAR_BASE_OFFSET, 9, log2);
+            smallResults[1] = ArraysSupport.vectorizedMismatch(b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, 10, log2);
+        } else {
+            Assert.assertEquals(smallResults[0], ArraysSupport.vectorizedMismatch(a1, Unsafe.ARRAY_CHAR_BASE_OFFSET, b1, Unsafe.ARRAY_CHAR_BASE_OFFSET, 9, log2), "no match len 9");
+            Assert.assertEquals(smallResults[1], ArraysSupport.vectorizedMismatch(a2, Unsafe.ARRAY_CHAR_BASE_OFFSET, b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, 10, log2), "no match len 10");
+        }
+    }
+
+
+
     // ---- helpers ------------------------------------------------------------
 
     @FunctionalInterface
@@ -213,9 +240,9 @@ public class TestArraysSupport {
                 for (int len = 1; len <= MAX_TEST_ARRAY_SIZE; len++) {
                     results[idx++] = ArraysSupport.vectorizedMismatch(a, aOff, b, bOff, len, log2);
                     for (int pos = 0; pos < len; pos++) {
-                        setMismatch.set(b, bOff, bSkip + pos);
+                        setMismatch.set(b, 0, bSkip + pos);
                         results[idx++] = ArraysSupport.vectorizedMismatch(a, aOff, b, bOff, len, log2);
-                        clearMismatch.set(b, bOff, bSkip + pos);
+                        clearMismatch.set(b, 0, bSkip + pos);
                     }
                 }
             }
@@ -238,12 +265,12 @@ public class TestArraysSupport {
                             String.format("%s aSkip=%d bSkip=%d len=%d equal: compiled=%d interpreted=%d",
                                     type, aSkip, bSkip, len, result, stored[idx - 1]));
                     for (int pos = 0; pos < len; pos++) {
-                        setMismatch.set(b, bOff, bSkip + pos);
+                        setMismatch.set(b, 0, bSkip + pos);
                         result = ArraysSupport.vectorizedMismatch(a, aOff, b, bOff, len, log2);
                         Assert.assertEquals(result, stored[idx++],
                                 String.format("%s aSkip=%d bSkip=%d len=%d mismatch@%d: compiled=%d interpreted=%d",
                                         type, aSkip, bSkip, len, pos, result, stored[idx - 1]));
-                        clearMismatch.set(b, bOff, bSkip + pos);
+                        clearMismatch.set(b, 0, bSkip + pos);
                     }
                 }
             }
