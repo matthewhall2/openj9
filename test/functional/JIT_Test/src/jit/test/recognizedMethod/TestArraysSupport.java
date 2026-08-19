@@ -199,7 +199,7 @@ public class TestArraysSupport {
 
     @Test(groups = "level.sanity", invocationCount = 2)
     public void testVecSmallChar() {
-
+        int log2 = ArraysSupport.LOG2_ARRAY_CHAR_INDEX_SCALE;
         char[] a1 = {'a','b','c','d','e','f','g','h','X'};
         char[] b1 = {'a','b','c','d','e','f','g','h','i'};
 
