@@ -215,8 +215,8 @@ public class TestArraysSupport {
             smallResults[0] = ArraysSupport.vectorizedMismatch(a1, Unsafe.ARRAY_CHAR_BASE_OFFSET, b1, Unsafe.ARRAY_CHAR_BASE_OFFSET, 9, log2);
             smallResults[1] = ArraysSupport.vectorizedMismatch(b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, 10, log2);
         } else {
-            Assert.assertEquals(smallResults[0], ArraysSupport.vectorizedMismatch(a1, Unsafe.ARRAY_CHAR_BASE_OFFSET, b1, Unsafe.ARRAY_CHAR_BASE_OFFSET, 9, log2), "no match len 9");
-            Assert.assertEquals(smallResults[1], ArraysSupport.vectorizedMismatch(a2, Unsafe.ARRAY_CHAR_BASE_OFFSET, b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, 10, log2), "no match len 10");
+            Assert.assertEquals(ArraysSupport.vectorizedMismatch(a1, Unsafe.ARRAY_CHAR_BASE_OFFSET, b1, Unsafe.ARRAY_CHAR_BASE_OFFSET, 9, log2), smallResults[0], "no match len 9");
+            Assert.assertEquals(ArraysSupport.vectorizedMismatch(a2, Unsafe.ARRAY_CHAR_BASE_OFFSET, b2, Unsafe.ARRAY_CHAR_BASE_OFFSET, 10, log2), smallResults[1], "no match len 10");
         }
     }
 
