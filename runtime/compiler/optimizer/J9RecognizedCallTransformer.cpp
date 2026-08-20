@@ -1649,12 +1649,12 @@ void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vect
     TR::Node *lengthInBytes
         = TR::Node::create(node, TR::lshl, 2, TR::Node::create(node, TR::iu2l, 1, length), log2ArrayIndexScale);
 
-    TR::Node *mask = TR::Node::create(node, TR::lor, 2,
-        TR::Node::create(node, TR::lshl, 2, log2ArrayIndexScale64Bits, TR::Node::iconst(node, 1)),
-        TR::Node::lconst(node, 3));
+    // TR::Node *mask = TR::Node::create(node, TR::lor, 2,
+    //     TR::Node::create(node, TR::lshl, 2, log2ArrayIndexScale64Bits, TR::Node::iconst(node, 1)),
+    //     TR::Node::lconst(node, 3));
 
-    TR::Node *lengthToCompare = TR::Node::create(node, TR::land, 2, lengthInBytes,
-        TR::Node::create(node, TR::lxor, 2, mask, TR::Node::lconst(node, -1)));
+    // TR::Node *lengthToCompare = TR::Node::create(node, TR::land, 2, lengthInBytes,
+    //     TR::Node::create(node, TR::lxor, 2, mask, TR::Node::lconst(node, -1)));
 
     TR::Node *mismatchByteIndex = TR::Node::create(node, TR::arraycmplen, 3);
 
@@ -1671,11 +1671,11 @@ void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vect
     TR::Node *arraycmplenAnchorNode = TR::Node::create(TR::treetop, 1, mismatchByteIndex);
     TR::TreeTop *arraycmplenTreeTop = TR::TreeTop::create(comp(), treetop->getPrevTreeTop(), arraycmplenAnchorNode);
 
-    TR::Node *invertedRemainder = TR::Node::create(node, TR::ixor, 2,
-        TR::Node::create(node, TR::l2i, 1,
-            TR::Node::create(node, TR::lshr, 2, TR::Node::create(node, TR::land, 2, lengthInBytes, mask),
-                log2ArrayIndexScale)),
-        TR::Node::iconst(node, -1));
+    // TR::Node *invertedRemainder = TR::Node::create(node, TR::ixor, 2,
+    //     TR::Node::create(node, TR::l2i, 1,
+    //         TR::Node::create(node, TR::lshr, 2, TR::Node::create(node, TR::land, 2, lengthInBytes, mask),
+    //             log2ArrayIndexScale)),
+    //     TR::Node::iconst(node, -1));
 
     
 
