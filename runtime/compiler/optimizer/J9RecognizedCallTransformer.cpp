@@ -1644,7 +1644,7 @@ void J9::RecognizedCallTransformer::process_jdk_internal_util_ArraysSupport_vect
     }
 #endif /* defined(J9VM_GC_SPARSE_HEAP_ALLOCATION) */
 
-    TR::Node *log2ArrayIndexScale64Bits = TR::Node::create(node, TR::iu2l, 1, log2ArrayIndexScale);
+    //TR::Node *log2ArrayIndexScale64Bits = TR::Node::create(node, TR::iu2l, 1, log2ArrayIndexScale);
 
     TR::Node *lengthInBytes
         = TR::Node::create(node, TR::lshl, 2, TR::Node::create(node, TR::iu2l, 1, length), log2ArrayIndexScale);
