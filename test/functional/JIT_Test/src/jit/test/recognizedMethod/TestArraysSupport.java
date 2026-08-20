@@ -30,6 +30,8 @@ import java.util.Random;
 import java.util.stream.IntStream;
 import jdk.internal.misc.Unsafe;
 import jdk.internal.util.ArraysSupport;
+import jdk.internal.vm.annotation.ForceInline;
+
 
 public class TestArraysSupport {
 
@@ -228,6 +230,7 @@ public class TestArraysSupport {
     private interface ArraySetter { void set(Object arr, long baseOff, int idx); }
 
     /** Runs the full sweep, records each result into a fresh int[] and returns it. */
+    @ForceInline
     private static int[] collectMismatch(Object a, Object b, long base, int log2,
                                          ArraySetter setMismatch, ArraySetter clearMismatch) {
         int total = sweepTotal();
@@ -251,6 +254,7 @@ public class TestArraysSupport {
     }
 
     /** Runs the full sweep, comparing each result against the stored interpreted results. */
+    @ForceInline
     private static void compareMismatch(Object a, Object b, long base, int log2,
                                         int[] stored, String type,
                                         ArraySetter setMismatch, ArraySetter clearMismatch) {
