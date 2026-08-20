@@ -752,7 +752,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 		<command>$(JAVA_COMMAND) $(JVM_OPTIONS) \
 	--add-exports java.base/jdk.internal.util=ALL-UNNAMED \
 	--add-exports java.base/jdk.internal.misc=ALL-UNNAMED \
-	--add-exports java.base/jdk.internal.vm.annotation.ForceInline \
+	--add-exports java.base/jdk.internal.vm.annotation=ALL-UNNAMED \
 	-cp $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)jitt.jar$(Q) \
 	org.testng.TestNG -d $(REPORTDIR) $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) \
 	-testnames \
