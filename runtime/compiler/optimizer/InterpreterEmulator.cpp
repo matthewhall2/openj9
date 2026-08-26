@@ -222,7 +222,6 @@ void InterpreterEmulator::mergeOperandArray(OperandArray *first, OperandArray *s
         TR_ASSERT_FATAL(second->size() == size, "attempt to merge operand arrays of different sizes: first %d, second %d", size, second->size());
     }
 
-    bool enableTrace = tracer()->debugLevel();
     if (enableTrace) {
         log->prints("Operands before merging:\n");
         printOperandArray(first);
