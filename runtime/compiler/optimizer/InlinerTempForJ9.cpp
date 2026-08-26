@@ -6094,6 +6094,22 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_CallTarget *target, TR_Prex
     auto prexArgInfoFromCallSite = TR_J9InlinerUtil::computePrexInfo(inliner(), site, callerArgInfo);
     auto prexArgInfo = TR_PrexArgInfo::enhance(prexArgInfoFromTarget, prexArgInfoFromCallSite, comp());
 
+    // If the ECS walk established a known-object index for the receiver that
+    // the IL-tree walk above couldn't recover (e.g. the def of the receiver
+    // auto crosses a conditional branch), propagate it into arg 0 now.
+    if (prexArgInfo && site->_ecsPrexArgInfo) {
+        TR_PrexArgument *ecsReceiverArg = site->_ecsPrexArgInfo->get(0);
+        if (ecsReceiverArg && ecsReceiverArg->hasKnownObjectIndex()) {
+            TR_PrexArgument *currentArg = prexArgInfo->get(0);
+            if (!currentArg || !currentArg->hasKnownObjectIndex()) {
+                prexArgInfo->set(0, ecsReceiverArg);
+                logprintf(tracePrex, comp()->log(),
+                    "PREX.inl:    arg 0 koi=%d recovered from _ecsPrexArgInfo for target %p\n",
+                    ecsReceiverArg->getKnownObjectIndex(), target);
+            }
+        }
+    }
+
     if (tracePrex && prexArgInfo) {
         comp()->log()->printf("PREX.inl:    argInfo for target %p\n", target);
         prexArgInfo->dumpTrace();
