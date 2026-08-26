@@ -210,8 +210,17 @@ void InterpreterEmulator::mergeOperandArray(OperandArray *first, OperandArray *s
 {
     OMR::Logger *log = comp()->log();
 
+    bool enableTrace = tracer()->debugLevel();
     uint32_t size = first->size();
-    TR_ASSERT_FATAL(second->size() == size, "attempt to merge operand arrays of different sizes");
+    if (second->size() != size) {
+        if (enableTrace) {
+            log->prints("First operand array\n");
+            printOperandArray(first);
+            log->prints("Second operand array\n");
+            printOperandArray(second);
+        }
+        TR_ASSERT_FATAL(second->size() == size, "attempt to merge operand arrays of different sizes: first %d, second %d", size, second->size());
+    }
 
     bool enableTrace = tracer()->debugLevel();
     if (enableTrace) {
@@ -893,7 +902,7 @@ bool InterpreterEmulator::maintainStack(TR_J9ByteCode bc)
         case J9BCsipush:
             push(new (trStackMemory()) IconstOperand(next2Bytes()));
             break;
-
+    
         case J9BCladd:
         case J9BCiadd:
         case J9BCisub:
