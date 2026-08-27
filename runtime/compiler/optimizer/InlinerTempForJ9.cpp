@@ -6311,6 +6311,16 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_InlinerBase *inliner, TR_Ca
                         "PREX.inl:      %p: is known object obj%d, argument n%dn has def from n%dn %s %s\n", prexArg,
                         prexArg->getKnownObjectIndex(), argument->getGlobalIndex(), valueNode->getGlobalIndex(),
                         valueNode->getOpCode().getName(), valueNode->getSymbolReference()->getName(comp->getDebug()));
+                } else if (valueNode && valueNode->getOpCodeValue() == TR::aload
+                           && valueNode->getSymbolReference()->getSymbol()->isParm()
+                           && callerArgInfo) {
+                    int32_t ordinal = valueNode->getSymbolReference()->getSymbol()->getParmSymbol()->getOrdinal();
+                    if (ordinal < callerArgInfo->getNumArgs() && callerArgInfo->get(ordinal)) {
+                        prexArg = callerArgInfo->get(ordinal);
+                        logprintf(tracePrex, log,
+                            "PREX.inl:      %p: auto n%dn has def from caller parm %d, propagating caller prex arg\n",
+                            prexArg, argument->getGlobalIndex(), ordinal);
+                    }
                 }
             }
         } else if (symRef == comp->getSymRefTab()->findJavaLangClassFromClassSymbolRef()) {

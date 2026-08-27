@@ -1327,6 +1327,14 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
         case TR::java_lang_invoke_ILGenMacros_isShareableThunk:
             result = new (trStackMemory()) IconstOperand(0);
             break;
+        // case TR::java_lang_Class_isAssignableFrom:
+        //     Operand *toClass = topn(1);
+        //     Operand *fromClass = topn(0);
+        //     TR::KnownObjectTable::Index toClassIndex = toClass->getKnownObjectIndex();
+        //     TR::KnownObjectTable::Index fromClassIndex = fromClass->getKnownObjectIndex();
+        //     debugTrace(tracer(), "Known MethodHandle koi %d\n", mhIndex);
+        //     debugTrace(tracer(), "Known MethodType koi %d\n", mtIndex);
+        //     break;
 
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
         case TR::java_lang_invoke_DelegatingMethodHandle_getTarget: {
