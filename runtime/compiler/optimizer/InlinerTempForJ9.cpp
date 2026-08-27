@@ -6285,17 +6285,17 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_InlinerBase *inliner, TR_Ca
                             parmSymbol->getFixedType(), sig);
                     }
                 }
-                // Propagate caller's prex arg for this parm ordinal when available,
-                // regardless of whether the parm is itself marked preexistent.
-                // This threads concrete type info (e.g. fixed/known-object) from an
-                // outer caller through intermediate methods that widen to Object.
+                // Propagate caller's prex arg for this parm ordinal when available —
+                // this threads concrete type info through intermediate methods that
+                // widen to Object. Fall back to deriving from the parm's own type
+                // signature (always at least as specific as the declared callee param).
                 int32_t ordinal = parmSymbol->getOrdinal();
                 if (!prexArg && callerArgInfo && ordinal < callerArgInfo->getNumArgs()
                     && callerArgInfo->get(ordinal)) {
                     prexArg = callerArgInfo->get(ordinal);
                     logprintf(tracePrex, log,
                         "PREX.inl:      %p: parm %d, using caller's prex arg\n", prexArg, ordinal);
-                } else if (!prexArg && parmSymbol->getIsPreexistent()) {
+                } else if (!prexArg) {
                     int32_t len = 0;
                     const char *sig = parmSymbol->getTypeSignature(len);
                     TR_OpaqueClassBlock *clazz
@@ -6304,7 +6304,7 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_InlinerBase *inliner, TR_Ca
                     if (clazz) {
                         prexArg = new (inliner->trHeapMemory())
                             TR_PrexArgument(TR_PrexArgument::ClassIsPreexistent, clazz);
-                        logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent\n", prexArg);
+                        logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent (from parm type)\n", prexArg);
                     }
                 }
             } else if (symbol->isAuto()) {
