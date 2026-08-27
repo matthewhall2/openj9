@@ -6286,15 +6286,22 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_InlinerBase *inliner, TR_Ca
                     }
                 }
                 if (parmSymbol->getIsPreexistent()) {
-                    int32_t len = 0;
-                    const char *sig = parmSymbol->getTypeSignature(len);
-                    TR_OpaqueClassBlock *clazz
-                        = comp->fe()->getClassFromSignature(sig, len, site->_callerResolvedMethod);
+                    int32_t ordinal = parmSymbol->getOrdinal();
+                    if (callerArgInfo && ordinal < callerArgInfo->getNumArgs() && callerArgInfo->get(ordinal)) {
+                        prexArg = callerArgInfo->get(ordinal);
+                        logprintf(tracePrex, log,
+                            "PREX.inl:      %p: is preexistent parm %d, using caller's prex arg\n", prexArg, ordinal);
+                    } else {
+                        int32_t len = 0;
+                        const char *sig = parmSymbol->getTypeSignature(len);
+                        TR_OpaqueClassBlock *clazz
+                            = comp->fe()->getClassFromSignature(sig, len, site->_callerResolvedMethod);
 
-                    if (clazz) {
-                        prexArg
-                            = new (inliner->trHeapMemory()) TR_PrexArgument(TR_PrexArgument::ClassIsPreexistent, clazz);
-                        logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent\n", prexArg);
+                        if (clazz) {
+                            prexArg = new (inliner->trHeapMemory())
+                                TR_PrexArgument(TR_PrexArgument::ClassIsPreexistent, clazz);
+                            logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent\n", prexArg);
+                        }
                     }
                 }
             } else if (symbol->isAuto()) {
