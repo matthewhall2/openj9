@@ -6285,23 +6285,26 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_InlinerBase *inliner, TR_Ca
                             parmSymbol->getFixedType(), sig);
                     }
                 }
-                if (parmSymbol->getIsPreexistent()) {
-                    int32_t ordinal = parmSymbol->getOrdinal();
-                    if (callerArgInfo && ordinal < callerArgInfo->getNumArgs() && callerArgInfo->get(ordinal)) {
-                        prexArg = callerArgInfo->get(ordinal);
-                        logprintf(tracePrex, log,
-                            "PREX.inl:      %p: is preexistent parm %d, using caller's prex arg\n", prexArg, ordinal);
-                    } else {
-                        int32_t len = 0;
-                        const char *sig = parmSymbol->getTypeSignature(len);
-                        TR_OpaqueClassBlock *clazz
-                            = comp->fe()->getClassFromSignature(sig, len, site->_callerResolvedMethod);
+                // Propagate caller's prex arg for this parm ordinal when available,
+                // regardless of whether the parm is itself marked preexistent.
+                // This threads concrete type info (e.g. fixed/known-object) from an
+                // outer caller through intermediate methods that widen to Object.
+                int32_t ordinal = parmSymbol->getOrdinal();
+                if (!prexArg && callerArgInfo && ordinal < callerArgInfo->getNumArgs()
+                    && callerArgInfo->get(ordinal)) {
+                    prexArg = callerArgInfo->get(ordinal);
+                    logprintf(tracePrex, log,
+                        "PREX.inl:      %p: parm %d, using caller's prex arg\n", prexArg, ordinal);
+                } else if (!prexArg && parmSymbol->getIsPreexistent()) {
+                    int32_t len = 0;
+                    const char *sig = parmSymbol->getTypeSignature(len);
+                    TR_OpaqueClassBlock *clazz
+                        = comp->fe()->getClassFromSignature(sig, len, site->_callerResolvedMethod);
 
-                        if (clazz) {
-                            prexArg = new (inliner->trHeapMemory())
-                                TR_PrexArgument(TR_PrexArgument::ClassIsPreexistent, clazz);
-                            logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent\n", prexArg);
-                        }
+                    if (clazz) {
+                        prexArg = new (inliner->trHeapMemory())
+                            TR_PrexArgument(TR_PrexArgument::ClassIsPreexistent, clazz);
+                        logprintf(tracePrex, log, "PREX.inl:      %p: is preexistent\n", prexArg);
                     }
                 }
             } else if (symbol->isAuto()) {
