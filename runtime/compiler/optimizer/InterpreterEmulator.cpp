@@ -219,6 +219,8 @@ void InterpreterEmulator::mergeOperandArray(OperandArray *first, OperandArray *s
             log->prints("Second operand array\n");
             printOperandArray(second);
         }
+        heuristicTrace(tracer(), "mergeOperandArray size mismatch in method %s at bcIndex %d: first=%d second=%d",
+        _calltarget->_calleeMethod->signature(comp()->trMemory()), _bcIndex, size, second->size());
         TR_ASSERT_FATAL(second->size() == size, "attempt to merge operand arrays of different sizes: first %d, second %d", size, second->size());
     }
 
