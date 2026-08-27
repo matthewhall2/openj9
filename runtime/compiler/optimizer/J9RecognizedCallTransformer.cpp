@@ -2604,9 +2604,6 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop *treetop)
             case TR::sun_misc_Unsafe_getAndSetLong:
                 processUnsafeAtomicCall(treetop, TR::SymbolReferenceTable::atomicSwapSymbol);
                 break;
-            case TR::java_lang_Class_isAssignableFrom:
-                process_java_lang_Class_IsAssignableFrom(treetop, node);
-                break;
             case TR::java_lang_Class_cast:
                 process_java_lang_Class_cast(treetop, node);
                 break;
@@ -2762,6 +2759,9 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop *treetop)
                 break;
             case TR::java_lang_invoke_MethodHandle_linkToInterface:
                 process_java_lang_invoke_MethodHandle_linkToInterface(treetop, node);
+                break;
+            case TR::java_lang_Class_isAssignableFrom:
+                process_java_lang_Class_IsAssignableFrom(treetop, node);
                 break;
             default:
                 break;
