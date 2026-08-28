@@ -6869,28 +6869,44 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                     targetArgInfo->set(i - callNode->getFirstArgumentIndex(),
                         TR_PrexArgInfo::getArgForChild(child, argInfo));
                 } else {
-                    TR_PrexArgument *targetArg = targetArgInfo->get(i - callNode->getFirstArgumentIndex());
-            PrexKnowledgeLevel lvl = TR_PrexArgument::knowledgeLevel(targetArg);
-            heuristicTrace(tracer,
-                "ARGS PROPAGATION: target child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
-                "argIsKnownObject=%d koi=%d class=%p",
-                child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
-                targetArg ? targetArg->classIsFixed() : 0,
-                targetArg ? targetArg->classIsPreexistent() : 0,
-                targetArg ? targetArg->hasKnownObjectIndex() : 0,
-                targetArg ? targetArg->getKnownObjectIndex() : -1,
-                targetArg ? targetArg->getClass() : nullptr);
-            targetArg =  TR_PrexArgInfo::getArgForChild(child, argInfo);
-            lvl = TR_PrexArgument::knowledgeLevel(targetArg);
-            heuristicTrace(tracer,
-                "ARGS PROPAGATION: callee child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
-                "argIsKnownObject=%d koi=%d class=%p",
-                child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
-                targetArg ? targetArg->classIsFixed() : 0,
-                targetArg ? targetArg->classIsPreexistent() : 0,
-                targetArg ? targetArg->hasKnownObjectIndex() : 0,
-                targetArg ? targetArg->getKnownObjectIndex() : -1,
-                targetArg ? targetArg->getClass() : nullptr);
+                    int32_t slot = i - callNode->getFirstArgumentIndex();
+                    TR_PrexArgument *targetArg = targetArgInfo->get(slot);
+                    TR_PrexArgument *callerArg = TR_PrexArgInfo::getArgForChild(child, argInfo);
+                    PrexKnowledgeLevel targetLvl = TR_PrexArgument::knowledgeLevel(targetArg);
+                    PrexKnowledgeLevel callerLvl = TR_PrexArgument::knowledgeLevel(callerArg);
+                    heuristicTrace(tracer,
+                        "ARGS PROPAGATION: slot %d already has arg %p %s classIsFixed=%d classIsPreexistent=%d "
+                        "argIsKnownObject=%d koi=%d class=%p; caller arg %p %s classIsFixed=%d classIsPreexistent=%d "
+                        "argIsKnownObject=%d koi=%d class=%p",
+                        slot, targetArg, TR_PrexArgument::priorKnowledgeStrings[targetLvl],
+                        targetArg ? targetArg->classIsFixed() : 0,
+                        targetArg ? targetArg->classIsPreexistent() : 0,
+                        targetArg ? targetArg->hasKnownObjectIndex() : 0,
+                        targetArg ? targetArg->getKnownObjectIndex() : -1,
+                        targetArg ? targetArg->getClass() : nullptr,
+                        callerArg, TR_PrexArgument::priorKnowledgeStrings[callerLvl],
+                        callerArg ? callerArg->classIsFixed() : 0,
+                        callerArg ? callerArg->classIsPreexistent() : 0,
+                        callerArg ? callerArg->hasKnownObjectIndex() : 0,
+                        callerArg ? callerArg->getKnownObjectIndex() : -1,
+                        callerArg ? callerArg->getClass() : nullptr);
+
+                    // If the caller has strictly more specific type info for this slot,
+                    // update the target. This handles the case where ECS populated the
+                    // slot from the callee's declared signature (e.g. Object) but the
+                    // caller has a more refined subtype (e.g. ReflectionSpeedBenchmark).
+                    bool callerIsStrongerLevel = callerLvl > targetLvl;
+                    bool callerIsStrongerClass = callerLvl == targetLvl
+                        && callerArg && callerArg->getClass()
+                        && targetArg && targetArg->getClass()
+                        && tracer->comp()->fe()->isInstanceOf(callerArg->getClass(), targetArg->getClass(), true, true, false)
+                        && !tracer->comp()->fe()->isInstanceOf(targetArg->getClass(), callerArg->getClass(), true, true, false);
+                    if (callerIsStrongerLevel || callerIsStrongerClass)
+                        {
+                        heuristicTrace(tracer,
+                            "ARGS PROPAGATION: updating slot %d with more specific caller arg", slot);
+                        targetArgInfo->set(slot, callerArg);
+                        }
                 }
 
             }
