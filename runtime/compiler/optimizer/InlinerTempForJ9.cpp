@@ -6837,10 +6837,13 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
         }
     }
 
-    heuristicTrace(tracer, "ARGS PROPAGATION: argsFromTarget before args propagation");
-    for (int i = 0; i < callsite->numTargets(); i++)
-        if (tracer->heuristicLevel())
+    heuristicTrace(tracer, "ARGS PROPAGATION: argsFromTarget before args propagation (%d targets)");
+    for (int i = 0; i < callsite->numTargets(); i++) {
+        heuristicTrace(tracer, "ARGS PROPAGATION: target %d for callsite %p", i, callsite);
+        if (tracer->heuristicLevel()) {
             callsite->getTarget(i)->_ecsPrexArgInfo->dumpTrace();
+        }
+    }
 
     for (int i = callNode->getFirstArgumentIndex(); i < callNode->getNumChildren(); i++) {
         TR::Node *child = callNode->getChild(i);
@@ -6857,9 +6860,23 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                 if (i - callNode->getFirstArgumentIndex() >= targetArgInfo->getNumArgs())
                     continue;
 
-                if (!targetArgInfo->get(i - callNode->getFirstArgumentIndex()))
+                if (!targetArgInfo->get(i - callNode->getFirstArgumentIndex())) {
                     targetArgInfo->set(i - callNode->getFirstArgumentIndex(),
                         TR_PrexArgInfo::getArgForChild(child, argInfo));
+                } else {
+                    TR_PrexArgument *targetArg = TR_PrexArgInfo::getArgForChild(child, targetArgInfo);
+            PrexKnowledgeLevel lvl = TR_PrexArgument::knowledgeLevel(targetArg);
+            heuristicTrace(tracer,
+                "ARGS PROPAGATION: propagating child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
+                "argIsKnownObject=%d koi=%d class=%p",
+                child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
+                targetArg ? targetArg->classIsFixed() : 0,
+                targetArg ? targetArg->classIsPreexistent() : 0,
+                targetArg ? targetArg->hasKnownObjectIndex() : 0,
+                targetArg ? targetArg->getKnownObjectIndex() : -1,
+                targetArg ? targetArg->getClass() : nullptr);
+                }
+
             }
         }
     }
