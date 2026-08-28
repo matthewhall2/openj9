@@ -3709,6 +3709,23 @@ void J9::ValuePropagation::getParmValues()
 
             TR_OpaqueClassBlock *opaqueClass = parmIterator->getOpaqueClass();
 
+            // If we are inlining this method and the caller has more specific type
+            // info for this parm slot (e.g. a subtype of the declared signature
+            // class), use the caller's refined class as the basis for the VP
+            // constraint. This allows VP to fold calls like isAssignableFrom that
+            // require a concrete class constraint on the argument nodes.
+            TR_PrexArgInfo *inlinedArgInfo = comp()->getCurrentInlinedCallArgInfo();
+            if (inlinedArgInfo && parmIndex < inlinedArgInfo->getNumArgs())
+                {
+                TR_PrexArgument *prexArg = inlinedArgInfo->get(parmIndex);
+                if (prexArg && prexArg->getClass() && opaqueClass
+                    && fe()->isInstanceOf(prexArg->getClass(), opaqueClass, true, true, true) == TR_yes
+                    && prexArg->getClass() != opaqueClass)
+                    {
+                    opaqueClass = prexArg->getClass();
+                    }
+                }
+
             if (opaqueClass && parmIterator->isArray() && TR::Compiler->om.areFlattenableValueTypesEnabled()) {
                 TR_OpaqueClassBlock *arrayComponentClass = comp()->fej9()->getComponentClassFromArrayClass(opaqueClass);
                 uint32_t len = 0;
