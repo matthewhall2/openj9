@@ -6838,6 +6838,8 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
     }
 
     heuristicTrace(tracer, "ARGS PROPAGATION: argsFromTarget before args propagation (%d targets)");
+    heuristicTrace(tracer, "Caller args:");
+    argInfo->dumpTrace();
     for (int i = 0; i < callsite->numTargets(); i++) {
         heuristicTrace(tracer, "ARGS PROPAGATION: target %d for callsite %p", i, callsite);
         if (tracer->heuristicLevel()) {
@@ -6867,7 +6869,7 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                     TR_PrexArgument *targetArg = TR_PrexArgInfo::getArgForChild(child, targetArgInfo);
             PrexKnowledgeLevel lvl = TR_PrexArgument::knowledgeLevel(targetArg);
             heuristicTrace(tracer,
-                "ARGS PROPAGATION: propagating child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
+                "ARGS PROPAGATION: target child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
                 "argIsKnownObject=%d koi=%d class=%p",
                 child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
                 targetArg ? targetArg->classIsFixed() : 0,
