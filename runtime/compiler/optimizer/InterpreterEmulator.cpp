@@ -631,8 +631,10 @@ bool InterpreterEmulator::maintainStack(TR_J9ByteCode bc)
         case J9BCgoto:
             genTarget(bcIndex() + next2BytesSigned());
             break;
-        case J9BCpop:
         case J9BCputfield:
+            popn(2);
+            break;
+        case J9BCpop:
         case J9BCputstatic:
             pop();
             break;
