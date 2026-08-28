@@ -6092,8 +6092,8 @@ TR_PrexArgInfo *TR_J9InlinerUtil::computePrexInfo(TR_CallTarget *target, TR_Prex
 
     auto prexArgInfoFromTarget = createPrexArgInfoForCallTarget(target->_guard, target->_calleeMethod);
     auto prexArgInfoFromCallSite = TR_J9InlinerUtil::computePrexInfo(inliner(), site, callerArgInfo);
-    auto prexArgInfoTemp = TR_PrexArgInfo::enhance(prexArgInfoFromTarget, prexArgInfoFromCallSite, comp());
-    auto prexArgInfo = TR_PrexArgInfo::enhance(prexArgInfoTemp, site->_ecsPrexArgInfo, comp());
+    auto prexArgInfo = TR_PrexArgInfo::enhance(prexArgInfoFromTarget, prexArgInfoFromCallSite, comp());
+  //  auto prexArgInfo = TR_PrexArgInfo::enhance(prexArgInfoTemp, site->_ecsPrexArgInfo, comp());
 
     // If the ECS walk established a known-object index for the receiver that
     // the IL-tree walk above couldn't recover (e.g. the def of the receiver
@@ -6906,7 +6906,7 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                         {
                         heuristicTrace(tracer,
                             "ARGS PROPAGATION: updating slot %d with more specific caller arg", slot);
-                        targetArgInfo->set(slot, callerArg);
+                      //  targetArgInfo->set(slot, callerArg);
                         }
                 }
 
