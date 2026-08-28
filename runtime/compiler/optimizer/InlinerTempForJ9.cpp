@@ -6834,6 +6834,8 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
             receiverPrexArg = TR_PrexArgInfo::getArgForChild(receiverChild, argInfo);
             argInfo->set(receiverChild->getSymbolReference()->getSymbol()->getParmSymbol()->getOrdinal(),
                 callsite->_ecsPrexArgInfo->get(0));
+        } else {
+            heuristicTrace(tracer, "ARGS PROPAGATION: caller has no arg info for target receiver child");
         }
     }
 
@@ -6863,6 +6865,7 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                     continue;
 
                 if (!targetArgInfo->get(i - callNode->getFirstArgumentIndex())) {
+                    heuristicTrace(tracer, "ARGS PROPAGATION: target has no arg info for child %d", i - callNode->getFirstArgumentIndex());
                     targetArgInfo->set(i - callNode->getFirstArgumentIndex(),
                         TR_PrexArgInfo::getArgForChild(child, argInfo));
                 } else {
@@ -6870,6 +6873,17 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
             PrexKnowledgeLevel lvl = TR_PrexArgument::knowledgeLevel(targetArg);
             heuristicTrace(tracer,
                 "ARGS PROPAGATION: target child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
+                "argIsKnownObject=%d koi=%d class=%p",
+                child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
+                targetArg ? targetArg->classIsFixed() : 0,
+                targetArg ? targetArg->classIsPreexistent() : 0,
+                targetArg ? targetArg->hasKnownObjectIndex() : 0,
+                targetArg ? targetArg->getKnownObjectIndex() : -1,
+                targetArg ? targetArg->getClass() : nullptr);
+            targetArg =  TR_PrexArgInfo::getArgForChild(child, argInfo);
+            lvl = TR_PrexArgument::knowledgeLevel(targetArg);
+            heuristicTrace(tracer,
+                "ARGS PROPAGATION: callee child %p arg %p %s classIsFixed=%d classIsPreexistent=%d "
                 "argIsKnownObject=%d koi=%d class=%p",
                 child, targetArg, TR_PrexArgument::priorKnowledgeStrings[lvl],
                 targetArg ? targetArg->classIsFixed() : 0,
