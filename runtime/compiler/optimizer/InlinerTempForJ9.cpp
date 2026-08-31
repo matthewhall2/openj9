@@ -6801,6 +6801,8 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
         }
     }
 
+    heuristicTrace(tracer, "ARGS PROPAGATION: argsFromCaller");
+    argInfo->dumpTrace();
     heuristicTrace(tracer, "ARGS PROPAGATION: argsFromTarget before args propagation");
     for (int i = 0; i < callsite->numTargets(); i++)
         if (tracer->heuristicLevel())
@@ -6821,9 +6823,33 @@ void TR_PrexArgInfo::propagateArgsFromCaller(TR::ResolvedMethodSymbol *methodSym
                 if (i - callNode->getFirstArgumentIndex() >= targetArgInfo->getNumArgs())
                     continue;
 
-                if (!targetArgInfo->get(i - callNode->getFirstArgumentIndex()))
-                    targetArgInfo->set(i - callNode->getFirstArgumentIndex(),
-                        TR_PrexArgInfo::getArgForChild(child, argInfo));
+                int32_t slot = i - callNode->getFirstArgumentIndex();
+                TR_PrexArgument *callerArg = TR_PrexArgInfo::getArgForChild(child, argInfo);
+                TR_PrexArgument *targetArg = targetArgInfo->get(slot);
+                if (!targetArg) {
+                    // Target has no info for this slot — use the caller's arg directly.
+                    targetArgInfo->set(slot, callerArg);
+                } else {
+                    // Target already has info — use the caller's arg only if it is
+                    // strictly stronger: either a higher knowledge level, or the same
+                    // level with a more specific (sub)type.
+                    PrexKnowledgeLevel callerLvl = TR_PrexArgument::knowledgeLevel(callerArg);
+                    PrexKnowledgeLevel targetLvl = TR_PrexArgument::knowledgeLevel(targetArg);
+                    bool callerIsStrongerLevel = callerLvl > targetLvl;
+                    bool callerIsStrongerClass = callerLvl == targetLvl
+                        && callerArg && callerArg->getClass()
+                        && targetArg->getClass()
+                        && tracer->comp()->fe()->isInstanceOf(
+                            callerArg->getClass(), targetArg->getClass(), true, true, false)
+                        && !tracer->comp()->fe()->isInstanceOf(
+                            targetArg->getClass(), callerArg->getClass(), true, true, false);
+                    if (callerIsStrongerLevel || callerIsStrongerClass) {
+                        heuristicTrace(tracer,
+                            "ARGS PROPAGATION: updating slot %d with more specific caller arg"
+                            " (callerLvl=%d targetLvl=%d)", slot, callerLvl, targetLvl);
+                        targetArgInfo->set(slot, callerArg);
+                    }
+                }
             }
         }
     }
