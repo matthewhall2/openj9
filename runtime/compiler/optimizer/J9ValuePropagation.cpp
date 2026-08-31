@@ -3731,43 +3731,6 @@ void J9::ValuePropagation::getParmValues()
                 }
             }
 
-            // If this is an inlined call with propagated prex arg info, use the more
-            // specific class from the caller when it is a subtype of the declared type.
-            // This allows VP to build a VPResolvedClass (or VPFixedClass + VPPreexistentObject)
-            // constraint using the concrete type seen at the call site rather than the
-            // broad declared type from the callee's signature (e.g. Object).
-            TR_PrexArgInfo *inlinedArgInfo = comp()->getCurrentInlinedCallArgInfo();
-            if (inlinedArgInfo && opaqueClass && parmIndex < inlinedArgInfo->getNumArgs()) {
-                TR_PrexArgument *prexArg = inlinedArgInfo->get(parmIndex);
-                TR_OpaqueClassBlock *argClass = prexArg ? prexArg->getClass() : NULL;
-                if (argClass && argClass != opaqueClass
-                    && comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) == TR_yes) {
-                    logprintf(trace(), comp()->log(),
-                        "getParmValues: refining parm %d of %s (in %s) from %s to %s\n",
-                        parmIndex,
-                        comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
-                        comp()->signature(),
-                        TR::Compiler->cls.classSignature(comp(), opaqueClass, trMemory()),
-                        TR::Compiler->cls.classSignature(comp(), argClass, trMemory()));
-                    opaqueClass = argClass;
-                } else {
-                    logprintf(trace(), comp()->log(),
-                        "getParmValues: could not refine parm %d of %s (in %s): argClass=%p opaqueClass=%p isInstanceOf=%d\n",
-                        parmIndex,
-                        comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
-                        comp()->signature(),
-                        argClass, opaqueClass,
-                        argClass ? (int)comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) : -1);
-                }
-            } else {
-                logprintf(trace(), comp()->log(),
-                    "getParmValues: no inlinedArgInfo refinement for parm %d of %s (in %s): inlinedArgInfo=%p opaqueClass=%p\n",
-                    parmIndex,
-                    comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
-                    comp()->signature(),
-                    inlinedArgInfo, opaqueClass);
-            }
-
             if (opaqueClass) {
                 TR_OpaqueClassBlock *prexClass = NULL;
                 if (usePreexistence()) {
