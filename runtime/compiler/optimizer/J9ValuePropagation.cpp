@@ -3731,6 +3731,21 @@ void J9::ValuePropagation::getParmValues()
                 }
             }
 
+            // If this is an inlined call with propagated prex arg info, use the more
+            // specific class from the caller when it is a subtype of the declared type.
+            // This allows VP to build a VPResolvedClass (or VPFixedClass + VPPreexistentObject)
+            // constraint using the concrete type seen at the call site rather than the
+            // broad declared type from the callee's signature (e.g. Object).
+            TR_PrexArgInfo *inlinedArgInfo = comp()->getCurrentInlinedCallArgInfo();
+            if (inlinedArgInfo && opaqueClass && parmIndex < inlinedArgInfo->getNumArgs()) {
+                TR_PrexArgument *prexArg = inlinedArgInfo->get(parmIndex);
+                TR_OpaqueClassBlock *argClass = prexArg ? prexArg->getClass() : NULL;
+                if (argClass && argClass != opaqueClass
+                    && comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) == TR_yes) {
+                    opaqueClass = argClass;
+                }
+            }
+
             if (opaqueClass) {
                 TR_OpaqueClassBlock *prexClass = NULL;
                 if (usePreexistence()) {
