@@ -3743,7 +3743,11 @@ void J9::ValuePropagation::getParmValues()
                 if (argClass && argClass != opaqueClass
                     && comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) == TR_yes) {
                     opaqueClass = argClass;
+                } else {
+                    logprintf(trace(), comp()->log(), "VP instanceOf returned %d\n", comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false));
                 }
+            } else {
+                logprints(trace(), comp()->log(), "VP could not refine type\n");
             }
 
             if (opaqueClass) {
