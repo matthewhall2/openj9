@@ -3742,12 +3742,30 @@ void J9::ValuePropagation::getParmValues()
                 TR_OpaqueClassBlock *argClass = prexArg ? prexArg->getClass() : NULL;
                 if (argClass && argClass != opaqueClass
                     && comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) == TR_yes) {
+                    logprintf(trace(), comp()->log(),
+                        "getParmValues: refining parm %d of %s (in %s) from %s to %s\n",
+                        parmIndex,
+                        comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
+                        comp()->signature(),
+                        TR::Compiler->cls.classSignature(comp(), opaqueClass, trMemory()),
+                        TR::Compiler->cls.classSignature(comp(), argClass, trMemory()));
                     opaqueClass = argClass;
                 } else {
-                    logprintf(trace(), comp()->log(), "VP instanceOf returned %d\n", comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false));
+                    logprintf(trace(), comp()->log(),
+                        "getParmValues: could not refine parm %d of %s (in %s): argClass=%p opaqueClass=%p isInstanceOf=%d\n",
+                        parmIndex,
+                        comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
+                        comp()->signature(),
+                        argClass, opaqueClass,
+                        argClass ? (int)comp()->fe()->isInstanceOf(argClass, opaqueClass, true, true, false) : -1);
                 }
             } else {
-                logprints(trace(), comp()->log(), "VP could not refine type\n");
+                logprintf(trace(), comp()->log(),
+                    "getParmValues: no inlinedArgInfo refinement for parm %d of %s (in %s): inlinedArgInfo=%p opaqueClass=%p\n",
+                    parmIndex,
+                    comp()->getMethodSymbol()->getResolvedMethod()->signature(trMemory()),
+                    comp()->signature(),
+                    inlinedArgInfo, opaqueClass);
             }
 
             if (opaqueClass) {
