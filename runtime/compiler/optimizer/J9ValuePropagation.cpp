@@ -1548,7 +1548,14 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                     TR::DebugCounter::incStaticDebugCounter(comp(),
                         TR::DebugCounter::debugCounterName(comp(), "constrainCall/(%s)", signature));
                     return;
+                } else {
+                    if (!secondClassChildConstraint)
+                        logprints(trace(), log, "fromClass has no constraint\n");
+                    else
+                        logprints(trace(), log, "tofromClass unknown - isJavaLangClass %d hasClass %d\n", secondClassChildConstraint->isJavaLangClassObject(), secondClassChildConstraint->getClassType());
                 }
+            } else {
+                logprints(trace(), log, "toClass not not fixed, quit transforming Class.isAssignableFrom\n");
             }
             break;
         }
