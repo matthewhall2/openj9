@@ -26,8 +26,8 @@ if(OMR_DDR AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 11))
 	# supported by ddrgen: tell the compiler to use DWARF version 4.
 	list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -gdwarf-4)
 endif()
-list(APPEND OMR_PLATFORM_C_COMPILE_OPTIONS -Wimplicit -Wreturn-type)
-list(APPEND OMR_PLATFORM_CXX_COMPILE_OPTIONS -fno-threadsafe-statics)
+list(APPEND OMR_PLATFORM_C_COMPILE_OPTIONS -Wimplicit -Wreturn-type -DPR -DPROD_WITH_ASSUMES)
+list(APPEND OMR_PLATFORM_CXX_COMPILE_OPTIONS -fno-threadsafe-statics -DPROD_WITH_ASSUMES)
 
 # OMR_PLATFORM_CXX_COMPILE_OPTIONS gets applied to the jit (which needs exceptions),
 # so we put these in the CMAKE_CXX_FLAGS instead
