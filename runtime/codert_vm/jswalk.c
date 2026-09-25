@@ -350,7 +350,29 @@ static UDATA walkTransitionFrame(J9StackWalkState *walkState)
 #ifdef J9VM_INTERP_STACKWALK_TRACING
 			swPrintf(walkState, 3, "\tAt exception catch - incrementing PC to make map fetching work\n");
 #endif
-			walkState->pc += 1;
+			/* The +1 compensates for jitGetMapsFromPC always subtracting 1 from the
+			 * PC (which expects a return address past a call, not a handler's first
+			 * instruction).  However, if the catch handler lands exactly at startPC
+			 * (the interpreter-entry preprologue area, before the first GC map),
+			 * applying +1 still produces an offset with no GC map and the subsequent
+			 * jitWalkFrame will assert.  Guard: only increment when the handler is
+			 * within the JIT body proper, i.e. at or past startPC + jitEntryOffset.
+			 * The jitEntryOffset is the upper 16 bits of the LinkageInfo word stored
+			 * in the uint32_t immediately before startPC.
+			 */
+			{
+				/* J9_STACK_FLAGS_JIT_EXCEPTION_CATCH_RESOLVE is only set when the VM is
+				 * executing a JIT exception catch, so the handler PC always falls within
+				 * a JIT body and catchTable cannot be NULL here.
+				 */
+				J9JITExceptionTable *catchTable = jitGetExceptionTableFromPC(walkState->walkThread, (UDATA)walkState->pc);
+				if (catchTable != NULL) {
+					UDATA jitEntryOffset = (UDATA)((*((U_32 *)catchTable->startPC - 1)) >> 16);
+					if ((UDATA)walkState->pc >= catchTable->startPC + jitEntryOffset) {
+						walkState->pc += 1;
+					}
+				}
+			}
 		}
 		walkState->resolveFrameFlags = walkState->frameFlags;
 		walkState->unwindSP = (UDATA *) UNTAG2(resolveFrame->taggedRegularReturnSP, UDATA *);
@@ -1451,7 +1473,20 @@ static J9JITExceptionTable * jitGetExceptionTable(J9StackWalkState * walkState)
 		if (walkState->pcAddress == walkState->decompilationStack->pcAddress) {
 			walkState->pc = walkState->decompilationStack->pc;
 			if (J9_STACK_FLAGS_JIT_EXCEPTION_CATCH_RESOLVE == (walkState->resolveFrameFlags & J9_STACK_FLAGS_JIT_FRAME_SUB_TYPE_MASK)) {
-				walkState->pc += 1;
+				/* Apply the same guard as in walkTransitionFrame: only increment
+				 * when the handler is within the JIT body (at or past jitEntryOffset).
+				 * See the detailed comment at the corresponding site in walkTransitionFrame.
+				 */
+				/* The decompilation record's PC was saved from within a JIT body, so it
+				 * always has valid metadata and catchTable cannot be NULL here.
+				 */
+				J9JITExceptionTable *catchTable = jitGetExceptionTableFromPC(walkState->walkThread, (UDATA)walkState->pc);
+				if (catchTable != NULL) {
+					UDATA jitEntryOffset = (UDATA)((*((U_32 *)catchTable->startPC - 1)) >> 16);
+					if ((UDATA)walkState->pc >= catchTable->startPC + jitEntryOffset) {
+						walkState->pc += 1;
+					}
+				}
 			}
 			walkState->decompilationRecord = walkState->decompilationStack;
 			walkState->decompilationStack = walkState->decompilationStack->next;
