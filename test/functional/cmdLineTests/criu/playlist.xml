@@ -185,7 +185,7 @@
 			<variation>-Xjit:count=0</variation>
 			<variation>-Xjit:vlog=vlog</variation>
 			<variation>-XX:+DebugOnRestore -Xjit</variation>
-			<variation>-XX:+DebugOnRestore -Xjit:count=0 -Xdump:jit+system:events=throw,filter=java/lang/NullPointerException#jdk/internal/util/ByteArray.getUnsignedShort,file=/root/testdump.log</variation>
+			<variation>-XX:+DebugOnRestore -Xjit:count=0 -Xdump:jit+system:events=throw,filter=java/lang/NullPointerException,request=exclusive+prepwalk</variation>
 		</variations>
 		<command>
 			TR_Options=$(Q)dontApplyLogFileNameSuffix$(Q) \
