@@ -185,7 +185,7 @@
 			<variation>-Xjit:count=0</variation>
 			<variation>-Xjit:vlog=vlog</variation>
 			<variation>-XX:+DebugOnRestore -Xjit</variation>
-			<variation>-XX:+DebugOnRestore $(SQ)-Xjit:count=0,{*ByteArray.getUnsignedShort*}(traceFull,traceCG,traceInlining,traceGlobalVP,traceLocalVP,log=short.log)$(SQ)</variation>
+			<variation>-XX:+DebugOnRestore -XX:+MergeCompilerOptions $(SQ)-Xjit:count=0,{*ByteArray.getUnsignedShort*}(traceFull,traceCG,traceInlining,traceGlobalVP,traceLocalVP,log=short.log)$(SQ)</variation>
 		</variations>
 		<command>
 			TR_Options=$(Q)dontApplyLogFileNameSuffix$(Q) \
