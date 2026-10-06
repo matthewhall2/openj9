@@ -21,6 +21,7 @@
  *******************************************************************************/
 
 #include "optimizer/J9ValuePropagation.hpp"
+#include "env/TRFrontEnd.hpp"
 #include "optimizer/VPBCDConstraint.hpp"
 #include "codegen/CodeGenerator.hpp"
 #include "compile/Compilation.hpp"
@@ -2264,6 +2265,9 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                 break;
             }
             case TR::java_lang_reflect_Method_isCallerSensitive: {
+                static bool refineIsCallerSensitiveInVP = feGetEnv("refineIsCallerSensitiveInVP") != NULL;
+                if (!refineIsCallerSensitiveInVP)
+                    break;
                 TR::Node *thisNode = node->getFirstChild();
                 bool isGlobal;
                 logprintf(trace(), log, "Trying to fold Method.isCallerSensitive\n");
