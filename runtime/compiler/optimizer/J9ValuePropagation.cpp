@@ -21,6 +21,8 @@
  *******************************************************************************/
 
 #include "optimizer/J9ValuePropagation.hpp"
+#include "compile/J9Compilation.hpp"
+#include "env/jittypes.h"
 #include "optimizer/VPBCDConstraint.hpp"
 #include "codegen/CodeGenerator.hpp"
 #include "compile/Compilation.hpp"
@@ -2262,6 +2264,38 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                 transformCallToIconstInPlaceOrInDelayedTransformations(_curTree, 0, isGlobal, true, false);
                 logprintf(trace(), log, "MethodHandleImpl.isCompileConstant folded to false\n");
                 break;
+            }
+            case TR::java_lang_reflect_Method_isCallerSensitive: {
+                TR::Node *thisNode = node->getFirstChild();
+                bool isGlobal;
+                logprintf(trace(), log, "Trying to fold Method.isCallerSensitive\n");
+                TR::VPConstraint *thisConstraint = getConstraint(thisNode, isGlobal);
+                if (!thisConstraint || !thisConstraint->getKnownObject() || !thisConstraint->isNonNullObject()) {
+                    break;
+                }
+
+                TR_OpaqueClassBlock *thisClass = thisConstraint->getClass();
+                if (!thisClass)
+                    break;
+                
+                int32_t offset = comp()->fej9()->getInstanceFieldOffset(thisClass, "callerSensitive", "B");
+                if (offset < 0)
+                    break;
+
+                uintptr_t *thisLocation = getObjectLocationFromConstraint(thisConstraint);
+
+                TR::VMAccessCriticalSection isCallerSensitiveSection(comp(), TR::VMAccessCriticalSection::tryToAcquireVMAccess);
+                if (!isCallerSensitiveSection.hasVMAccess())
+                    break;
+
+                uintptr_t thisObject = comp()->fej9()->getStaticReferenceFieldAtAddress((uintptr_t)thisLocation);
+                int8_t isCallerSensitive = (int8_t)comp()->fej9()->getInt32FieldAt(thisObject, offset);
+
+                if (isCallerSensitive == 0)
+                    break;
+
+                int32_t result = (isCallerSensitive > 0) ? 1 : 0;
+                transformCallToIconstInPlaceOrInDelayedTransformations(_curTree, result, isGlobal, true, false);
             }
             default:
                 break;

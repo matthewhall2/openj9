@@ -345,6 +345,7 @@ FirstJ9Method = LastOMRMethod + 1,
     LastVectorMethod = LastVectorIntrinsicMethod,
 
     java_lang_reflect_Array_getLength, java_lang_reflect_Method_invoke, java_lang_reflect_Method_acquireMethodAccessor,
+    java_lang_reflect_Method_isCallerSensitive,
     java_util_Arrays_fill, java_util_Arrays_equals, java_lang_String_equals, sun_io_ByteToCharSingleByte_convert,
     sun_io_CharToByteSingleByte_convert, sun_io_ByteToCharDBCS_EBCDIC_convert,
     sun_io_ByteToCharSingleByte_JITintrinsicConvert, sun_nio_cs_ISO_8859_1_Encoder_encodeArrayLoop,
