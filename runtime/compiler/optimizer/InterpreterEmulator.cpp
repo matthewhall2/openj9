@@ -1313,6 +1313,9 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
 
     switch (recognizedMethod) {
         case TR::java_lang_reflect_Method_isCallerSensitive: {
+            static bool refineIsCallerSensitiveInIE = feGetEnv("refineIsCallerSensitiveInIE") != NULL;
+                if (!refineIsCallerSensitiveInIE)
+                    break;
             TR::KnownObjectTable::Index methodIndex = top()->getKnownObjectIndex();
             if (knot && methodIndex != TR::KnownObjectTable::UNKNOWN && !knot->isNull(methodIndex)) {
                 TR_OpaqueClassBlock *methodClass = comp()->fej9()->getObjectClassFromKnownObjectIndex(comp(), methodIndex);
