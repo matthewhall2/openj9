@@ -7624,18 +7624,33 @@ bool TR_J9ByteCodeIlGenerator::pushRequiredConst(TR::KnownObjectTable::Index *ko
     if (entry == _requiredConsts->end())
         return false;
 
-    dumpOptDetails(comp(), "Folding required constant at bc index %d\n", _bcIndex);
-
     TR::AnyConst value = entry->second._value;
     auto &assumptions = entry->second._assumptions;
     if (!assumptions.empty()) {
         TR_ASSERT_FATAL(comp()->isFearPointPlacementUnrestricted(),
             "placement must be unrestricted for required const fear point @ bc index %d", _bcIndex);
 
+        // If OSR cannot be attempted in this inlined frame, we can't place the fear point
+        // here. Generating it without OSR support would leave HCRGuardAnalysis with an
+        // uninducible yield point and hit the assertion there. Skip the fold entirely and
+        // let the caller emit the original call node.
+        if (_cannotAttemptOSR) {
+            dumpOptDetails(comp(), "Skipping required constant fold at bc index %d: OSR not supported in this frame\n",
+                _bcIndex);
+            // Record as handled so assertFoldedAllRequiredConsts does not treat this
+            // as a missed fold — we made a deliberate decision to skip it.
+            _foldedRequiredConsts->insert(_bcIndex);
+            return false;
+        }
+
+        dumpOptDetails(comp(), "Folding required constant at bc index %d\n", _bcIndex);
+
         TR::Node *bciNode = NULL;
         genTreeTop(TR::Node::createOSRFearPointHelperCall(bciNode));
         for (auto it = assumptions.begin(); it != assumptions.end(); it++)
             (*it)->commit(comp());
+    } else {
+        dumpOptDetails(comp(), "Folding required constant at bc index %d\n", _bcIndex);
     }
 
     if (value.isKnownObject()) {
