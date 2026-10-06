@@ -2296,6 +2296,7 @@ void J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
 
                 int32_t result = (isCallerSensitive > 0) ? 1 : 0;
                 transformCallToIconstInPlaceOrInDelayedTransformations(_curTree, result, isGlobal, true, false);
+                logprintf(trace(), log, "Method.reflect folded to %d\n", result);
             }
             default:
                 break;
