@@ -3600,8 +3600,12 @@ bool J9::Z::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&resul
         ReduceSynchronizedFieldLoad::inlineSynchronizedFieldLoad(node, cg);
         return true;
     } else if (node->getSymbolReference()->getReferenceNumber() == TR_checkAssignable) {
-        resultReg = TR::TreeEvaluator::inlineCheckAssignableFromEvaluator(node, cg);
-        return true;
+        static const bool disableIsAssignableFromLowering = feGetEnv("TR_DisableIsAssignableFromLowering") != NULL;
+        if (disableIsAssignableFromLowering) {
+            resultReg = TR::TreeEvaluator::inlineCheckAssignableFromEvaluator(node, cg);
+            return true;
+        }
+        return false;
     }
 
     static const char *enableTRTRE = feGetEnv("TR_enableTRTRE");

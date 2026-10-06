@@ -635,6 +635,7 @@ int32_t TR_EscapeAnalysis::performAnalysisOnce()
     _notOptimizableLocalObjectsValueNumbers = NULL;
     _notOptimizableLocalStringObjectsValueNumbers = NULL;
     _initializedHeapifiedTemps = NULL;
+    _valueNumbersWithSkippedWrtBars = NULL;
 
     // Walk the trees and find the "new" nodes.
     // Any that are candidates for local allocation or desynchronization are
@@ -2980,6 +2981,74 @@ bool TR_EscapeAnalysis::usesValueNumber(Candidate *candidate, int32_t valueNumbe
     return false;
 }
 
+// Value propagation removes the write barrier of a store into a freshly allocated object (setSkipWrtBar) on the
+// assumption that the object stays stack referenced, and is therefore auto-remembered by the GC if it is tenured.
+// That assumption is invalid for an object that escapes, so put the barriers back.
+//
+void TR_EscapeAnalysis::collectValueNumbersOfSkippedWrtBars(TR::Node *node, TR::NodeChecklist &visited)
+{
+    if (visited.contains(node))
+        return;
+    visited.add(node);
+
+    if (node->getOpCodeValue() == TR::awrtbari && node->skipWrtBar()) {
+        TR::Node *base = node->getFirstChild();
+        if (base->getOpCode().isArrayRef())
+            base = base->getFirstChild();
+        _valueNumbersWithSkippedWrtBars->set(_valueNumberInfo->getValueNumber(base));
+    }
+
+    for (int32_t i = 0; i < node->getNumChildren(); i++)
+        collectValueNumbersOfSkippedWrtBars(node->getChild(i), visited);
+}
+
+void TR_EscapeAnalysis::restoreSkippedWrtBars(TR::Node *node, int32_t valueNumber, TR::NodeChecklist &visited)
+{
+    if (visited.contains(node))
+        return;
+    visited.add(node);
+
+    if (node->getOpCodeValue() == TR::awrtbari && node->skipWrtBar()) {
+        TR::Node *base = node->getFirstChild();
+        if (base->getOpCode().isArrayRef())
+            base = base->getFirstChild();
+        if (_valueNumberInfo->getValueNumber(base) == valueNumber
+            && performTransformation(comp(), "%sRestoring write barrier [%p] because its destination object escapes\n",
+                OPT_DETAILS, node)) {
+            node->setSkipWrtBar(false);
+            _somethingChanged = true;
+        }
+    }
+
+    for (int32_t i = 0; i < node->getNumChildren(); i++)
+        restoreSkippedWrtBars(node->getChild(i), valueNumber, visited);
+}
+
+void TR_EscapeAnalysis::restoreSkippedWrtBarsForEscapingObject(int32_t valueNumber)
+{
+    if (!_valueNumbersWithSkippedWrtBars) {
+        _valueNumbersWithSkippedWrtBars
+            = new (trStackMemory()) TR_BitVector(_valueNumberInfo->getNumberOfValues(), trMemory(), stackAlloc);
+        TR::NodeChecklist visited(comp());
+        for (TR::TreeTop *tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop()) {
+            if (tt->getNode())
+                collectValueNumbersOfSkippedWrtBars(tt->getNode(), visited);
+        }
+    }
+
+    if (!_valueNumbersWithSkippedWrtBars->isSet(valueNumber))
+        return;
+
+    // All barriers for this object are restored in one go, so there is nothing left to do next time
+    _valueNumbersWithSkippedWrtBars->reset(valueNumber);
+
+    TR::NodeChecklist visited(comp());
+    for (TR::TreeTop *tt = comp()->getStartTree(); tt; tt = tt->getNextTreeTop()) {
+        if (tt->getNode())
+            restoreSkippedWrtBars(tt->getNode(), valueNumber, visited);
+    }
+}
+
 // Remove any candidates that match the given value number
 //
 void TR_EscapeAnalysis::forceEscape(TR::Node *node, TR::Node *reason, bool forceFail)
@@ -2991,6 +3060,12 @@ void TR_EscapeAnalysis::forceEscape(TR::Node *node, TR::Node *reason, bool force
     OMR::Logger *log = comp()->log();
 
     int32_t valueNumber = _valueNumberInfo->getValueNumber(resolvedNode);
+
+    // This is done regardless of whether the object is a stack allocation candidate (or whether the escape point
+    // is cold), because the barrier is needed on whatever copy of the object ends up on the heap.
+    //
+    restoreSkippedWrtBarsForEscapingObject(valueNumber);
+
     Candidate *candidate, *next;
     for (candidate = _candidates.getFirst(); candidate; candidate = next) {
         next = candidate->getNext();

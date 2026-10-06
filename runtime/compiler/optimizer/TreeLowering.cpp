@@ -34,10 +34,6 @@ const char *TR::TreeLowering::optDetailString() const throw() { return "O^O TREE
 
 int32_t TR::TreeLowering::perform()
 {
-    if (!TR::Compiler->om.areValueTypesEnabled()) {
-        return 0;
-    }
-
     if (trace())
         comp()->dumpMethodTrees(comp()->log(), "Trees before Tree Lowering Optimization");
 
@@ -48,7 +44,10 @@ int32_t TR::TreeLowering::perform()
         TR::Node *node = nodeIter.currentNode();
         TR::TreeTop *tt = nodeIter.currentTree();
 
-        lowerValueTypeOperations(transformations, node, tt);
+        if (TR::Compiler->om.areValueTypesEnabled()) {
+            lowerValueTypeOperations(transformations, node, tt);
+        }
+        lowerTypeCheckOperations(transformations, node, tt);
     }
 
     transformations.doTransformations();
@@ -1565,6 +1564,115 @@ void IsIdentityObjectTransformer::lower(TR::Node * const node, TR::TreeTop * con
     node->setAndIncChild(0, testFlagsNode);
 }
 
+class IsAssignableFromTransformer : public TR::TreeLowering::Transformer {
+public:
+    explicit IsAssignableFromTransformer(TR::TreeLowering *opt)
+        : TR::TreeLowering::Transformer(opt)
+    {}
+
+    void lower(TR::Node * const node, TR::TreeTop * const tt)
+    {
+        TR::Compilation *comp = this->comp();
+        OMR::Logger *log = comp->log();
+        TR::CFG *cfg = comp->getFlowGraph();
+        cfg->invalidateStructure();
+
+        if (!performTransformation(comp, "%sPreparing for post-GRA block split by anchoring isAssignableFrom helper call and arguments\n",
+                optDetailString()))
+            return;
+
+        auto * const anchoredCallTT = TR::TreeTop::create(comp, tt, TR::Node::create(TR::treetop, 1, node));
+        logprintf(trace(), log, "Anchoring isAssignableFrom call node under treetop n%un (0x%p)\n",
+            anchoredCallTT->getNode()->getGlobalIndex(), anchoredCallTT->getNode());
+
+        auto * const anchoredFromClassTT
+            = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, node->getFirstChild()));
+        auto * const anchoredToClassTT
+            = TR::TreeTop::create(comp, tt->getPrevTreeTop(), TR::Node::create(TR::treetop, 1, node->getSecondChild()));
+
+        TR::Block *callBlock = tt->getEnclosingBlock();
+        if (!performTransformation(comp, "%sSplitting block_%d at TreeTop [0x%p], which holds isAssignableFrom call node n%un\n",
+                optDetailString(), callBlock->getNumber(), tt, node->getGlobalIndex()))
+            return;
+        TR::Block *targetBlock = callBlock->splitPostGRA(tt->getNextTreeTop(), cfg, true, NULL);
+
+        moveNodeToEndOfBlock(callBlock, tt, node, false /* isAddress */);
+
+        TR::Node *anchoredNode = anchoredCallTT->getNode()->getFirstChild();
+        auto *constForSuccessNode = TR::Node::iconst(1);
+        TR::Node *storeNode = NULL;
+        TR::Node *regDepForStoreNode = NULL;
+        if (anchoredNode->getOpCodeValue() == TR::iRegLoad) {
+            auto const globalRegNum = anchoredNode->getGlobalRegisterNumber();
+            storeNode = TR::Node::create(TR::iRegStore, 1, constForSuccessNode);
+            storeNode->setGlobalRegisterNumber(globalRegNum);
+            regDepForStoreNode = TR::Node::create(TR::PassThrough, 1, constForSuccessNode);
+            regDepForStoreNode->setGlobalRegisterNumber(globalRegNum);
+        } else if (anchoredNode->getOpCodeValue() == TR::iload) {
+            storeNode = TR::Node::create(TR::istore, 1, constForSuccessNode);
+            storeNode->setSymbolReference(anchoredNode->getSymbolReference());
+        } else {
+            TR_ASSERT_FATAL_WITH_NODE(anchoredNode, false, "Anchored isAssignableFrom call has unexpected opcode\n");
+        }
+
+        tt->insertBefore(TR::TreeTop::create(comp, storeNode));
+
+        TR::Node *exitGlRegDeps = NULL;
+        if (callBlock->getExit()->getNode()->getNumChildren() > 0) {
+            exitGlRegDeps = callBlock->getExit()->getNode()->getFirstChild();
+        }
+
+        TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
+        TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
+
+        // 1. Fastpath: Class Equality (fromClass == toClass)
+        auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
+        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreNode);
+        tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+        callBlock = splitForFastpath(callBlock, tt, targetBlock);
+
+        // 2. Fastpath: castClassCache Check
+        TR::Node *cacheAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
+            TR::Node::iconst(offsetof(J9Class, castClassCache)));
+        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr,
+            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+
+        auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
+        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifCacheEqNode, exitGlRegDeps, regDepForStoreNode);
+        tt->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
+        callBlock = splitForFastpath(callBlock, tt, targetBlock);
+
+        // 3. Fastpath: Superclass Array Check
+        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
+            TR::Node::iconst(offsetof(J9Class, classDepthAndFlags)));
+        TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
+            comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
+        TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
+
+        TR::Node *toDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, toClassNode,
+            TR::Node::iconst(offsetof(J9Class, classDepthAndFlags)));
+        TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
+            comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
+        TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
+
+        TR::Node *superclassesPtrAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
+            TR::Node::iconst(offsetof(J9Class, superclasses)));
+        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr,
+            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+
+        TR::Node *elementOffset = TR::Node::create(TR::imul, 2, toDepth,
+            TR::Node::iconst(comp->target().is64Bit() ? 8 : 4));
+        TR::Node *superClassElemAddr = TR::Node::create(TR::aiadd, 2, superclassesArray, elementOffset);
+        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr,
+            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+
+        auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
+        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifSuperclassEqNode, exitGlRegDeps, regDepForStoreNode);
+        tt->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
+        callBlock = splitForFastpath(callBlock, tt, targetBlock);
+    }
+};
+
 /**
  * @brief Perform lowering related to Valhalla value types
  *
@@ -1628,5 +1736,14 @@ void TR::TreeLowering::lowerValueTypeOperations(TransformationManager &transform
                        TR::SymbolReferenceTable::isIdentityObjectNonHelperSymbol)) {
             transformations.addTransformation(getTransformer<IsIdentityObjectTransformer>(), node, tt);
         }
+    }
+}
+
+void TR::TreeLowering::lowerTypeCheckOperations(TransformationManager &transformations, TR::Node *node, TR::TreeTop *tt)
+{
+    static const bool disableIsAssignableFromLowering = feGetEnv("TR_DisableIsAssignableFromLowering") != NULL;
+    if (!disableIsAssignableFromLowering && node->getOpCode().isCall()
+        && node->getSymbolReference()->getReferenceNumber() == TR_checkAssignable) {
+        transformations.addTransformation(getTransformer<IsAssignableFromTransformer>(), node, tt);
     }
 }

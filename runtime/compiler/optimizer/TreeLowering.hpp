@@ -227,6 +227,7 @@ public:
 private:
     // helpers related to Valhalla value type lowering
     void lowerValueTypeOperations(TransformationManager &transformation, TR::Node *node, TR::TreeTop *tt);
+    void lowerTypeCheckOperations(TransformationManager &transformations, TR::Node *node, TR::TreeTop *tt);
 
     template<typename T> Transformer *getTransformer() { return new (comp()->region()) T(this); }
 };

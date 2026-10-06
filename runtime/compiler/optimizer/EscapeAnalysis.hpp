@@ -691,6 +691,9 @@ protected:
     bool isEscapePointCold(Candidate *candidate, TR::Node *node);
     bool checkIfEscapePointIsCold(Candidate *candidate, TR::Node *node);
     void forceEscape(TR::Node *node, TR::Node *reason, bool forceFail = false);
+    void collectValueNumbersOfSkippedWrtBars(TR::Node *node, TR::NodeChecklist &visited);
+    void restoreSkippedWrtBars(TR::Node *node, int32_t valueNumber, TR::NodeChecklist &visited);
+    void restoreSkippedWrtBarsForEscapingObject(int32_t valueNumber);
     bool restrictCandidates(TR::Node *node, TR::Node *reason, restrictionType);
     // void     referencedField(TR::Node *base, TR::Node *field, bool isStore, bool seenSelfStore = false);
     void referencedField(TR::Node *base, TR::Node *field, bool isStore, bool seenSelfStore = false,
@@ -818,6 +821,10 @@ protected:
     TR_BitVector *_blocksWithFlushOnEntry;
     TR_BitVector *_visitedNodes;
     TR_BitVector *_initializedHeapifiedTemps;
+
+    // Value numbers of the destination objects of write barriers that VP marked as skippable (setSkipWrtBar).
+    // Built lazily the first time an escape is found. NULL until then, and reset on every analysis pass.
+    TR_BitVector *_valueNumbersWithSkippedWrtBars;
 
     CallLoadMap *_callsToProtect;
 
