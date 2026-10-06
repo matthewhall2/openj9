@@ -1312,6 +1312,23 @@ Operand *InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
     }
 
     switch (recognizedMethod) {
+        case TR::java_lang_reflect_Method_isCallerSensitive: {
+            TR::KnownObjectTable::Index methodIndex = top()->getKnownObjectIndex();
+            if (knot && methodIndex != TR::KnownObjectTable::UNKNOWN && !knot->isNull(methodIndex)) {
+                TR_OpaqueClassBlock *methodClass = comp()->fej9()->getObjectClassFromKnownObjectIndex(comp(), methodIndex);
+                if (methodClass) {
+                    int32_t offset = comp()->fej9()->getInstanceFieldOffset(methodClass, "callerSensitive", "B");
+                    if (offset >= 0) {
+                        TR::VMAccessCriticalSection isCallerSensitiveSection(comp()->fej9());
+                        uintptr_t methodObject = knot->getPointer(methodIndex);
+                        int8_t isCallerSensitive = (int8_t)comp()->fej9()->getInt32FieldAt(methodObject, offset);
+                        if (isCallerSensitive != 0)
+                            result = new (trStackMemory()) IconstOperand((isCallerSensitive > 0) ? 1 : 0);
+                    }
+                }
+            }
+            break;
+        }
         case TR::java_lang_invoke_ILGenMacros_isCustomThunk:
             result = new (trStackMemory()) IconstOperand(1);
             break;
