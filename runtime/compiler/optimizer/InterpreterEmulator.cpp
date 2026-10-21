@@ -1991,7 +1991,7 @@ bool InterpreterEmulator::shouldIterateWithState()
 
 bool InterpreterEmulator::findAndCreateCallsitesFromBytecodes(bool wasPeekingSuccessfull, bool withState)
 {
-    static const bool enableMore = feGetEnv("TR_moreInterpreterEmulator") != NULL;
+    static const bool enableMore = true;
     if (enableMore) {
         // ignore withState and determine on our own whether to use state
         withState = shouldIterateWithState();
