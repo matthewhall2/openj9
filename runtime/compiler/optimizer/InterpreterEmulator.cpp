@@ -2842,7 +2842,11 @@ void InterpreterEmulator::markSuccessorsUnreachable(const TR::CFGEdgeList &edges
     auto end = edges.end();
     for (auto it = edges.begin(); it != end; it++) {
         TR::CFGEdge *edge = *it;
-        if (_outEdgesStillReachable.count(edge) == 0)
+
+        // The edge might already be known to be unreachable, e.g. if
+        // markSweepCFG() found its source block to be unreachable before the
+        // block was reached in the iteration order.
+        if (_outEdgesStillReachable.count(edge) == 0 && !isEdgeUnreachable(edge))
             markEdgeUnreachable(edge);
     }
 }
@@ -2856,7 +2860,7 @@ void InterpreterEmulator::markEdgeUnreachable(TR::CFGEdge *edge)
         dest->getEntry()->getNode()->getByteCodeIndex());
 
     bool newlyAdded = _unreachableEdges.insert(edge).second;
-    TR_ASSERT_FATAL(newlyAdded, ".."); // TODO: message
+    TR_ASSERT_FATAL(newlyAdded, "edge %d -> %d already marked unreachable", src->getNumber(), dest->getNumber());
 
     uint32_t &rc = _blockRc[dest];
     TR_ASSERT_FATAL(rc != 0, "dest block %d already unreachable", dest->getNumber());
