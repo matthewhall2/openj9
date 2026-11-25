@@ -1626,46 +1626,67 @@ public:
         TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
         // 1. Fastpath: Class Equality (fromClass == toClass)
+        fromClassNode->incReferenceCount();
+        toClassNode->incReferenceCount();
         auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreNode);
         tt->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
         callBlock = splitForFastpath(callBlock, tt, targetBlock);
 
         // 2. Fastpath: castClassCache Check
-        TR::Node *cacheAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
-            TR::Node::iconst(offsetof(J9Class, castClassCache)));
+        fromClassNode->incReferenceCount();
+        TR::Node *cacheOffset = comp->target().is64Bit()
+            ? TR::Node::lconst(offsetof(J9Class, castClassCache))
+            : TR::Node::iconst(offsetof(J9Class, castClassCache));
+        TR::Node *cacheAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, cacheOffset);
         TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr,
             comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
+        toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifCacheEqNode, exitGlRegDeps, regDepForStoreNode);
         tt->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
         callBlock = splitForFastpath(callBlock, tt, targetBlock);
 
         // 3. Fastpath: Superclass Array Check
-        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
-            TR::Node::iconst(offsetof(J9Class, classDepthAndFlags)));
+        fromClassNode->incReferenceCount();
+        TR::Node *fromDepthOffset = comp->target().is64Bit()
+            ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
+            : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
+        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, fromDepthOffset);
         TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
             comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
         TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
 
-        TR::Node *toDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, toClassNode,
-            TR::Node::iconst(offsetof(J9Class, classDepthAndFlags)));
+        toClassNode->incReferenceCount();
+        TR::Node *toDepthOffset = comp->target().is64Bit()
+            ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
+            : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
+        TR::Node *toDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, toClassNode, toDepthOffset);
         TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
             comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
         TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
 
-        TR::Node *superclassesPtrAddr = TR::Node::create(TR::aiadd, 2, fromClassNode,
-            TR::Node::iconst(offsetof(J9Class, superclasses)));
+        fromClassNode->incReferenceCount();
+        TR::Node *superclassesOffset = comp->target().is64Bit()
+            ? TR::Node::lconst(offsetof(J9Class, superclasses))
+            : TR::Node::iconst(offsetof(J9Class, superclasses));
+        TR::Node *superclassesPtrAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, superclassesOffset);
         TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr,
             comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
-        TR::Node *elementOffset = TR::Node::create(TR::imul, 2, toDepth,
-            TR::Node::iconst(comp->target().is64Bit() ? 8 : 4));
+        TR::Node *elementOffset = NULL;
+        if (comp->target().is64Bit()) {
+            TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepth);
+            elementOffset = TR::Node::create(TR::lshl, 2, toDepth64, TR::Node::iconst(3));
+        } else {
+            elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
+        }
         TR::Node *superClassElemAddr = TR::Node::create(TR::aiadd, 2, superclassesArray, elementOffset);
         TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr,
             comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
+        toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifSuperclassEqNode, exitGlRegDeps, regDepForStoreNode);
         tt->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
