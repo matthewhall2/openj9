@@ -1656,7 +1656,7 @@ public:
         }
 
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
-        TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
+        TR::Node *toClassNode = anchoredToClassTT->getNode()->getSecondChild();
 
         // Symbol reference for loading raw native pointers (uncollected 64-bit addresses on 64-bit platforms)
         TR::Symbol *rawPtrSym = TR::Symbol::createShadow(comp->trHeapMemory(), TR::Address);
