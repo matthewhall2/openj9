@@ -1649,17 +1649,16 @@ public:
         TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
         // 1. Fastpath: Class Equality (fromClass == toClass)
-        callBlock->append(TR::TreeTop::create(comp, storeSuccessNode));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
         fromClassNode->incReferenceCount();
         toClassNode->incReferenceCount();
         auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreSuccessNode);
-        callBlock->append(TR::TreeTop::create(comp, ifacmpeqNode));
-        TR::TreeTop *splitPoint = callBlock->getLastRealTreeTop();
-        callBlock = splitForFastpath(callBlock, splitPoint, targetBlock);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 2. Fastpath: castClassCache Check
-        callBlock->append(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
         fromClassNode->incReferenceCount();
         TR::Node *cacheOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9Class, castClassCache))
@@ -1671,9 +1670,8 @@ public:
         toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifCacheEqNode, exitGlRegDeps, regDepForStoreSuccessNode);
-        callBlock->append(TR::TreeTop::create(comp, ifCacheEqNode));
-        splitPoint = callBlock->getLastRealTreeTop();
-        callBlock = splitForFastpath(callBlock, splitPoint, targetBlock);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 3. Modifier Flags Check on toClass:
         // Test if toClass is an Interface or an Array (modifiers & (J9AccInterface | J9AccClassArray) != 0).
@@ -1697,9 +1695,8 @@ public:
         TR::Node *modifierFlags = TR::Node::create(TR::iand, 2, modifiers, TR::Node::iconst(interfaceOrArrayMask));
         auto *ifInterfaceOrArrayNode = TR::Node::createif(TR::ificmpne, modifierFlags, TR::Node::iconst(0), helperCallBlock->getEntry());
         copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, exitGlRegDeps, NULL);
-        callBlock->append(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
-        splitPoint = callBlock->getLastRealTreeTop();
-        callBlock = splitForFastpath(callBlock, splitPoint, helperCallBlock);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
 
         // 4. Fast-Fail: Depth Check (fromDepth <= toDepth)
         // Since toClass is a normal class, if fromDepth <= toDepth, fromClass CANNOT be a subclass of toClass.
@@ -1721,15 +1718,14 @@ public:
             comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
         TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
 
-        callBlock->append(TR::TreeTop::create(comp, storeFailNode));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifDepthFailNode, exitGlRegDeps, regDepForStoreFailNode);
-        callBlock->append(TR::TreeTop::create(comp, ifDepthFailNode));
-        splitPoint = callBlock->getLastRealTreeTop();
-        callBlock = splitForFastpath(callBlock, splitPoint, targetBlock);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
-        callBlock->append(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
 
         fromClassNode->incReferenceCount();
         TR::Node *superclassesOffset = comp->target().is64Bit()
@@ -1754,16 +1750,15 @@ public:
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
         exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifSuperclassEqNode, exitGlRegDeps, regDepForStoreSuccessNode);
-        callBlock->append(TR::TreeTop::create(comp, ifSuperclassEqNode));
-        splitPoint = callBlock->getLastRealTreeTop();
-        callBlock = splitForFastpath(callBlock, splitPoint, targetBlock);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 6. Superclass Mismatch Fast-Fail:
         // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0).
-        callBlock->append(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
         auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
         copyBranchGlRegDepsAndSubstitute(gotoFailNode, exitGlRegDeps, regDepForStoreFailNode);
-        callBlock->append(TR::TreeTop::create(comp, gotoFailNode));
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
         cfg->addEdge(callBlock, targetBlock);
     }
 };
