@@ -30,6 +30,7 @@
 #include "infra/ILWalk.hpp"
 #include "optimizer/J9TransformUtil.hpp"
 #include "ras/Logger.hpp"
+#include "env/VMJ9.h"
 
 const char *TR::TreeLowering::optDetailString() const throw() { return "O^O TREE LOWERING: "; }
 
@@ -1694,40 +1695,44 @@ public:
         toClassNode->incReferenceCount();
         TR::Node *romClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClassNode,
             comp->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
-
-        TR::Node *modifiersOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
-            : TR::Node::iconst(offsetof(J9ROMClass, modifiers));
-        TR::Node *modifiersAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd: TR::aiadd, 2, romClass, modifiersOffset);
-        TR::Node *modifiers = TR::Node::createWithSymRef(TR::iloadi, 1, 1, modifiersAddr,
-            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Int32));
-
         const int32_t interfaceOrArrayMask = J9AccInterface | J9AccClassArray;
-        TR::Node *modifierFlags = TR::Node::create(TR::iand, 2, modifiers, TR::Node::iconst(interfaceOrArrayMask));
-        auto *ifInterfaceOrArrayNode = TR::Node::createif(TR::ificmpne, modifierFlags, TR::Node::iconst(0), helperCallBlock->getEntry());
+
+        TR::Node *modifers = comp->fej9()->testAreSomeClassModifiersSet(romClass, interfaceOrArrayMask)
+
+        // TR::Node *modifiersOffset = comp->target().is64Bit()
+        //     ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
+        //     : TR::Node::iconst(offsetof(J9ROMClass, modifiers));
+        // TR::Node *modifiersAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd: TR::aiadd, 2, romClass, modifiersOffset);
+        // TR::Node *modifiers = TR::Node::createWithSymRef(TR::iloadi, 1, 1, modifiersAddr,
+        //     comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Int32));
+
+       // TR::Node *modifierFlags = TR::Node::create(TR::iand, 2, modifiers, TR::Node::iconst(interfaceOrArrayMask));
+        auto *ifInterfaceOrArrayNode = TR::Node::createif(TR::ificmpne, modifers, TR::Node::iconst(0), helperCallBlock->getEntry());
         copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, helperEntryGlRegDeps, NULL);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
 
         // 4. Fast-Fail: Depth Check (fromDepth <= toDepth)
         // Since toClass is a normal class, if fromDepth <= toDepth, fromClass CANNOT be a subclass of toClass.
-        fromClassNode->incReferenceCount();
-        TR::Node *fromDepthOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
-            : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, fromDepthOffset);
-        TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
-            comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
-        TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
+//fromClassNode->incReferenceCount();
+        TR::Node *fromDepth = comp->fej9()->loadClassDepthAndFlags(fromClassNode);
+        // TR::Node *fromDepthOffset = comp->target().is64Bit()
+        //     ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
+        //     : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
+        // TR::Node *fromDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, fromDepthOffset);
+        // TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
+        //     comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
+      //  TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
 
-        toClassNode->incReferenceCount();
-        TR::Node *toDepthOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
-            : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        TR::Node *toDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, toClassNode, toDepthOffset);
-        TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
-            comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
-        TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
+      //  toClassNode->incReferenceCount();
+        // TR::Node *toDepthOffset = comp->target().is64Bit()
+        //     ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
+        //     : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
+        TR::Node *toDepth = comp->fej9()->loadClassDepthAndFlags(toClassNode);
+        // TR::Node *toDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, toClassNode, toDepthOffset);
+        // TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
+        //     comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
+        // TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
 
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());

@@ -1610,7 +1610,9 @@ UDATA TR_J9VMBase::getOffsetOfRamStaticsFromClassField() { return offsetof(J9Cla
 
 UDATA TR_J9VMBase::getOffsetOfIsArrayFieldFromRomClass() { return offsetof(J9ROMClass, modifiers); }
 
-UDATA TR_J9VMBase::getOffsetOfClassDepthAndFlags() { return offsetof(J9Class, classDepthAndFlags); }
+UDATA TR_J9VMBase::getOffsetOfClassDepthAndFlags() { return offsetof(J9Class, classDepthAndFlags); }\
+
+UDATA TR_J9VMBase::getOffsetOfClassModifiers() { return offsetof(J9Class, modifiers); }
 
 UDATA TR_J9VMBase::getOffsetOfClassFlags() { return offsetof(J9Class, classFlags); }
 
@@ -2832,6 +2834,31 @@ TR::Node *TR_J9VMBase::loadClassDepthAndFlags(TR::Node *j9ClassRefNode)
 
     return classFlagsNode;
 }
+
+ TR::Node *TR_J9VMBase::loadClassModifiers(TR::Node *j9ROMClassNode) {
+    TR::SymbolReference *classModifersSymRef
+        = TR::comp()->getSymRefTab()->findOrCreateClassModifersSymbolRef();
+
+    TR::Node *classModifersNode = NULL;
+
+    if (TR::comp()->target().is32Bit()) {
+        classModifersNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ROMClassNode, classModifersSymRef);
+    } else {
+        classModifersNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ROMClassNode, classModifersSymRef);
+        classModifersNode = TR::Node::create(TR::l2i, 1, classModifersNode);
+    }
+
+    return classModifersNode;
+ }
+
+ TR::Node *TR_J9VMBase::testAreSomeClassModifiersSet(TR::Node *j9ROMClassNode, uint32_t flagsToTest)
+{
+    TR::Node *classFlags = loadClassModifiers(j9ROMClassNode);
+    TR::Node *maskedFlags = TR::Node::create(TR::iand, 2, classFlags, TR::Node::iconst(j9ROMClassNode, flagsToTest));
+
+    return maskedFlags;
+}
+
 
 TR::Node *TR_J9VMBase::testAreSomeClassDepthAndFlagsSet(TR::Node *j9ClassRefNode, uint32_t flagsToTest)
 {

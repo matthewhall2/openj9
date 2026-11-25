@@ -1155,6 +1155,18 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassDepthAndFlagsSym
     return element(isClassDepthAndFlagsSymbol);
 }
 
+TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassModifersSymbolRef()
+{
+    if (!element(isClassDepthAndFlagsSymbol)) {
+        TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
+        element(isClassDepthAndFlagsSymbol)
+            = new (trHeapMemory()) TR::SymbolReference(self(), isClassDepthAndFlagsSymbol, sym);
+        element(isClassDepthAndFlagsSymbol)->setOffset(fej9->getOffsetOfClassModifiers());
+    }
+    return element(isClassDepthAndFlagsSymbol);
+}
+
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateArrayComponentTypeAsPrimitiveSymbolRef()
 {
     if (!element(componentClassAsPrimitiveSymbol)) {

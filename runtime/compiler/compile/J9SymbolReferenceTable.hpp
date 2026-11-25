@@ -268,6 +268,7 @@ public:
     TR::SymbolReference *findOrCreateDescriptionWordFromPtrSymbolRef();
     TR::SymbolReference *findOrCreateClassFlagsSymbolRef();
     TR::SymbolReference *findOrCreateClassDepthAndFlagsSymbolRef();
+    TR::SymbolReference *findOrCreateClassModifersSymbolRef();
     TR::SymbolReference *findOrCreateArrayComponentTypeAsPrimitiveSymbolRef();
     TR::SymbolReference *findOrCreateMethodTypeCheckSymbolRef(TR::ResolvedMethodSymbol *owningMethodSymbol);
     TR::SymbolReference *findOrCreateIncompatibleReceiverSymbolRef(TR::ResolvedMethodSymbol *owningMethodSymbol);

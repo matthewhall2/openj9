@@ -943,6 +943,7 @@ public:
 
     virtual uintptr_t getOffsetOfIsArrayFieldFromRomClass();
     virtual uintptr_t getOffsetOfClassDepthAndFlags();
+    virtual uintptr_t getOffsetOfClassModifiers();
     virtual uintptr_t getOffsetOfClassFlags();
     virtual uintptr_t getOffsetOfArrayComponentTypeField();
     virtual uintptr_t getOffsetOfIndexableSizeField();
@@ -1600,6 +1601,8 @@ public:
      */
     TR::Node *loadClassDepthAndFlags(TR::Node *j9ClassRefNode);
 
+    TR::Node *loadClassModifiers(TR::Node *j9ROMClassNode);
+
     /**
      * \brief Generate IL to load the \c classDepthAndFlags field of the specified
      *        \ref J9Class, and apply the mask specified by \c flagsToTest.
@@ -1610,6 +1613,7 @@ public:
      */
     TR::Node *testAreSomeClassDepthAndFlagsSet(TR::Node *j9ClassRefNode, uint32_t flagsToTest);
 
+    TR::Node *testAreSomeClassModifiersSet(TR::Node *j9ROMClassNode, uint32_t flagsToTest);
     /**
      * \brief Generate IL to test whether the specified \ref J9Class is an array class.
      * \param j9ClassRefNode A node representing a reference to a \ref J9Class
