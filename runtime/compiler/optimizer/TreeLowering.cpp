@@ -1741,7 +1741,7 @@ public:
         TR::Node *superclassesOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9Class, superclasses))
             : TR::Node::iconst(offsetof(J9Class, superclasses));
-        TR::Node *superclassesPtrAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, superclassesOffset);
+        TR::Node *superclassesPtrAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, superclassesOffset);
         TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, rawPtrSymRef);
 
         toDepth->incReferenceCount();
@@ -1752,7 +1752,7 @@ public:
         } else {
             elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
         }
-        TR::Node *superClassElemAddr = TR::Node::create(TR::aiadd, 2, superclassesArray, elementOffset);
+        TR::Node *superClassElemAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, superclassesArray, elementOffset);
         TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, rawPtrSymRef);
 
         toClassNode->incReferenceCount();
