@@ -1640,9 +1640,19 @@ public:
         helperCallBlock->append(TR::TreeTop::create(comp, gotoTargetNode));
         cfg->addEdge(helperCallBlock, targetBlock);
 
-        TR::Node *exitGlRegDeps = NULL;
+        // Move exit GlRegDeps in helperCallBlock from BBEnd to the Goto node.
+        TR::Node *targetExitGlRegDeps = NULL;
+        if (helperCallBlock->getExit()->getNode()->getNumChildren() > 0) {
+            auto * const bbEnd = helperCallBlock->getExit()->getNode();
+            targetExitGlRegDeps = bbEnd->getChild(0);
+            gotoTargetNode->setChild(0, targetExitGlRegDeps);
+            gotoTargetNode->setNumChildren(1);
+            bbEnd->setNumChildren(0);
+        }
+
+        TR::Node *helperEntryGlRegDeps = NULL;
         if (callBlock->getExit()->getNode()->getNumChildren() > 0) {
-            exitGlRegDeps = callBlock->getExit()->getNode()->getFirstChild();
+            helperEntryGlRegDeps = callBlock->getExit()->getNode()->getFirstChild();
         }
 
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
@@ -1653,7 +1663,7 @@ public:
         fromClassNode->incReferenceCount();
         toClassNode->incReferenceCount();
         auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
-        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, exitGlRegDeps, regDepForStoreSuccessNode);
+        copyBranchGlRegDepsAndSubstitute(ifacmpeqNode, targetExitGlRegDeps, regDepForStoreSuccessNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1669,7 +1679,7 @@ public:
 
         toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
-        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifCacheEqNode, exitGlRegDeps, regDepForStoreSuccessNode);
+        copyBranchGlRegDepsAndSubstitute(ifCacheEqNode, targetExitGlRegDeps, regDepForStoreSuccessNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1694,7 +1704,7 @@ public:
         const int32_t interfaceOrArrayMask = J9AccInterface | J9AccClassArray;
         TR::Node *modifierFlags = TR::Node::create(TR::iand, 2, modifiers, TR::Node::iconst(interfaceOrArrayMask));
         auto *ifInterfaceOrArrayNode = TR::Node::createif(TR::ificmpne, modifierFlags, TR::Node::iconst(0), helperCallBlock->getEntry());
-        copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, exitGlRegDeps, NULL);
+        copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, helperEntryGlRegDeps, NULL);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
 
@@ -1720,7 +1730,7 @@ public:
 
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
-        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifDepthFailNode, exitGlRegDeps, regDepForStoreFailNode);
+        copyBranchGlRegDepsAndSubstitute(ifDepthFailNode, targetExitGlRegDeps, regDepForStoreFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1749,7 +1759,7 @@ public:
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
-        exitGlRegDeps = copyBranchGlRegDepsAndSubstitute(ifSuperclassEqNode, exitGlRegDeps, regDepForStoreSuccessNode);
+        copyBranchGlRegDepsAndSubstitute(ifSuperclassEqNode, targetExitGlRegDeps, regDepForStoreSuccessNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1757,7 +1767,7 @@ public:
         // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0).
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
         auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
-        copyBranchGlRegDepsAndSubstitute(gotoFailNode, exitGlRegDeps, regDepForStoreFailNode);
+        copyBranchGlRegDepsAndSubstitute(gotoFailNode, targetExitGlRegDeps, regDepForStoreFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
         cfg->addEdge(callBlock, targetBlock);
     }
