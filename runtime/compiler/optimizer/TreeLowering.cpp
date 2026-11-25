@@ -1658,6 +1658,11 @@ public:
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
         TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
+        // Symbol reference for loading raw native pointers (uncollected 64-bit addresses on 64-bit platforms)
+        TR::Symbol *rawPtrSym = TR::Symbol::createShadow(comp->trHeapMemory(), TR::Address);
+        rawPtrSym->setNotCollected();
+        TR::SymbolReference *rawPtrSymRef = new (comp->trHeapMemory()) TR::SymbolReference(comp->getSymRefTab(), rawPtrSym);
+
         // 1. Fastpath: Class Equality (fromClass == toClass)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
         fromClassNode->incReferenceCount();
@@ -1674,8 +1679,7 @@ public:
             ? TR::Node::lconst(offsetof(J9Class, castClassCache))
             : TR::Node::iconst(offsetof(J9Class, castClassCache));
         TR::Node *cacheAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, cacheOffset);
-        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr,
-            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, rawPtrSymRef);
 
         toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
@@ -1687,12 +1691,8 @@ public:
         // Test if toClass is an Interface or an Array (modifiers & (J9AccInterface | J9AccClassArray) != 0).
         // If it is an interface or array, superclass array check does not apply, so jump to helperCallBlock.
         toClassNode->incReferenceCount();
-        TR::Node *romClassOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9Class, romClass))
-            : TR::Node::iconst(offsetof(J9Class, romClass));
-        TR::Node *romClassAddr = TR::Node::create(TR::aiadd, 2, toClassNode, romClassOffset);
-        TR::Node *romClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, romClassAddr,
-            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        TR::Node *romClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClassNode,
+            comp->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
 
         TR::Node *modifiersOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
@@ -1742,8 +1742,7 @@ public:
             ? TR::Node::lconst(offsetof(J9Class, superclasses))
             : TR::Node::iconst(offsetof(J9Class, superclasses));
         TR::Node *superclassesPtrAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, superclassesOffset);
-        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr,
-            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, rawPtrSymRef);
 
         toDepth->incReferenceCount();
         TR::Node *elementOffset = NULL;
@@ -1754,8 +1753,7 @@ public:
             elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
         }
         TR::Node *superClassElemAddr = TR::Node::create(TR::aiadd, 2, superclassesArray, elementOffset);
-        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr,
-            comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, rawPtrSymRef);
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
