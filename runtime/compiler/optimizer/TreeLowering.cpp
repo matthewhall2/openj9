@@ -1698,7 +1698,7 @@ public:
         TR::Node *modifiersOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
             : TR::Node::iconst(offsetof(J9ROMClass, modifiers));
-        TR::Node *modifiersAddr = TR::Node::create(TR::aiadd, 2, romClass, modifiersOffset);
+        TR::Node *modifiersAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd: TR::aiadd, 2, romClass, modifiersOffset);
         TR::Node *modifiers = TR::Node::createWithSymRef(TR::iloadi, 1, 1, modifiersAddr,
             comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Int32));
 
@@ -1715,7 +1715,7 @@ public:
         TR::Node *fromDepthOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
             : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, fromClassNode, fromDepthOffset);
+        TR::Node *fromDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, fromDepthOffset);
         TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
             comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
         TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
@@ -1724,7 +1724,7 @@ public:
         TR::Node *toDepthOffset = comp->target().is64Bit()
             ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
             : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        TR::Node *toDepthAndFlagsAddr = TR::Node::create(TR::aiadd, 2, toClassNode, toDepthOffset);
+        TR::Node *toDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, toClassNode, toDepthOffset);
         TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
             comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
         TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
