@@ -26,6 +26,7 @@
 #include "compile/SymbolReferenceTable.hpp"
 #include "il/Block.hpp"
 #include "il/Block_inlines.hpp"
+#include "il/OMRDataTypes.hpp"
 #include "infra/ILWalk.hpp"
 #include "optimizer/J9TransformUtil.hpp"
 #include "ras/Logger.hpp"
@@ -1656,7 +1657,7 @@ public:
         }
 
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
-        TR::Node *toClassNode = anchoredToClassTT->getNode()->getSecondChild();
+        TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
         // Symbol reference for loading raw native pointers (uncollected 64-bit addresses on 64-bit platforms)
         TR::Symbol *rawPtrSym = TR::Symbol::createShadow(comp->trHeapMemory(), TR::Address);
@@ -1679,7 +1680,7 @@ public:
             ? TR::Node::lconst(offsetof(J9Class, castClassCache))
             : TR::Node::iconst(offsetof(J9Class, castClassCache));
         TR::Node *cacheAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, cacheOffset);
-        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(comp->target().is64Bit() ? TR::Int64 : TR::Int32));
+        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
         toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
@@ -1742,7 +1743,7 @@ public:
             ? TR::Node::lconst(offsetof(J9Class, superclasses))
             : TR::Node::iconst(offsetof(J9Class, superclasses));
         TR::Node *superclassesPtrAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, superclassesOffset);
-        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(comp->target().is64Bit() ? TR::Int64 : TR::Int32));
+        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
         toDepth->incReferenceCount();
         TR::Node *elementOffset = NULL;
@@ -1753,7 +1754,7 @@ public:
             elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
         }
         TR::Node *superClassElemAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, superclassesArray, elementOffset);
-        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(comp->target().is64Bit() ? TR::Int64 : TR::Int32));
+        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
