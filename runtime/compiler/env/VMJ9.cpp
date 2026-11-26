@@ -1612,7 +1612,7 @@ UDATA TR_J9VMBase::getOffsetOfIsArrayFieldFromRomClass() { return offsetof(J9ROM
 
 UDATA TR_J9VMBase::getOffsetOfClassDepthAndFlags() { return offsetof(J9Class, classDepthAndFlags); }
 
-UDATA TR_J9VMBase::getOffsetOfCastClassCache() { return offsetof(J9Class, castClassCache); }\
+UDATA TR_J9VMBase::getOffsetOfCastClassCache() { return offsetof(J9Class, castClassCache); }
 
 UDATA TR_J9VMBase::getOffsetOfClassModifiers() { return offsetof(J9ROMClass, modifiers); }
 
