@@ -1642,6 +1642,12 @@ public:
                 optDetailString()))
             return;
 
+        // The fast paths are expanded below, so the remaining call is only the slow path helper call. On Z, retarget it
+        // to a separate helper index so the code generator emits just the call to the helper instead of re-expanding
+        // the inline fast paths for TR_checkAssignable.
+        if (comp->target().cpu.isZ())
+            node->setSymbolReference(comp->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignableHelper));
+
         auto * const anchoredCallTT = TR::TreeTop::create(comp, tt, TR::Node::create(TR::treetop, 1, node));
         logprintf(trace(), log, "Anchoring isAssignableFrom call node under treetop n%un (0x%p)\n",
             anchoredCallTT->getNode()->getGlobalIndex(), anchoredCallTT->getNode());

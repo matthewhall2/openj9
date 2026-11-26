@@ -949,6 +949,9 @@ void initializeCodeRuntimeHelperTable(J9JITConfig *jitConfig, char isSMP)
 #if defined(TR_HOST_X86) || defined(TR_HOST_POWER) || (defined(TR_HOST_S390) && defined(J9VM_JIT_NEW_DUAL_HELPERS)) \
     || defined(TR_HOST_ARM64)
     SET(TR_checkAssignable, (void *)fast_jitCheckAssignable, TR_CHelper);
+    // Same helper as TR_checkAssignable. TreeLowering retargets the helper call of a lowered Class.isAssignableFrom to
+    // this index so that code generators emit just the call, instead of re-expanding the inline fast paths.
+    SET(TR_checkAssignableHelper, (void *)fast_jitCheckAssignable, TR_CHelper);
 #endif
     SET(TR_induceOSRAtCurrentPC, (void *)jitInduceOSRAtCurrentPC, TR_Helper);
     SET(TR_induceOSRAtCurrentPCAndRecompile, (void *)jitInduceOSRAtCurrentPCAndRecompile, TR_Helper);

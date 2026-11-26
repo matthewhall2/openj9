@@ -3600,12 +3600,16 @@ bool J9::Z::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&resul
         ReduceSynchronizedFieldLoad::inlineSynchronizedFieldLoad(node, cg);
         return true;
     } else if (node->getSymbolReference()->getReferenceNumber() == TR_checkAssignable) {
-        static const bool disableIsAssignableFromLowering = feGetEnv("TR_DisableIsAssignableFromLowering") != NULL;
-        if (disableIsAssignableFromLowering) {
-            resultReg = TR::TreeEvaluator::inlineCheckAssignableFromEvaluator(node, cg);
-            return true;
-        }
-        return false;
+        // Not lowered by TreeLowering: expand the fast paths and the helper call here.
+        resultReg = TR::TreeEvaluator::inlineCheckAssignableFromEvaluator(node, cg);
+        return true;
+    } else if (node->getSymbolReference()->getReferenceNumber() == TR_checkAssignableHelper) {
+        // TreeLowering already expanded the fast paths in IL; this is only the call to the helper. Dispatch through the
+        // C helper linkage directly so the call always goes to fast_jitCheckAssignable.
+        resultReg = cg->getLinkage(TR_CHelper)->buildDirectDispatch(node);
+        cg->decReferenceCount(node->getFirstChild());
+        cg->decReferenceCount(node->getSecondChild());
+        return true;
     }
 
     static const char *enableTRTRE = feGetEnv("TR_enableTRTRE");

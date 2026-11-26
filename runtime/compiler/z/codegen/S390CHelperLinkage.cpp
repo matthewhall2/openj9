@@ -248,7 +248,9 @@ bool J9::Z::CHelperLinkage::getIsFastPathOnly(TR::Node *callNode)
     }
 
     TR::SymbolReference *ref = callNode->getSymbolReference();
-    return ref == cg()->comp()->getSymRefTab()->findOrCreateRuntimeHelper(TR_checkAssignable);
+    TR::SymbolReferenceTable *symRefTab = cg()->comp()->getSymRefTab();
+    return ref == symRefTab->findOrCreateRuntimeHelper(TR_checkAssignable)
+        || ref == symRefTab->findOrCreateRuntimeHelper(TR_checkAssignableHelper);
 }
 
 /**   \brief Build a JIT helper call.
