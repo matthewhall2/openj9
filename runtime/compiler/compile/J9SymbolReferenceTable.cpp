@@ -1195,6 +1195,20 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassesSymb
     return element(isClassSuperclassesSymbol);
 }
 
+TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassElementSymbolRef()
+{
+    if (!element(isClassSuperclassElementSymbol)) {
+        // A load of one J9Class * element of a J9Class::superclasses array. The element address is computed in IL
+        // (superclasses + depth * sizeof(J9Class *)), so the offset is 0. The element is a native J9Class pointer
+        // (not a heap reference), so it must be an uncollected address.
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Address);
+        sym->setNotCollected();
+        element(isClassSuperclassElementSymbol)
+            = new (trHeapMemory()) TR::SymbolReference(self(), isClassSuperclassElementSymbol, sym, 0);
+    }
+    return element(isClassSuperclassElementSymbol);
+}
+
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateArrayComponentTypeAsPrimitiveSymbolRef()
 {
     if (!element(componentClassAsPrimitiveSymbol)) {

@@ -1660,11 +1660,6 @@ public:
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
         TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
-        // Symbol reference for loading raw native pointers (uncollected 64-bit addresses on 64-bit platforms)
-        TR::Symbol *rawPtrSym = TR::Symbol::createShadow(comp->trHeapMemory(), TR::Address);
-        rawPtrSym->setNotCollected();
-        TR::SymbolReference *rawPtrSymRef = new (comp->trHeapMemory()) TR::SymbolReference(comp->getSymRefTab(), rawPtrSym);
-
         // 1. Fastpath: Class Equality (fromClass == toClass)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
         fromClassNode->incReferenceCount();
@@ -1744,7 +1739,8 @@ public:
             elementOffset = TR::Node::create(TR::ishl, 2, toDepthForIndex, TR::Node::iconst(2));
         }
         TR::Node *superClassElemAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, superclassesArray, elementOffset);
-        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, rawPtrSymRef);
+        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr,
+            comp->getSymRefTab()->findOrCreateClassSuperclassElementSymbolRef());
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
