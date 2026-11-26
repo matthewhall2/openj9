@@ -2837,53 +2837,23 @@ TR::Node *TR_J9VMBase::loadClassDepthAndFlags(TR::Node *j9ClassRefNode)
     return classFlagsNode;
 }
 
- TR::Node *TR_J9VMBase::loadClassModifiers(TR::Node *j9ROMClassNode) {
-    TR::SymbolReference *classModifersSymRef
-        = TR::comp()->getSymRefTab()->findOrCreateClassModifersSymbolRef();
-
-    TR::Node *classModifersNode = NULL;
-
-    if (TR::comp()->target().is32Bit()) {
-        classModifersNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ROMClassNode, classModifersSymRef);
-    } else {
-        classModifersNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ROMClassNode, classModifersSymRef);
-        classModifersNode = TR::Node::create(TR::l2i, 1, classModifersNode);
-    }
-
-    return classModifersNode;
- }
-
-TR::Node *TR_J9VMBase::loadCastClassCache(TR::Node *j9ClassRefNode) {
-    TR::SymbolReference *cacheSymRef
-        = TR::comp()->getSymRefTab()->findOrCastClassCacheSymbolSymbolRef();
-
-    TR::Node *cacheNode = NULL;
-
-    if (TR::comp()->target().is32Bit()) {
-        cacheNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ClassRefNode, cacheSymRef);
-    } else {
-        cacheNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ClassRefNode, cacheSymRef);
-        cacheNode = TR::Node::create(TR::l2i, 1, j9ClassRefNode);
-    }
-
-    return cacheNode;
+TR::Node *TR_J9VMBase::loadClassModifiers(TR::Node *j9ROMClassNode)
+{
+    // J9ROMClass::modifiers is a U_32 on all platforms
+    TR::SymbolReference *classModifersSymRef = TR::comp()->getSymRefTab()->findOrCreateClassModifersSymbolRef();
+    return TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ROMClassNode, classModifersSymRef);
 }
 
+TR::Node *TR_J9VMBase::loadCastClassCache(TR::Node *j9ClassRefNode)
+{
+    TR::SymbolReference *cacheSymRef = TR::comp()->getSymRefTab()->findOrCreateCastClassCacheSymbolSymbolRef();
+    return TR::Node::createWithSymRef(TR::aloadi, 1, 1, j9ClassRefNode, cacheSymRef);
+}
 
-TR::Node *TR_J9VMBase::loadClassSuperclassArray(TR::Node *j9ClassRefNode) {
-    TR::SymbolReference *cacheSymRef
-        = TR::comp()->getSymRefTab()->findOrCreateClassSuperclassesSymbolRef();
-
-    TR::Node *cacheNode = NULL;
-
-    if (TR::comp()->target().is32Bit()) {
-        cacheNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ClassRefNode, cacheSymRef);
-    } else {
-        cacheNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ClassRefNode, cacheSymRef);
-        cacheNode = TR::Node::create(TR::l2i, 1, j9ClassRefNode);
-    }
-
-    return cacheNode;
+TR::Node *TR_J9VMBase::loadClassSuperclassArray(TR::Node *j9ClassRefNode)
+{
+    TR::SymbolReference *superclassesSymRef = TR::comp()->getSymRefTab()->findOrCreateClassSuperclassesSymbolRef();
+    return TR::Node::createWithSymRef(TR::aloadi, 1, 1, j9ClassRefNode, superclassesSymRef);
 }
 
 

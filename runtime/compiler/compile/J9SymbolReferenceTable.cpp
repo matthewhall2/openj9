@@ -1159,7 +1159,9 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateCastClassCacheSymbolS
 {
     if (!element(isCastClassCacheSymbol)) {
         TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
-        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
+        // Native J9Class* value (not a heap reference), so it must be an uncollected address.
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Address);
+        sym->setNotCollected();
         element(isCastClassCacheSymbol)
             = new (trHeapMemory()) TR::SymbolReference(self(), isCastClassCacheSymbol, sym);
         element(isCastClassCacheSymbol)->setOffset(fej9->getOffsetOfCastClassCache());
@@ -1183,7 +1185,9 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassesSymb
 {
     if (!element(isClassSuperclassesSymbol)) {
         TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
-        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
+        // Native J9Class** value (not a heap reference), so it must be an uncollected address.
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Address);
+        sym->setNotCollected();
         element(isClassSuperclassesSymbol)
             = new (trHeapMemory()) TR::SymbolReference(self(), isClassSuperclassesSymbol, sym);
         element(isClassSuperclassesSymbol)->setOffset(fej9->getOffsetOfSuperclassesInClassObject());

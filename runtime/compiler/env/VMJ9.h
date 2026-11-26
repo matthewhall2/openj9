@@ -1607,6 +1607,12 @@ public:
     TR::Node *loadCastClassCache(TR::Node *j9ClassRefNode);
 
     /**
+     * \brief Generate IL to load the \c superclasses field (a \c J9Class** array) of the
+     *        specified \ref J9Class.
+     */
+    TR::Node *loadClassSuperclassArray(TR::Node *j9ClassRefNode);
+
+    /**
      * \brief Generate IL to load the \c classDepthAndFlags field of the specified
      *        \ref J9Class, and apply the mask specified by \c flagsToTest.
      * \param j9ClassRefNode A node representing a reference to a \ref J9Class

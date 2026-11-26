@@ -269,7 +269,8 @@ public:
     TR::SymbolReference *findOrCreateClassFlagsSymbolRef();
     TR::SymbolReference *findOrCreateClassDepthAndFlagsSymbolRef();
     TR::SymbolReference *findOrCreateClassModifersSymbolRef();
-    TR::SymbolReference *findOrCastClassCacheSymbolSymbolRef()
+    TR::SymbolReference *findOrCreateCastClassCacheSymbolSymbolRef();
+    TR::SymbolReference *findOrCreateClassSuperclassesSymbolRef();
     TR::SymbolReference *findOrCreateArrayComponentTypeAsPrimitiveSymbolRef();
     TR::SymbolReference *findOrCreateMethodTypeCheckSymbolRef(TR::ResolvedMethodSymbol *owningMethodSymbol);
     TR::SymbolReference *findOrCreateIncompatibleReceiverSymbolRef(TR::ResolvedMethodSymbol *owningMethodSymbol);

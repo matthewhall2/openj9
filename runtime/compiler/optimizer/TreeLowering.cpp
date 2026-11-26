@@ -1715,25 +1715,11 @@ public:
 
         // 4. Fast-Fail: Depth Check (fromDepth <= toDepth)
         // Since toClass is a normal class, if fromDepth <= toDepth, fromClass CANNOT be a subclass of toClass.
-//fromClassNode->incReferenceCount();
-        TR::Node *fromDepth = comp->fej9()->loadClassDepthAndFlags(fromClassNode);
-        // TR::Node *fromDepthOffset = comp->target().is64Bit()
-        //     ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
-        //     : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        // TR::Node *fromDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, fromDepthOffset);
-        // TR::Node *fromDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, fromDepthAndFlagsAddr,
-        //     comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
-      //  TR::Node *fromDepth = TR::Node::create(TR::iand, 2, fromDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
-
-      //  toClassNode->incReferenceCount();
-        // TR::Node *toDepthOffset = comp->target().is64Bit()
-        //     ? TR::Node::lconst(offsetof(J9Class, classDepthAndFlags))
-        //     : TR::Node::iconst(offsetof(J9Class, classDepthAndFlags));
-        TR::Node *toDepth = comp->fej9()->loadClassDepthAndFlags(toClassNode);
-        // TR::Node *toDepthAndFlagsAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, toClassNode, toDepthOffset);
-        // TR::Node *toDepthAndFlags = TR::Node::createWithSymRef(TR::iloadi, 1, 1, toDepthAndFlagsAddr,
-        //     comp->getSymRefTab()->findOrCreateClassDepthAndFlagsSymbolRef());
-        // TR::Node *toDepth = TR::Node::create(TR::iand, 2, toDepthAndFlags, TR::Node::iconst(J9AccClassDepthMask));
+        // The depth is the low 16 bits of classDepthAndFlags (a UDATA). Load the full-width field and mask it; this is
+        // endian-independent, unlike a narrow load which would need an offset of classDepthAndFlags + 6 on 64-bit
+        // big-endian.
+        TR::Node *fromDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(fromClassNode, J9AccClassDepthMask);
+        TR::Node *toDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
@@ -1744,24 +1730,21 @@ public:
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
 
-        // fromClassNode->incReferenceCount();
-        // TR::Node *superclassesOffset = comp->target().is64Bit()
-        //     ? TR::Node::lconst(offsetof(J9Class, superclasses))
-        //     : TR::Node::iconst(offsetof(J9Class, superclasses));
-        //TR::Node *superclassesPtrAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, superclassesOffset);
         TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
-        // TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
-        toDepth->incReferenceCount();
+        // The element address is superclasses + toDepth * sizeof(J9Class *), so there is no fixed offset to put in a
+        // symref; load through the zero-offset uncollected address shadow instead. toDepth is reloaded here rather
+        // than reused from the previous block, since a node must not be commoned across blocks.
+        TR::Node *toDepthForIndex = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
         TR::Node *elementOffset = NULL;
         if (comp->target().is64Bit()) {
-            TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepth);
+            TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepthForIndex);
             elementOffset = TR::Node::create(TR::lshl, 2, toDepth64, TR::Node::iconst(3));
         } else {
-            elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
+            elementOffset = TR::Node::create(TR::ishl, 2, toDepthForIndex, TR::Node::iconst(2));
         }
         TR::Node *superClassElemAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, superclassesArray, elementOffset);
-        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr, rawPtrSymRef);
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
