@@ -1186,7 +1186,7 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassesSymb
         TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
         element(isClassSuperclassesSymbol)
             = new (trHeapMemory()) TR::SymbolReference(self(), isClassSuperclassesSymbol, sym);
-        element(isClassDepthAndFlagsSymbol)->setOffset(fej9->getOffsetOfSuperclassesInClassObject());
+        element(isClassSuperclassesSymbol)->setOffset(fej9->getOffsetOfSuperclassesInClassObject());
     }
     return element(isClassSuperclassesSymbol);
 }
