@@ -1169,14 +1169,14 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateCastClassCacheSymbolS
 
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassModifersSymbolRef()
 {
-    if (!element(isClassDepthAndFlagsSymbol)) {
+    if (!element(isClassModifiersSymbol)) {
         TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
         TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
-        element(isClassDepthAndFlagsSymbol)
-            = new (trHeapMemory()) TR::SymbolReference(self(), isClassDepthAndFlagsSymbol, sym);
-        element(isClassDepthAndFlagsSymbol)->setOffset(fej9->getOffsetOfClassModifiers());
+        element(isClassModifiersSymbol)
+            = new (trHeapMemory()) TR::SymbolReference(self(), isClassModifiersSymbol, sym);
+        element(isClassModifiersSymbol)->setOffset(fej9->getOffsetOfClassModifiers());
     }
-    return element(isClassDepthAndFlagsSymbol);
+    return element(isClassModifiersSymbol);
 }
 
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassesSymbolRef()
