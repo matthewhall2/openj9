@@ -1610,7 +1610,9 @@ UDATA TR_J9VMBase::getOffsetOfRamStaticsFromClassField() { return offsetof(J9Cla
 
 UDATA TR_J9VMBase::getOffsetOfIsArrayFieldFromRomClass() { return offsetof(J9ROMClass, modifiers); }
 
-UDATA TR_J9VMBase::getOffsetOfClassDepthAndFlags() { return offsetof(J9Class, classDepthAndFlags); }\
+UDATA TR_J9VMBase::getOffsetOfClassDepthAndFlags() { return offsetof(J9Class, classDepthAndFlags); }
+
+UDATA TR_J9VMBase::getOffsetOfCastClassCache() { return offsetof(J9Class, castClassCache); }\
 
 UDATA TR_J9VMBase::getOffsetOfClassModifiers() { return offsetof(J9ROMClass, modifiers); }
 
@@ -2850,6 +2852,40 @@ TR::Node *TR_J9VMBase::loadClassDepthAndFlags(TR::Node *j9ClassRefNode)
 
     return classModifersNode;
  }
+
+TR::Node *TR_J9VMBase::loadCastClassCache(TR::Node *j9ClassRefNode) {
+    TR::SymbolReference *cacheSymRef
+        = TR::comp()->getSymRefTab()->findOrCastClassCacheSymbolSymbolRef();
+
+    TR::Node *cacheNode = NULL;
+
+    if (TR::comp()->target().is32Bit()) {
+        cacheNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ClassRefNode, cacheSymRef);
+    } else {
+        cacheNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ClassRefNode, cacheSymRef);
+        cacheNode = TR::Node::create(TR::l2i, 1, j9ClassRefNode);
+    }
+
+    return cacheNode;
+}
+
+
+TR::Node *TR_J9VMBase::loadClassSuperclassArray(TR::Node *j9ClassRefNode) {
+    TR::SymbolReference *cacheSymRef
+        = TR::comp()->getSymRefTab()->findOrCreateClassSuperclassesSymbolRef();
+
+    TR::Node *cacheNode = NULL;
+
+    if (TR::comp()->target().is32Bit()) {
+        cacheNode = TR::Node::createWithSymRef(TR::iloadi, 1, 1, j9ClassRefNode, cacheSymRef);
+    } else {
+        cacheNode = TR::Node::createWithSymRef(TR::lloadi, 1, 1, j9ClassRefNode, cacheSymRef);
+        cacheNode = TR::Node::create(TR::l2i, 1, j9ClassRefNode);
+    }
+
+    return cacheNode;
+}
+
 
  TR::Node *TR_J9VMBase::testAreSomeClassModifiersSet(TR::Node *j9ROMClassNode, uint32_t flagsToTest)
 {

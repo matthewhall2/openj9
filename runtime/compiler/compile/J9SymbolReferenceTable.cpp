@@ -1155,6 +1155,18 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassDepthAndFlagsSym
     return element(isClassDepthAndFlagsSymbol);
 }
 
+TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateCastClassCacheSymbolSymbolRef()
+{
+    if (!element(isCastClassCacheSymbol)) {
+        TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
+        element(isCastClassCacheSymbol)
+            = new (trHeapMemory()) TR::SymbolReference(self(), isCastClassCacheSymbol, sym);
+        element(isCastClassCacheSymbol)->setOffset(fej9->getOffsetOfCastClassCache());
+    }
+    return element(isCastClassCacheSymbol);
+}
+
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassModifersSymbolRef()
 {
     if (!element(isClassDepthAndFlagsSymbol)) {
@@ -1165,6 +1177,18 @@ TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassModifersSymbolRe
         element(isClassDepthAndFlagsSymbol)->setOffset(fej9->getOffsetOfClassModifiers());
     }
     return element(isClassDepthAndFlagsSymbol);
+}
+
+TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateClassSuperclassesSymbolRef()
+{
+    if (!element(isClassSuperclassesSymbol)) {
+        TR_J9VMBase *fej9 = (TR_J9VMBase *)(fe());
+        TR::Symbol *sym = TR::Symbol::createShadow(trHeapMemory(), TR::Int32);
+        element(isClassSuperclassesSymbol)
+            = new (trHeapMemory()) TR::SymbolReference(self(), isClassSuperclassesSymbol, sym);
+        element(isClassDepthAndFlagsSymbol)->setOffset(fej9->getOffsetOfSuperclassesInClassObject());
+    }
+    return element(isClassSuperclassesSymbol);
 }
 
 TR::SymbolReference *J9::SymbolReferenceTable::findOrCreateArrayComponentTypeAsPrimitiveSymbolRef()

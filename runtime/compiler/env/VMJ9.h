@@ -944,6 +944,7 @@ public:
     virtual uintptr_t getOffsetOfIsArrayFieldFromRomClass();
     virtual uintptr_t getOffsetOfClassDepthAndFlags();
     virtual uintptr_t getOffsetOfClassModifiers();
+    virtual uintptr_t getOffsetOfCastClassCache();
     virtual uintptr_t getOffsetOfClassFlags();
     virtual uintptr_t getOffsetOfArrayComponentTypeField();
     virtual uintptr_t getOffsetOfIndexableSizeField();
@@ -1602,6 +1603,8 @@ public:
     TR::Node *loadClassDepthAndFlags(TR::Node *j9ClassRefNode);
 
     TR::Node *loadClassModifiers(TR::Node *j9ROMClassNode);
+
+    TR::Node *loadCastClassCache(TR::Node *j9ClassRefNode);
 
     /**
      * \brief Generate IL to load the \c classDepthAndFlags field of the specified

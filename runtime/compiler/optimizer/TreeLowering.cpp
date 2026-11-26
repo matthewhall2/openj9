@@ -1676,12 +1676,13 @@ public:
 
         // 2. Fastpath: castClassCache Check
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
-        fromClassNode->incReferenceCount();
-        TR::Node *cacheOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9Class, castClassCache))
-            : TR::Node::iconst(offsetof(J9Class, castClassCache));
-        TR::Node *cacheAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, cacheOffset);
-        TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+      //  fromClassNode->incReferenceCount();
+        // TR::Node *cacheOffset = comp->target().is64Bit()
+        //     ? TR::Node::lconst(offsetof(J9Class, castClassCache))
+        //     : TR::Node::iconst(offsetof(J9Class, castClassCache));
+        //TR::Node *cacheAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, cacheOffset);
+        TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
+      //  TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
         toClassNode->incReferenceCount();
         auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
@@ -1697,7 +1698,7 @@ public:
             comp->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
         const int32_t interfaceOrArrayMask = J9AccInterface | J9AccClassArray;
 
-        TR::Node *modifers = comp->fej9()->testAreSomeClassModifiersSet(romClass, interfaceOrArrayMask)
+        TR::Node *modifers = comp->fej9()->testAreSomeClassModifiersSet(romClass, interfaceOrArrayMask);
 
         // TR::Node *modifiersOffset = comp->target().is64Bit()
         //     ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
@@ -1743,12 +1744,13 @@ public:
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
 
-        fromClassNode->incReferenceCount();
-        TR::Node *superclassesOffset = comp->target().is64Bit()
-            ? TR::Node::lconst(offsetof(J9Class, superclasses))
-            : TR::Node::iconst(offsetof(J9Class, superclasses));
-        TR::Node *superclassesPtrAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, superclassesOffset);
-        TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        // fromClassNode->incReferenceCount();
+        // TR::Node *superclassesOffset = comp->target().is64Bit()
+        //     ? TR::Node::lconst(offsetof(J9Class, superclasses))
+        //     : TR::Node::iconst(offsetof(J9Class, superclasses));
+        //TR::Node *superclassesPtrAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, superclassesOffset);
+        TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
+        // TR::Node *superclassesArray = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superclassesPtrAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
 
         toDepth->incReferenceCount();
         TR::Node *elementOffset = NULL;
