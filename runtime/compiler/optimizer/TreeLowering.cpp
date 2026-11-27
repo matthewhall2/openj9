@@ -24,6 +24,7 @@
 
 #include "compile/Compilation.hpp"
 #include "compile/SymbolReferenceTable.hpp"
+#include "env/TRFrontEnd.hpp"
 #include "il/Block.hpp"
 #include "il/Block_inlines.hpp"
 #include "il/StaticSymbol.hpp"
@@ -1822,7 +1823,8 @@ public:
         //    0 -> cached success: result is true
         //    1 -> cached failure: result is false
         //    otherwise -> not cached for this toClass, continue
-        if (!toIsAbstract) {
+        static bool doCacheCheck = feGetEnv("doCacheCheck") != NULL;
+        if (doCacheCheck && !toIsAbstract) {
             const bool is64Bit = comp->target().is64Bit();
             const TR::ILOpCodes addrToInt = is64Bit ? TR::a2l : TR::a2i;
             const TR::ILOpCodes xorOp = is64Bit ? TR::lxor : TR::ixor;
