@@ -1703,9 +1703,10 @@ public:
         cfg->addEdge(callBlock, targetBlock);
 
         // Append goto targetBlock at the end of helperCallBlock
+        // Note: helperCallBlock already has a CFG edge to targetBlock because splitPostGRA moved the successors of
+        // callBlock to it, so adding one here would create a duplicate edge.
         auto * const gotoTargetNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
         helperCallBlock->append(TR::TreeTop::create(comp, gotoTargetNode));
-        cfg->addEdge(helperCallBlock, targetBlock);
 
         // Move exit GlRegDeps in helperCallBlock from BBEnd to the Goto node.
         TR::Node *targetExitGlRegDeps = NULL;
@@ -1819,7 +1820,10 @@ public:
         auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
         addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
-        cfg->addEdge(callBlock, targetBlock);
+        // This block inherited both the helperCallBlock and targetBlock successor edges from the previous splits, but
+        // it only goes to targetBlock. Remove the stale edge to helperCallBlock; the edge to targetBlock already
+        // exists, so do not add another.
+        cfg->removeEdge(callBlock, helperCallBlock);
     }
 };
 
