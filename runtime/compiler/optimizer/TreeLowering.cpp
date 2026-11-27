@@ -1793,19 +1793,28 @@ public:
             toJ9Class != NULL ? "known" : "unknown", fromJ9Class != NULL ? "known" : "unknown", toIsInterface,
             toIsArray, toIsAbstract, toClassDepth, fastFail);
 
-        // 1. Fastpath: Class Equality (fromClass == toClass)
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
-        fromClassNode->incReferenceCount();
-        toClassNode->incReferenceCount();
-        auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifacmpeqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
-        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+        // The original result store nodes share their constant child with the PassThrough nodes used in the branch
+        // GlRegDeps, so each original must be inserted exactly once, at the first block that uses it. Any later use
+        // inserts a duplicate.
+        bool successStoreInserted = false;
+        bool failStoreInserted = false;
+        auto insertStoreSuccess = [&]() {
+            TR::Node *store = successStoreInserted ? storeSuccessNode->duplicateTree(true) : storeSuccessNode;
+            successStoreInserted = true;
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, store));
+        };
+        auto insertStoreFail = [&]() {
+            TR::Node *store = failStoreInserted ? storeFailNode->duplicateTree(true) : storeFailNode;
+            failStoreInserted = true;
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, store));
+        };
 
-        // Fast-fail at compile time: toClass is deeper than fromClass, so the answer is definitely false. The helper
-        // block becomes unreachable once its last incoming edge is removed, and it is deleted from the CFG.
+        // Fast-fail at compile time: toClass is deeper than fromClass, so the answer is definitely false. This also
+        // implies fromClass != toClass, and the castClassCache can never hold a normal toClass, so no other test is
+        // needed. The helper block becomes unreachable once its last incoming edge is removed, and it is deleted from
+        // the CFG.
         if (fastFail) {
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
+            insertStoreFail();
             auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
             addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
@@ -1813,7 +1822,7 @@ public:
             return;
         }
 
-        // 2. Fastpath: castClassCache Check
+        // 1. Fastpath: castClassCache Check
         // Skipped if toClass is known to be abstract (as the Z codegen does) or a known normal class. VM_VMHelpers::
         // inlineCheckCast only caches successful casts to interfaces and arrays, since a cast to a same or superclass
         // is not cached, and failed casts are cached with the low bit set, so the cache can never equal such a toClass.
@@ -1831,7 +1840,7 @@ public:
             const TR::ILOpCodes ifEqOp = is64Bit ? TR::iflcmpeq : TR::ificmpeq;
 
             // Cache hit, result true
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
+            insertStoreSuccess();
             TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
             toClassNode->incReferenceCount();
             TR::Node *cacheXorToClass = TR::Node::create(xorOp, 2, TR::Node::create(addrToInt, 1, cachedClass),
@@ -1845,7 +1854,7 @@ public:
 
             // Cached failure (low bit set), result false. This block is an extension of the previous one, so it
             // commons the xor evaluated there.
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
+            insertStoreFail();
             auto *ifCachedFailNode = TR::Node::createif(ifEqOp, cacheXorToClass,
                 is64Bit ? TR::Node::lconst(1) : TR::Node::iconst(1), targetBlock->getEntry());
             addFastpathGlRegDeps(ifCachedFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
@@ -1853,9 +1862,9 @@ public:
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
         }
 
-        // toClass is known to be an interface or an array, so the superclass test does not apply: go straight to the
-        // helper. This block inherited both the helperCallBlock and targetBlock successor edges, but it only goes to
-        // helperCallBlock now.
+        // toClass is known to be an interface or an array, so the equality and superclass tests do not apply: go
+        // straight to the helper (which handles fromClass == toClass). This block inherited both the helperCallBlock
+        // and targetBlock successor edges, but it only goes to helperCallBlock now.
         if (toIsInterface || toIsArray) {
             auto * const gotoHelperNode = TR::Node::create(node, TR::Goto, 0, helperCallBlock->getEntry());
             copyBranchGlRegDepsAndSubstitute(gotoHelperNode, helperEntryGlRegDeps, NULL);
@@ -1864,7 +1873,7 @@ public:
             return;
         }
 
-        // 3. Modifier Flags Check on toClass:
+        // 2. Modifier Flags Check on toClass:
         // Test if toClass is an Interface or an Array (modifiers & (J9AccInterface | J9AccClassArray) != 0).
         // If it is an interface or array, superclass array check does not apply, so jump to helperCallBlock.
         // Not needed when toClass is known to be a normal class.
@@ -1883,6 +1892,17 @@ public:
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
         }
 
+        // 3. Fastpath: Class Equality (fromClass == toClass)
+        // Only reached when toClass is not known to be an interface or an array, and must be before the depth check,
+        // since equal classes have equal depths.
+        insertStoreSuccess();
+        fromClassNode->incReferenceCount();
+        toClassNode->incReferenceCount();
+        auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
+        addFastpathGlRegDeps(ifacmpeqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+
         // 4. Fast-Fail: Depth Check (fromDepth <= toDepth)
         // Since toClass is a normal class, if fromDepth <= toDepth, fromClass CANNOT be a subclass of toClass.
         // The depth is the low 16 bits of classDepthAndFlags (a UDATA). Load the full-width field and mask it; this is
@@ -1896,14 +1916,14 @@ public:
             ? TR::Node::iconst(toClassDepth)
             : comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
+        insertStoreFail();
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
         addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
+        insertStoreSuccess();
 
         TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
 
@@ -1932,7 +1952,7 @@ public:
 
         // 6. Superclass Mismatch Fast-Fail:
         // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0).
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
+        insertStoreFail();
         auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
         addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
