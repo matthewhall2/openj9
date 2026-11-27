@@ -1886,22 +1886,19 @@ public:
         // The depth is the low 16 bits of classDepthAndFlags (a UDATA). Load the full-width field and mask it; this is
         // endian-independent, unlike a narrow load which would need an offset of classDepthAndFlags + 6 on 64-bit
         // big-endian.
-        // When toDepth is a compile-time constant smaller than the minimum superclass array size, the superclass
-        // array is always large enough to be indexed by toDepth, so the check is not needed.
-        TR::Node *toDepth = NULL;
-        if (!toIsNormalClass || toClassDepth >= comp->getOptions()->_minimumSuperclassArraySize) {
-            TR::Node *fromDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(fromClassNode, J9AccClassDepthMask);
-            if (toIsNormalClass)
-                toDepth = TR::Node::iconst(toClassDepth);
-            else
-                toDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
+        // The check is always done, even when toDepth is a constant smaller than the minimum superclass array size
+        // (where it would not be needed for safety). The depth load is from the same cache line as the superclasses
+        // pointer, and a failing check avoids loading from the separately allocated superclass array.
+        TR::Node *fromDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(fromClassNode, J9AccClassDepthMask);
+        TR::Node *toDepth = toIsNormalClass
+            ? TR::Node::iconst(toClassDepth)
+            : comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
-            auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
-            addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
-            callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
-        }
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
+        auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
+        addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
