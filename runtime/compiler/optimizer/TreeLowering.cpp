@@ -1715,19 +1715,15 @@ public:
         auto *constForFailNode = TR::Node::iconst(0);
         TR::Node *storeSuccessNode = NULL;
         TR::Node *storeFailNode = NULL;
-        TR::Node *regDepForStoreSuccessNode = NULL;
-        TR::Node *regDepForStoreFailNode = NULL;
-        if (anchoredNode->getOpCodeValue() == TR::iRegLoad) {
-            auto const globalRegNum = anchoredNode->getGlobalRegisterNumber();
+        // The result is either in a global register (iRegLoad), or in a stack temp (iload)
+        const bool resultInReg = anchoredNode->getOpCodeValue() == TR::iRegLoad;
+        const TR_GlobalRegisterNumber resultRegNum = resultInReg ? anchoredNode->getGlobalRegisterNumber() : -1;
+        if (resultInReg) {
             storeSuccessNode = TR::Node::create(TR::iRegStore, 1, constForSuccessNode);
-            storeSuccessNode->setGlobalRegisterNumber(globalRegNum);
-            regDepForStoreSuccessNode = TR::Node::create(TR::PassThrough, 1, constForSuccessNode);
-            regDepForStoreSuccessNode->setGlobalRegisterNumber(globalRegNum);
+            storeSuccessNode->setGlobalRegisterNumber(resultRegNum);
 
             storeFailNode = TR::Node::create(TR::iRegStore, 1, constForFailNode);
-            storeFailNode->setGlobalRegisterNumber(globalRegNum);
-            regDepForStoreFailNode = TR::Node::create(TR::PassThrough, 1, constForFailNode);
-            regDepForStoreFailNode->setGlobalRegisterNumber(globalRegNum);
+            storeFailNode->setGlobalRegisterNumber(resultRegNum);
         } else if (anchoredNode->getOpCodeValue() == TR::iload) {
             storeSuccessNode = TR::Node::create(TR::istore, 1, constForSuccessNode);
             storeSuccessNode->setSymbolReference(anchoredNode->getSymbolReference());
@@ -1793,39 +1789,21 @@ public:
             toJ9Class != NULL ? "known" : "unknown", fromJ9Class != NULL ? "known" : "unknown", toIsInterface,
             toIsArray, toIsAbstract, toClassDepth, fastFail);
 
-        // The original result store nodes share their constant child with the PassThrough nodes used in the branch
-        // GlRegDeps, so each original must be inserted exactly once, at the first block that uses it. Any later use
-        // inserts a duplicate store.
-        //
-        // Each branch needs its own PassThrough, whose child is the child of the store inserted just before that
-        // branch. A PassThrough must not be commoned between branches: doing so does not anchor its child at the
-        // later branch, and its child would not be the value stored into the register in that block. So the first use
-        // gets the original PassThrough, and later uses get a new PassThrough on the duplicated store's child.
-        //
-        // Each lambda inserts the store at the end of callBlock and returns the PassThrough to pass as the substitute
-        // dependency to addFastpathGlRegDeps for the branch that follows (NULL if the result is not in a global
-        // register).
-        bool successStoreInserted = false;
-        bool failStoreInserted = false;
-        auto insertResultStore = [&](bool &inserted, TR::Node *originalStore, TR::Node *originalRegDep) -> TR::Node * {
-            TR::Node *store = originalStore;
-            TR::Node *regDep = originalRegDep;
-            if (inserted) {
-                store = originalStore->duplicateTree(true);
-                if (originalRegDep != NULL) {
-                    regDep = TR::Node::create(TR::PassThrough, 1, store->getFirstChild());
-                    regDep->setGlobalRegisterNumber(originalRegDep->getGlobalRegisterNumber());
-                }
-            }
-            inserted = true;
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, store));
+        // The result starts out as true. Tests that prove it true branch to targetBlock, and tests that prove it false
+        // branch to a single fail block that stores false and continues to targetBlock. Since the result is stored
+        // before any branch, every branch has the same GlRegDeps: those of targetBlock, with a PassThrough on the
+        // constant true for the result register. A PassThrough must not be commoned between branches, because doing so
+        // does not anchor its child, so every branch gets a new one.
+        auto makeResultRegDep = [&](TR::Node *constNode) -> TR::Node * {
+            if (!resultInReg || targetExitGlRegDeps == NULL)
+                return NULL;
+            TR::Node *regDep = TR::Node::create(TR::PassThrough, 1, constNode);
+            regDep->setGlobalRegisterNumber(resultRegNum);
             return regDep;
         };
-        auto insertStoreSuccess = [&]() -> TR::Node * {
-            return insertResultStore(successStoreInserted, storeSuccessNode, regDepForStoreSuccessNode);
-        };
-        auto insertStoreFail = [&]() -> TR::Node * {
-            return insertResultStore(failStoreInserted, storeFailNode, regDepForStoreFailNode);
+        auto addResultTrueBranchGlRegDeps = [&](TR::Node *branchNode) {
+            addFastpathGlRegDeps(branchNode, targetExitGlRegDeps, helperEntryGlRegDeps,
+                makeResultRegDep(constForSuccessNode));
         };
 
         // Fast-fail at compile time: toClass is deeper than fromClass, so the answer is definitely false. This also
@@ -1833,13 +1811,63 @@ public:
         // needed. The helper block becomes unreachable once its last incoming edge is removed, and it is deleted from
         // the CFG.
         if (fastFail) {
-            TR::Node *regDepForFail = insertStoreFail();
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
             auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
-            addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForFail);
+            addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps,
+                makeResultRegDep(constForFailNode));
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
             cfg->removeEdge(callBlock, helperCallBlock);
             return;
         }
+
+        // The fail block stores false and goes to targetBlock. It is created the first time a test needs it, and is laid
+        // out after the last block of the chain, before targetBlock. Its entry GlRegDeps are those of targetBlock, which
+        // is what every branch to it provides. Callers add the CFG edge to it (splitForFastpath does).
+        TR::Block *failBlock = NULL;
+        auto getFailBlock = [&]() -> TR::Block * {
+            if (failBlock != NULL)
+                return failBlock;
+
+            failBlock = TR::Block::createEmptyBlock(node, comp, callBlock->getFrequency(), callBlock);
+            failBlock->inheritBlockInfo(callBlock);
+            cfg->addNode(failBlock);
+            callBlock->getExit()->join(failBlock->getEntry());
+            failBlock->getExit()->join(targetBlock->getEntry());
+            cfg->addEdge(failBlock, targetBlock);
+
+            failBlock->append(TR::TreeTop::create(comp, storeFailNode));
+            auto * const gotoTargetFromFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
+
+            TR::Node *targetEntryNode = targetBlock->getEntry()->getNode();
+            if (targetEntryNode->getNumChildren() > 0) {
+                TR::Node *targetEntryGlRegDeps = targetEntryNode->getFirstChild();
+                const int32_t numDeps = targetEntryGlRegDeps->getNumChildren();
+                TR::Node *failEntryGlRegDeps = TR::Node::create(TR::GlRegDeps, numDeps);
+                TR::Node *failExitGlRegDeps = TR::Node::create(TR::GlRegDeps, numDeps);
+                for (int32_t i = 0; i < numDeps; ++i) {
+                    TR::Node *regLoad = TR::Node::copy(targetEntryGlRegDeps->getChild(i));
+                    regLoad->setReferenceCount(0);
+                    failEntryGlRegDeps->setAndIncChild(i, regLoad);
+
+                    const bool isResult = resultInReg && regLoad->getOpCode().isLoadReg()
+                        && regLoad->getGlobalRegisterNumber() == resultRegNum;
+                    if (isResult) {
+                        // The result register is set to false in this block
+                        failExitGlRegDeps->setAndIncChild(i, makeResultRegDep(constForFailNode));
+                    } else {
+                        // All other dependencies are passed through, and must be commoned so they get evaluated
+                        failExitGlRegDeps->setAndIncChild(i, regLoad);
+                    }
+                }
+                failBlock->getEntry()->getNode()->addChildren(&failEntryGlRegDeps, 1);
+                gotoTargetFromFailNode->addChildren(&failExitGlRegDeps, 1);
+            }
+            failBlock->append(TR::TreeTop::create(comp, gotoTargetFromFailNode));
+            return failBlock;
+        };
+
+        // Start with a result of true
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
 
         // 1. Fastpath: castClassCache Check
         // Skipped if toClass is known to be abstract (as the Z codegen does) or a known normal class. VM_VMHelpers::
@@ -1859,26 +1887,24 @@ public:
             const TR::ILOpCodes ifEqOp = is64Bit ? TR::iflcmpeq : TR::ificmpeq;
 
             // Cache hit, result true
-            TR::Node *regDepForCachedSuccess = insertStoreSuccess();
             TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
             toClassNode->incReferenceCount();
             TR::Node *cacheXorToClass = TR::Node::create(xorOp, 2, TR::Node::create(addrToInt, 1, cachedClass),
                 TR::Node::create(addrToInt, 1, toClassNode));
             auto *ifCachedSuccessNode = TR::Node::createif(ifEqOp, cacheXorToClass,
                 is64Bit ? TR::Node::lconst(0) : TR::Node::iconst(0), targetBlock->getEntry());
-            addFastpathGlRegDeps(ifCachedSuccessNode, targetExitGlRegDeps, helperEntryGlRegDeps,
-                regDepForCachedSuccess);
+            addResultTrueBranchGlRegDeps(ifCachedSuccessNode);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedSuccessNode));
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
             // Cached failure (low bit set), result false. This block is an extension of the previous one, so it
             // commons the xor evaluated there.
-            TR::Node *regDepForCachedFail = insertStoreFail();
+            TR::Block *cachedFailBlock = getFailBlock();
             auto *ifCachedFailNode = TR::Node::createif(ifEqOp, cacheXorToClass,
-                is64Bit ? TR::Node::lconst(1) : TR::Node::iconst(1), targetBlock->getEntry());
-            addFastpathGlRegDeps(ifCachedFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForCachedFail);
+                is64Bit ? TR::Node::lconst(1) : TR::Node::iconst(1), cachedFailBlock->getEntry());
+            addResultTrueBranchGlRegDeps(ifCachedFailNode);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedFailNode));
-            callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+            callBlock = splitForFastpath(callBlock, callBlock->getExit(), cachedFailBlock);
         }
 
         // toClass is known to be an interface or an array, so the equality and superclass tests do not apply: go
@@ -1914,11 +1940,10 @@ public:
         // 3. Fastpath: Class Equality (fromClass == toClass)
         // Only reached when toClass is not known to be an interface or an array, and must be before the depth check,
         // since equal classes have equal depths.
-        TR::Node *regDepForEquality = insertStoreSuccess();
         fromClassNode->incReferenceCount();
         toClassNode->incReferenceCount();
         auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifacmpeqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForEquality);
+        addResultTrueBranchGlRegDeps(ifacmpeqNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1935,15 +1960,13 @@ public:
             ? TR::Node::iconst(toClassDepth)
             : comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
-        TR::Node *regDepForDepthFail = insertStoreFail();
-        auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForDepthFail);
+        TR::Block *depthFailBlock = getFailBlock();
+        auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, depthFailBlock->getEntry());
+        addResultTrueBranchGlRegDeps(ifDepthFailNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
-        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+        callBlock = splitForFastpath(callBlock, callBlock->getExit(), depthFailBlock);
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
-        TR::Node *regDepForSuperclassMatch = insertStoreSuccess();
-
         TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
 
         // The element address is superclasses + toDepth * sizeof(J9Class *), so there is no fixed offset to put in a
@@ -1965,20 +1988,21 @@ public:
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifSuperclassEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForSuperclassMatch);
+        addResultTrueBranchGlRegDeps(ifSuperclassEqNode);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 6. Superclass Mismatch Fast-Fail:
-        // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0).
-        TR::Node *regDepForMismatch = insertStoreFail();
-        auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
-        addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForMismatch);
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
-        // This block inherited both the helperCallBlock and targetBlock successor edges from the previous splits, but
-        // it only goes to targetBlock. Remove the stale edge to helperCallBlock; the edge to targetBlock already
-        // exists, so do not add another.
+        // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0), so go to
+        // the fail block. This block inherited both the helperCallBlock and targetBlock successor edges from the
+        // previous splits, but it only goes to the fail block. Remove the stale edges and add the one to the fail
+        // block, since splitForFastpath was not used for it.
+        auto * const gotoFailBlockNode = TR::Node::create(node, TR::Goto, 0, getFailBlock()->getEntry());
+        addResultTrueBranchGlRegDeps(gotoFailBlockNode);
+        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailBlockNode));
         cfg->removeEdge(callBlock, helperCallBlock);
+        cfg->removeEdge(callBlock, targetBlock);
+        cfg->addEdge(callBlock, failBlock);
     }
 };
 
