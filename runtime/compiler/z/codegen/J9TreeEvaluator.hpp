@@ -248,6 +248,7 @@ public:
     static TR::Register *evaluateNULLCHKWithPossibleResolve(TR::Node *node, bool needResolution, TR::CodeGenerator *cg);
     static float interpreterProfilingInstanceOfOrCheckCastTopProb(TR::CodeGenerator *cg, TR::Node *node);
     static TR::Register *inlineCheckAssignableFromEvaluator(TR::Node *node, TR::CodeGenerator *cg);
+    static TR::Register *inlineCheckAssignableFromHelperEvaluator(TR::Node *node, TR::CodeGenerator *cg);
 
     /**
      * \brief

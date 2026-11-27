@@ -11696,13 +11696,30 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     srm->addScratchRegistersToDependencyList(deps);
     deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
     deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
+    deps->addPostConditionIfNotAlre adyInserted(toClassReg, TR::RealRegister::AssignAny);
     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
     doneLabel->setEndInternalControlFlow();
 
     node->setRegister(resultReg);
     return resultReg;
 }
+
+/**
+ * TreeLowering already expanded the isAssignableFrom fast paths in IL, so only the call to the helper remains. The
+ * helper symbol reference (TR_checkAssignableHelper) uses the TR_CHelper linkage, so performCall dispatches directly
+ * to fast_jitCheckAssignable.
+ */
+TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromHelperEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+{
+    TR::Register *resultReg = TR::TreeEvaluator::performCall(node, false, cg);
+    // The call node can have more than one parent (the anchoring treetop and the original store). Record the register
+    // so the node is not evaluated, and its children are not released, a second time.
+    node->setRegister(resultReg);
+    cg->decReferenceCount(node->getFirstChild());
+    cg->decReferenceCount(node->getSecondChild());
+    return resultReg;
+}
+
 
 bool J9::Z::TreeEvaluator::VMinlineCallEvaluator(TR::Node *node, bool indirect, TR::CodeGenerator *cg)
 {
