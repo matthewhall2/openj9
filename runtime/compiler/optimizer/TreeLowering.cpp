@@ -26,6 +26,8 @@
 #include "compile/SymbolReferenceTable.hpp"
 #include "il/Block.hpp"
 #include "il/Block_inlines.hpp"
+#include "il/StaticSymbol.hpp"
+#include "il/Symbol.hpp"
 #include "il/OMRDataTypes.hpp"
 #include "infra/ILWalk.hpp"
 #include "optimizer/J9TransformUtil.hpp"
@@ -1625,6 +1627,48 @@ static void addFastpathGlRegDeps(TR::Node * const branchNode, TR::Node * const t
     branchNode->addChildren(&glRegDeps, 1);
 }
 
+/**
+ * @brief Find the J9Class of an isAssignableFrom class argument if it is known at compile time.
+ *
+ * Recognizes the class node being a `loadaddr` of a resolved class, or the shape produced by
+ * J9::RecognizedCallTransformer for a class constant:
+ *
+ *    aloadi <classFromJavaLangClass>
+ *      aloadi <javaLangClassFromClass>
+ *        loadaddr (resolved class)
+ *
+ * @param classNode is the class argument of the isAssignableFrom call
+ * @param comp is the current compilation
+ * @return the J9Class, or NULL if it is not known at compile time
+ */
+static TR_OpaqueClassBlock *getResolvedClassOfClassNode(TR::Node *classNode, TR::Compilation *comp)
+{
+    TR::SymbolReferenceTable *symRefTab = comp->getSymRefTab();
+    TR::Node *classRef = NULL;
+
+    if (classNode->getOpCodeValue() == TR::loadaddr) {
+        classRef = classNode;
+    } else if (classNode->getOpCodeValue() == TR::aloadi
+        && classNode->getSymbolReference() == symRefTab->findOrCreateClassFromJavaLangClassSymbolRef()) {
+        TR::Node *javaLangClassNode = classNode->getFirstChild();
+        if (javaLangClassNode->getOpCodeValue() == TR::aloadi
+            && javaLangClassNode->getSymbolReference() == symRefTab->findJavaLangClassFromClassSymbolRef()
+            && javaLangClassNode->getFirstChild()->getOpCodeValue() == TR::loadaddr) {
+            classRef = javaLangClassNode->getFirstChild();
+        }
+    }
+
+    if (classRef == NULL)
+        return NULL;
+
+    TR::SymbolReference *symRef = classRef->getSymbolReference();
+    if (symRef == NULL || symRef->isUnresolved() || symRef->getSymbol() == NULL)
+        return NULL;
+
+    TR::StaticSymbol *classSym = symRef->getSymbol()->getStaticSymbol();
+    return (classSym != NULL) ? (TR_OpaqueClassBlock *)classSym->getStaticAddress() : NULL;
+}
+
 class IsAssignableFromTransformer : public TR::TreeLowering::Transformer {
 public:
     explicit IsAssignableFromTransformer(TR::TreeLowering *opt)
@@ -1726,6 +1770,28 @@ public:
         TR::Node *fromClassNode = anchoredFromClassTT->getNode()->getFirstChild();
         TR::Node *toClassNode = anchoredToClassTT->getNode()->getFirstChild();
 
+        // Compile-time facts about the classes, mirroring J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator.
+        // They are only available when the class arguments are resolved class constants.
+        TR_OpaqueClassBlock *toJ9Class = getResolvedClassOfClassNode(toClassNode, comp);
+        TR_OpaqueClassBlock *fromJ9Class = getResolvedClassOfClassNode(fromClassNode, comp);
+        const bool toIsInterface = toJ9Class != NULL && TR::Compiler->cls.isInterfaceClass(comp, toJ9Class);
+        const bool toIsArray = toJ9Class != NULL && TR::Compiler->cls.isClassArray(comp, toJ9Class);
+        const bool toIsAbstract = toJ9Class != NULL && TR::Compiler->cls.isAbstractClass(comp, toJ9Class);
+        // A known toClass that is neither an interface nor an array can only be satisfied by the superclass test, so
+        // the interface/array modifier test and the helper call are not needed.
+        const bool toIsNormalClass = toJ9Class != NULL && !toIsInterface && !toIsArray;
+        const int32_t toClassDepth = toIsNormalClass ? (int32_t)TR::Compiler->cls.classDepthOf(toJ9Class) : -1;
+
+        // If both classes are known and toClass is deeper than fromClass, fromClass cannot be a subclass of toClass.
+        bool fastFail = false;
+        if (toIsNormalClass && fromJ9Class != NULL && !TR::Compiler->cls.isInterfaceClass(comp, fromJ9Class))
+            fastFail = toClassDepth > (int32_t)TR::Compiler->cls.classDepthOf(fromJ9Class);
+        logprintf(trace(), log,
+            "isAssignableFrom specialization: toClass %s, fromClass %s, toIsInterface=%d toIsArray=%d toIsAbstract=%d "
+            "toDepth=%d fastFail=%d\n",
+            toJ9Class != NULL ? "known" : "unknown", fromJ9Class != NULL ? "known" : "unknown", toIsInterface,
+            toIsArray, toIsAbstract, toClassDepth, fastFail);
+
         // 1. Fastpath: Class Equality (fromClass == toClass)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode));
         fromClassNode->incReferenceCount();
@@ -1735,58 +1801,83 @@ public:
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
-        // 2. Fastpath: castClassCache Check
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
-      //  fromClassNode->incReferenceCount();
-        // TR::Node *cacheOffset = comp->target().is64Bit()
-        //     ? TR::Node::lconst(offsetof(J9Class, castClassCache))
-        //     : TR::Node::iconst(offsetof(J9Class, castClassCache));
-        //TR::Node *cacheAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, fromClassNode, cacheOffset);
-        TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
-      //  TR::Node *cachedClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, cacheAddr, comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Address));
+        // Fast-fail at compile time: toClass is deeper than fromClass, so the answer is definitely false. The helper
+        // block becomes unreachable once its last incoming edge is removed, and it is deleted from the CFG.
+        if (fastFail) {
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
+            auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
+            addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
+            cfg->removeEdge(callBlock, helperCallBlock);
+            return;
+        }
 
-        toClassNode->incReferenceCount();
-        auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifCacheEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
-        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+        // 2. Fastpath: castClassCache Check
+        // Skipped if toClass is known to be abstract (as the Z codegen does) or a known normal class. VM_VMHelpers::
+        // inlineCheckCast only caches successful casts to interfaces and arrays, since a cast to a same or superclass
+        // is not cached, and failed casts are cached with the low bit set, so the cache can never equal such a toClass.
+        if (!toIsAbstract && !toIsNormalClass) {
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
+            TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
+
+            toClassNode->incReferenceCount();
+            auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
+            addFastpathGlRegDeps(ifCacheEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
+            callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+        }
+
+        // toClass is known to be an interface or an array, so the superclass test does not apply: go straight to the
+        // helper. This block inherited both the helperCallBlock and targetBlock successor edges, but it only goes to
+        // helperCallBlock now.
+        if (toIsInterface || toIsArray) {
+            auto * const gotoHelperNode = TR::Node::create(node, TR::Goto, 0, helperCallBlock->getEntry());
+            copyBranchGlRegDepsAndSubstitute(gotoHelperNode, helperEntryGlRegDeps, NULL);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoHelperNode));
+            cfg->removeEdge(callBlock, targetBlock);
+            return;
+        }
 
         // 3. Modifier Flags Check on toClass:
         // Test if toClass is an Interface or an Array (modifiers & (J9AccInterface | J9AccClassArray) != 0).
         // If it is an interface or array, superclass array check does not apply, so jump to helperCallBlock.
-        toClassNode->incReferenceCount();
-        TR::Node *romClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClassNode,
-            comp->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
-        const int32_t interfaceOrArrayMask = J9AccInterface | J9AccClassArray;
+        // Not needed when toClass is known to be a normal class.
+        if (!toIsNormalClass) {
+            toClassNode->incReferenceCount();
+            TR::Node *romClass = TR::Node::createWithSymRef(TR::aloadi, 1, 1, toClassNode,
+                comp->getSymRefTab()->findOrCreateClassRomPtrSymbolRef());
+            const int32_t interfaceOrArrayMask = J9AccInterface | J9AccClassArray;
 
-        TR::Node *modifers = comp->fej9()->testAreSomeClassModifiersSet(romClass, interfaceOrArrayMask);
+            TR::Node *modifers = comp->fej9()->testAreSomeClassModifiersSet(romClass, interfaceOrArrayMask);
 
-        // TR::Node *modifiersOffset = comp->target().is64Bit()
-        //     ? TR::Node::lconst(offsetof(J9ROMClass, modifiers))
-        //     : TR::Node::iconst(offsetof(J9ROMClass, modifiers));
-        // TR::Node *modifiersAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd: TR::aiadd, 2, romClass, modifiersOffset);
-        // TR::Node *modifiers = TR::Node::createWithSymRef(TR::iloadi, 1, 1, modifiersAddr,
-        //     comp->getSymRefTab()->findOrCreateUnsafeSymbolRef(TR::Int32));
-
-       // TR::Node *modifierFlags = TR::Node::create(TR::iand, 2, modifiers, TR::Node::iconst(interfaceOrArrayMask));
-        auto *ifInterfaceOrArrayNode = TR::Node::createif(TR::ificmpne, modifers, TR::Node::iconst(0), helperCallBlock->getEntry());
-        copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, helperEntryGlRegDeps, NULL);
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
-        callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
+            auto *ifInterfaceOrArrayNode
+                = TR::Node::createif(TR::ificmpne, modifers, TR::Node::iconst(0), helperCallBlock->getEntry());
+            copyBranchGlRegDepsAndSubstitute(ifInterfaceOrArrayNode, helperEntryGlRegDeps, NULL);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifInterfaceOrArrayNode));
+            callBlock = splitForFastpath(callBlock, callBlock->getExit(), helperCallBlock);
+        }
 
         // 4. Fast-Fail: Depth Check (fromDepth <= toDepth)
         // Since toClass is a normal class, if fromDepth <= toDepth, fromClass CANNOT be a subclass of toClass.
         // The depth is the low 16 bits of classDepthAndFlags (a UDATA). Load the full-width field and mask it; this is
         // endian-independent, unlike a narrow load which would need an offset of classDepthAndFlags + 6 on 64-bit
         // big-endian.
-        TR::Node *fromDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(fromClassNode, J9AccClassDepthMask);
-        TR::Node *toDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
+        // When toDepth is a compile-time constant smaller than the minimum superclass array size, the superclass
+        // array is always large enough to be indexed by toDepth, so the check is not needed.
+        TR::Node *toDepth = NULL;
+        if (!toIsNormalClass || toClassDepth >= comp->getOptions()->_minimumSuperclassArraySize) {
+            TR::Node *fromDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(fromClassNode, J9AccClassDepthMask);
+            if (toIsNormalClass)
+                toDepth = TR::Node::iconst(toClassDepth);
+            else
+                toDepth = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
-        auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
-        callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
-        callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode));
+            auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
+            addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
+            callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+        }
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
@@ -1794,11 +1885,13 @@ public:
         TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
 
         // The element address is superclasses + toDepth * sizeof(J9Class *), so there is no fixed offset to put in a
-        // symref; load through the zero-offset uncollected address shadow instead. toDepth is reloaded here rather
-        // than reused from the previous block, since a node must not be commoned across blocks.
-        //TR::Node *toDepthForIndex = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
+        // symref; load through the zero-offset uncollected address shadow instead.
         TR::Node *elementOffset = NULL;
-        if (comp->target().is64Bit()) {
+        if (toIsNormalClass) {
+            const int32_t superclassOffset = toClassDepth * TR::Compiler->om.sizeofReferenceAddress();
+            elementOffset = comp->target().is64Bit() ? TR::Node::lconst((int64_t)superclassOffset)
+                                                     : TR::Node::iconst(superclassOffset);
+        } else if (comp->target().is64Bit()) {
             TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepth);
             elementOffset = TR::Node::create(TR::lshl, 2, toDepth64, TR::Node::iconst(3));
         } else {
