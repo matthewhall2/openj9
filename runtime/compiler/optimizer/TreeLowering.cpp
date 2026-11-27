@@ -1795,18 +1795,37 @@ public:
 
         // The original result store nodes share their constant child with the PassThrough nodes used in the branch
         // GlRegDeps, so each original must be inserted exactly once, at the first block that uses it. Any later use
-        // inserts a duplicate.
+        // inserts a duplicate store.
+        //
+        // Each branch needs its own PassThrough, whose child is the child of the store inserted just before that
+        // branch. A PassThrough must not be commoned between branches: doing so does not anchor its child at the
+        // later branch, and its child would not be the value stored into the register in that block. So the first use
+        // gets the original PassThrough, and later uses get a new PassThrough on the duplicated store's child.
+        //
+        // Each lambda inserts the store at the end of callBlock and returns the PassThrough to pass as the substitute
+        // dependency to addFastpathGlRegDeps for the branch that follows (NULL if the result is not in a global
+        // register).
         bool successStoreInserted = false;
         bool failStoreInserted = false;
-        auto insertStoreSuccess = [&]() {
-            TR::Node *store = successStoreInserted ? storeSuccessNode->duplicateTree(true) : storeSuccessNode;
-            successStoreInserted = true;
+        auto insertResultStore = [&](bool &inserted, TR::Node *originalStore, TR::Node *originalRegDep) -> TR::Node * {
+            TR::Node *store = originalStore;
+            TR::Node *regDep = originalRegDep;
+            if (inserted) {
+                store = originalStore->duplicateTree(true);
+                if (originalRegDep != NULL) {
+                    regDep = TR::Node::create(TR::PassThrough, 1, store->getFirstChild());
+                    regDep->setGlobalRegisterNumber(originalRegDep->getGlobalRegisterNumber());
+                }
+            }
+            inserted = true;
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, store));
+            return regDep;
         };
-        auto insertStoreFail = [&]() {
-            TR::Node *store = failStoreInserted ? storeFailNode->duplicateTree(true) : storeFailNode;
-            failStoreInserted = true;
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, store));
+        auto insertStoreSuccess = [&]() -> TR::Node * {
+            return insertResultStore(successStoreInserted, storeSuccessNode, regDepForStoreSuccessNode);
+        };
+        auto insertStoreFail = [&]() -> TR::Node * {
+            return insertResultStore(failStoreInserted, storeFailNode, regDepForStoreFailNode);
         };
 
         // Fast-fail at compile time: toClass is deeper than fromClass, so the answer is definitely false. This also
@@ -1814,9 +1833,9 @@ public:
         // needed. The helper block becomes unreachable once its last incoming edge is removed, and it is deleted from
         // the CFG.
         if (fastFail) {
-            insertStoreFail();
+            TR::Node *regDepForFail = insertStoreFail();
             auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
-            addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+            addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForFail);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
             cfg->removeEdge(callBlock, helperCallBlock);
             return;
@@ -1840,7 +1859,7 @@ public:
             const TR::ILOpCodes ifEqOp = is64Bit ? TR::iflcmpeq : TR::ificmpeq;
 
             // Cache hit, result true
-            insertStoreSuccess();
+            TR::Node *regDepForCachedSuccess = insertStoreSuccess();
             TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
             toClassNode->incReferenceCount();
             TR::Node *cacheXorToClass = TR::Node::create(xorOp, 2, TR::Node::create(addrToInt, 1, cachedClass),
@@ -1848,16 +1867,16 @@ public:
             auto *ifCachedSuccessNode = TR::Node::createif(ifEqOp, cacheXorToClass,
                 is64Bit ? TR::Node::lconst(0) : TR::Node::iconst(0), targetBlock->getEntry());
             addFastpathGlRegDeps(ifCachedSuccessNode, targetExitGlRegDeps, helperEntryGlRegDeps,
-                regDepForStoreSuccessNode);
+                regDepForCachedSuccess);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedSuccessNode));
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
             // Cached failure (low bit set), result false. This block is an extension of the previous one, so it
             // commons the xor evaluated there.
-            insertStoreFail();
+            TR::Node *regDepForCachedFail = insertStoreFail();
             auto *ifCachedFailNode = TR::Node::createif(ifEqOp, cacheXorToClass,
                 is64Bit ? TR::Node::lconst(1) : TR::Node::iconst(1), targetBlock->getEntry());
-            addFastpathGlRegDeps(ifCachedFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+            addFastpathGlRegDeps(ifCachedFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForCachedFail);
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedFailNode));
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
         }
@@ -1895,11 +1914,11 @@ public:
         // 3. Fastpath: Class Equality (fromClass == toClass)
         // Only reached when toClass is not known to be an interface or an array, and must be before the depth check,
         // since equal classes have equal depths.
-        insertStoreSuccess();
+        TR::Node *regDepForEquality = insertStoreSuccess();
         fromClassNode->incReferenceCount();
         toClassNode->incReferenceCount();
         auto *ifacmpeqNode = TR::Node::createif(TR::ifacmpeq, fromClassNode, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifacmpeqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
+        addFastpathGlRegDeps(ifacmpeqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForEquality);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifacmpeqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
@@ -1916,14 +1935,14 @@ public:
             ? TR::Node::iconst(toClassDepth)
             : comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
 
-        insertStoreFail();
+        TR::Node *regDepForDepthFail = insertStoreFail();
         auto *ifDepthFailNode = TR::Node::createif(TR::ificmple, fromDepth, toDepth, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+        addFastpathGlRegDeps(ifDepthFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForDepthFail);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifDepthFailNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 5. Superclass Array Check (guaranteed fromDepth > toDepth and toClass is a normal class)
-        insertStoreSuccess();
+        TR::Node *regDepForSuperclassMatch = insertStoreSuccess();
 
         TR::Node *superclassesArray = comp->fej9()->loadClassSuperclassArray(fromClassNode);
 
@@ -1946,15 +1965,15 @@ public:
 
         toClassNode->incReferenceCount();
         auto *ifSuperclassEqNode = TR::Node::createif(TR::ifacmpeq, superClassAtDepth, toClassNode, targetBlock->getEntry());
-        addFastpathGlRegDeps(ifSuperclassEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
+        addFastpathGlRegDeps(ifSuperclassEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForSuperclassMatch);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifSuperclassEqNode));
         callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
 
         // 6. Superclass Mismatch Fast-Fail:
         // Since toClass is a normal class and not in superclasses at toDepth, it is definitively a FAIL (0).
-        insertStoreFail();
+        TR::Node *regDepForMismatch = insertStoreFail();
         auto * const gotoFailNode = TR::Node::create(node, TR::Goto, 0, targetBlock->getEntry());
-        addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+        addFastpathGlRegDeps(gotoFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForMismatch);
         callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, gotoFailNode));
         // This block inherited both the helperCallBlock and targetBlock successor edges from the previous splits, but
         // it only goes to targetBlock. Remove the stale edge to helperCallBlock; the edge to targetBlock already
