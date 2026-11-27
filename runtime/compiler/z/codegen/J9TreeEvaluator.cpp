@@ -11696,7 +11696,7 @@ TR::Register *J9::Z::TreeEvaluator::inlineCheckAssignableFromEvaluator(TR::Node 
     srm->addScratchRegistersToDependencyList(deps);
     deps->addPostCondition(resultReg, TR::RealRegister::AssignAny);
     deps->addPostCondition(fromClassReg, TR::RealRegister::AssignAny);
-    deps->addPostConditionIfNotAlre adyInserted(toClassReg, TR::RealRegister::AssignAny);
+    deps->addPostConditionIfNotAlreadyInserted(toClassReg, TR::RealRegister::AssignAny);
     generateS390LabelInstruction(cg, TR::InstOpCode::label, node, doneLabel, deps);
     doneLabel->setEndInternalControlFlow();
 
