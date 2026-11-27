@@ -1795,13 +1795,13 @@ public:
         // The element address is superclasses + toDepth * sizeof(J9Class *), so there is no fixed offset to put in a
         // symref; load through the zero-offset uncollected address shadow instead. toDepth is reloaded here rather
         // than reused from the previous block, since a node must not be commoned across blocks.
-        TR::Node *toDepthForIndex = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
+        //TR::Node *toDepthForIndex = comp->fej9()->testAreSomeClassDepthAndFlagsSet(toClassNode, J9AccClassDepthMask);
         TR::Node *elementOffset = NULL;
         if (comp->target().is64Bit()) {
-            TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepthForIndex);
+            TR::Node *toDepth64 = TR::Node::create(TR::i2l, 1, toDepth);
             elementOffset = TR::Node::create(TR::lshl, 2, toDepth64, TR::Node::iconst(3));
         } else {
-            elementOffset = TR::Node::create(TR::ishl, 2, toDepthForIndex, TR::Node::iconst(2));
+            elementOffset = TR::Node::create(TR::ishl, 2, toDepth, TR::Node::iconst(2));
         }
         TR::Node *superClassElemAddr = TR::Node::create(comp->target().is64Bit() ? TR::aladd : TR::aiadd, 2, superclassesArray, elementOffset);
         TR::Node *superClassAtDepth = TR::Node::createWithSymRef(TR::aloadi, 1, 1, superClassElemAddr,

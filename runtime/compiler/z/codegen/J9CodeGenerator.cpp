@@ -3607,6 +3607,9 @@ bool J9::Z::CodeGenerator::inlineDirectCall(TR::Node *node, TR::Register *&resul
         // TreeLowering already expanded the fast paths in IL; this is only the call to the helper. Dispatch through the
         // C helper linkage directly so the call always goes to fast_jitCheckAssignable.
         resultReg = cg->getLinkage(TR_CHelper)->buildDirectDispatch(node);
+        // The call node can have more than one parent (the anchoring treetop and the original store). Record the
+        // register so the node is not evaluated, and its children are not released, a second time.
+        node->setRegister(resultReg);
         cg->decReferenceCount(node->getFirstChild());
         cg->decReferenceCount(node->getSecondChild());
         return true;
