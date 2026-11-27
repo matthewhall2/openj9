@@ -1816,14 +1816,38 @@ public:
         // Skipped if toClass is known to be abstract (as the Z codegen does) or a known normal class. VM_VMHelpers::
         // inlineCheckCast only caches successful casts to interfaces and arrays, since a cast to a same or superclass
         // is not cached, and failed casts are cached with the low bit set, so the cache can never equal such a toClass.
-        if (!toIsAbstract && !toIsNormalClass) {
+        //
+        // The cache holds either toClass (cached success) or toClass | 1 (cached failure), as in
+        // VM_VMHelpers::inlineCheckCast. toClass is aligned, so (cache ^ toClass) is:
+        //    0 -> cached success: result is true
+        //    1 -> cached failure: result is false
+        //    otherwise -> not cached for this toClass, continue
+        if (!toIsAbstract) {
+            const bool is64Bit = comp->target().is64Bit();
+            const TR::ILOpCodes addrToInt = is64Bit ? TR::a2l : TR::a2i;
+            const TR::ILOpCodes xorOp = is64Bit ? TR::lxor : TR::ixor;
+            const TR::ILOpCodes ifEqOp = is64Bit ? TR::iflcmpeq : TR::ificmpeq;
+
+            // Cache hit, result true
             callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeSuccessNode->duplicateTree(true)));
             TR::Node *cachedClass = comp->fej9()->loadCastClassCache(fromClassNode);
-
             toClassNode->incReferenceCount();
-            auto *ifCacheEqNode = TR::Node::createif(TR::ifacmpeq, cachedClass, toClassNode, targetBlock->getEntry());
-            addFastpathGlRegDeps(ifCacheEqNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreSuccessNode);
-            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCacheEqNode));
+            TR::Node *cacheXorToClass = TR::Node::create(xorOp, 2, TR::Node::create(addrToInt, 1, cachedClass),
+                TR::Node::create(addrToInt, 1, toClassNode));
+            auto *ifCachedSuccessNode = TR::Node::createif(ifEqOp, cacheXorToClass,
+                is64Bit ? TR::Node::lconst(0) : TR::Node::iconst(0), targetBlock->getEntry());
+            addFastpathGlRegDeps(ifCachedSuccessNode, targetExitGlRegDeps, helperEntryGlRegDeps,
+                regDepForStoreSuccessNode);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedSuccessNode));
+            callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
+
+            // Cached failure (low bit set), result false. This block is an extension of the previous one, so it
+            // commons the xor evaluated there.
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, storeFailNode->duplicateTree(true)));
+            auto *ifCachedFailNode = TR::Node::createif(ifEqOp, cacheXorToClass,
+                is64Bit ? TR::Node::lconst(1) : TR::Node::iconst(1), targetBlock->getEntry());
+            addFastpathGlRegDeps(ifCachedFailNode, targetExitGlRegDeps, helperEntryGlRegDeps, regDepForStoreFailNode);
+            callBlock->getExit()->insertBefore(TR::TreeTop::create(comp, ifCachedFailNode));
             callBlock = splitForFastpath(callBlock, callBlock->getExit(), targetBlock);
         }
 
